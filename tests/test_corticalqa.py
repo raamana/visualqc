@@ -7,7 +7,7 @@ import pytest
 
 from click.testing import CliRunner
 
-from corticalqa import corticalqa
+from corticalqa import qa
 from corticalqa import cli
 
 

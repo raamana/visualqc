@@ -26,9 +26,12 @@ test_requirements = [
     # TODO: put package test requirements here
 ]
 
+import versioneer
+
 setup(
     name='corticalqa',
-    version='0.1.0',
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     description="Tool to automate the quality assurance of pial and white matter surfaces from Freesurfer Parcellation",
     long_description=readme + '\n\n' + history,
     author="Pradeep Reddy Raamana",
