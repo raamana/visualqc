@@ -1,4 +1,4 @@
-Welcome to corticalqa's documentation!
+Welcome to visualqc's documentation!
 ======================================
 
 Contents:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Top-level package for corticalqa."""
+"""Top-level package for visualqc."""
 
 __author__ = """Pradeep Reddy Raamana"""
 __email__ = 'raamana@gmail.com'

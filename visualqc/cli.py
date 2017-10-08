@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
-"""Console script for corticalqa."""
+"""Console script for visualqc."""
 
 import click
 
 
 @click.command()
 def main(args=None):
-    """Console script for corticalqa."""
+    """Console script for visualqc."""
     click.echo("Replace this message by putting your code into "
-               "corticalqa.cli.main")
+               "visualqc.cli.main")
     click.echo("See click documentation at http://click.pocoo.org/")
 
 

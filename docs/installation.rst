@@ -8,13 +8,13 @@ Installation
 Stable release
 --------------
 
-To install corticalqa, run this command in your terminal:
+To install visualqc, run this command in your terminal:
 
 .. code-block:: console
 
-    $ pip install corticalqa
+    $ pip install visualqc
 
-This is the preferred method to install corticalqa, as it will always install the most recent stable release. 
+This is the preferred method to install visualqc, as it will always install the most recent stable release. 
 
 If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
@@ -26,19 +26,19 @@ you through the process.
 From sources
 ------------
 
-The sources for corticalqa can be downloaded from the `Github repo`_.
+The sources for visualqc can be downloaded from the `Github repo`_.
 
 You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/raamana/corticalqa
+    $ git clone git://github.com/raamana/visualqc
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl  -OL https://github.com/raamana/corticalqa/tarball/master
+    $ curl  -OL https://github.com/raamana/visualqc/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/raamana/corticalqa
-.. _tarball: https://github.com/raamana/corticalqa/tarball/master
+.. _Github repo: https://github.com/raamana/visualqc
+.. _tarball: https://github.com/raamana/visualqc/tarball/master

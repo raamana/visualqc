@@ -29,25 +29,25 @@ test_requirements = [
 import versioneer
 
 setup(
-    name='corticalqa',
+    name='visualqc',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="Tool to automate the quality assurance of pial and white matter surfaces from Freesurfer Parcellation",
     long_description=readme + '\n\n' + history,
     author="Pradeep Reddy Raamana",
     author_email='raamana@gmail.com',
-    url='https://github.com/raamana/corticalqa',
-    packages=find_packages(include=['corticalqa']),
+    url='https://github.com/raamana/visualqc',
+    packages=find_packages(include=['visualqc']),
     entry_points={
         'console_scripts': [
-            'corticalqa=corticalqa.cli:main'
+            'visualqc=visualqc.cli:main'
         ]
     },
     include_package_data=True,
     install_requires=requirements,
     license="MIT license",
     zip_safe=False,
-    keywords='corticalqa',
+    keywords='visualqc',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',

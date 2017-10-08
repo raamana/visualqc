@@ -1,20 +1,20 @@
 ==========
-corticalqa
+visualqc
 ==========
 
 
-.. image:: https://img.shields.io/pypi/v/corticalqa.svg
-        :target: https://pypi.python.org/pypi/corticalqa
+.. image:: https://img.shields.io/pypi/v/visualqc.svg
+        :target: https://pypi.python.org/pypi/visualqc
 
-.. image:: https://img.shields.io/travis/raamana/corticalqa.svg
-        :target: https://travis-ci.org/raamana/corticalqa
+.. image:: https://img.shields.io/travis/raamana/visualqc.svg
+        :target: https://travis-ci.org/raamana/visualqc
 
-.. image:: https://readthedocs.org/projects/corticalqa/badge/?version=latest
-        :target: https://corticalqa.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/visualqc/badge/?version=latest
+        :target: https://visualqc.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-.. image:: https://pyup.io/repos/github/raamana/corticalqa/shield.svg
-     :target: https://pyup.io/repos/github/raamana/corticalqa/
+.. image:: https://pyup.io/repos/github/raamana/visualqc/shield.svg
+     :target: https://pyup.io/repos/github/raamana/visualqc/
      :alt: Updates
 
 
@@ -22,7 +22,7 @@ Tool to automate the quality assurance of pial and white matter surfaces from Fr
 
 
 * Free software: MIT license
-* Documentation: https://corticalqa.readthedocs.io.
+* Documentation: https://visualqc.readthedocs.io.
 
 
 Features

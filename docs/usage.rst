@@ -2,6 +2,6 @@
 Usage
 =====
 
-To use corticalqa in a project::
+To use visualqc in a project::
 
-    import corticalqa
+    import visualqc

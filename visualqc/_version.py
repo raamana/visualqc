@@ -42,8 +42,8 @@ def get_config():
     cfg.VCS = "git"
     cfg.style = "pep440"
     cfg.tag_prefix = ""
-    cfg.parentdir_prefix = "corticalqa-"
-    cfg.versionfile_source = "corticalqa/_version.py"
+    cfg.parentdir_prefix = "visualqc-"
+    cfg.versionfile_source = "visualqc/_version.py"
     cfg.verbose = False
     return cfg
 
