@@ -18,8 +18,8 @@ deploy:
       YkdkUXhKODIxTzc1VGx5cUdSalJlVG9JTzNjUmV3ZXQ1M2J1bUhqNm54NS9ROThXVmkwMGptMXlh
       SXpiRS80bXd3UzJIK0Y3bWRRa2hKTHpITEVGMVZTNjI0YXU1c21RZnVlZUZUTEVsdWVKVnJ2enM9
   true:
-    python: 2.7
-    repo: raamana/corticalqa
+    python: 3.5
+    repo: raamana/visualqc
     tags: true
 install: pip install -U tox-travis
 language: python
