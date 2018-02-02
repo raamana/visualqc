@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, basename
 
-from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, mix_aseg_in_mri
+from visualqc.utils import read_image, void_subcortical_symmetrize_cortical
 from mrivis import collage, aseg_on_mri
 
 # default values
@@ -50,8 +50,8 @@ def _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type)
     """Actual routine to generate the visualizations. """
 
     # we ensured these files exist and are not empty
-    t1_mri_path = pjoin(fs_dir, subject_id, t1_mri_identifier)
-    fs_seg_path = pjoin(fs_dir, subject_id, fs_seg_identifier)
+    t1_mri_path = pjoin(fs_dir, subject_id, 'mri', t1_mri_identifier)
+    fs_seg_path = pjoin(fs_dir, subject_id, 'mri', fs_seg_identifier)
 
     t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
     fs_seg = read_image(fs_seg_path, error_msg='aparc+aseg segmentation')
