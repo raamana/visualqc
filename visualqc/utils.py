@@ -14,7 +14,7 @@ def read_image(img_spec, error_msg='image'):
         if pexists(realpath(img_spec)):
             img = nib.load(img_spec).get_data()
         else:
-            raise IOError('Given path to {} does not exist!'.format(error_msg))
+            raise IOError('Given path to {} does not exist!\n\t{}'.format(error_msg, img_spec))
     elif isinstance(img_spec, np.ndarray):
         img = img_spec
     else:
