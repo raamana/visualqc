@@ -6,6 +6,7 @@ import os
 import sys
 import argparse
 import textwrap
+import nibabel as nib
 import traceback
 import warnings
 
@@ -25,16 +26,45 @@ import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, basename
 
+from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, mix_aseg_in_mri
+from mrivis import collage, aseg_on_mri
+
 # default values
 default_out_dir_name = 'visualqc'
-required_files = ('orig.mgz', 'aparc+aseg.mgz')
+t1_mri_identifier = 'orig.mgz'
+fs_seg_identifier = 'aparc+aseg.mgz'
+required_files = (t1_mri_identifier, fs_seg_identifier)
+visualization_combination_choices = ('cortical_volumetric', 'cortical_surface',
+                                     'cortical_composite', 'subcortical_volumetric')
 
 def generate_visualizations(make_type, fs_dir, id_list, out_dir):
     """Generate the required visualizations for the specified subjects."""
 
-
+    for subject_id in id_list:
+        _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type)
 
     return
+
+
+def _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type):
+    """Actual routine to generate the visualizations. """
+
+    # we ensured these files exist and are not empty
+    t1_mri_path = pjoin(fs_dir, subject_id, t1_mri_identifier)
+    fs_seg_path = pjoin(fs_dir, subject_id, fs_seg_identifier)
+
+    t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
+    fs_seg = read_image(fs_seg_path, error_msg='aparc+aseg segmentation')
+
+    if make_type in ('cortical_volumetric', ):
+        ctx_aseg_symmetric = void_subcortical_symmetrize_cortical(fs_seg)
+    else:
+        raise NotImplementedError('Other visualization combinations have not been implemented yet! Stay tuned.')
+
+    out_path = pjoin(out_dir, 'visual_qc_{}_{}.png'.format(make_type, subject_id))
+    fig = aseg_on_mri(ctx_aseg_symmetric, t1_mri, output_path=out_path)
+
+    return fig, out_path
 
 
 def rate_visualizations(rate_dir, id_list):
@@ -94,7 +124,8 @@ def get_parser():
     parser.add_argument("-i", "--id_list", action="store", dest="id_list",
                         default=None, required=False, help=help_text_id_list)
 
-    parser.add_argument("-m", "--make", action="store", dest="make_type", # choices=('volumetric', 'composite', 'surface'),
+    parser.add_argument("-m", "--make", action="store", dest="make_type",
+                        choices=visualization_combination_choices,
                         default=None, required=False,
                         help=help_text_make_type)
 
@@ -130,13 +161,14 @@ def check_id_list(id_list_in, fs_dir):
 
     for subject_id in id_list:
         for req_file in required_files:
-            if not pexists(pjoin(fs_dir, subject_id, req_file)):
+            current_file = pjoin(fs_dir, subject_id, req_file)
+            if not pexists(current_file) or os.path.getsize(current_file) <= 0:
                 id_list_err.append(subject_id)
             else:
                 id_list_out.append(subject_id)
 
     if len(id_list_err) > 0:
-        warnings.warn('The following subjects do NOT have all the required files - skipping them!')
+        warnings.warn('The following subjects do NOT have all the required files or some are empty - skipping them!')
         print('\n'.join(id_list_err))
 
     if len(id_list_out) < 1:
@@ -177,7 +209,7 @@ def parse_args():
         except:
             raise IOError('Unable to create the output directory as requested.')
 
-    make_type = user_args.make_type
+    make_type = user_args.make_type.lower()
     rate_dir = user_args.rate_dir
 
     if make_type is not None and rate_dir is not None:
