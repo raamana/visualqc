@@ -61,9 +61,8 @@ def _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type)
     else:
         raise NotImplementedError('Other visualization combinations have not been implemented yet! Stay tuned.')
 
-    out_path = pjoin(out_dir, 'visual_qc_{}_{}'.format(make_type, subject_id))
-    fig = aseg_on_mri(t1_mri, ctx_aseg_symmetric, output_path=out_path,
-                      padding=2, num_rows=2, num_cols=7, figsize=[21, 15])
+    out_path = pjoin(out_dir, 'visual_qc_{}_{}.png'.format(make_type, subject_id))
+    fig = aseg_on_mri(ctx_aseg_symmetric, t1_mri, output_path=out_path)
 
     return fig, out_path
 
