@@ -12,8 +12,9 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    'Click>=6.0',
-    # TODO: put package requirements here
+    'numpy',
+    'matplotlib',
+    'mrivis',
 ]
 
 setup_requirements = [
@@ -32,7 +33,7 @@ setup(
     name='visualqc',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description="Tool to automate the quality assurance of pial and white matter surfaces from Freesurfer Parcellation",
+    description="Tool to automate the quality control of pial and white matter surfaces from Freesurfer Parcellation",
     long_description=readme + '\n\n' + history,
     author="Pradeep Reddy Raamana",
     author_email='raamana@gmail.com',
@@ -40,7 +41,7 @@ setup(
     packages=find_packages(include=['visualqc']),
     entry_points={
         'console_scripts': [
-            'visualqc=visualqc.cli:main'
+            'visualqc=visualqc.__main__:main'
         ]
     },
     include_package_data=True,
