@@ -234,10 +234,10 @@ def cli_run():
     fs_dir, id_list, out_dir, make_type, rate_dir = parse_args()
 
     if make_type is not None and rate_dir is None:
-        generate_visualizations(make_type, fs_dir, id_list, out_dir)
+        generate_visualizations(make_type=make_type, fs_dir=fs_dir, id_list=id_list, out_dir=out_dir)
         print('Results are available in:\n\t{}'.format(out_dir))
     elif make_type is None and rate_dir is not None:
-        rate_visualizations(rate_dir, id_list)
+        rate_visualizations(rate_dir=rate_dir, id_list=id_list)
     else:
         raise ValueError('Invalid state for visualQC!\n\t Ensure proper combination of arguments is used.')
 
