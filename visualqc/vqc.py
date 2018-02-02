@@ -31,7 +31,7 @@ from mrivis import collage, aseg_on_mri
 
 # default values
 default_out_dir_name = 'visualqc'
-t1_mri_identifier = 'orig.mgz'
+t1_mri_identifier = 'orig.mgz' # TODO replace 'brainmask.mgz'
 fs_seg_identifier = 'aparc+aseg.mgz'
 required_files = (t1_mri_identifier, fs_seg_identifier)
 visualization_combination_choices = ('cortical_volumetric', 'cortical_surface',
@@ -41,6 +41,7 @@ def generate_visualizations(make_type, fs_dir, id_list, out_dir):
     """Generate the required visualizations for the specified subjects."""
 
     for subject_id in id_list:
+        print('Processing {}'.format(subject_id))
         _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type)
 
     return
@@ -61,7 +62,7 @@ def _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type)
     else:
         raise NotImplementedError('Other visualization combinations have not been implemented yet! Stay tuned.')
 
-    out_path = pjoin(out_dir, 'visual_qc_{}_{}.png'.format(make_type, subject_id))
+    out_path = pjoin(out_dir, 'visual_qc_{}_{}'.format(make_type, subject_id))
     fig = aseg_on_mri(ctx_aseg_symmetric, t1_mri, output_path=out_path)
 
     return fig, out_path
@@ -126,7 +127,7 @@ def get_parser():
 
     parser.add_argument("-m", "--make", action="store", dest="make_type",
                         choices=visualization_combination_choices,
-                        default=None, required=False,
+                        default='cortical_volumetric', required=False,
                         help=help_text_make_type)
 
     parser.add_argument("-r", "--rate_dir", action="store", dest="rate_dir",
@@ -158,18 +159,21 @@ def check_id_list(id_list_in, fs_dir):
 
     id_list_out = list()
     id_list_err = list()
+    invalid_list = list()
 
     for subject_id in id_list:
-        for req_file in required_files:
-            current_file = pjoin(fs_dir, subject_id, req_file)
-            if not pexists(current_file) or os.path.getsize(current_file) <= 0:
-                id_list_err.append(subject_id)
-            else:
-                id_list_out.append(subject_id)
+        path_list = [realpath(pjoin(fs_dir, subject_id, 'mri', req_file)) for req_file in required_files]
+        invalid = [ this_file for this_file in path_list if not pexists(this_file) or os.path.getsize(this_file)<=0 ]
+        if len(invalid) > 0:
+            id_list_err.append(subject_id)
+            invalid_list.extend(invalid)
+        else:
+            id_list_out.append(subject_id)
 
     if len(id_list_err) > 0:
         warnings.warn('The following subjects do NOT have all the required files or some are empty - skipping them!')
         print('\n'.join(id_list_err))
+        print('\n\nThe following files do not exist or empty: \n {} \n\n'.format('\n'.join(invalid_list)))
 
     if len(id_list_out) < 1:
         raise ValueError('All the subject IDs do not have the required files - unable to proceed.')
@@ -231,6 +235,7 @@ def cli_run():
 
     if make_type is not None and rate_dir is None:
         generate_visualizations(make_type, fs_dir, id_list, out_dir)
+        print('Results are available in:\n\t{}'.format(out_dir))
     elif make_type is None and rate_dir is not None:
         rate_visualizations(rate_dir, id_list)
     else:
