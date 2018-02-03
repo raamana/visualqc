@@ -78,6 +78,79 @@ def overlay_images(mri, seg, alpha_mri=0.7, alpha_seg=0.7,
 
 
     return fig, axes_mri, axes_seg
+
+
+class ReviewInterface(object):
+    """Class to layout interaction elements and define callbacks. """
+
+    def __init__(self, fig, axes_seg, axes_mri,
+                 rating_list,
+                 quit_elements=("Next", "Quit")):
+        ""
+
+        self.fig = fig
+        self.axes_seg = axes_seg
+        self.axes_mri = axes_mri
+
+        self.rating_list = rating_list
+        ax_radio = plt.axes([0.905, 0.8 , 0.085, 0.18], axisbg='#009b8c')
+        self.radio_bt = RadioButtons(ax_radio, self.rating_list,
+                                active=None, activecolor='orange')
+
+        ax_quit  = plt.axes([0.905, 0.69, 0.085, 0.1], axisbg='#0084b4')
+        self.quit_button = RadioButtons(ax_quit, quit_elements,
+                                   active=None, activecolor='orange')
+
+        for txt_lbl in self.quit_button.labels + self.radio_bt.labels:
+            txt_lbl.set_color('#fff6da')
+            txt_lbl.set_fontweight('bold')
+
+        self.radio_bt.on_clicked(self.save_rating)
+        self.quit_button.on_clicked(self.quit_review)
+
+    def on_mouse(self, event):
+        """Callback for mouse events."""
+
+        print(event)
+
+        if event.button in [3]:
+            self.prev_alpha_seg = self.latest_alpha_seg
+            self.latest_alpha_seg = 0.0
+            self.update()
+
+        elif event.dblclick:
+            # zoom axes full-screen
+            print('cue to move to next subject!')
+        else:
+            pass
+
+        return
+
+    def set_alpha_value(self, latest_alpha_value):
+        ""
+
+        self.latest_alpha_seg = latest_alpha_value
+
+    def save_rating(self, label):
+        print('\t {}'.format(label))
+
+        return
+
+    def quit_review(self, label):
+        plt.close()
+
+        return
+
+    def update(self, label):
+
+        # updating seg alpha for all axes
+        for ax in self.axes_seg:
+            ax.set_alpha(self.latest_alpha_seg)
+
+        plt.close()
+
+
+
 def review_and_rate(mri,
                     seg,
                     alpha_mri=0.7,
