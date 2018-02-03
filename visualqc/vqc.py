@@ -120,7 +120,7 @@ def get_parser():
                         default=None, required=False, help=help_text_id_list)
 
     # TODO make and rate is combined into one single worklfow : rename & organize
-    parser.add_argument("-v", "--type", action="store", dest="vis_type",
+    parser.add_argument("-v", "--vis_type", action="store", dest="vis_type",
                         choices=visualization_combination_choices,
                         default='cortical_volumetric', required=False,
                         help=help_text_vis_type)
@@ -174,6 +174,8 @@ def check_id_list(id_list_in, fs_dir):
     if len(id_list_out) < 1:
         raise ValueError('All the subject IDs do not have the required files - unable to proceed.')
 
+    print(' {} subjects are usable for review.'.format(len(id_list_out)))
+
     return id_list_out
 
 
@@ -203,11 +205,10 @@ def parse_args():
     if out_dir is None:
         out_dir = pjoin(fs_dir, default_out_dir_name)
 
-    if not pexists(out_dir):
-        try:
-            os.makedirs(out_dir)
-        except:
-            raise IOError('Unable to create the output directory as requested.')
+    try:
+        os.makedirs(out_dir, exist_ok=True)
+    except:
+        raise IOError('Unable to create the output directory as requested.')
 
     vis_type = user_args.vis_type.lower()
 
