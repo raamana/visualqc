@@ -29,6 +29,27 @@ def read_image(img_spec, error_msg='image'):
     return img
 
 
+def get_axis(array, axis, slice_num):
+    """Returns a fixed axis"""
+
+    slice_list = [slice(None)] * array.ndim
+    slice_list[axis] = slice_num
+    slice_data = array[slice_list]  # no transpose
+
+    return slice_data
+
+
+def check_alpha_set(alpha_set):
+    """Ensure given alphas are valid."""
+
+    alpha_set = np.array(alpha_set).astype('float16')
+
+    if any(alpha_set<0.0) or any(alpha_set> 1.0):
+        raise ValueError("One of the alpha's is invalid - all alphas must be within [0.0, 1.0]")
+
+    return alpha_set
+
+
 def check_image_is_3d(img):
     """Ensures the image loaded is 3d and nothing else."""
 

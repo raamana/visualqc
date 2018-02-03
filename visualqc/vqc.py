@@ -26,8 +26,8 @@ import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, basename
 
-from visualqc.utils import read_image, void_subcortical_symmetrize_cortical
-from mrivis import collage, aseg_on_mri
+from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set
+from visualqc.viz import aseg_on_mri
 
 # default values
 default_out_dir_name = 'visualqc'
@@ -37,17 +37,19 @@ required_files = (t1_mri_identifier, fs_seg_identifier)
 visualization_combination_choices = ('cortical_volumetric', 'cortical_surface',
                                      'cortical_composite', 'subcortical_volumetric')
 
-def generate_visualizations(make_type, fs_dir, id_list, out_dir):
+default_alpha_set = (0.7, 0.7)
+
+def generate_visualizations(make_type, fs_dir, id_list, out_dir, alpha_set):
     """Generate the required visualizations for the specified subjects."""
 
     for subject_id in id_list:
         print('Processing {}'.format(subject_id))
-        _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type)
+        _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type, alpha_set)
 
     return
 
 
-def _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type):
+def _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type, alpha_set):
     """Actual routine to generate the visualizations. """
 
     # we ensured these files exist and are not empty
@@ -63,7 +65,8 @@ def _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type)
         raise NotImplementedError('Other visualization combinations have not been implemented yet! Stay tuned.')
 
     out_path = pjoin(out_dir, 'visual_qc_{}_{}'.format(make_type, subject_id))
-    fig = aseg_on_mri(t1_mri, ctx_aseg_symmetric, output_path=out_path)
+    fig = aseg_on_mri(t1_mri, ctx_aseg_symmetric, output_path=out_path,
+                      alpha_mri=alpha_set[0], alpha_seg=alpha_set[1])
 
     return fig, out_path
 
@@ -79,7 +82,7 @@ def get_parser():
     "Parser to specify arguments and their defaults."
 
     parser = argparse.ArgumentParser(prog="visualqc", formatter_class=argparse.RawTextHelpFormatter,
-                                     description='visualqc : generate visualizations of anatomical/cortical segmentations and rate their quality')
+                                     description='visualqc: rate accuracy of anatomical segmentations and parcellations')
 
     help_text_fs_dir = textwrap.dedent("""
     Absolute path to ``SUBJECTS_DIR`` containing the finished runs of Freesurfer parcellation
@@ -118,6 +121,14 @@ def get_parser():
     Default: a new folder called ``visualqc`` will be created inside the ``fs_dir``
     \n""")
 
+    help_text_alphas = textwrap.dedent("""
+    Alpha values to control the transparency of MRI and aseg. 
+    This must be a set of two values (between 0 and 1.0) separated by a space e.g. --alphas 0.7 0.5. 
+    
+    Default: 0.7 0.7
+    Play with these values to find something that works for you and the dataset.
+    \n""")
+
 
     parser.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
                         required=True, help=help_text_fs_dir)
@@ -137,6 +148,11 @@ def get_parser():
     parser.add_argument("-o", "--out_dir", action="store", dest="out_dir",
                         required=False, help=help_text_out_dir,
                         default=None)
+
+    parser.add_argument("-a", "--alpha_set", action="store", dest="alpha_set",
+                        metavar='alpha', nargs=2,
+                        default=default_alpha_set,
+                        required=False, help=help_text_alphas)
 
     return parser
 
@@ -225,16 +241,19 @@ def parse_args():
     if make_type is None and rate_dir is not None and not pexists(rate_dir):
         raise IOError("""Given directory to review/rate does not exist! \nMake sure to generate visualizations with --make first.""")
 
-    return fs_dir, id_list, out_dir, make_type, rate_dir
+    alpha_set = check_alpha_set(user_args.alpha_set)
+
+    return fs_dir, id_list, out_dir, make_type, rate_dir, alpha_set
 
 
 def cli_run():
     """Main entry point."""
 
-    fs_dir, id_list, out_dir, make_type, rate_dir = parse_args()
+    fs_dir, id_list, out_dir, make_type, rate_dir, alpha_set = parse_args()
 
     if make_type is not None and rate_dir is None:
-        generate_visualizations(make_type=make_type, fs_dir=fs_dir, id_list=id_list, out_dir=out_dir)
+        generate_visualizations(make_type=make_type, fs_dir=fs_dir, id_list=id_list,
+                                out_dir=out_dir, alpha_set=alpha_set)
         print('Results are available in:\n\t{}'.format(out_dir))
     elif make_type is None and rate_dir is not None:
         rate_visualizations(rate_dir=rate_dir, id_list=id_list)
