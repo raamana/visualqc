@@ -71,18 +71,15 @@ def aseg_on_mri(mri_spec,
             slice_mri = get_axis(mri, dim_index, slice_num)
             slice_seg = get_axis(seg, dim_index, slice_num)
 
-            # # masking data to set no-value pixels to transparent
-            # seg_background = np.isclose(slice_seg, 0.0)
-            # slice_seg = np.ma.masked_where(seg_background, slice_seg)
-            # slice_mri = np.ma.masked_where(np.logical_not(seg_background), slice_mri)
-
             seg_rgb = seg_mapper.to_rgba(slice_seg)
             mri_rgb = mri_mapper.to_rgba(slice_mri)
 
-            plt.imshow(seg_rgb, **display_params_seg)
-            plt.imshow(mri_rgb, **display_params_mri)
+            handle_seg = plt.imshow(seg_rgb, **display_params_seg)
+            handle_mri = plt.imshow(mri_rgb, **display_params_mri)
             plt.axis('off')
 
+            axes_seg.append(handle_seg)
+            axes_mri.append(handle_mri)
 
     # plt.subplots_adjust(wspace=0.0, hspace=0.0)
     plt.subplots_adjust(left  =0.01, right  =0.99,
