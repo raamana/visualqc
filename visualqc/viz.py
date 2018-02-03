@@ -11,11 +11,12 @@ from matplotlib import pyplot as plt, colors, cm
 from matplotlib.widgets import RadioButtons, Slider
 import matplotlib as mpl
 
+zoomed_position = [0.2, 0.2, 0.7, 0.7]
 
-def overlay_images(mri, seg, alpha_mri=0.7, alpha_seg=0.7,
+def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
                    num_rows=2, num_cols=6, figsize=None,
                    sub_cortical=False, annot=None, padding=5):
-    """"""
+    """Backend engine for overlaying a given seg on MRI with freesurfer label."""
 
     num_rows, num_cols, padding = check_params(num_rows, num_cols, padding)
 
@@ -76,6 +77,8 @@ def overlay_images(mri, seg, alpha_mri=0.7, alpha_seg=0.7,
                         bottom=0.01,   top  =0.99,
                         wspace=0.05 , hspace=0.02)
 
+    fig.set_size_inches(figsize)
+    # plt.show()
 
     return fig, axes_mri, axes_seg
 
@@ -83,23 +86,37 @@ def overlay_images(mri, seg, alpha_mri=0.7, alpha_seg=0.7,
 class ReviewInterface(object):
     """Class to layout interaction elements and define callbacks. """
 
-    def __init__(self, fig, axes_seg, axes_mri,
+    def __init__(self, fig, axes_seg, axes_mri, alpha_seg,
                  rating_list,
                  quit_elements=("Next", "Quit")):
-        ""
+        "Constructor."
 
         self.fig = fig
         self.axes_seg = axes_seg
         self.axes_mri = axes_mri
+        self.latest_alpha_seg = alpha_seg
+
+        self.user_rating = None
+        self.quit_now = False
+
+        self.zoomed_in = False
+        self.prev_axis = None
+        self.prev_ax_pos = None
 
         self.rating_list = rating_list
-        ax_radio = plt.axes([0.905, 0.8 , 0.085, 0.18], axisbg='#009b8c')
+        ax_radio = plt.axes([0.905, 0.8 , 0.085, 0.18], facecolor='#009b8c')
         self.radio_bt = RadioButtons(ax_radio, self.rating_list,
                                 active=None, activecolor='orange')
 
-        ax_quit  = plt.axes([0.905, 0.69, 0.085, 0.1], axisbg='#0084b4')
+        ax_quit  = plt.axes([0.905, 0.59, 0.065, 0.1], facecolor='#0084b4')
         self.quit_button = RadioButtons(ax_quit, quit_elements,
                                    active=None, activecolor='orange')
+
+        ax_slider = plt.axes([0.905, 0.73, 0.08, 0.02], facecolor='#fa8072')
+        self.slider = Slider(ax_slider, label='transparency',
+                             valmin=0.0, valmax=1.0, valinit=0.7, valfmt='%1.2f')
+        self.slider.label.set_position((0.95, 1.5))
+        self.slider.on_changed(self.set_alpha_value)
 
         for txt_lbl in self.quit_button.labels + self.radio_bt.labels:
             txt_lbl.set_color('#fff6da')
@@ -113,47 +130,73 @@ class ReviewInterface(object):
 
         print(event)
 
+        if self.prev_axis is not None:
+            self.prev_axis.set_position(self.prev_ax_pos)
+            self.prev_axis.set_zorder(-1)
+            self.zoomed_in = False
+
+        # right click
         if event.button in [3]:
-            self.prev_alpha_seg = self.latest_alpha_seg
-            self.latest_alpha_seg = 0.0
+            if self.latest_alpha_seg != 0.0:
+                self.prev_alpha_seg = self.latest_alpha_seg
+                self.latest_alpha_seg = 0.0
+            else:
+                self.latest_alpha_seg = self.prev_alpha_seg
             self.update()
 
         elif event.dblclick:
             # zoom axes full-screen
-            print('cue to move to next subject!')
+            print('cue to zoom in axes {}'.format(event.inaxes))
+            self.prev_ax_pos = event.inaxes.get_position()
+            event.inaxes.set_position(zoomed_position)
+            event.inaxes.set_zorder(1)
+            self.zoomed_in = True
+            self.prev_axis = event.inaxes
+
         else:
             pass
 
+        plt.draw()
+
         return
 
-    def set_alpha_value(self, latest_alpha_value):
-        ""
+    def set_alpha_value(self, latest_value):
+        """" Use the slider to set alpha."""
 
-        self.latest_alpha_seg = latest_alpha_value
+        self.latest_alpha_seg = latest_value
+        self.update()
 
     def save_rating(self, label):
-        print('\t {}'.format(label))
+        """Update the rating"""
 
+        print('\t {}'.format(label))
+        self.user_rating = label
         return
 
     def quit_review(self, label):
-        plt.close()
+        """Signal to quit"""
+
+        if label.upper() == u'QUIT':
+            self.quit_now = True
+            plt.close(self.fig)
+        else:
+            self.quit_now = False
 
         return
 
-    def update(self, label):
+    def update(self):
 
         # updating seg alpha for all axes
         for ax in self.axes_seg:
             ax.set_alpha(self.latest_alpha_seg)
 
-        plt.close()
-
+        # self.fig.canvas.draw_idle()
+        # plt.draw()
 
 
 def review_and_rate(mri,
                     seg,
-                    alpha_mri=0.7,
+                    alpha_mri=0.8,
                     alpha_seg=0.7,
                     rating_list=('Good', 'Suspect', 'Bad', 'Failed', 'Later'),
                     num_rows=2,
@@ -172,81 +215,13 @@ def review_and_rate(mri,
                                              figsize=figsize, num_rows=num_rows, num_cols=num_cols, padding=padding,
                                              sub_cortical=sub_cortical, annot=annot)
 
-    def advance_to_next():
-        """Callback to move to next image"""
-        pass
+    interact_ui = ReviewInterface(fig, axes_seg, axes_mri, alpha_seg, rating_list)
 
-
-    ax_radio = plt.axes([0.905, 0.8 , 0.085, 0.18], axisbg='#009b8c')
-    radio_bt = RadioButtons(ax_radio, rating_list,
-                            active=None, activecolor='orange')
-
-    ax_quit  = plt.axes([0.905, 0.69, 0.085, 0.1], axisbg='#0084b4')
-    quit_button = RadioButtons(ax_quit, ["Next", "Quit"],
-                               active=None, activecolor='orange')
-
-    for txt_lbl in quit_button.labels + radio_bt.labels:
-        txt_lbl.set_color('#fff6da')
-        txt_lbl.set_fontweight('bold')
-
-    def save_and_advance(label):
-        print('\t {}'.format(label))
-        # TODO save rating
-        plt.close()
-
-
-    def quit_review(label):
-        plt.close()
-        if label.upper() == u'QUIT':
-            print('User chosen to stop.')
-            advance_to_next()
-
-    radio_bt.on_clicked(save_and_advance)
-    quit_button.on_clicked(quit_review)
-
-    global rating, quit_now
-    global latest_alpha_seg, prev_alpha_seg, axes_to_update
-    latest_alpha_seg = deepcopy(alpha_seg)
-    prev_alpha_seg = deepcopy(latest_alpha_seg)
-    axes_to_update = copy(axes_seg)
-
-    def on_mouse(event):
-        """Callback for mouse events."""
-
-        global latest_alpha_seg, prev_alpha_seg, axes_to_update
-
-        print(event)
-        print('alpha before action:\n prev {} latest {} global {}'.format(prev_alpha_seg, latest_alpha_seg, alpha_seg))
-        if event.button in ['up', 'down', 3]:
-
-            if event.button == 'up':
-                latest_alpha_seg = latest_alpha_seg + event.step*0.025
-            elif event.button == 'down':
-                latest_alpha_seg = latest_alpha_seg - event.step*0.025
-            elif event.button in [3]: # right click
-                if latest_alpha_seg > 0.0:
-                    prev_alpha_seg = copy(latest_alpha_seg)
-                    latest_alpha_seg = 0.0
-                else:
-                    latest_alpha_seg = copy(prev_alpha_seg)
-
-            # updating seg alpha for all axes
-            for ax in axes_to_update:
-                ax.set_alpha(latest_alpha_seg)
-
-        elif event.dblclick:
-            print('cue to move to next subject!')
-        else:
-            pass
-
-        print('alpha AFTER action:\n prev {} latest {} global {}'.format(prev_alpha_seg, latest_alpha_seg, alpha_seg))
-
-        return
-
-    con_id_click  = fig.canvas.mpl_connect('button_press_event', on_mouse)
+    con_id_click  = fig.canvas.mpl_connect('button_press_event', interact_ui.on_mouse)
     # con_id_scroll = fig.canvas.mpl_connect('scroll_event', on_mouse)
 
-    fig.set_size_inches(figsize)
+    # plt.show()
+    # fig.set_size_inches(figsize)
     plt.show(block=True)
 
     if output_path is not None:
@@ -257,4 +232,4 @@ def review_and_rate(mri,
     # fig.canvas.mpl_disconnect(con_id_scroll)
     plt.close()
 
-    return fig, rating, quit_now
+    return fig, interact_ui.user_rating, interact_ui.quit_now
