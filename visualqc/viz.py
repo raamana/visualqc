@@ -12,8 +12,8 @@ import matplotlib as mpl
 
 def aseg_on_mri(mri_spec,
                 aseg_spec,
-                alpha_mri=1.0,
-                alpha_seg=1.0,
+                alpha_mri=0.7,
+                alpha_seg=0.7,
                 num_rows=2,
                 num_cols=6,
                 rescale_method='global',
