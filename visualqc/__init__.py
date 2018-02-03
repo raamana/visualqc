@@ -2,7 +2,7 @@
 
 """Top-level package for visualqc."""
 
-__all__ = ['vqc', 'generate_visualizations', 'rate_visualizations']
+__all__ = ['vqc', 'generate_visualizations', 'rate_visualizations', 'aseg_on_mri']
 
 __author__ = """Pradeep Reddy Raamana"""
 __email__ = 'raamana@gmail.com'
@@ -15,3 +15,4 @@ del get_versions
 
 from visualqc import vqc
 from visualqc.vqc import generate_visualizations, rate_visualizations
+from visualqc.viz import aseg_on_mri
