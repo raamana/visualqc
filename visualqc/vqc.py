@@ -11,17 +11,6 @@ import traceback
 import warnings
 
 import matplotlib
-if 'DISPLAY' in os.environ:
-    display = os.environ['DISPLAY']
-    display_name, display_num = display.split(':')
-    display_num = int(float(display_num))
-    if display_num != 0:
-        matplotlib.use('Agg')
-else:
-    # Agg is purely interactive
-    matplotlib.use('Agg')
-    display = None
-
 import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, basename
@@ -252,6 +241,7 @@ def cli_run():
     fs_dir, id_list, out_dir, make_type, rate_dir, alpha_set = parse_args()
 
     if make_type is not None and rate_dir is None:
+        matplotlib.interactive(True)
         generate_visualizations(make_type=make_type, fs_dir=fs_dir, id_list=id_list,
                                 out_dir=out_dir, alpha_set=alpha_set)
         print('Results are available in:\n\t{}'.format(out_dir))
