@@ -28,17 +28,17 @@ visualization_combination_choices = ('cortical_volumetric', 'cortical_surface',
 
 default_alpha_set = (0.7, 0.7)
 
-def generate_visualizations(make_type, fs_dir, id_list, out_dir, alpha_set):
+def generate_visualizations(vis_type, fs_dir, id_list, out_dir, alpha_set):
     """Generate the required visualizations for the specified subjects."""
 
     for subject_id in id_list:
         print('Processing {}'.format(subject_id))
-        _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type, alpha_set)
+        _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, vis_type, alpha_set)
 
     return
 
 
-def _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type, alpha_set):
+def _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, vis_type, alpha_set):
     """Actual routine to generate the visualizations. """
 
     # we ensured these files exist and are not empty
@@ -48,12 +48,12 @@ def _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type,
     t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
     fs_seg = read_image(fs_seg_path, error_msg='aparc+aseg segmentation')
 
-    if make_type in ('cortical_volumetric', ):
+    if vis_type in ('cortical_volumetric', ):
         ctx_aseg_symmetric = void_subcortical_symmetrize_cortical(fs_seg)
     else:
         raise NotImplementedError('Other visualization combinations have not been implemented yet! Stay tuned.')
 
-    out_path = pjoin(out_dir, 'visual_qc_{}_{}'.format(make_type, subject_id))
+    out_path = pjoin(out_dir, 'visual_qc_{}_{}'.format(vis_type, subject_id))
     fig = review_and_rate(t1_mri, ctx_aseg_symmetric, output_path=out_path,
                           alpha_mri=alpha_set[0], alpha_seg=alpha_set[1])
 
@@ -94,15 +94,9 @@ def get_parser():
 
     \n""")
 
-    help_text_make_type = textwrap.dedent("""
-    Generates the visualizations.
+    help_text_vis_type = textwrap.dedent("""
+    Specifies the type of visualizations/overlay requested.
     Default: volumetric overlay of cortical segmentation on T1 mri.
-    \n""")
-
-    help_text_rate_dir = textwrap.dedent("""
-    Starts the review and rate workflow in the given directory.
-    Requires that the visualizations be generated previously using --make.
-
     \n""")
 
     help_text_out_dir = textwrap.dedent("""
@@ -125,14 +119,11 @@ def get_parser():
     parser.add_argument("-i", "--id_list", action="store", dest="id_list",
                         default=None, required=False, help=help_text_id_list)
 
-    parser.add_argument("-m", "--make", action="store", dest="make_type",
+    # TODO make and rate is combined into one single worklfow : rename & organize
+    parser.add_argument("-v", "--type", action="store", dest="vis_type",
                         choices=visualization_combination_choices,
                         default='cortical_volumetric', required=False,
-                        help=help_text_make_type)
-
-    parser.add_argument("-r", "--rate_dir", action="store", dest="rate_dir",
-                        default=None, required=False,
-                        help=help_text_rate_dir)
+                        help=help_text_vis_type)
 
     parser.add_argument("-o", "--out_dir", action="store", dest="out_dir",
                         required=False, help=help_text_out_dir,
@@ -218,35 +209,23 @@ def parse_args():
         except:
             raise IOError('Unable to create the output directory as requested.')
 
-    make_type = user_args.make_type.lower()
-    rate_dir = user_args.rate_dir
-
-    if make_type is not None and rate_dir is not None:
-        raise ValueError('Only one of --make and --rate_dir can be specified at a time.\n Run --make first, and then --rate_dir afterwards.')
-
-    if make_type is not None and rate_dir is None and not pexists(fs_dir):
-        raise IOError('Given Freesurfer directory does not exist.')
-
-    if make_type is None and rate_dir is not None and not pexists(rate_dir):
-        raise IOError("""Given directory to review/rate does not exist! \nMake sure to generate visualizations with --make first.""")
+    vis_type = user_args.vis_type.lower()
 
     alpha_set = check_alpha_set(user_args.alpha_set)
 
-    return fs_dir, id_list, out_dir, make_type, rate_dir, alpha_set
+    return fs_dir, id_list, out_dir, vis_type, alpha_set
 
 
 def cli_run():
     """Main entry point."""
 
-    fs_dir, id_list, out_dir, make_type, rate_dir, alpha_set = parse_args()
+    fs_dir, id_list, out_dir, vis_type, alpha_set = parse_args()
 
-    if make_type is not None and rate_dir is None:
+    if vis_type is not None:
         matplotlib.interactive(True)
-        generate_visualizations(make_type=make_type, fs_dir=fs_dir, id_list=id_list,
+        generate_visualizations(vis_type=vis_type, fs_dir=fs_dir, id_list=id_list,
                                 out_dir=out_dir, alpha_set=alpha_set)
         print('Results are available in:\n\t{}'.format(out_dir))
-    elif make_type is None and rate_dir is not None:
-        rate_visualizations(rate_dir=rate_dir, id_list=id_list)
     else:
         raise ValueError('Invalid state for visualQC!\n\t Ensure proper combination of arguments is used.')
 
