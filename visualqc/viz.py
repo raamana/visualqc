@@ -58,25 +58,12 @@ def aseg_on_mri(mri_spec,
     normalize_mri = colors.Normalize(vmin=mri.min(), vmax=mri.max(), clip=True)
     mri_mapper = cm.ScalarMappable(norm=normalize_mri, cmap='gray')
 
-    collage_mri_whole = list()
-    collage_seg_whole = list()
-
-    num_slices = len(slices[0])
-    max_len_dim = max(mri.shape)
-    # from left to right (or top to bottom)
-    total_pixels = padding * (num_slices - 1) + max_len_dim*num_slices
+    axes_seg = list()
+    axes_mri = list()
 
     ax = ax.flatten()
     ax_counter = 0
     for dim_index in range(3):
-
-        shape3d = list(mri.shape)
-        shape3d.remove(mri.shape[dim_index])
-        max_len_this_dim = max(shape3d)
-        total_pixels_this_dim = padding * (num_slices - 1) + max_len_this_dim*num_slices
-        collage_mri_dim = np.array([shape3d[0], total_pixels_this_dim, 4])
-        collage_seg_dim = np.array([shape3d[0], total_pixels_this_dim, 4])
-
         for counter, slice_num in enumerate(slices[dim_index]):
             plt.sca(ax[ax_counter])
             ax_counter = ax_counter + 1
@@ -95,20 +82,6 @@ def aseg_on_mri(mri_spec,
             plt.imshow(seg_rgb, **display_params_seg)
             plt.imshow(mri_rgb, **display_params_mri)
             plt.axis('off')
-
-            if counter == 0:
-                collage_mri_dim = mri_rgb
-                collage_seg_dim = seg_rgb
-            else:
-                collage_mri_dim = np.concatenate((collage_mri_dim, mri_rgb), axis=1)
-                collage_seg_dim = np.concatenate((collage_seg_dim, seg_rgb), axis=1)
-
-        if dim_index == 0:
-            collage_mri_whole = collage_mri_dim
-            collage_seg_whole = collage_seg_dim
-        else:
-            collage_mri_whole = np.concatenate((collage_mri_whole, collage_mri_dim), axis=0)
-            collage_seg_whole = np.concatenate((collage_seg_whole, collage_seg_dim), axis=0)
 
 
     # plt.subplots_adjust(wspace=0.0, hspace=0.0)
