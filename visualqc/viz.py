@@ -4,9 +4,11 @@ __all__ = ['aseg_on_mri']
 from mrivis.utils import check_params, crop_to_seg_extents, read_image, pick_slices
 from mrivis.color_maps import get_freesurfer_cmap
 from visualqc.utils import get_axis
+from copy import copy, deepcopy
 
 import numpy as np
 from matplotlib import pyplot as plt, colors, cm
+from matplotlib.widgets import RadioButtons, Slider
 import matplotlib as mpl
 
 
@@ -14,6 +16,7 @@ def aseg_on_mri(mri_spec,
                 aseg_spec,
                 alpha_mri=0.7,
                 alpha_seg=0.7,
+                rating_list=('Good', 'Suspect', 'Bad', 'Failed', 'Later'),
                 num_rows=2,
                 num_cols=6,
                 rescale_method='global',
@@ -82,10 +85,43 @@ def aseg_on_mri(mri_spec,
             axes_mri.append(handle_mri)
 
     # plt.subplots_adjust(wspace=0.0, hspace=0.0)
-    plt.subplots_adjust(left  =0.01, right  =0.99,
+    plt.subplots_adjust(left  =0.01, right  =0.9,
                         bottom=0.01,   top  =0.99,
                         wspace=0.05 , hspace=0.02)
-    # fig.tight_layout()
+
+
+    def advance_to_next():
+        """Callback to move to next image"""
+        pass
+
+
+    ax_radio = plt.axes([0.905, 0.8 , 0.085, 0.18], axisbg='#009b8c')
+    radio_bt = RadioButtons(ax_radio, rating_list,
+                            active=None, activecolor='orange')
+
+    ax_quit  = plt.axes([0.905, 0.69, 0.085, 0.1], axisbg='#0084b4')
+    quit_button = RadioButtons(ax_quit, ["Next", "Quit"],
+                               active=None, activecolor='orange')
+
+    for txt_lbl in quit_button.labels + radio_bt.labels:
+        txt_lbl.set_color('#fff6da')
+        txt_lbl.set_fontweight('bold')
+
+    def save_and_advance(label):
+        print('\t {}'.format(label))
+        # TODO save rating
+        plt.close()
+
+
+    def quit_review(label):
+        plt.close()
+        if label.upper() == u'QUIT':
+            print('User chosen to stop.')
+            advance_to_next()
+
+    radio_bt.on_clicked(save_and_advance)
+    quit_button.on_clicked(quit_review)
+
     global latest_alpha_seg, prev_alpha_seg, axes_to_update
     latest_alpha_seg = deepcopy(alpha_seg)
     prev_alpha_seg = deepcopy(latest_alpha_seg)
