@@ -1,5 +1,5 @@
 
-__all__ = ['aseg_on_mri']
+__all__ = ['review_and_rate']
 
 from mrivis.utils import check_params, crop_to_seg_extents, read_image, pick_slices
 from mrivis.color_maps import get_freesurfer_cmap
@@ -12,22 +12,22 @@ from matplotlib.widgets import RadioButtons, Slider
 import matplotlib as mpl
 
 
-def aseg_on_mri(mri_spec,
-                aseg_spec,
-                alpha_mri=0.7,
-                alpha_seg=0.7,
-                rating_list=('Good', 'Suspect', 'Bad', 'Failed', 'Later'),
-                num_rows=2,
-                num_cols=6,
-                rescale_method='global',
-                aseg_cmap='freesurfer',
-                sub_cortical=False,
-                annot=None,
-                padding=5,
-                bkground_thresh=0.05,
-                output_path=None,
-                figsize=None,
-                **kwargs):
+def review_and_rate(mri_spec,
+                    aseg_spec,
+                    alpha_mri=0.7,
+                    alpha_seg=0.7,
+                    rating_list=('Good', 'Suspect', 'Bad', 'Failed', 'Later'),
+                    num_rows=2,
+                    num_cols=6,
+                    rescale_method='global',
+                    aseg_cmap='freesurfer',
+                    sub_cortical=False,
+                    annot=None,
+                    padding=5,
+                    bkground_thresh=0.05,
+                    output_path=None,
+                    figsize=None,
+                    **kwargs):
     "Produces a collage of various slices from different orientations in the given 3D image"
 
     num_rows, num_cols, padding = check_params(num_rows, num_cols, padding)
@@ -42,7 +42,7 @@ def aseg_on_mri(mri_spec,
 
     num_axes = 3
     if figsize is None:
-        figsize = [5 * num_axes * num_rows, 5 * num_cols]
+        figsize = [4 * num_axes * num_rows, 4 * num_cols]
     fig, ax = plt.subplots(num_axes * num_rows, num_cols, figsize=figsize)
 
     # displaying some annotation text if provided

@@ -16,7 +16,7 @@ from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, basename
 
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set
-from visualqc.viz import aseg_on_mri
+from visualqc.viz import review_and_rate
 
 # default values
 default_out_dir_name = 'visualqc'
@@ -54,8 +54,8 @@ def _generate_visualizations_per_subject(fs_dir, subject_id, out_dir, make_type,
         raise NotImplementedError('Other visualization combinations have not been implemented yet! Stay tuned.')
 
     out_path = pjoin(out_dir, 'visual_qc_{}_{}'.format(make_type, subject_id))
-    fig = aseg_on_mri(t1_mri, ctx_aseg_symmetric, output_path=out_path,
-                      alpha_mri=alpha_set[0], alpha_seg=alpha_set[1])
+    fig = review_and_rate(t1_mri, ctx_aseg_symmetric, output_path=out_path,
+                          alpha_mri=alpha_set[0], alpha_seg=alpha_set[1])
 
     return fig, out_path
 
