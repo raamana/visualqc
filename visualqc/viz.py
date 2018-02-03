@@ -12,28 +12,15 @@ from matplotlib.widgets import RadioButtons, Slider
 import matplotlib as mpl
 
 
-def review_and_rate(mri_spec,
-                    aseg_spec,
-                    alpha_mri=0.7,
-                    alpha_seg=0.7,
-                    rating_list=('Good', 'Suspect', 'Bad', 'Failed', 'Later'),
-                    num_rows=2,
-                    num_cols=6,
-                    rescale_method='global',
-                    aseg_cmap='freesurfer',
-                    sub_cortical=False,
-                    annot=None,
-                    padding=5,
-                    bkground_thresh=0.05,
-                    output_path=None,
-                    figsize=None,
-                    **kwargs):
-    "Produces a collage of various slices from different orientations in the given 3D image"
+def overlay_images(mri, seg, alpha_mri=0.7, alpha_seg=0.7,
+                   num_rows=2, num_cols=6, figsize=None,
+                   sub_cortical=False, annot=None, padding=5):
+    """"""
 
     num_rows, num_cols, padding = check_params(num_rows, num_cols, padding)
 
-    mri = read_image(mri_spec, bkground_thresh=bkground_thresh)
-    seg = read_image(aseg_spec, bkground_thresh=0)
+    # mri = read_image(mri_spec, bkground_thresh=bkground_thresh)
+    # seg = read_image(aseg_spec, bkground_thresh=0)
     mri, seg = crop_to_seg_extents(mri, seg, padding)
 
     slices = pick_slices(mri.shape, num_rows, num_cols)
@@ -90,6 +77,28 @@ def review_and_rate(mri_spec,
                         wspace=0.05 , hspace=0.02)
 
 
+    return fig, axes_mri, axes_seg
+def review_and_rate(mri,
+                    seg,
+                    alpha_mri=0.7,
+                    alpha_seg=0.7,
+                    rating_list=('Good', 'Suspect', 'Bad', 'Failed', 'Later'),
+                    num_rows=2,
+                    num_cols=6,
+                    rescale_method='global',
+                    aseg_cmap='freesurfer',
+                    sub_cortical=False,
+                    annot=None,
+                    padding=5,
+                    output_path=None,
+                    figsize=None,
+                    **kwargs):
+    "Produces a collage of various slices from different orientations in the given 3D image"
+
+    fig, axes_mri, axes_seg = overlay_images(mri, seg, alpha_mri=alpha_mri, alpha_seg=alpha_seg,
+                                             figsize=figsize, num_rows=num_rows, num_cols=num_cols, padding=padding,
+                                             sub_cortical=sub_cortical, annot=annot)
+
     def advance_to_next():
         """Callback to move to next image"""
         pass
@@ -122,6 +131,7 @@ def review_and_rate(mri_spec,
     radio_bt.on_clicked(save_and_advance)
     quit_button.on_clicked(quit_review)
 
+    global rating, quit_now
     global latest_alpha_seg, prev_alpha_seg, axes_to_update
     latest_alpha_seg = deepcopy(alpha_seg)
     prev_alpha_seg = deepcopy(latest_alpha_seg)
@@ -174,4 +184,4 @@ def review_and_rate(mri_spec,
     # fig.canvas.mpl_disconnect(con_id_scroll)
     plt.close()
 
-    return
+    return fig, rating, quit_now
