@@ -86,11 +86,56 @@ def aseg_on_mri(mri_spec,
                         bottom=0.01,   top  =0.99,
                         wspace=0.05 , hspace=0.02)
     # fig.tight_layout()
+    global latest_alpha_seg, prev_alpha_seg, axes_to_update
+    latest_alpha_seg = deepcopy(alpha_seg)
+    prev_alpha_seg = deepcopy(latest_alpha_seg)
+    axes_to_update = copy(axes_seg)
+
+    def on_mouse(event):
+        """Callback for mouse events."""
+
+        global latest_alpha_seg, prev_alpha_seg, axes_to_update
+
+        print(event)
+        print('alpha before action:\n prev {} latest {} global {}'.format(prev_alpha_seg, latest_alpha_seg, alpha_seg))
+        if event.button in ['up', 'down', 3]:
+
+            if event.button == 'up':
+                latest_alpha_seg = latest_alpha_seg + event.step*0.025
+            elif event.button == 'down':
+                latest_alpha_seg = latest_alpha_seg - event.step*0.025
+            elif event.button in [3]: # right click
+                if latest_alpha_seg > 0.0:
+                    prev_alpha_seg = copy(latest_alpha_seg)
+                    latest_alpha_seg = 0.0
+                else:
+                    latest_alpha_seg = copy(prev_alpha_seg)
+
+            # updating seg alpha for all axes
+            for ax in axes_to_update:
+                ax.set_alpha(latest_alpha_seg)
+
+        elif event.dblclick:
+            print('cue to move to next subject!')
+        else:
+            pass
+
+        print('alpha AFTER action:\n prev {} latest {} global {}'.format(prev_alpha_seg, latest_alpha_seg, alpha_seg))
+
+        return
+
+    con_id_click  = fig.canvas.mpl_connect('button_press_event', on_mouse)
+    # con_id_scroll = fig.canvas.mpl_connect('scroll_event', on_mouse)
+
+    fig.set_size_inches(figsize)
+    plt.show(block=True)
 
     if output_path is not None:
         output_path = output_path.replace(' ', '_')
         fig.savefig(output_path + '.png', bbox_inches='tight')
 
-    # plt.close()
+    fig.canvas.mpl_disconnect(con_id_click)
+    # fig.canvas.mpl_disconnect(con_id_scroll)
+    plt.close()
 
-    return fig
+    return
