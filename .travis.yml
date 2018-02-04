@@ -21,7 +21,12 @@ deploy:
     python: 3.5
     repo: raamana/visualqc
     tags: true
-install: pip install -U tox-travis
+
+install:
+  - pip install -U tox-travis
+  - pip install -r requirements.txt
+  - pip install -e .
+
 language: python
 python:
 - 3.6
