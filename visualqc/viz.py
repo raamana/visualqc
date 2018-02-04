@@ -32,7 +32,8 @@ def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
 
     # displaying some annotation text if provided
     if annot is not None:
-        fig.suptitle(annot, backgroundcolor='black', color='g')
+        title_handle = fig.suptitle(annot, backgroundcolor='black', color='white', fontsize='large')
+        title_handle.set_position((0.95, 0.01))
 
     display_params_mri = dict(interpolation='none', aspect='equal', origin='lower',
                               alpha=alpha_mri)
