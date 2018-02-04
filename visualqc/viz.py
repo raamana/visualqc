@@ -11,7 +11,8 @@ zoomed_position = [0.2, 0.2, 0.7, 0.7]
 
 def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
                    num_rows=2, num_cols=6, figsize=None,
-                   sub_cortical=False, annot=None, padding=5):
+                   sub_cortical=False, annot=None, padding=5,
+                   output_path=None):
     """Backend engine for overlaying a given seg on MRI with freesurfer label."""
 
     num_rows, num_cols, padding = check_params(num_rows, num_cols, padding)
@@ -68,12 +69,21 @@ def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
             axes_seg.append(handle_seg)
             axes_mri.append(handle_mri)
 
-    # plt.subplots_adjust(wspace=0.0, hspace=0.0)
+    fig.set_size_inches(figsize)
+
+    if output_path is not None:
+        # no space left unused
+        plt.subplots_adjust(left=0.01, right=0.99,
+                            bottom=0.01, top=0.99,
+                            wspace=0.05, hspace=0.02)
+
+        output_path = output_path.replace(' ', '_')
+        fig.savefig(output_path + '.png', bbox_inches='tight')
+
+    # leaving some space on the right for review elements
     plt.subplots_adjust(left  =0.01, right  =0.9,
                         bottom=0.01,   top  =0.99,
                         wspace=0.05 , hspace=0.02)
-
-    fig.set_size_inches(figsize)
 
     return fig, axes_mri, axes_seg, figsize
 
@@ -208,7 +218,7 @@ def review_and_rate(mri,
 
     fig, axes_mri, axes_seg, figsize = overlay_images(mri, seg, alpha_mri=alpha_mri, alpha_seg=alpha_seg,
                                              figsize=figsize, num_rows=num_rows, num_cols=num_cols, padding=padding,
-                                             sub_cortical=sub_cortical, annot=annot)
+                                             sub_cortical=sub_cortical, annot=annot, output_path=output_path)
 
     interact_ui = ReviewInterface(fig, axes_seg, axes_mri, alpha_seg, rating_list)
 
