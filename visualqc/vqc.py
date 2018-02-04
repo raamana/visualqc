@@ -34,8 +34,10 @@ def generate_visualizations(vis_type, fs_dir, id_list, out_dir, alpha_set):
     for subject_id in id_list:
         print('Reviewing {}'.format(subject_id))
         t1_mri, overlay_seg, out_path = _prepare_images(fs_dir, subject_id, out_dir, vis_type)
-        fig, rating, quit_now = review_and_rate(t1_mri, overlay_seg, output_path=out_path,
-                              alpha_mri=alpha_set[0], alpha_seg=alpha_set[1])
+        rating, quit_now = review_and_rate(t1_mri, overlay_seg, output_path=out_path,
+                              alpha_mri=alpha_set[0], alpha_seg=alpha_set[1],
+                                                annot='ID {}'.format(subject_id))
+        print('id {} rating {}'.format(subject_id, rating))
 
     return
 
@@ -223,7 +225,7 @@ def cli_run():
     fs_dir, id_list, out_dir, vis_type, alpha_set = parse_args()
 
     if vis_type is not None:
-        matplotlib.interactive(True)
+        # matplotlib.interactive(True)
         generate_visualizations(vis_type=vis_type, fs_dir=fs_dir, id_list=id_list,
                                 out_dir=out_dir, alpha_set=alpha_set)
         print('Results are available in:\n\t{}'.format(out_dir))

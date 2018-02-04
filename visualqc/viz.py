@@ -78,9 +78,8 @@ def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
                         wspace=0.05 , hspace=0.02)
 
     fig.set_size_inches(figsize)
-    # plt.show()
 
-    return fig, axes_mri, axes_seg
+    return fig, axes_mri, axes_seg, figsize
 
 
 class ReviewInterface(object):
@@ -123,7 +122,7 @@ class ReviewInterface(object):
             txt_lbl.set_fontweight('bold')
 
         self.radio_bt.on_clicked(self.save_rating)
-        self.quit_button.on_clicked(self.quit_review)
+        self.quit_button.on_clicked(self.advance_or_quit)
 
     def on_mouse(self, event):
         """Callback for mouse events."""
@@ -135,7 +134,7 @@ class ReviewInterface(object):
             self.prev_axis.set_zorder(-1)
             self.zoomed_in = False
 
-        # right click
+        # right click to toggle overlay
         if event.button in [3]:
             if self.latest_alpha_seg != 0.0:
                 self.prev_alpha_seg = self.latest_alpha_seg
@@ -144,6 +143,7 @@ class ReviewInterface(object):
                 self.latest_alpha_seg = self.prev_alpha_seg
             self.update()
 
+        # double click to zoom in to any axis
         elif event.dblclick:
             # zoom axes full-screen
             print('cue to zoom in axes {}'.format(event.inaxes))
@@ -169,11 +169,11 @@ class ReviewInterface(object):
     def save_rating(self, label):
         """Update the rating"""
 
-        print('\t {}'.format(label))
+        print('  rating {}'.format(label))
         self.user_rating = label
         return
 
-    def quit_review(self, label):
+    def advance_or_quit(self, label):
         """Signal to quit"""
 
         if label.upper() == u'QUIT':
@@ -181,6 +181,7 @@ class ReviewInterface(object):
             plt.close(self.fig)
         else:
             self.quit_now = False
+            plt.close(self.fig)
 
         return
 
@@ -192,6 +193,7 @@ class ReviewInterface(object):
 
         # self.fig.canvas.draw_idle()
         # plt.draw()
+        return
 
 
 def review_and_rate(mri,
@@ -211,7 +213,7 @@ def review_and_rate(mri,
                     **kwargs):
     "Produces a collage of various slices from different orientations in the given 3D image"
 
-    fig, axes_mri, axes_seg = overlay_images(mri, seg, alpha_mri=alpha_mri, alpha_seg=alpha_seg,
+    fig, axes_mri, axes_seg, figsize = overlay_images(mri, seg, alpha_mri=alpha_mri, alpha_seg=alpha_seg,
                                              figsize=figsize, num_rows=num_rows, num_cols=num_cols, padding=padding,
                                              sub_cortical=sub_cortical, annot=annot)
 
@@ -220,16 +222,12 @@ def review_and_rate(mri,
     con_id_click  = fig.canvas.mpl_connect('button_press_event', interact_ui.on_mouse)
     # con_id_scroll = fig.canvas.mpl_connect('scroll_event', on_mouse)
 
-    # plt.show()
-    # fig.set_size_inches(figsize)
-    plt.show(block=True)
-
-    if output_path is not None:
-        output_path = output_path.replace(' ', '_')
-        fig.savefig(output_path + '.png', bbox_inches='tight')
+    fig.set_size_inches(figsize)
+    # plt.pause(0.001)
+    plt.show()
 
     fig.canvas.mpl_disconnect(con_id_click)
     # fig.canvas.mpl_disconnect(con_id_scroll)
     plt.close()
 
-    return fig, interact_ui.user_rating, interact_ui.quit_now
+    return interact_ui.user_rating, interact_ui.quit_now
