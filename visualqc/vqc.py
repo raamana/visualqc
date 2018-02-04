@@ -22,19 +22,19 @@ from visualqc.viz import review_and_rate
 
 # default values
 default_out_dir_name = 'visualqc'
-t1_mri_identifier = 'orig.mgz' # TODO replace 'brainmask.mgz'
+t1_mri_identifier = 'brainmask.mgz' # TODO make this an option to capture wider variety of use cases
 fs_seg_identifier = 'aparc+aseg.mgz'
 required_files = (t1_mri_identifier, fs_seg_identifier)
 visualization_combination_choices = ('cortical_volumetric', 'cortical_surface',
                                      'cortical_composite', 'subcortical_volumetric')
 
-default_alpha_set = (0.7, 0.7)
+default_alpha_set = (0.8, 0.7)
 
 suffix_ratings_dir='ratings'
 file_name_ratings = 'ratings.all.csv'
 file_name_ratings_backup = 'backup_ratings.all.csv'
 
-def generate_visualizations(vis_type, fs_dir, id_list, out_dir, alpha_set):
+def run_workflow(vis_type, fs_dir, id_list, out_dir, alpha_set):
     """Generate the required visualizations for the specified subjects."""
 
     ratings, ratings_dir, incomplete_list, prev_done = get_ratings(out_dir, id_list)
@@ -196,7 +196,6 @@ def get_parser():
     parser.add_argument("-i", "--id_list", action="store", dest="id_list",
                         default=None, required=False, help=help_text_id_list)
 
-    # TODO make and rate is combined into one single worklfow : rename & organize
     parser.add_argument("-v", "--vis_type", action="store", dest="vis_type",
                         choices=visualization_combination_choices,
                         default='cortical_volumetric', required=False,
@@ -301,8 +300,8 @@ def cli_run():
 
     if vis_type is not None:
         # matplotlib.interactive(True)
-        generate_visualizations(vis_type=vis_type, fs_dir=fs_dir, id_list=id_list,
-                                out_dir=out_dir, alpha_set=alpha_set)
+        run_workflow(vis_type=vis_type, fs_dir=fs_dir, id_list=id_list,
+                     out_dir=out_dir, alpha_set=alpha_set)
         print('Results are available in:\n\t{}'.format(out_dir))
     else:
         raise ValueError('Invalid state for visualQC!\n\t Ensure proper combination of arguments is used.')

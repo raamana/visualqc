@@ -19,7 +19,6 @@ requirements = [
 
 setup_requirements = [
     'pytest-runner',
-    # TODO(raamana): put setup requirements (distutils extensions, etc.) here
 ]
 
 test_requirements = [

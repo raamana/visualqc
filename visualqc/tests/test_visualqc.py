@@ -1,7 +1,7 @@
 
 from os import mkdir, makedirs
 from os.path import join as pjoin, exists as pexists, abspath, realpath, basename, dirname
-from visualqc.vqc import generate_visualizations
+from visualqc.vqc import run_workflow
 
 test_dir = dirname(realpath(__file__))
 base_dir = realpath(pjoin(test_dir, '..', '..', 'example_datasets'))
@@ -20,7 +20,7 @@ makedirs(out_dir, exist_ok=True)
 def test_gen():
     """super basic run."""
 
-    generate_visualizations(vis_type=vis_type, fs_dir=fs_dir, id_list=id_list, out_dir=out_dir,
-                            alpha_set=(0.8, 0.7))
+    run_workflow(vis_type=vis_type, fs_dir=fs_dir, id_list=id_list, out_dir=out_dir,
+                 alpha_set=(0.8, 0.7))
 
 test_gen()
