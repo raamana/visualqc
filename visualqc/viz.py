@@ -1,15 +1,11 @@
 
 __all__ = ['review_and_rate']
 
-from mrivis.utils import check_params, crop_to_seg_extents, read_image, pick_slices
-from mrivis.color_maps import get_freesurfer_cmap
-from visualqc.utils import get_axis
-from copy import copy, deepcopy
-
-import numpy as np
 from matplotlib import pyplot as plt, colors, cm
 from matplotlib.widgets import RadioButtons, Slider
-import matplotlib as mpl
+from mrivis.color_maps import get_freesurfer_cmap
+from mrivis.utils import check_params, crop_to_seg_extents, pick_slices
+from visualqc.utils import get_axis
 
 zoomed_position = [0.2, 0.2, 0.7, 0.7]
 

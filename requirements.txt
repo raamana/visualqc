@@ -1,0 +1,3 @@
+nibabel
+matplotlib
+mrivis

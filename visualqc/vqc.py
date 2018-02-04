@@ -2,19 +2,13 @@
 
 """Main module."""
 
+import argparse
 import os
 import sys
-import argparse
 import textwrap
-import nibabel as nib
-import traceback
 import warnings
-
-import matplotlib
-import matplotlib.pyplot as plt
-from sys import version_info
-from os.path import join as pjoin, exists as pexists, abspath, realpath, basename
 from os import makedirs
+from os.path import join as pjoin, exists as pexists, realpath
 from shutil import copyfile
 
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set
