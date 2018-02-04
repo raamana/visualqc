@@ -14,6 +14,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, basename
+from os import makedirs
+from shutil import copyfile
 
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set
 from visualqc.viz import review_and_rate
@@ -28,20 +30,32 @@ visualization_combination_choices = ('cortical_volumetric', 'cortical_surface',
 
 default_alpha_set = (0.7, 0.7)
 
+suffix_ratings_dir='ratings'
+file_name_ratings = 'ratings.all.csv'
+file_name_ratings_backup = 'backup_ratings.all.csv'
+
 def generate_visualizations(vis_type, fs_dir, id_list, out_dir, alpha_set):
     """Generate the required visualizations for the specified subjects."""
 
-    ratings = dict()
-    for subject_id in id_list:
+    ratings, ratings_dir, incomplete_list, prev_done = get_ratings(out_dir, id_list)
+    for subject_id in incomplete_list:
         print('Reviewing {}'.format(subject_id))
         t1_mri, overlay_seg, out_path = _prepare_images(fs_dir, subject_id, out_dir, vis_type)
         ratings[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg, output_path=out_path,
                               alpha_mri=alpha_set[0], alpha_seg=alpha_set[1],
                                                 annot='ID {}'.format(subject_id))
-        print('id {} rating {}'.format(subject_id, ratings[subject_id]))
+        # informing only when it was rated!
+        if ratings[subject_id] is not None:
+            print('id {} rating {}'.format(subject_id, ratings[subject_id]))
+        else:
+            ratings.pop(subject_id)
+
         if quit_now:
-            clean_up(ratings, out_dir)
-            sys.exit()
+            print('user chosen to quit..')
+            break
+
+    print('Saving ratings .. \n')
+    save_ratings(ratings, out_dir)
 
     return
 
@@ -66,9 +80,66 @@ def _prepare_images(fs_dir, subject_id, out_dir, vis_type):
     return t1_mri, ctx_aseg_symmetric, out_path
 
 
-def clean_up(ratings, out_dir):
+def get_ratings(out_dir, id_list):
+    """Creates a separate folder for ratings, backing up any previous sessions."""
+
+    # making a copy
+    incomplete_list = list(id_list)
+    prev_done = [] # empty list
+
+    ratings_dir = pjoin(out_dir, suffix_ratings_dir)
+    if pexists(ratings_dir):
+        prev_ratings = pjoin(ratings_dir,file_name_ratings)
+        prev_ratings_backup = pjoin(ratings_dir, file_name_ratings_backup)
+        if pexists(prev_ratings):
+            ratings = load_ratings_csv(prev_ratings)
+            copyfile(prev_ratings,prev_ratings_backup)
+            # finding the remaining
+            prev_done = set(ratings.keys())
+            incomplete_list = list(set(id_list)-prev_done)
+        else:
+            ratings = dict()
+    else:
+        makedirs(ratings_dir, exist_ok=True)
+        ratings = dict()
+
+    if len(prev_done) > 0:
+        print('Ratings for {} subjects were restored from previous backup'.format(len(prev_done)))
+
+    print('To be reviewed : {}'.format(len(incomplete_list)))
+
+    return ratings, ratings_dir, incomplete_list, prev_done
+
+
+def load_ratings_csv(prev_ratings):
+    """read CSV into a dict"""
+
+    if pexists(prev_ratings):
+        info_dict = dict([line.strip().split(',') for line in open(prev_ratings).readlines()])
+    else:
+        info_dict = dict()
+
+    return info_dict
+
+
+def save_ratings(ratings, out_dir):
     """Save ratings before closing shop."""
 
+    ratings_dir = pjoin(out_dir, suffix_ratings_dir)
+    if not pexists(ratings_dir):
+        makedirs(ratings_dir)
+
+    ratings_file = pjoin(ratings_dir,file_name_ratings)
+    prev_ratings_backup = pjoin(ratings_dir, file_name_ratings_backup)
+    if pexists(ratings_file):
+        copyfile(ratings_file,prev_ratings_backup)
+
+    lines = '\n'.join(['{},{}'.format(sid, rating) for sid, rating  in ratings.items()])
+    try:
+        with open(ratings_file,'w') as cf:
+            cf.write(lines)
+    except:
+        raise IOError('Error in saving ratings to file!!\nBackup might be helpful at:\n\t{}'.format(prev_ratings_backup))
 
     return
 
@@ -180,7 +251,7 @@ def check_id_list(id_list_in, fs_dir):
     if len(id_list_out) < 1:
         raise ValueError('All the subject IDs do not have the required files - unable to proceed.')
 
-    print(' {} subjects are usable for review.'.format(len(id_list_out)))
+    print('{} subjects are usable for review.'.format(len(id_list_out)))
 
     return id_list_out
 

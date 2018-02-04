@@ -144,7 +144,6 @@ class ReviewInterface(object):
         # double click to zoom in to any axis
         elif event.dblclick:
             # zoom axes full-screen
-            print('cue to zoom in axes {}'.format(event.inaxes))
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(zoomed_position)
             event.inaxes.set_zorder(1)
