@@ -127,8 +127,6 @@ class ReviewInterface(object):
     def on_mouse(self, event):
         """Callback for mouse events."""
 
-        print(event)
-
         if self.prev_axis is not None:
             self.prev_axis.set_position(self.prev_ax_pos)
             self.prev_axis.set_zorder(-1)
@@ -169,7 +167,7 @@ class ReviewInterface(object):
     def save_rating(self, label):
         """Update the rating"""
 
-        print('  rating {}'.format(label))
+        # print('  rating {}'.format(label))
         self.user_rating = label
         return
 
@@ -223,7 +221,6 @@ def review_and_rate(mri,
     # con_id_scroll = fig.canvas.mpl_connect('scroll_event', on_mouse)
 
     fig.set_size_inches(figsize)
-    # plt.pause(0.001)
     plt.show()
 
     fig.canvas.mpl_disconnect(con_id_click)
