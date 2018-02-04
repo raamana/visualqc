@@ -23,7 +23,7 @@ deploy:
     tags: true
 
 install:
-  - pip install -U tox-travis
+  - pip install -U pytest
   - pip install -r requirements.txt
   - pip install -e .
 
@@ -33,4 +33,5 @@ python:
 - 3.5
 - 3.4
 - 3.3
-script: tox
+script:
+  - travis_wait 999 pytest --verbose --cov=.
