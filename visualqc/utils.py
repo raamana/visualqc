@@ -12,7 +12,10 @@ def read_image(img_spec, error_msg='image'):
 
     if isinstance(img_spec, str):
         if pexists(realpath(img_spec)):
-            img = nib.load(img_spec).get_data()
+            hdr = nib.load(img_spec)
+            # trying to stick to an orientation
+            hdr = nib.as_closest_canonical(hdr)
+            img = hdr.get_data()
         else:
             raise IOError('Given path to {} does not exist!\n\t{}'.format(error_msg, img_spec))
     elif isinstance(img_spec, np.ndarray):
@@ -34,7 +37,7 @@ def get_axis(array, axis, slice_num):
 
     slice_list = [slice(None)] * array.ndim
     slice_list[axis] = slice_num
-    slice_data = array[slice_list]  # no transpose
+    slice_data = array[slice_list].T  # no transpose
 
     return slice_data
 
