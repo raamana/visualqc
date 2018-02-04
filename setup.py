@@ -15,6 +15,7 @@ requirements = [
     'numpy',
     'matplotlib',
     'mrivis',
+    'nibabel'
 ]
 
 setup_requirements = [

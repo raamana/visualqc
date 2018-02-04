@@ -1,0 +1,6 @@
+nibabel
+matplotlib
+mrivis
+numpy
+sphinx-argparse
+numpydoc
