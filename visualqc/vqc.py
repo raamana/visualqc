@@ -31,13 +31,17 @@ default_alpha_set = (0.7, 0.7)
 def generate_visualizations(vis_type, fs_dir, id_list, out_dir, alpha_set):
     """Generate the required visualizations for the specified subjects."""
 
+    ratings = dict()
     for subject_id in id_list:
         print('Reviewing {}'.format(subject_id))
         t1_mri, overlay_seg, out_path = _prepare_images(fs_dir, subject_id, out_dir, vis_type)
-        rating, quit_now = review_and_rate(t1_mri, overlay_seg, output_path=out_path,
+        ratings[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg, output_path=out_path,
                               alpha_mri=alpha_set[0], alpha_seg=alpha_set[1],
                                                 annot='ID {}'.format(subject_id))
-        print('id {} rating {}'.format(subject_id, rating))
+        print('id {} rating {}'.format(subject_id, ratings[subject_id]))
+        if quit_now:
+            clean_up(ratings, out_dir)
+            sys.exit()
 
     return
 
@@ -62,8 +66,8 @@ def _prepare_images(fs_dir, subject_id, out_dir, vis_type):
     return t1_mri, ctx_aseg_symmetric, out_path
 
 
-def rate_visualizations(rate_dir, id_list):
-    """Rating routine."""
+def clean_up(ratings, out_dir):
+    """Save ratings before closing shop."""
 
 
     return
