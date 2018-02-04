@@ -32,6 +32,31 @@ def read_image(img_spec, error_msg='image'):
     return img
 
 
+def get_label_set(seg, label_set, background=0):
+    """Extracts only the required labels"""
+
+    if label_set is None:
+        return seg
+
+    # get the mask picking up all labels
+    mask = np.full_like(seg, False)
+    for label in label_set:
+        mask = np.logical_or(mask, seg==label)
+
+    out_seg = np.full_like(seg, background)
+    out_seg[mask] = seg[mask]
+
+    # remap labels from arbitrary range to 1:N
+    # helps to facilitate distinguishable colors
+    unique_labels = np.unique(out_seg.flatten())
+    # removing background - 0 stays 0
+    unique_labels = np.delete(unique_labels, background)
+    for index, label in enumerate(unique_labels):
+        out_seg[out_seg==label] = index+1 # index=0 would make it background
+
+    return out_seg
+
+
 def get_axis(array, axis, slice_num):
     """Returns a fixed axis"""
 

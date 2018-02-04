@@ -10,8 +10,9 @@ from visualqc.utils import get_axis
 zoomed_position = [0.2, 0.2, 0.7, 0.7]
 
 def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
+                   vis_type='cortical_volumetric',
                    num_rows=2, num_cols=6, figsize=None,
-                   sub_cortical=False, annot=None, padding=5,
+                   annot=None, padding=5,
                    output_path=None):
     """Backend engine for overlaying a given seg on MRI with freesurfer label."""
 
@@ -41,7 +42,7 @@ def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
                               alpha=alpha_seg)
 
     normalize_labels = colors.Normalize(vmin=seg.min(), vmax=seg.max(), clip=True)
-    fs_cmap = get_freesurfer_cmap(sub_cortical)
+    fs_cmap = get_freesurfer_cmap(vis_type)
     seg_mapper = cm.ScalarMappable(norm=normalize_labels, cmap=fs_cmap)
 
     normalize_mri = colors.Normalize(vmin=mri.min(), vmax=mri.max(), clip=True)
@@ -118,10 +119,10 @@ class ReviewInterface(object):
         self.quit_button = RadioButtons(ax_quit, quit_elements,
                                    active=None, activecolor='orange')
 
-        ax_slider = plt.axes([0.905, 0.73, 0.08, 0.02], facecolor='#fa8072')
+        ax_slider = plt.axes([0.905, 0.73, 0.07, 0.02], facecolor='#fa8072')
         self.slider = Slider(ax_slider, label='transparency',
                              valmin=0.0, valmax=1.0, valinit=0.7, valfmt='%1.2f')
-        self.slider.label.set_position((0.95, 1.5))
+        self.slider.label.set_position((0.99, 1.5))
         self.slider.on_changed(self.set_alpha_value)
 
         for txt_lbl in self.quit_button.labels + self.radio_bt.labels:
@@ -207,9 +208,7 @@ def review_and_rate(mri,
                     rating_list=('Good', 'Suspect', 'Bad', 'Failed', 'Later'),
                     num_rows=2,
                     num_cols=6,
-                    rescale_method='global',
-                    aseg_cmap='freesurfer',
-                    sub_cortical=False,
+                    vis_type='cortical_volumetric',
                     annot=None,
                     padding=5,
                     output_path=None,
@@ -218,8 +217,9 @@ def review_and_rate(mri,
     "Produces a collage of various slices from different orientations in the given 3D image"
 
     fig, axes_mri, axes_seg, figsize = overlay_images(mri, seg, alpha_mri=alpha_mri, alpha_seg=alpha_seg,
+                                                      vis_type=vis_type,
                                              figsize=figsize, num_rows=num_rows, num_cols=num_cols, padding=padding,
-                                             sub_cortical=sub_cortical, annot=annot, output_path=output_path)
+                                             annot=annot, output_path=output_path)
 
     interact_ui = ReviewInterface(fig, axes_seg, axes_mri, alpha_seg, rating_list)
 

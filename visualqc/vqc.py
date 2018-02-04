@@ -10,8 +10,8 @@ import warnings
 from os import makedirs
 from os.path import join as pjoin, exists as pexists, realpath
 from shutil import copyfile
-
-from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set
+import numpy as np
+from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set
 from visualqc.viz import review_and_rate
 
 # default values
@@ -19,25 +19,28 @@ default_out_dir_name = 'visualqc'
 t1_mri_identifier = 'brainmask.mgz' # TODO make this an option to capture wider variety of use cases
 fs_seg_identifier = 'aparc+aseg.mgz'
 required_files = (t1_mri_identifier, fs_seg_identifier)
-visualization_combination_choices = ('cortical_volumetric', 'cortical_surface',
+visualization_combination_choices = ('cortical_volumetric', 'labels',
+                                     'cortical_surface',
                                      'cortical_composite', 'subcortical_volumetric')
+default_label_set = None
 
-default_alpha_set = (0.8, 0.7)
+default_alpha_set = (0.7, 0.7)
 
 suffix_ratings_dir='ratings'
 file_name_ratings = 'ratings.all.csv'
 file_name_ratings_backup = 'backup_ratings.all.csv'
 
-def run_workflow(vis_type, fs_dir, id_list, out_dir, alpha_set):
+def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir, alpha_set=default_alpha_set):
     """Generate the required visualizations for the specified subjects."""
 
     ratings, ratings_dir, incomplete_list, prev_done = get_ratings(out_dir, id_list)
     for subject_id in incomplete_list:
         print('Reviewing {}'.format(subject_id))
-        t1_mri, overlay_seg, out_path = _prepare_images(fs_dir, subject_id, out_dir, vis_type)
-        ratings[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg, output_path=out_path,
-                              alpha_mri=alpha_set[0], alpha_seg=alpha_set[1],
-                                                annot='ID {}'.format(subject_id))
+        t1_mri, overlay_seg, out_path = _prepare_images(fs_dir, subject_id, out_dir, vis_type, label_set)
+        ratings[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg, vis_type=vis_type,
+                                                        output_path=out_path,
+                                                        alpha_mri=alpha_set[0], alpha_seg=alpha_set[1],
+                                                        annot='ID {}'.format(subject_id))
         # informing only when it was rated!
         if ratings[subject_id] is not None:
             print('id {} rating {}'.format(subject_id, ratings[subject_id]))
@@ -54,7 +57,7 @@ def run_workflow(vis_type, fs_dir, id_list, out_dir, alpha_set):
     return
 
 
-def _prepare_images(fs_dir, subject_id, out_dir, vis_type):
+def _prepare_images(fs_dir, subject_id, out_dir, vis_type, label_set):
     """Actual routine to generate the visualizations. """
 
     # we ensured these files exist and are not empty
@@ -64,14 +67,25 @@ def _prepare_images(fs_dir, subject_id, out_dir, vis_type):
     t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
     fs_seg = read_image(fs_seg_path, error_msg='aparc+aseg segmentation')
 
+    if t1_mri.shape != fs_seg.shape:
+        raise ValueError('size mismatch! MRI: {} Seg: {}\n'
+                         'Size must match in all dimensions.'.format(t1_mri.shape,fs_seg.shape))
+
+    if label_set is not None:
+        fs_seg = get_label_set(fs_seg, label_set)
+
+    suffix = ''
     if vis_type in ('cortical_volumetric', ):
-        ctx_aseg_symmetric = void_subcortical_symmetrize_cortical(fs_seg)
+        out_seg = void_subcortical_symmetrize_cortical(fs_seg)
+    elif vis_type in ('label_set', 'labels'):
+        out_seg = fs_seg
+        suffix = '_'.join([str(lbl) for lbl in list(label_set)])
     else:
         raise NotImplementedError('Other visualization combinations have not been implemented yet! Stay tuned.')
 
-    out_path = pjoin(out_dir, 'visual_qc_{}_{}'.format(vis_type, subject_id))
+    out_path = pjoin(out_dir, 'visual_qc_{}_{}_{}'.format(vis_type, suffix, subject_id))
 
-    return t1_mri, ctx_aseg_symmetric, out_path
+    return t1_mri, out_seg, out_path
 
 
 def get_ratings(out_dir, id_list):
@@ -183,6 +197,11 @@ def get_parser():
     Play with these values to find something that works for you and the dataset.
     \n""")
 
+    help_text_label = textwrap.dedent("""
+    Specifies the set of labels to include for overlay.
+    
+    Default: None (show all the labels in the selected segmentation)
+    \n""")
 
     parser.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
                         required=True, help=help_text_fs_dir)
@@ -203,6 +222,10 @@ def get_parser():
                         metavar='alpha', nargs=2,
                         default=default_alpha_set,
                         required=False, help=help_text_alphas)
+
+    parser.add_argument("-l", "--labels", action="store", dest="labels",
+                        default=default_label_set, required=False, nargs='+',
+                        help=help_text_label)
 
     return parser
 
@@ -249,6 +272,23 @@ def check_id_list(id_list_in, fs_dir):
     return id_list_out
 
 
+def check_labels(vis_type, label_set):
+    """Validates the selections."""
+
+    vis_type = vis_type.lower()
+    if vis_type not in visualization_combination_choices:
+        raise ValueError('Selected visualization type not recognized! '
+                         'Choose one of:\n{}'.format(visualization_combination_choices))
+
+    if label_set is not None:
+        if vis_type not in ['label_set', 'labels']:
+            raise ValueError('Invalid selection of vis_type when labels are specifed. Choose --vis_type labels')
+
+        label_set = np.array(label_set).astype('int16')
+
+    return vis_type, label_set
+
+
 def parse_args():
     """Parser/validator for the cmd line args."""
 
@@ -280,21 +320,22 @@ def parse_args():
     except:
         raise IOError('Unable to create the output directory as requested.')
 
-    vis_type = user_args.vis_type.lower()
+    vis_type, label_set = check_labels(user_args.vis_type, user_args.labels)
 
     alpha_set = check_alpha_set(user_args.alpha_set)
 
-    return fs_dir, id_list, out_dir, vis_type, alpha_set
+    return fs_dir, id_list, out_dir, vis_type, label_set, alpha_set
 
 
 def cli_run():
     """Main entry point."""
 
-    fs_dir, id_list, out_dir, vis_type, alpha_set = parse_args()
+    fs_dir, id_list, out_dir, vis_type, label_set, alpha_set = parse_args()
 
     if vis_type is not None:
         # matplotlib.interactive(True)
-        run_workflow(vis_type=vis_type, fs_dir=fs_dir, id_list=id_list,
+        run_workflow(vis_type=vis_type, label_set=label_set,
+                     fs_dir=fs_dir, id_list=id_list,
                      out_dir=out_dir, alpha_set=alpha_set)
         print('Results are available in:\n\t{}'.format(out_dir))
     else:

@@ -23,4 +23,11 @@ def test_gen():
     run_workflow(vis_type=vis_type, fs_dir=fs_dir, id_list=id_list, out_dir=out_dir,
                  alpha_set=(0.8, 0.7))
 
-test_gen()
+def test_gen_label_focus():
+    """super basic run."""
+
+    run_workflow(vis_type='labels', fs_dir=fs_dir, id_list=id_list, out_dir=out_dir,
+                 label_set=[17,])
+
+# test_gen()
+test_gen_label_focus()
