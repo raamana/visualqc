@@ -17,6 +17,7 @@ from visualqc.viz import review_and_rate
 
 
 def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
+                 mri_name=default_mri_name, seg_name=default_seg_name,
                  alpha_set=default_alpha_set,
                  views=default_views, num_slices=default_num_slices, num_rows=default_num_rows):
     """Generate the required visualizations for the specified subjects."""
@@ -24,7 +25,8 @@ def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
     ratings, ratings_dir, incomplete_list, prev_done = get_ratings(out_dir, id_list)
     for subject_id in incomplete_list:
         print('Reviewing {}'.format(subject_id))
-        t1_mri, overlay_seg, out_path = _prepare_images(fs_dir, subject_id, out_dir, vis_type, label_set)
+        t1_mri, overlay_seg, out_path = _prepare_images(fs_dir, subject_id, mri_name, seg_name,
+                                                        out_dir, vis_type, label_set)
         ratings[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg, vis_type=vis_type,
                                                         views=views, num_rows=num_rows, num_slices=num_slices, output_path=out_path,
                                                         alpha_mri=alpha_set[0], alpha_seg=alpha_set[1],
@@ -36,7 +38,7 @@ def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
             ratings.pop(subject_id)
 
         if quit_now:
-            print('user chosen to quit..')
+            print('\nUser chosen to quit..')
             break
 
     print('Saving ratings .. \n')
@@ -45,15 +47,15 @@ def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
     return
 
 
-def _prepare_images(fs_dir, subject_id, out_dir, vis_type, label_set):
+def _prepare_images(fs_dir, subject_id, mri_name, seg_name, out_dir, vis_type, label_set):
     """Actual routine to generate the visualizations. """
 
     # we ensured these files exist and are not empty
-    t1_mri_path = pjoin(fs_dir, subject_id, 'mri', default_mri_name)
-    fs_seg_path = pjoin(fs_dir, subject_id, 'mri', default_seg_name)
+    t1_mri_path = pjoin(fs_dir, subject_id, 'mri', mri_name)
+    fs_seg_path = pjoin(fs_dir, subject_id, 'mri', seg_name)
 
     t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
-    fs_seg = read_image(fs_seg_path, error_msg='aparc+aseg segmentation')
+    fs_seg = read_image(fs_seg_path, error_msg='segmentation')
 
     if t1_mri.shape != fs_seg.shape:
         raise ValueError('size mismatch! MRI: {} Seg: {}\n'
@@ -67,7 +69,8 @@ def _prepare_images(fs_dir, subject_id, out_dir, vis_type, label_set):
         out_seg = void_subcortical_symmetrize_cortical(fs_seg)
     elif vis_type in ('label_set', 'labels'):
         out_seg = fs_seg
-        suffix = '_'.join([str(lbl) for lbl in list(label_set)])
+        if label_set is not None:
+            suffix = '_'.join([str(lbl) for lbl in list(label_set)])
     else:
         raise NotImplementedError('Other visualization combinations have not been implemented yet! Stay tuned.')
 
@@ -228,11 +231,13 @@ def parse_args():
     if not pexists(fs_dir):
         raise IOError('Freesurfer directory specified does not exist!')
 
-    id_list = check_id_list(user_args.id_list, fs_dir)
+    vis_type, label_set = check_labels(user_args.vis_type, user_args.labels)
+
+    mri_name = user_args.mri_name
+    seg_name = user_args.seg_name
+    id_list = check_id_list(user_args.id_list, fs_dir, vis_type, mri_name, seg_name)
 
     out_dir = check_out_dir(user_args.out_dir, fs_dir)
-
-    vis_type, label_set = check_labels(user_args.vis_type, user_args.labels)
 
     alpha_set = check_alpha_set(user_args.alpha_set)
 
@@ -240,18 +245,21 @@ def parse_args():
 
     num_slices, num_rows = check_finite_int(user_args.num_slices, user_args.num_rows)
 
-    return fs_dir, id_list, out_dir, vis_type, label_set, alpha_set, views, num_slices, num_rows
+    return fs_dir, id_list, out_dir, vis_type, label_set, \
+           alpha_set, views, num_slices, num_rows, mri_name, seg_name
 
 
 def cli_run():
     """Main entry point."""
 
-    fs_dir, id_list, out_dir, vis_type, label_set, alpha_set, views, num_slices, num_rows = parse_args()
+    fs_dir, id_list, out_dir, vis_type, label_set, alpha_set, \
+        views, num_slices, num_rows, mri_name, seg_name = parse_args()
 
     if vis_type is not None:
         # matplotlib.interactive(True)
         run_workflow(vis_type=vis_type, label_set=label_set,
                      fs_dir=fs_dir, id_list=id_list,
+                     mri_name=mri_name, seg_name=seg_name,
                      out_dir=out_dir, alpha_set=alpha_set,
                      views=views, num_slices=num_slices, num_rows=num_rows)
         print('Results are available in:\n\t{}'.format(out_dir))

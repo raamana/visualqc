@@ -3,8 +3,8 @@ import warnings
 from os import makedirs
 from shutil import copyfile
 
-from visualqc.config import suffix_ratings_dir, file_name_ratings, file_name_ratings_backup, required_files, \
-    visualization_combination_choices, default_out_dir_name
+from visualqc.config import suffix_ratings_dir, file_name_ratings, file_name_ratings_backup, \
+    visualization_combination_choices, default_out_dir_name, freesurfer_types
 
 __all__ = ['read_image', 'check_image_is_3d']
 
@@ -296,7 +296,7 @@ def check_out_dir(out_dir, fs_dir):
     return out_dir
 
 
-def check_id_list(id_list_in, fs_dir):
+def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name):
     """Checks to ensure each subject listed has the required files and returns only those that can be processed."""
 
     if id_list_in is not None:
@@ -310,14 +310,16 @@ def check_id_list(id_list_in, fs_dir):
             raise IOError('unable to read the ID list.')
     else:
         # get all IDs in the given folder
-        id_list = [ folder for folder in os.listdir(fs_dir) if os.path.isdir(pjoin(fs_dir,folder)) ]
+        id_list = [folder for folder in os.listdir(in_dir) if os.path.isdir(pjoin(in_dir, folder))]
+
+    required_files = (mri_name, seg_name)
 
     id_list_out = list()
     id_list_err = list()
     invalid_list = list()
 
     for subject_id in id_list:
-        path_list = [realpath(pjoin(fs_dir, subject_id, 'mri', req_file)) for req_file in required_files]
+        path_list = [get_path_for_subject(in_dir, subject_id, req_file, vis_type) for req_file in required_files]
         invalid = [ this_file for this_file in path_list if not pexists(this_file) or os.path.getsize(this_file)<=0 ]
         if len(invalid) > 0:
             id_list_err.append(subject_id)
@@ -336,6 +338,17 @@ def check_id_list(id_list_in, fs_dir):
     print('{} subjects are usable for review.'.format(len(id_list_out)))
 
     return id_list_out
+
+
+def get_path_for_subject(in_dir, subject_id, req_file, vis_type):
+    """Constructs the path for the image file based on chosen input and visualization type"""
+
+    if vis_type in freesurfer_types:
+        out_path = realpath(pjoin(in_dir, subject_id, 'mri', req_file))
+    else:
+        out_path = realpath(pjoin(in_dir, subject_id, req_file))
+
+    return out_path
 
 
 def check_labels(vis_type, label_set):
