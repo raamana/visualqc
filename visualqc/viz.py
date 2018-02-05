@@ -6,8 +6,7 @@ from matplotlib.widgets import RadioButtons, Slider
 from mrivis.color_maps import get_freesurfer_cmap
 from mrivis.utils import check_params, crop_to_seg_extents
 from visualqc.utils import get_axis, pick_slices, check_layout
-
-zoomed_position = [0.2, 0.2, 0.7, 0.7]
+from visualqc.config import zoomed_position
 
 def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
                    vis_type='cortical_volumetric',
@@ -27,6 +26,7 @@ def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
     num_rows = num_rows_per_view*num_views
     slices = pick_slices(mri.shape, views, num_slices_per_view)
     num_cols = check_layout(len(slices), num_views, num_rows_per_view)
+    # TODO add space for few composite slice (1 row or 4-5 slices)
 
     plt.style.use('dark_background')
 

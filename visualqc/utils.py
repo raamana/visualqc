@@ -1,8 +1,15 @@
+import os
+import warnings
+from os import makedirs
+from shutil import copyfile
+
+from visualqc.config import suffix_ratings_dir, file_name_ratings, file_name_ratings_backup, required_files, \
+    visualization_combination_choices
 
 __all__ = ['read_image', 'check_image_is_3d']
 
 from genericpath import exists as pexists
-from os.path import realpath
+from os.path import realpath, join as pjoin
 import numpy as np
 import nibabel as nib
 from matplotlib.colors import ListedColormap
@@ -212,3 +219,144 @@ def get_freesurfer_color_LUT():
 
     return LUT
 
+
+def get_ratings(out_dir, id_list):
+    """Creates a separate folder for ratings, backing up any previous sessions."""
+
+    # making a copy
+    incomplete_list = list(id_list)
+    prev_done = [] # empty list
+
+    ratings_dir = pjoin(out_dir, suffix_ratings_dir)
+    if pexists(ratings_dir):
+        prev_ratings = pjoin(ratings_dir,file_name_ratings)
+        prev_ratings_backup = pjoin(ratings_dir, file_name_ratings_backup)
+        if pexists(prev_ratings):
+            ratings = load_ratings_csv(prev_ratings)
+            copyfile(prev_ratings,prev_ratings_backup)
+            # finding the remaining
+            prev_done = set(ratings.keys())
+            incomplete_list = list(set(id_list)-prev_done)
+        else:
+            ratings = dict()
+    else:
+        makedirs(ratings_dir, exist_ok=True)
+        ratings = dict()
+
+    if len(prev_done) > 0:
+        print('Ratings for {} subjects were restored from previous backup'.format(len(prev_done)))
+
+    print('To be reviewed : {}'.format(len(incomplete_list)))
+
+    return ratings, ratings_dir, incomplete_list, prev_done
+
+
+def load_ratings_csv(prev_ratings):
+    """read CSV into a dict"""
+
+    if pexists(prev_ratings):
+        info_dict = dict([line.strip().split(',') for line in open(prev_ratings).readlines()])
+    else:
+        info_dict = dict()
+
+    return info_dict
+
+
+def save_ratings(ratings, out_dir):
+    """Save ratings before closing shop."""
+
+    ratings_dir = pjoin(out_dir, suffix_ratings_dir)
+    if not pexists(ratings_dir):
+        makedirs(ratings_dir)
+
+    ratings_file = pjoin(ratings_dir,file_name_ratings)
+    prev_ratings_backup = pjoin(ratings_dir, file_name_ratings_backup)
+    if pexists(ratings_file):
+        copyfile(ratings_file,prev_ratings_backup)
+
+    lines = '\n'.join(['{},{}'.format(sid, rating) for sid, rating  in ratings.items()])
+    try:
+        with open(ratings_file,'w') as cf:
+            cf.write(lines)
+    except:
+        raise IOError('Error in saving ratings to file!!\nBackup might be helpful at:\n\t{}'.format(prev_ratings_backup))
+
+    return
+
+
+def check_id_list(id_list_in, fs_dir):
+    """Checks to ensure each subject listed has the required files and returns only those that can be processed."""
+
+    if id_list_in is not None:
+        if not pexists(id_list_in):
+            raise IOError('Given ID list does not exist!')
+
+        try:
+            # read all lines and strip them of newlines/spaces
+            id_list = [ line.strip('\n ') for line in open(id_list_in) ]
+        except:
+            raise IOError('unable to read the ID list.')
+    else:
+        # get all IDs in the given folder
+        id_list = [ folder for folder in os.listdir(fs_dir) if os.path.isdir(pjoin(fs_dir,folder)) ]
+
+    id_list_out = list()
+    id_list_err = list()
+    invalid_list = list()
+
+    for subject_id in id_list:
+        path_list = [realpath(pjoin(fs_dir, subject_id, 'mri', req_file)) for req_file in required_files]
+        invalid = [ this_file for this_file in path_list if not pexists(this_file) or os.path.getsize(this_file)<=0 ]
+        if len(invalid) > 0:
+            id_list_err.append(subject_id)
+            invalid_list.extend(invalid)
+        else:
+            id_list_out.append(subject_id)
+
+    if len(id_list_err) > 0:
+        warnings.warn('The following subjects do NOT have all the required files or some are empty - skipping them!')
+        print('\n'.join(id_list_err))
+        print('\n\nThe following files do not exist or empty: \n {} \n\n'.format('\n'.join(invalid_list)))
+
+    if len(id_list_out) < 1:
+        raise ValueError('All the subject IDs do not have the required files - unable to proceed.')
+
+    print('{} subjects are usable for review.'.format(len(id_list_out)))
+
+    return id_list_out
+
+
+def check_labels(vis_type, label_set):
+    """Validates the selections."""
+
+    vis_type = vis_type.lower()
+    if vis_type not in visualization_combination_choices:
+        raise ValueError('Selected visualization type not recognized! '
+                         'Choose one of:\n{}'.format(visualization_combination_choices))
+
+    if label_set is not None:
+        if vis_type not in ['label_set', 'labels']:
+            raise ValueError('Invalid selection of vis_type when labels are specifed. Choose --vis_type labels')
+
+        label_set = np.array(label_set).astype('int16')
+
+    return vis_type, label_set
+
+
+def check_views(views):
+    """Checks which views were selected."""
+
+    if views is None:
+        return range(3)
+
+    views = [int(vw) for vw in views]
+    out_views = list()
+    for vw in views:
+        if vw < 0 or vw > 2:
+            print('one of the selected views is out of range - skipping it.')
+        out_views.append(vw)
+
+    if len(out_views) < 1:
+        raise ValueError('Atleast one valid view must be selected. Choose one or more of 0, 1, 2.')
+
+    return out_views
