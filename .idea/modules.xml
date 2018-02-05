@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/corticalqa.iml" filepath="$PROJECT_DIR$/.idea/corticalqa.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/visualqc.iml" filepath="$PROJECT_DIR$/.idea/visualqc.iml" />
     </modules>
   </component>
 </project>

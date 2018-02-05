@@ -4,7 +4,7 @@ from os import makedirs
 from shutil import copyfile
 
 from visualqc.config import suffix_ratings_dir, file_name_ratings, file_name_ratings_backup, required_files, \
-    visualization_combination_choices
+    visualization_combination_choices, default_out_dir_name
 
 __all__ = ['read_image', 'check_image_is_3d']
 
@@ -69,7 +69,7 @@ def get_axis(array, axis, slice_num):
 
     slice_list = [slice(None)] * array.ndim
     slice_list[axis] = slice_num
-    slice_data = array[slice_list].T  # no transpose
+    slice_data = array[slice_list].T  # for proper appearance
 
     return slice_data
 
@@ -155,8 +155,6 @@ def void_subcortical_symmetrize_cortical(aseg, null_label=0):
     """
 
     aseg = check_image_is_3d(aseg)
-    left_aseg  = np.full_like(aseg, null_label)
-    right_aseg = np.full_like(aseg, null_label)
     symmetric_aseg = np.full_like(aseg, null_label)
 
     left_baseline = 1000
@@ -282,6 +280,20 @@ def save_ratings(ratings, out_dir):
         raise IOError('Error in saving ratings to file!!\nBackup might be helpful at:\n\t{}'.format(prev_ratings_backup))
 
     return
+
+
+def check_out_dir(out_dir, fs_dir):
+    """Creates the output folder."""
+
+    if out_dir is None:
+        out_dir = pjoin(fs_dir, default_out_dir_name)
+
+    try:
+        os.makedirs(out_dir, exist_ok=True)
+    except:
+        raise IOError('Unable to create the output directory as requested.')
+
+    return out_dir
 
 
 def check_id_list(id_list_in, fs_dir):

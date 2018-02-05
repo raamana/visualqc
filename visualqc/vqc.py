@@ -8,11 +8,11 @@ import sys
 import textwrap
 from os.path import join as pjoin, exists as pexists
 
-from visualqc.config import default_out_dir_name, t1_mri_identifier, fs_seg_identifier, \
+from visualqc.config import default_out_dir_name, default_mri_name, default_seg_name, \
     visualization_combination_choices, default_label_set, default_alpha_set, \
-    default_views, default_num_slices, default_num_rows
+    default_views, default_num_slices, default_num_rows, default_vis_type
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set, \
-    check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views
+    check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_out_dir
 from visualqc.viz import review_and_rate
 
 
@@ -49,8 +49,8 @@ def _prepare_images(fs_dir, subject_id, out_dir, vis_type, label_set):
     """Actual routine to generate the visualizations. """
 
     # we ensured these files exist and are not empty
-    t1_mri_path = pjoin(fs_dir, subject_id, 'mri', t1_mri_identifier)
-    fs_seg_path = pjoin(fs_dir, subject_id, 'mri', fs_seg_identifier)
+    t1_mri_path = pjoin(fs_dir, subject_id, 'mri', default_mri_name)
+    fs_seg_path = pjoin(fs_dir, subject_id, 'mri', default_seg_name)
 
     t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
     fs_seg = read_image(fs_seg_path, error_msg='aparc+aseg segmentation')
@@ -94,6 +94,7 @@ def get_parser():
     If not provided, all the subjects with required files will be processed.
 
     E.g.
+    
     .. parsed-literal::
 
         sub001
@@ -105,21 +106,20 @@ def get_parser():
 
     help_text_vis_type = textwrap.dedent("""
     Specifies the type of visualizations/overlay requested.
-    Default: volumetric overlay of cortical segmentation on T1 mri.
-    \n""")
+    Default: {} (volumetric overlay of cortical segmentation on T1 mri).
+    \n""".format(default_vis_type))
 
     help_text_out_dir = textwrap.dedent("""
     Output folder to store the visualizations & ratings.
-    Default: a new folder called ``visualqc`` will be created inside the ``fs_dir``
-    \n""")
+    Default: a new folder called ``{}`` will be created inside the ``fs_dir``
+    \n""".format(default_out_dir_name))
 
     help_text_alphas = textwrap.dedent("""
     Alpha values to control the transparency of MRI and aseg. 
     This must be a set of two values (between 0 and 1.0) separated by a space e.g. --alphas 0.7 0.5. 
     
-    Default: 0.7 0.7
-    Play with these values to find something that works for you and the dataset.
-    \n""")
+    Default: {} {}.  Play with these values to find something that works for you and the dataset.
+    \n""".format(default_alpha_set[0], default_alpha_set[1]))
 
     help_text_label = textwrap.dedent("""
     Specifies the set of labels to include for overlay.
@@ -127,23 +127,40 @@ def get_parser():
     Default: None (show all the labels in the selected segmentation)
     \n""")
 
+    help_text_mri_name = textwrap.dedent("""
+    Specifies the name of MRI image to serve as the reference slice.
+    Typical options include orig.mgz, brainmask.mgz, T1.mgz etc.
+    Make sure to choose the right vis_type.
+    
+    Default: {} (within the mri folder of Freesurfer format).
+    \n""".format(default_mri_name))
+
+    help_text_seg_name = textwrap.dedent("""
+    Specifies the name of segmentation image (volumetric) to be overlaid on the MRI.
+    Typical options include aparc+aseg.mgz, aseg.mgz, wmparc.mgz. 
+    Make sure to choose the right vis_type. 
+
+    Default: {} (within the mri folder of Freesurfer format).
+    \n""".format(default_seg_name))
+
     help_text_views = textwrap.dedent("""
     Specifies the set of views to display - could be just 1 view, or 2 or all 3.
     Example: --views 0 (typically sagittal) or --views 1 2 (axial and coronal)
-    Default: 3 (show all the views in the selected segmentation)
-    \n""")
+    Default: {} {} {} (show all the views in the selected segmentation)
+    \n""".format(default_views[0], default_views[1], default_views[2]))
 
     help_text_num_slices = textwrap.dedent("""
     Specifies the number of slices to display per each view. 
     This must be even to facilitate better division.
-    Default: 12.
-    \n""")
+    Default: {}.
+    \n""".format(default_num_slices))
 
     help_text_num_rows = textwrap.dedent("""
     Specifies the number of rows to display per each axis. 
-    Default: 2.
-    \n""")
+    Default: {}.
+    \n""".format(default_num_rows))
 
+    # TODO need more options for generic inputs (without specific structure)
     parser.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
                         required=True, help=help_text_fs_dir)
 
@@ -167,6 +184,14 @@ def get_parser():
     parser.add_argument("-l", "--labels", action="store", dest="labels",
                         default=default_label_set, required=False, nargs='+',
                         help=help_text_label)
+
+    parser.add_argument("-m", "--mri_name", action="store", dest="mri_name",
+                        default=default_mri_name, required=False,
+                        help=help_text_mri_name)
+
+    parser.add_argument("-g", "--seg_name", action="store", dest="seg_name",
+                        default=default_seg_name, required=False,
+                        help=help_text_seg_name)
 
     parser.add_argument("-w", "--views", action="store", dest="views",
                         default=default_views, required=False, nargs='+',
@@ -205,14 +230,7 @@ def parse_args():
 
     id_list = check_id_list(user_args.id_list, fs_dir)
 
-    out_dir = user_args.out_dir
-    if out_dir is None:
-        out_dir = pjoin(fs_dir, default_out_dir_name)
-
-    try:
-        os.makedirs(out_dir, exist_ok=True)
-    except:
-        raise IOError('Unable to create the output directory as requested.')
+    out_dir = check_out_dir(user_args.out_dir, fs_dir)
 
     vis_type, label_set = check_labels(user_args.vis_type, user_args.labels)
 
