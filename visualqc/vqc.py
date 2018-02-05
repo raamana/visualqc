@@ -11,7 +11,7 @@ from os import makedirs
 from os.path import join as pjoin, exists as pexists, realpath
 from shutil import copyfile
 import numpy as np
-from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set
+from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set, check_finite_int
 from visualqc.viz import review_and_rate
 
 # default values
@@ -26,11 +26,17 @@ default_label_set = None
 
 default_alpha_set = (0.7, 0.7)
 
+default_views = (0, 1, 2)
+default_num_slices = 12
+default_num_rows = 2
+
 suffix_ratings_dir='ratings'
 file_name_ratings = 'ratings.all.csv'
 file_name_ratings_backup = 'backup_ratings.all.csv'
 
-def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir, alpha_set=default_alpha_set):
+def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
+                 alpha_set=default_alpha_set,
+                 views=default_views, num_slices=default_num_slices, num_rows=default_num_rows):
     """Generate the required visualizations for the specified subjects."""
 
     ratings, ratings_dir, incomplete_list, prev_done = get_ratings(out_dir, id_list)
@@ -38,7 +44,7 @@ def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir, alpha_set=defaul
         print('Reviewing {}'.format(subject_id))
         t1_mri, overlay_seg, out_path = _prepare_images(fs_dir, subject_id, out_dir, vis_type, label_set)
         ratings[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg, vis_type=vis_type,
-                                                        output_path=out_path,
+                                                        views=views, num_rows=num_rows, num_slices=num_slices, output_path=out_path,
                                                         alpha_mri=alpha_set[0], alpha_seg=alpha_set[1],
                                                         annot='ID {}'.format(subject_id))
         # informing only when it was rated!
@@ -203,6 +209,23 @@ def get_parser():
     Default: None (show all the labels in the selected segmentation)
     \n""")
 
+    help_text_views = textwrap.dedent("""
+    Specifies the set of views to display - could be just 1 view, or 2 or all 3.
+    Example: --views 0 (typically sagittal) or --views 1 2 (axial and coronal)
+    Default: 3 (show all the views in the selected segmentation)
+    \n""")
+
+    help_text_num_slices = textwrap.dedent("""
+    Specifies the number of slices to display per each view. 
+    This must be even to facilitate better division.
+    Default: 12.
+    \n""")
+
+    help_text_num_rows = textwrap.dedent("""
+    Specifies the number of rows to display per each axis. 
+    Default: 2.
+    \n""")
+
     parser.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
                         required=True, help=help_text_fs_dir)
 
@@ -226,6 +249,18 @@ def get_parser():
     parser.add_argument("-l", "--labels", action="store", dest="labels",
                         default=default_label_set, required=False, nargs='+',
                         help=help_text_label)
+
+    parser.add_argument("-w", "--views", action="store", dest="views",
+                        default=default_views, required=False, nargs='+',
+                        help=help_text_views)
+
+    parser.add_argument("-s", "--num_slices", action="store", dest="num_slices",
+                        default=default_num_slices, required=False,
+                        help=help_text_num_slices)
+
+    parser.add_argument("-r", "--num_rows", action="store", dest="num_rows",
+                        default=default_num_rows, required=False,
+                        help=help_text_num_rows)
 
     return parser
 
@@ -289,6 +324,25 @@ def check_labels(vis_type, label_set):
     return vis_type, label_set
 
 
+def check_views(views):
+    """Checks which views were selected."""
+
+    if views is None:
+        return range(3)
+
+    views = [int(vw) for vw in views]
+    out_views = list()
+    for vw in views:
+        if vw < 0 or vw > 2:
+            print('one of the selected views is out of range - skipping it.')
+        out_views.append(vw)
+
+    if len(out_views) < 1:
+        raise ValueError('Atleast one valid view must selected. Choose one or more of 0, 1, 2.')
+
+    return out_views
+
+
 def parse_args():
     """Parser/validator for the cmd line args."""
 
@@ -324,19 +378,24 @@ def parse_args():
 
     alpha_set = check_alpha_set(user_args.alpha_set)
 
-    return fs_dir, id_list, out_dir, vis_type, label_set, alpha_set
+    views = check_views(user_args.views)
+
+    num_slices, num_rows = check_finite_int(user_args.num_slices, user_args.num_rows)
+
+    return fs_dir, id_list, out_dir, vis_type, label_set, alpha_set, views, num_slices, num_rows
 
 
 def cli_run():
     """Main entry point."""
 
-    fs_dir, id_list, out_dir, vis_type, label_set, alpha_set = parse_args()
+    fs_dir, id_list, out_dir, vis_type, label_set, alpha_set, views, num_slices, num_rows = parse_args()
 
     if vis_type is not None:
         # matplotlib.interactive(True)
         run_workflow(vis_type=vis_type, label_set=label_set,
                      fs_dir=fs_dir, id_list=id_list,
-                     out_dir=out_dir, alpha_set=alpha_set)
+                     out_dir=out_dir, alpha_set=alpha_set,
+                     views=views, num_slices=num_slices, num_rows=num_rows)
         print('Results are available in:\n\t{}'.format(out_dir))
     else:
         raise ValueError('Invalid state for visualQC!\n\t Ensure proper combination of arguments is used.')

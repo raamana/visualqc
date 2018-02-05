@@ -20,7 +20,8 @@ makedirs(out_dir, exist_ok=True)
 def test_gen():
     """super basic run."""
 
-    run_workflow(vis_type=vis_type, fs_dir=fs_dir, id_list=id_list, out_dir=out_dir,
+    run_workflow(vis_type=vis_type, label_set=None,
+                 fs_dir=fs_dir, id_list=id_list, out_dir=out_dir,
                  alpha_set=(0.8, 0.7))
 
 def test_gen_label_focus():
@@ -29,5 +30,16 @@ def test_gen_label_focus():
     run_workflow(vis_type='labels', fs_dir=fs_dir, id_list=id_list, out_dir=out_dir,
                  label_set=[17,])
 
+
+def test_gen_single_view():
+    """super basic run."""
+
+    run_workflow(vis_type=vis_type, label_set=None,
+                 fs_dir=fs_dir, id_list=id_list, out_dir=out_dir,
+                 views=[0, ], num_slices=24, num_rows=4,
+                 alpha_set=(0.8, 0.7))
+
+
 # test_gen()
-test_gen_label_focus()
+# test_gen_label_focus()
+test_gen_single_view()

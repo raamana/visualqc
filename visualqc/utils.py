@@ -67,6 +67,49 @@ def get_axis(array, axis, slice_num):
     return slice_data
 
 
+def pick_slices(img_shape, view_set, num_slices):
+    """Picks the slices to display in each dimension"""
+
+    num_views = len(view_set)
+    skip_count = int(np.floor(num_slices/num_views))
+
+    slices = list()
+    for view in view_set:
+        dim_size = img_shape[view]
+        slices_in_dim = np.around(np.linspace(0, dim_size, num_slices+2*skip_count)).astype('int64')
+        # skipping not-so-important slices at boundaries
+        slices_in_dim = slices_in_dim[skip_count: -skip_count]
+        # ensure you do not overshoot
+        slices_in_dim = [sn for sn in slices_in_dim if sn >=0 or sn <=dim_size ]
+        # adding view and slice # at the same time.
+        slices.extend([ (view, slice) for slice in slices_in_dim ])
+
+    return slices
+
+
+def check_layout(total_num_slices, num_views, num_rows):
+    """Ensures all odd cases are dealt with"""
+
+    num_cols = int(np.floor(total_num_slices/(num_views*num_rows)))
+
+    return num_cols
+
+
+def check_finite_int(num_slices, num_rows):
+    """Validates numbers."""
+
+    num_slices = int(num_slices)
+    num_rows = int(num_rows)
+
+    if not all(np.isfinite((num_slices,num_rows))):
+        raise ValueError('num_slices and num_rows must be finite.')
+
+    if num_slices < 0 or num_rows < 0:
+        raise ValueError('num_slices and num_rows must be positive (>=1).')
+
+    return num_slices, num_rows
+
+
 def check_alpha_set(alpha_set):
     """Ensure given alphas are valid."""
 

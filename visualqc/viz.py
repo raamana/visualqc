@@ -4,32 +4,36 @@ __all__ = ['review_and_rate']
 from matplotlib import pyplot as plt, colors, cm
 from matplotlib.widgets import RadioButtons, Slider
 from mrivis.color_maps import get_freesurfer_cmap
-from mrivis.utils import check_params, crop_to_seg_extents, pick_slices
-from visualqc.utils import get_axis
+from mrivis.utils import check_params, crop_to_seg_extents
+from visualqc.utils import get_axis, pick_slices, check_layout
 
 zoomed_position = [0.2, 0.2, 0.7, 0.7]
 
 def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
                    vis_type='cortical_volumetric',
-                   num_rows=2, num_cols=6, figsize=None,
+                   views=(0, 1, 2), num_slices_per_view=12,
+                   num_rows_per_view=2, figsize=None,
                    annot=None, padding=5,
                    output_path=None):
     """Backend engine for overlaying a given seg on MRI with freesurfer label."""
 
-    num_rows, num_cols, padding = check_params(num_rows, num_cols, padding)
+    num_rows_per_view, num_slices_per_view, padding = check_params(num_rows_per_view, num_slices_per_view, padding)
 
     # mri = read_image(mri_spec, bkground_thresh=bkground_thresh)
     # seg = read_image(aseg_spec, bkground_thresh=0)
     mri, seg = crop_to_seg_extents(mri, seg, padding)
 
-    slices = pick_slices(mri.shape, num_rows, num_cols)
+    num_views = len(views)
+    num_rows = num_rows_per_view*num_views
+    slices = pick_slices(mri.shape, views, num_slices_per_view)
+    num_cols = check_layout(len(slices), num_views, num_rows_per_view)
 
     plt.style.use('dark_background')
 
-    num_axes = 3
     if figsize is None:
-        figsize = [4 * num_axes * num_rows, 4 * num_cols]
-    fig, ax = plt.subplots(num_axes * num_rows, num_cols, figsize=figsize)
+        # figsize = [min(15,4*num_rows), min(12,4*num_cols)] # max (15,12)
+        figsize = [ 4 * num_rows, 4 * num_cols]
+    fig, ax = plt.subplots(num_rows, num_cols, figsize=figsize)
 
     # displaying some annotation text if provided
     if annot is not None:
@@ -52,24 +56,21 @@ def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
     axes_mri = list()
 
     ax = ax.flatten()
-    ax_counter = 0
-    for dim_index in range(3):
-        for counter, slice_num in enumerate(slices[dim_index]):
-            plt.sca(ax[ax_counter])
-            ax_counter = ax_counter + 1
+    for ax_counter, (dim_index, slice_num) in enumerate(slices):
+        plt.sca(ax[ax_counter])
 
-            slice_mri = get_axis(mri, dim_index, slice_num)
-            slice_seg = get_axis(seg, dim_index, slice_num)
+        slice_mri = get_axis(mri, dim_index, slice_num)
+        slice_seg = get_axis(seg, dim_index, slice_num)
 
-            seg_rgb = seg_mapper.to_rgba(slice_seg)
-            mri_rgb = mri_mapper.to_rgba(slice_mri)
+        seg_rgb = seg_mapper.to_rgba(slice_seg)
+        mri_rgb = mri_mapper.to_rgba(slice_mri)
 
-            handle_seg = plt.imshow(seg_rgb, **display_params_seg)
-            handle_mri = plt.imshow(mri_rgb, **display_params_mri)
-            plt.axis('off')
+        handle_seg = plt.imshow(seg_rgb, **display_params_seg)
+        handle_mri = plt.imshow(mri_rgb, **display_params_mri)
+        plt.axis('off')
 
-            axes_seg.append(handle_seg)
-            axes_mri.append(handle_mri)
+        axes_seg.append(handle_seg)
+        axes_mri.append(handle_mri)
 
     fig.set_size_inches(figsize)
 
@@ -206,8 +207,9 @@ def review_and_rate(mri,
                     alpha_mri=0.8,
                     alpha_seg=0.7,
                     rating_list=('Good', 'Suspect', 'Bad', 'Failed', 'Later'),
-                    num_rows=2,
-                    num_cols=6,
+                    views=(0,1,2),
+                    num_slices=12,
+                    num_rows=6,
                     vis_type='cortical_volumetric',
                     annot=None,
                     padding=5,
@@ -217,8 +219,8 @@ def review_and_rate(mri,
     "Produces a collage of various slices from different orientations in the given 3D image"
 
     fig, axes_mri, axes_seg, figsize = overlay_images(mri, seg, alpha_mri=alpha_mri, alpha_seg=alpha_seg,
-                                                      vis_type=vis_type,
-                                             figsize=figsize, num_rows=num_rows, num_cols=num_cols, padding=padding,
+                                                      vis_type=vis_type, views=views, num_slices_per_view=num_slices,
+                                             figsize=figsize, num_rows_per_view=num_rows, padding=padding,
                                              annot=annot, output_path=output_path)
 
     interact_ui = ReviewInterface(fig, axes_seg, axes_mri, alpha_seg, rating_list)
