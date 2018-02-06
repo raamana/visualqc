@@ -67,6 +67,8 @@ def _prepare_images(fs_dir, subject_id, mri_name, seg_name, out_dir, vis_type, l
     suffix = ''
     if vis_type in ('cortical_volumetric', ):
         out_seg = void_subcortical_symmetrize_cortical(fs_seg)
+        # generate pial surface
+
     elif vis_type in ('label_set', 'labels'):
         out_seg = fs_seg
         if label_set is not None:
@@ -174,7 +176,6 @@ def get_parser():
     Default: {}.
     \n""".format(default_num_rows))
 
-    # TODO need more options for generic inputs (without specific structure)
     parser.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
                         default=default_freesurfer_dir,
                         required=False, help=help_text_fs_dir)
@@ -186,10 +187,6 @@ def get_parser():
                         choices=visualization_combination_choices,
                         default='cortical_volumetric', required=False,
                         help=help_text_vis_type)
-
-    parser.add_argument("-u", "--user_dir", action="store", dest="user_dir",
-                        default=default_user_dir,
-                        required=False, help=help_text_user_dir)
 
     parser.add_argument("-o", "--out_dir", action="store", dest="out_dir",
                         required=False, help=help_text_out_dir,
@@ -223,6 +220,10 @@ def get_parser():
     parser.add_argument("-r", "--num_rows", action="store", dest="num_rows",
                         default=default_num_rows, required=False,
                         help=help_text_num_rows)
+
+    parser.add_argument("-u", "--user_dir", action="store", dest="user_dir",
+                        default=default_user_dir,
+                        required=False, help=help_text_user_dir)
 
     return parser
 

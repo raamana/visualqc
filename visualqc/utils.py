@@ -1,13 +1,11 @@
+__all__ = ['read_image', 'check_image_is_3d']
+
 import os
 import warnings
 from os import makedirs
-from shutil import copyfile
-
+from shutil import copyfile, which
 from visualqc.config import suffix_ratings_dir, file_name_ratings, file_name_ratings_backup, \
-    visualization_combination_choices, default_out_dir_name, freesurfer_vis_types
-
-__all__ = ['read_image', 'check_image_is_3d']
-
+    visualization_combination_choices, default_out_dir_name, freesurfer_vis_types, freesurfer_vis_cmd
 from genericpath import exists as pexists
 from os.path import realpath, join as pjoin
 import numpy as np
@@ -289,8 +287,12 @@ def check_input_dir(fs_dir, user_dir, vis_type):
     if fs_dir is None and user_dir is None:
         raise ValueError('At least one of --fs_dir or --user_dir must be specified.')
 
-    if fs_dir is not None and user_dir is not None:
-        raise ValueError('Only one of --fs_dir or --user_dir can be specified.')
+    if fs_dir is not None:
+        if user_dir is not None:
+            raise ValueError('Only one of --fs_dir or --user_dir can be specified.')
+
+        if not freesurfer_installed():
+            raise EnvironmentError('Freesurfer functionality is requested(e.g. visualizing annotations), but is not installed!')
 
     if fs_dir is None and vis_type in freesurfer_vis_types:
         raise ValueError('vis_type depending on Freesurfer organization is specified, but --fs_dir is not provided.')
@@ -310,6 +312,15 @@ def check_input_dir(fs_dir, user_dir, vis_type):
         raise IOError('Invalid specification - check proper combination of --fs_dir and --user_dir')
 
     return in_dir
+
+
+def freesurfer_installed():
+    """Checks whether Freesurfer is installed."""
+
+    if os.getenv('FREESURFER_HOME') is None or which(freesurfer_vis_cmd) is None:
+        return False
+
+    return True
 
 
 def check_out_dir(out_dir, fs_dir):

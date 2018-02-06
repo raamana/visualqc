@@ -5,6 +5,7 @@ Central place to store the config info
 
 # default values
 default_out_dir_name = 'visualqc'
+annot_vis_dir_name = 'annot_visualizations'
 default_mri_name = 'brainmask.mgz'
 default_seg_name = 'aparc+aseg.mgz'
 required_files = (default_mri_name, default_seg_name)
@@ -15,6 +16,9 @@ freesurfer_vis_types = ('cortical_volumetric', 'labels', 'cortical_surface', 'co
 visualization_combination_choices = ('cortical_volumetric', 'labels', 'cortical_surface', 'cortical_composite',
                                      'subcortical_volumetric', 'user_defined')
 default_vis_type = 'cortical_volumetric'
+
+freesurfer_vis_cmd = 'tksurfer'
+
 default_label_set = None
 
 default_user_dir = None

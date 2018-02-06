@@ -6,7 +6,10 @@ from matplotlib.widgets import RadioButtons, Slider
 from mrivis.color_maps import get_freesurfer_cmap
 from mrivis.utils import check_params, crop_to_seg_extents
 from visualqc.utils import get_axis, pick_slices, check_layout
-from visualqc.config import zoomed_position
+from visualqc.config import zoomed_position, annot_vis_dir_name
+from os.path import realpath, join as pjoin
+from os import makedirs
+from subprocess import check_call
 
 def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
                    vis_type='cortical_volumetric',
@@ -91,6 +94,60 @@ def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
     return fig, axes_mri, axes_seg, figsize
 
 
+def make_vis_pial_surface(fs_dir, subject_id, out_dir, annot_file='aparc.annot'):
+    """Generate screenshot for the pial surface in different views"""
+
+    out_vis_dir = pjoin(out_dir, annot_vis_dir_name)
+    makedirs(out_vis_dir, exist_ok=True)
+    hemi_list = ('lh', 'rh')
+    vis_list = list()
+    for hemi in hemi_list:
+        script_file, vis_files = make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir, annot_file)
+        run_tksurfer_script(fs_dir, subject_id, hemi, script_file)
+        vis_list.extend(vis_files)
+
+    return vis_list
+
+
+def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir,
+                              annot_file='aparc.annot'):
+    """Generates a tksurfer script to make visualizations"""
+
+    script_file = pjoin(out_vis_dir, 'vis_annot_{}.tcl'.format(hemi))
+    vis1 = pjoin(out_vis_dir, '{}_{}_lateral.tif'.format(subject_id, hemi))
+    vis2 = pjoin(out_vis_dir, '{}_{}_medial.tif'.format(subject_id, hemi))
+    vis_files = (vis1, vis2)
+
+    img_format = 'tiff' # rgb does not work
+
+    cmds = list()
+    # cmds.append("resize_window 1000")
+    cmds.append("labl_import_annotation {}".format(annot_file))
+    cmds.append("scale_brain 1.37")
+    cmds.append("redraw")
+    cmds.append("save_{} {}".format(img_format, vis1))
+    cmds.append("rotate_brain_y 180.0")
+    cmds.append("redraw")
+    cmds.append("save_{} {}".format(img_format, vis2))
+    cmds.append("exit 0")
+
+    try:
+        with open(script_file, 'w') as sf:
+            sf.write('\n'.join(cmds))
+    except:
+        raise IOError('Unable to write the script file to\n {}'.format(script_file))
+
+    return script_file, vis_files
+
+
+def run_tksurfer_script(fs_dir, subject_id, hemi, script_file):
+    """Runs a given TCL script to generate visualizations"""
+
+    exit_code = check_call(['tksurfer', '-sdir', fs_dir, subject_id, hemi, 'pial', '-tcl', script_file], shell=False)
+
+    return exit_code
+
+
 class ReviewInterface(object):
     """Class to layout interaction elements and define callbacks. """
 
@@ -137,6 +194,7 @@ class ReviewInterface(object):
         """Callback for mouse events."""
 
         if self.prev_axis is not None:
+            # TODO this may be the cause of un-zooming when slider is moved - fix it.
             self.prev_axis.set_position(self.prev_ax_pos)
             self.prev_axis.set_zorder(-1)
             self.zoomed_in = False
