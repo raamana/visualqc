@@ -27,7 +27,8 @@ def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
         print('Reviewing {}'.format(subject_id))
         t1_mri, overlay_seg, out_path = _prepare_images(fs_dir, subject_id, mri_name, seg_name,
                                                         out_dir, vis_type, label_set)
-        ratings[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg, vis_type=vis_type,
+        ratings[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg, vis_type=vis_type, out_dir=out_dir,
+                                                        fs_dir=fs_dir, subject_id=subject_id,
                                                         views=views, num_rows=num_rows, num_slices=num_slices, output_path=out_path,
                                                         alpha_mri=alpha_set[0], alpha_seg=alpha_set[1],
                                                         annot='ID {}'.format(subject_id))
@@ -102,7 +103,7 @@ def get_parser():
       unlike --fs_dir which looks for images in ``mri`` folder of the subject's Freesurfer folder)
     Each subject will be queried after its ID in the metadata file.
 
-    E.g. ``--fs_dir /project/freesurfer_v5.3``
+    E.g. ``--user_dir /project/images_to_QC``
     \n""")
 
     help_text_id_list = textwrap.dedent("""
@@ -199,7 +200,7 @@ def get_parser():
 
     parser.add_argument("-l", "--labels", action="store", dest="labels",
                         default=default_label_set, required=False, nargs='+',
-                        help=help_text_label)
+                        help=help_text_label, metavar='label')
 
     parser.add_argument("-m", "--mri_name", action="store", dest="mri_name",
                         default=default_mri_name, required=False,

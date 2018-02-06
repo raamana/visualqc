@@ -95,7 +95,7 @@ def pick_slices(img_shape, view_set, num_slices):
 def check_layout(total_num_slices, num_views, num_rows):
     """Ensures all odd cases are dealt with"""
 
-    num_cols = int(np.floor(total_num_slices/(num_views*num_rows)))
+    num_cols = int(np.ceil(total_num_slices/(num_views*num_rows)))
 
     return num_cols
 
