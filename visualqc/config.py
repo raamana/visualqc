@@ -5,16 +5,19 @@ Central place to store the config info
 
 # default values
 default_out_dir_name = 'visualqc'
-default_mri_name = 'brainmask.mgz' # TODO make this an option to capture wider variety of use cases
+default_mri_name = 'brainmask.mgz'
 default_seg_name = 'aparc+aseg.mgz'
 required_files = (default_mri_name, default_seg_name)
 
-freesurfer_types = ('cortical_volumetric', 'labels', 'cortical_surface', 'cortical_composite',
+default_freesurfer_dir = None
+freesurfer_vis_types = ('cortical_volumetric', 'labels', 'cortical_surface', 'cortical_composite',
                                      'subcortical_volumetric')
 visualization_combination_choices = ('cortical_volumetric', 'labels', 'cortical_surface', 'cortical_composite',
                                      'subcortical_volumetric', 'user_defined')
 default_vis_type = 'cortical_volumetric'
 default_label_set = None
+
+default_user_dir = None
 
 default_alpha_set = (0.7, 0.7)
 

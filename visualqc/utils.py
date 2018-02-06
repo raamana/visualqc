@@ -4,7 +4,7 @@ from os import makedirs
 from shutil import copyfile
 
 from visualqc.config import suffix_ratings_dir, file_name_ratings, file_name_ratings_backup, \
-    visualization_combination_choices, default_out_dir_name, freesurfer_types
+    visualization_combination_choices, default_out_dir_name, freesurfer_vis_types
 
 __all__ = ['read_image', 'check_image_is_3d']
 
@@ -282,6 +282,36 @@ def save_ratings(ratings, out_dir):
     return
 
 
+def check_input_dir(fs_dir, user_dir, vis_type):
+    """Ensures proper input is specified."""
+
+    in_dir = fs_dir
+    if fs_dir is None and user_dir is None:
+        raise ValueError('At least one of --fs_dir or --user_dir must be specified.')
+
+    if fs_dir is not None and user_dir is not None:
+        raise ValueError('Only one of --fs_dir or --user_dir can be specified.')
+
+    if fs_dir is None and vis_type in freesurfer_vis_types:
+        raise ValueError('vis_type depending on Freesurfer organization is specified, but --fs_dir is not provided.')
+
+    if user_dir is None:
+        if not pexists(fs_dir):
+            raise IOError('Freesurfer directory specified does not exist!')
+        else:
+            in_dir = fs_dir
+    elif fs_dir is None:
+        if not pexists(user_dir):
+            raise IOError('User-specified input directory does not exist!')
+        else:
+            in_dir = user_dir
+
+    if not pexists(in_dir):
+        raise IOError('Invalid specification - check proper combination of --fs_dir and --user_dir')
+
+    return in_dir
+
+
 def check_out_dir(out_dir, fs_dir):
     """Creates the output folder."""
 
@@ -343,7 +373,7 @@ def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name):
 def get_path_for_subject(in_dir, subject_id, req_file, vis_type):
     """Constructs the path for the image file based on chosen input and visualization type"""
 
-    if vis_type in freesurfer_types:
+    if vis_type in freesurfer_vis_types:
         out_path = realpath(pjoin(in_dir, subject_id, 'mri', req_file))
     else:
         out_path = realpath(pjoin(in_dir, subject_id, req_file))

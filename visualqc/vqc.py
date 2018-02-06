@@ -9,10 +9,10 @@ import textwrap
 from os.path import join as pjoin, exists as pexists
 
 from visualqc.config import default_out_dir_name, default_mri_name, default_seg_name, \
-    visualization_combination_choices, default_label_set, default_alpha_set, \
-    default_views, default_num_slices, default_num_rows, default_vis_type
+    visualization_combination_choices, default_label_set, default_alpha_set, freesurfer_vis_types, \
+    default_views, default_num_slices, default_num_rows, default_vis_type, default_freesurfer_dir, default_user_dir
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set, \
-    check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_out_dir
+    check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, check_out_dir
 from visualqc.viz import review_and_rate
 
 
@@ -92,6 +92,17 @@ def get_parser():
     E.g. ``--fs_dir /project/freesurfer_v5.3``
     \n""")
 
+    help_text_user_dir = textwrap.dedent("""
+    Absolute path to an input folder containing the MRI and segmentation images.
+    Must specify 
+     1) --vis_type to perform the right preprocessing and overlays.
+     2) --mri_name and --seg_name (if they differ from defaults), as no specific input folder organization is expected - 
+      unlike --fs_dir which looks for images in ``mri`` folder of the subject's Freesurfer folder)
+    Each subject will be queried after its ID in the metadata file.
+
+    E.g. ``--fs_dir /project/freesurfer_v5.3``
+    \n""")
+
     help_text_id_list = textwrap.dedent("""
     Abs path to file containing list of subject IDs to be processed.
     If not provided, all the subjects with required files will be processed.
@@ -165,7 +176,8 @@ def get_parser():
 
     # TODO need more options for generic inputs (without specific structure)
     parser.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
-                        required=True, help=help_text_fs_dir)
+                        default=default_freesurfer_dir,
+                        required=False, help=help_text_fs_dir)
 
     parser.add_argument("-i", "--id_list", action="store", dest="id_list",
                         default=None, required=False, help=help_text_id_list)
@@ -174,6 +186,10 @@ def get_parser():
                         choices=visualization_combination_choices,
                         default='cortical_volumetric', required=False,
                         help=help_text_vis_type)
+
+    parser.add_argument("-u", "--user_dir", action="store", dest="user_dir",
+                        default=default_user_dir,
+                        required=False, help=help_text_user_dir)
 
     parser.add_argument("-o", "--out_dir", action="store", dest="out_dir",
                         required=False, help=help_text_out_dir,
@@ -227,17 +243,15 @@ def parse_args():
     except:
         parser.exit(1)
 
-    fs_dir = user_args.fs_dir
-    if not pexists(fs_dir):
-        raise IOError('Freesurfer directory specified does not exist!')
-
     vis_type, label_set = check_labels(user_args.vis_type, user_args.labels)
+
+    in_dir = check_input_dir(user_args.fs_dir, user_args.user_dir, vis_type)
 
     mri_name = user_args.mri_name
     seg_name = user_args.seg_name
-    id_list = check_id_list(user_args.id_list, fs_dir, vis_type, mri_name, seg_name)
+    id_list = check_id_list(user_args.id_list, in_dir, vis_type, mri_name, seg_name)
 
-    out_dir = check_out_dir(user_args.out_dir, fs_dir)
+    out_dir = check_out_dir(user_args.out_dir, in_dir)
 
     alpha_set = check_alpha_set(user_args.alpha_set)
 
@@ -245,7 +259,7 @@ def parse_args():
 
     num_slices, num_rows = check_finite_int(user_args.num_slices, user_args.num_rows)
 
-    return fs_dir, id_list, out_dir, vis_type, label_set, \
+    return in_dir, id_list, out_dir, vis_type, label_set, \
            alpha_set, views, num_slices, num_rows, mri_name, seg_name
 
 
