@@ -12,7 +12,8 @@ from visualqc.config import default_out_dir_name, default_mri_name, default_seg_
     visualization_combination_choices, default_label_set, default_alpha_set, freesurfer_vis_types, \
     default_views, default_num_slices, default_num_rows, default_vis_type, default_freesurfer_dir, default_user_dir
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set, \
-    check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, check_out_dir
+    check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, \
+    check_out_dir
 from visualqc.viz import review_and_rate
 
 
@@ -29,7 +30,8 @@ def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
                                                         out_dir, vis_type, label_set)
         ratings[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg, vis_type=vis_type, out_dir=out_dir,
                                                         fs_dir=fs_dir, subject_id=subject_id,
-                                                        views=views, num_rows=num_rows, num_slices=num_slices, output_path=out_path,
+                                                        views=views, num_rows=num_rows, num_slices=num_slices,
+                                                        output_path=out_path,
                                                         alpha_mri=alpha_set[0], alpha_seg=alpha_set[1],
                                                         annot='ID {}'.format(subject_id))
         # informing only when it was rated!
@@ -60,13 +62,13 @@ def _prepare_images(fs_dir, subject_id, mri_name, seg_name, out_dir, vis_type, l
 
     if t1_mri.shape != fs_seg.shape:
         raise ValueError('size mismatch! MRI: {} Seg: {}\n'
-                         'Size must match in all dimensions.'.format(t1_mri.shape,fs_seg.shape))
+                         'Size must match in all dimensions.'.format(t1_mri.shape, fs_seg.shape))
 
     if label_set is not None:
         fs_seg = get_label_set(fs_seg, label_set)
 
     suffix = ''
-    if vis_type in ('cortical_volumetric', ):
+    if vis_type in ('cortical_volumetric',):
         out_seg = void_subcortical_symmetrize_cortical(fs_seg)
         # generate pial surface
 
@@ -269,7 +271,7 @@ def cli_run():
     """Main entry point."""
 
     fs_dir, id_list, out_dir, vis_type, label_set, alpha_set, \
-        views, num_slices, num_rows, mri_name, seg_name = parse_args()
+    views, num_slices, num_rows, mri_name, seg_name = parse_args()
 
     if vis_type is not None:
         # matplotlib.interactive(True)

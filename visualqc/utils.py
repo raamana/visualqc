@@ -12,6 +12,7 @@ import numpy as np
 import nibabel as nib
 from matplotlib.colors import ListedColormap
 
+
 def read_image(img_spec, error_msg='image'):
     """Image reader. Removes stray values close to zero (smaller than 5 %ile)."""
 
@@ -46,7 +47,7 @@ def get_label_set(seg, label_set, background=0):
     # get the mask picking up all labels
     mask = np.full_like(seg, False)
     for label in label_set:
-        mask = np.logical_or(mask, seg==label)
+        mask = np.logical_or(mask, seg == label)
 
     out_seg = np.full_like(seg, background)
     out_seg[mask] = seg[mask]
@@ -57,7 +58,7 @@ def get_label_set(seg, label_set, background=0):
     # removing background - 0 stays 0
     unique_labels = np.delete(unique_labels, background)
     for index, label in enumerate(unique_labels):
-        out_seg[out_seg==label] = index+1 # index=0 would make it background
+        out_seg[out_seg == label] = index + 1  # index=0 would make it background
 
     return out_seg
 
@@ -76,18 +77,18 @@ def pick_slices(img_shape, view_set, num_slices):
     """Picks the slices to display in each dimension"""
 
     num_views = len(view_set)
-    skip_count = int(np.floor(num_slices/num_views))
+    skip_count = int(np.floor(num_slices / num_views))
 
     slices = list()
     for view in view_set:
         dim_size = img_shape[view]
-        slices_in_dim = np.around(np.linspace(0, dim_size, num_slices+2*skip_count)).astype('int64')
+        slices_in_dim = np.around(np.linspace(0, dim_size, num_slices + 2 * skip_count)).astype('int64')
         # skipping not-so-important slices at boundaries
         slices_in_dim = slices_in_dim[skip_count: -skip_count]
         # ensure you do not overshoot
-        slices_in_dim = [sn for sn in slices_in_dim if sn >=0 or sn <=dim_size ]
+        slices_in_dim = [sn for sn in slices_in_dim if sn >= 0 or sn <= dim_size]
         # adding view and slice # at the same time.
-        slices.extend([ (view, slice) for slice in slices_in_dim ])
+        slices.extend([(view, slice) for slice in slices_in_dim])
 
     return slices
 
@@ -95,7 +96,7 @@ def pick_slices(img_shape, view_set, num_slices):
 def check_layout(total_num_slices, num_views, num_rows):
     """Ensures all odd cases are dealt with"""
 
-    num_cols = int(np.ceil(total_num_slices/(num_views*num_rows)))
+    num_cols = int(np.ceil(total_num_slices / (num_views * num_rows)))
 
     return num_cols
 
@@ -106,7 +107,7 @@ def check_finite_int(num_slices, num_rows):
     num_slices = int(num_slices)
     num_rows = int(num_rows)
 
-    if not all(np.isfinite((num_slices,num_rows))):
+    if not all(np.isfinite((num_slices, num_rows))):
         raise ValueError('num_slices and num_rows must be finite.')
 
     if num_slices < 0 or num_rows < 0:
@@ -120,7 +121,7 @@ def check_alpha_set(alpha_set):
 
     alpha_set = np.array(alpha_set).astype('float16')
 
-    if any(alpha_set<0.0) or any(alpha_set> 1.0):
+    if any(alpha_set < 0.0) or any(alpha_set > 1.0):
         raise ValueError("One of the alpha's is invalid - all alphas must be within [0.0, 1.0]")
 
     return alpha_set
@@ -145,6 +146,7 @@ def check_image_is_3d(img):
 
     return img
 
+
 def void_subcortical_symmetrize_cortical(aseg, null_label=0):
     """Sets Freesurfer LUT labels for subcortical segmentations (<1000) to null,
         and sets the left and rights parts of the same structure to the same label
@@ -158,10 +160,10 @@ def void_subcortical_symmetrize_cortical(aseg, null_label=0):
     left_baseline = 1000
     right_baseline = 2000
 
-    left_ctx  = np.logical_and(aseg >= left_baseline , aseg < 2000)
+    left_ctx = np.logical_and(aseg >= left_baseline, aseg < 2000)
     right_ctx = np.logical_and(aseg >= right_baseline, aseg < 3000)
 
-    symmetric_aseg[left_ctx]  = aseg[left_ctx]  - left_baseline
+    symmetric_aseg[left_ctx] = aseg[left_ctx] - left_baseline
     symmetric_aseg[right_ctx] = aseg[right_ctx] - right_baseline
 
     return symmetric_aseg
@@ -175,42 +177,42 @@ def get_freesurfer_color_LUT():
     https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT
     """
 
-    LUT = [ [25,5,25],
-            [25,100,40],
-            [125,100,160],
-            [100,25,0],
-            [120,70,50],
-            [220,20,100],
-            [220,20,10],
-            [180,220,140],
-            [220,60,220],
-            [180,40,120],
-            [140,20,140],
-            [20,30,140],
-            [35,75,50],
-            [225,140,140],
-            [200,35,75],
-            [160,100,50],
-            [20,220,60],
-            [60,220,60],
-            [220,180,140],
-            [20,100,50],
-            [220,60,20],
-            [120,100,60],
-            [220,20,20],
-            [220,180,220],
-            [60,20,220],
-            [160,140,180],
-            [80,20,140],
-            [75,50,125],
-            [20,220,160],
-            [20,180,140],
-            [140,220,220],
-            [80,160,20],
-            [100,0,100],
-            [70,70,70],
-            [150,150,200],
-            [220,216,20]
+    LUT = [[25, 5, 25],
+           [25, 100, 40],
+           [125, 100, 160],
+           [100, 25, 0],
+           [120, 70, 50],
+           [220, 20, 100],
+           [220, 20, 10],
+           [180, 220, 140],
+           [220, 60, 220],
+           [180, 40, 120],
+           [140, 20, 140],
+           [20, 30, 140],
+           [35, 75, 50],
+           [225, 140, 140],
+           [200, 35, 75],
+           [160, 100, 50],
+           [20, 220, 60],
+           [60, 220, 60],
+           [220, 180, 140],
+           [20, 100, 50],
+           [220, 60, 20],
+           [120, 100, 60],
+           [220, 20, 20],
+           [220, 180, 220],
+           [60, 20, 220],
+           [160, 140, 180],
+           [80, 20, 140],
+           [75, 50, 125],
+           [20, 220, 160],
+           [20, 180, 140],
+           [140, 220, 220],
+           [80, 160, 20],
+           [100, 0, 100],
+           [70, 70, 70],
+           [150, 150, 200],
+           [220, 216, 20]
            ]
 
     return LUT
@@ -221,18 +223,18 @@ def get_ratings(out_dir, id_list):
 
     # making a copy
     incomplete_list = list(id_list)
-    prev_done = [] # empty list
+    prev_done = []  # empty list
 
     ratings_dir = pjoin(out_dir, suffix_ratings_dir)
     if pexists(ratings_dir):
-        prev_ratings = pjoin(ratings_dir,file_name_ratings)
+        prev_ratings = pjoin(ratings_dir, file_name_ratings)
         prev_ratings_backup = pjoin(ratings_dir, file_name_ratings_backup)
         if pexists(prev_ratings):
             ratings = load_ratings_csv(prev_ratings)
-            copyfile(prev_ratings,prev_ratings_backup)
+            copyfile(prev_ratings, prev_ratings_backup)
             # finding the remaining
             prev_done = set(ratings.keys())
-            incomplete_list = list(set(id_list)-prev_done)
+            incomplete_list = list(set(id_list) - prev_done)
         else:
             ratings = dict()
     else:
@@ -265,17 +267,18 @@ def save_ratings(ratings, out_dir):
     if not pexists(ratings_dir):
         makedirs(ratings_dir)
 
-    ratings_file = pjoin(ratings_dir,file_name_ratings)
+    ratings_file = pjoin(ratings_dir, file_name_ratings)
     prev_ratings_backup = pjoin(ratings_dir, file_name_ratings_backup)
     if pexists(ratings_file):
-        copyfile(ratings_file,prev_ratings_backup)
+        copyfile(ratings_file, prev_ratings_backup)
 
-    lines = '\n'.join(['{},{}'.format(sid, rating) for sid, rating  in ratings.items()])
+    lines = '\n'.join(['{},{}'.format(sid, rating) for sid, rating in ratings.items()])
     try:
-        with open(ratings_file,'w') as cf:
+        with open(ratings_file, 'w') as cf:
             cf.write(lines)
     except:
-        raise IOError('Error in saving ratings to file!!\nBackup might be helpful at:\n\t{}'.format(prev_ratings_backup))
+        raise IOError(
+            'Error in saving ratings to file!!\nBackup might be helpful at:\n\t{}'.format(prev_ratings_backup))
 
     return
 
@@ -292,7 +295,8 @@ def check_input_dir(fs_dir, user_dir, vis_type):
             raise ValueError('Only one of --fs_dir or --user_dir can be specified.')
 
         if not freesurfer_installed():
-            raise EnvironmentError('Freesurfer functionality is requested(e.g. visualizing annotations), but is not installed!')
+            raise EnvironmentError(
+                'Freesurfer functionality is requested(e.g. visualizing annotations), but is not installed!')
 
     if fs_dir is None and vis_type in freesurfer_vis_types:
         raise ValueError('vis_type depending on Freesurfer organization is specified, but --fs_dir is not provided.')
@@ -346,7 +350,7 @@ def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name):
 
         try:
             # read all lines and strip them of newlines/spaces
-            id_list = [ line.strip('\n ') for line in open(id_list_in) ]
+            id_list = [line.strip('\n ') for line in open(id_list_in)]
         except:
             raise IOError('unable to read the ID list.')
     else:
@@ -361,7 +365,7 @@ def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name):
 
     for subject_id in id_list:
         path_list = [get_path_for_subject(in_dir, subject_id, req_file, vis_type) for req_file in required_files]
-        invalid = [ this_file for this_file in path_list if not pexists(this_file) or os.path.getsize(this_file)<=0 ]
+        invalid = [this_file for this_file in path_list if not pexists(this_file) or os.path.getsize(this_file) <= 0]
         if len(invalid) > 0:
             id_list_err.append(subject_id)
             invalid_list.extend(invalid)

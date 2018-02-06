@@ -37,12 +37,7 @@ def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
     num_volumetric_slices = len(slices)
     total_num_panels = num_volumetric_slices + num_surf_vis
 
-    # num_surf_views = 1 if num_surf_vis > 0 else 0
-    # total_num_views = num_views + num_surf_views
     num_cols = check_layout(total_num_panels, num_views, num_rows_per_view)
-
-    # TODO add space for few composite slice (1 row or 4-5 slices)
-
 
     plt.style.use('dark_background')
 
