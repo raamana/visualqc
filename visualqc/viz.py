@@ -239,7 +239,8 @@ class ReviewInterface(object):
         if self.prev_axis is not None:
             if event.inaxes not in [self.slider.ax, self.radio_bt_rating.ax, self.radio_bt_quit.ax]:
                 self.prev_axis.set_position(self.prev_ax_pos)
-                self.prev_axis.set_zorder(-1)
+                self.prev_axis.set_zorder(0)
+                self.prev_axis.patch.set_alpha(0.5)
                 self.zoomed_in = False
 
         # right click to toggle overlay
@@ -252,11 +253,13 @@ class ReviewInterface(object):
             self.update()
 
         # double click to zoom in to any axis
-        elif event.dblclick:
+        elif event.dblclick and event.inaxes is not None:
             # zoom axes full-screen
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(zoomed_position)
-            event.inaxes.set_zorder(1)
+            event.inaxes.set_zorder(1) # bring forth
+            event.inaxes.set_facecolor('black') # black
+            event.inaxes.patch.set_alpha(1.0)  # opaque
             self.zoomed_in = True
             self.prev_axis = event.inaxes
 
