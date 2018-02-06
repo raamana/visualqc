@@ -139,7 +139,9 @@ def make_vis_pial_surface(fs_dir, subject_id, out_dir, annot_file='aparc.annot')
 
     # flattening it for easier use later on
     out_vis_list = dict()
-    pref_order = [ ('right', 'lateral'), ('left', 'lateral'), ('right', 'medial'), ('left', 'medial')]
+    pref_order = [ ('right', 'lateral'), ('left', 'lateral'),
+                   ('right', 'medial'), ('left', 'medial'),
+                   ('right', 'transverse'), ('left', 'transverse')]
     for hemi_l, view in pref_order:
         if pexists(vis_list[hemi_l][view]):
             out_vis_list[(hemi_l, view)] = vis_list[hemi_l][view]
@@ -153,8 +155,8 @@ def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir,
 
     script_file = pjoin(out_vis_dir, 'vis_annot_{}.tcl'.format(hemi))
     vis = dict()
-    vis['lateral'] = pjoin(out_vis_dir, '{}_{}_lateral.tif'.format(subject_id, hemi))
-    vis['medial'] = pjoin(out_vis_dir, '{}_{}_medial.tif'.format(subject_id, hemi))
+    for view in ['lateral', 'medial', 'transverse']:
+        vis[view] = pjoin(out_vis_dir, '{}_{}_{}.tif'.format(subject_id, hemi, view))
 
     img_format = 'tiff'  # rgb does not work
 
@@ -167,6 +169,10 @@ def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir,
     cmds.append("rotate_brain_y 180.0")
     cmds.append("redraw")
     cmds.append("save_{} {}".format(img_format, vis['medial']))
+    cmds.append("rotate_brain_z -90.0")
+    cmds.append("rotate_brain_y 135.0")
+    cmds.append("redraw")
+    cmds.append("save_{} {}".format(img_format, vis['transverse']))
     cmds.append("exit 0")
 
     try:

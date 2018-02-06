@@ -34,4 +34,4 @@ file_name_ratings = 'ratings.all.csv'
 file_name_ratings_backup = 'backup_ratings.all.csv'
 
 # visualization layout
-zoomed_position = [0.2, 0.2, 0.7, 0.7]
+zoomed_position = [0.15, 0.15, 0.7, 0.7]
