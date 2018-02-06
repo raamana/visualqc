@@ -213,12 +213,12 @@ class ReviewInterface(object):
 
         self.rating_list = rating_list
         ax_radio = plt.axes([0.905, 0.8, 0.085, 0.18], facecolor='#009b8c')
-        self.radio_bt = RadioButtons(ax_radio, self.rating_list,
-                                     active=None, activecolor='orange')
+        self.radio_bt_rating = RadioButtons(ax_radio, self.rating_list,
+                                            active=None, activecolor='orange')
 
         ax_quit = plt.axes([0.905, 0.59, 0.065, 0.1], facecolor='#0084b4')
-        self.quit_button = RadioButtons(ax_quit, quit_elements,
-                                        active=None, activecolor='orange')
+        self.radio_bt_quit = RadioButtons(ax_quit, quit_elements,
+                                          active=None, activecolor='orange')
 
         ax_slider = plt.axes([0.905, 0.73, 0.07, 0.02], facecolor='#fa8072')
         self.slider = Slider(ax_slider, label='transparency',
@@ -226,21 +226,21 @@ class ReviewInterface(object):
         self.slider.label.set_position((0.99, 1.5))
         self.slider.on_changed(self.set_alpha_value)
 
-        for txt_lbl in self.quit_button.labels + self.radio_bt.labels:
+        for txt_lbl in self.radio_bt_quit.labels + self.radio_bt_rating.labels:
             txt_lbl.set_color('#fff6da')
             txt_lbl.set_fontweight('bold')
 
-        self.radio_bt.on_clicked(self.save_rating)
-        self.quit_button.on_clicked(self.advance_or_quit)
+        self.radio_bt_rating.on_clicked(self.save_rating)
+        self.radio_bt_quit.on_clicked(self.advance_or_quit)
 
     def on_mouse(self, event):
         """Callback for mouse events."""
 
         if self.prev_axis is not None:
-            # TODO this may be the cause of un-zooming when slider is moved - fix it.
-            self.prev_axis.set_position(self.prev_ax_pos)
-            self.prev_axis.set_zorder(-1)
-            self.zoomed_in = False
+            if event.inaxes not in [self.slider.ax, self.radio_bt_rating.ax, self.radio_bt_quit.ax]:
+                self.prev_axis.set_position(self.prev_ax_pos)
+                self.prev_axis.set_zorder(-1)
+                self.zoomed_in = False
 
         # right click to toggle overlay
         if event.button in [3]:
