@@ -10,7 +10,7 @@ from mrivis.utils import check_params, crop_to_seg_extents, crop_image
 from visualqc.utils import get_axis, pick_slices, check_layout
 from visualqc import config as cfg
 from visualqc.config import zoomed_position, annot_vis_dir_name, binary_pixel_value, \
-    contour_face_color, contour_level, contour_line_width, default_vis_type, default_padding, \
+    default_contour_face_color, contour_level, contour_line_width, default_vis_type, default_padding, \
     default_views, default_num_slices, default_num_rows, default_alpha_mri, default_alpha_seg, \
     default_rating_list, default_navigation_options
 from os.path import realpath, join as pjoin, exists as pexists
@@ -144,7 +144,7 @@ def plot_contours_in_slice(slice_seg):
     single_contour = np.vstack(clist_w_breaks)
     # display contours (notice the switch of x and y!)
     contour_handle = plt.plot(single_contour[:, 1], single_contour[:, 0],
-                              color=contour_face_color, linewidth=contour_line_width)
+                              color=default_contour_face_color, linewidth=contour_line_width)
 
     return contour_handle[0]
 

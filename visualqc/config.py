@@ -46,7 +46,7 @@ file_name_ratings_backup = 'backup_ratings.all.csv'
 
 # visualization layout
 zoomed_position = [0.15, 0.15, 0.7, 0.7]
-contour_face_color = '#cccc00' # 'yellow'
+default_contour_face_color = 'yellow' # '#cccc00' # 'yellow'
 contour_line_width = 1
 binary_pixel_value = 1
 contour_level = 0.5

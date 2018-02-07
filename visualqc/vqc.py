@@ -8,6 +8,7 @@ import sys
 import textwrap
 from os.path import join as pjoin, exists as pexists
 
+from visualqc import config as cfg
 from visualqc.config import default_out_dir_name, default_mri_name, default_seg_name, \
     visualization_combination_choices, default_label_set, default_alpha_set, freesurfer_vis_types, \
     default_views, default_num_slices, default_num_rows, default_vis_type, default_freesurfer_dir, default_user_dir, \
@@ -180,6 +181,11 @@ def get_parser():
     Default: {}.
     \n""".format(default_num_rows))
 
+    help_text_contour_color = textwrap.dedent("""
+    Specifies the color to use for the contours overlaid on MRI (when vis_type requested prescribes contours). 
+    Default: {}.
+    \n""".format(cfg.default_contour_face_color))
+
     parser.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
                         default=default_freesurfer_dir,
                         required=False, help=help_text_fs_dir)
@@ -224,6 +230,10 @@ def get_parser():
     parser.add_argument("-r", "--num_rows", action="store", dest="num_rows",
                         default=default_num_rows, required=False,
                         help=help_text_num_rows)
+
+    parser.add_argument("-c", "--contour_color", action="store", dest="contour_color",
+                        default=cfg.default_contour_face_color, required=False,
+                        help=help_text_contour_color)
 
     parser.add_argument("-u", "--user_dir", action="store", dest="user_dir",
                         default=default_user_dir,
