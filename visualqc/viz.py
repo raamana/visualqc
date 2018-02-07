@@ -8,9 +8,11 @@ from skimage.measure import find_contours
 from mrivis.color_maps import get_freesurfer_cmap
 from mrivis.utils import check_params, crop_to_seg_extents, crop_image
 from visualqc.utils import get_axis, pick_slices, check_layout
+from visualqc import config as cfg
 from visualqc.config import zoomed_position, annot_vis_dir_name, binary_pixel_value, \
     contour_face_color, contour_level, contour_line_width, default_vis_type, default_padding, \
-    default_views, default_num_slices, default_num_rows, default_alpha_mri, default_alpha_seg
+    default_views, default_num_slices, default_num_rows, default_alpha_mri, default_alpha_seg, \
+    default_rating_list, default_navigation_options
 from os.path import realpath, join as pjoin, exists as pexists
 from os import makedirs
 from subprocess import check_call
@@ -108,7 +110,7 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
     # displaying some annotation text if provided
     if annot is not None:
         title_handle = fig.suptitle(annot, backgroundcolor='black', color='white', fontsize='large')
-        title_handle.set_position((0.95, 0.02))
+        title_handle.set_position(cfg.annot_position)
 
     fig.set_size_inches(figsize)
 
@@ -229,7 +231,7 @@ class ReviewInterface(object):
 
     def __init__(self, fig, axes_seg, axes_mri, alpha_seg,
                  rating_list,
-                 quit_elements=("Next", "Quit")):
+                 navig_options=default_navigation_options):
         "Constructor."
 
         self.fig = fig
@@ -245,15 +247,15 @@ class ReviewInterface(object):
         self.prev_ax_pos = None
 
         self.rating_list = rating_list
-        ax_radio = plt.axes([0.905, 0.8, 0.085, 0.18], facecolor='#009b8c')
+        ax_radio = plt.axes(cfg.position_rating_axis, facecolor='#009b8c')
         self.radio_bt_rating = RadioButtons(ax_radio, self.rating_list,
                                             active=None, activecolor='orange')
 
-        ax_quit = plt.axes([0.905, 0.59, 0.065, 0.1], facecolor='#0084b4')
-        self.radio_bt_quit = RadioButtons(ax_quit, quit_elements,
+        ax_quit = plt.axes(cfg.position_navig_options, facecolor='#0084b4')
+        self.radio_bt_quit = RadioButtons(ax_quit, navig_options,
                                           active=None, activecolor='orange')
 
-        ax_slider = plt.axes([0.905, 0.73, 0.07, 0.02], facecolor='#fa8072')
+        ax_slider = plt.axes(cfg.position_slider_seg_alpha, facecolor='#fa8072')
         self.slider = Slider(ax_slider, label='transparency',
                              valmin=0.0, valmax=1.0, valinit=0.7, valfmt='%1.2f')
         self.slider.label.set_position((0.99, 1.5))
@@ -343,18 +345,18 @@ class ReviewInterface(object):
 
 def review_and_rate(mri,
                     seg,
-                    alpha_mri=0.8,
-                    alpha_seg=0.7,
-                    rating_list=('Good', 'Suspect', 'Bad', 'Failed', 'Later'),
-                    views=(0, 1, 2),
-                    num_slices=12,
-                    num_rows=6,
-                    vis_type='cortical_volumetric',
+                    alpha_mri=default_alpha_mri,
+                    alpha_seg=default_alpha_seg,
+                    rating_list=default_rating_list,
+                    views=default_views,
+                    num_slices=default_num_slices,
+                    num_rows=default_num_rows,
+                    vis_type=default_vis_type,
                     fs_dir=None,
                     subject_id=None,
                     out_dir=None,
                     annot=None,
-                    padding=5,
+                    padding=default_padding,
                     output_path=None,
                     figsize=None,
                     **kwargs):
