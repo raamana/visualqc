@@ -13,7 +13,7 @@ from visualqc.config import default_out_dir_name, default_mri_name, default_seg_
     default_views, default_num_slices, default_num_rows, default_vis_type, default_freesurfer_dir, default_user_dir
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set, \
     check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, \
-    check_out_dir
+    check_out_dir, get_path_for_subject
 from visualqc.viz import review_and_rate
 
 
@@ -50,12 +50,12 @@ def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
     return
 
 
-def _prepare_images(fs_dir, subject_id, mri_name, seg_name, out_dir, vis_type, label_set):
+def _prepare_images(in_dir, subject_id, mri_name, seg_name, out_dir, vis_type, label_set):
     """Actual routine to generate the visualizations. """
 
     # we ensured these files exist and are not empty
-    t1_mri_path = pjoin(fs_dir, subject_id, 'mri', mri_name)
-    fs_seg_path = pjoin(fs_dir, subject_id, 'mri', seg_name)
+    t1_mri_path = get_path_for_subject(in_dir, subject_id, mri_name, vis_type) # pjoin(in_dir, subject_id, 'mri', mri_name)
+    fs_seg_path = get_path_for_subject(in_dir, subject_id, seg_name, vis_type)
 
     t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
     fs_seg = read_image(fs_seg_path, error_msg='segmentation')
@@ -68,11 +68,11 @@ def _prepare_images(fs_dir, subject_id, mri_name, seg_name, out_dir, vis_type, l
         fs_seg = get_label_set(fs_seg, label_set)
 
     suffix = ''
-    if vis_type in ('cortical_volumetric',):
+    if vis_type in ('cortical_volumetric','cortical_contour'):
         out_seg = void_subcortical_symmetrize_cortical(fs_seg)
         # generate pial surface
 
-    elif vis_type in ('label_set', 'labels'):
+    elif vis_type in ('labels_volumetric', 'labels_contour'):
         out_seg = fs_seg
         if label_set is not None:
             suffix = '_'.join([str(lbl) for lbl in list(label_set)])
@@ -188,7 +188,7 @@ def get_parser():
 
     parser.add_argument("-v", "--vis_type", action="store", dest="vis_type",
                         choices=visualization_combination_choices,
-                        default='cortical_volumetric', required=False,
+                        default=default_vis_type, required=False,
                         help=help_text_vis_type)
 
     parser.add_argument("-o", "--out_dir", action="store", dest="out_dir",

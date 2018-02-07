@@ -2,3 +2,4 @@ nibabel
 matplotlib
 mrivis
 numpy
+skimage

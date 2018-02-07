@@ -3,22 +3,26 @@ __all__ = ['review_and_rate']
 from matplotlib import pyplot as plt, colors, cm
 import matplotlib.image as mpimg
 from matplotlib.widgets import RadioButtons, Slider
+import numpy as np
+from skimage.measure import find_contours
 from mrivis.color_maps import get_freesurfer_cmap
 from mrivis.utils import check_params, crop_to_seg_extents, crop_image
 from visualqc.utils import get_axis, pick_slices, check_layout
-from visualqc.config import zoomed_position, annot_vis_dir_name
+from visualqc.config import zoomed_position, annot_vis_dir_name, binary_pixel_value, \
+    contour_face_color, contour_level, contour_line_width, default_vis_type, default_padding, \
+    default_views, default_num_slices, default_num_rows, default_alpha_mri, default_alpha_seg
 from os.path import realpath, join as pjoin, exists as pexists
 from os import makedirs
 from subprocess import check_call
 import traceback
 
 
-def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
-                   vis_type='cortical_volumetric', out_dir=None,
+def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alpha_seg,
+                   vis_type=default_vis_type, out_dir=None,
                    fs_dir=None, subject_id=None,
-                   views=(0, 1, 2), num_slices_per_view=12,
-                   num_rows_per_view=2, figsize=None,
-                   annot=None, padding=5,
+                   views=default_views, num_slices_per_view=default_num_slices,
+                   num_rows_per_view=default_num_rows, figsize=None,
+                   annot=None, padding=default_padding,
                    output_path=None):
     """Backend engine for overlaying a given seg on MRI with freesurfer label."""
 
@@ -26,7 +30,7 @@ def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
     mri, seg = crop_to_seg_extents(mri, seg, padding)
 
     surf_vis = dict()  # empty - no vis to include
-    if vis_type in ('cortical_volumetric'):
+    if 'cortical' in vis_type:
         if fs_dir is not None and subject_id is not None and out_dir is not None:
             surf_vis = make_vis_pial_surface(fs_dir, subject_id, out_dir)
     num_surf_vis = len(surf_vis)
@@ -58,8 +62,8 @@ def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
     normalize_mri = colors.Normalize(vmin=mri.min(), vmax=mri.max(), clip=True)
     mri_mapper = cm.ScalarMappable(norm=normalize_mri, cmap='gray')
 
-    axes_seg = list()
-    axes_mri = list()
+    handles_seg = list()
+    handles_mri = list()
 
     ax = ax.flatten()
     # display surfaces
@@ -78,19 +82,24 @@ def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
         slice_mri = get_axis(mri, dim_index, slice_num)
         slice_seg = get_axis(seg, dim_index, slice_num)
 
-        seg_rgb = seg_mapper.to_rgba(slice_seg)
+        # display MRI
         mri_rgb = mri_mapper.to_rgba(slice_mri)
+        h_mri = plt.imshow(mri_rgb, **display_params_mri)
 
-        handle_seg = plt.imshow(seg_rgb, **display_params_seg)
-        handle_mri = plt.imshow(mri_rgb, **display_params_mri)
+        if 'volumetric' in vis_type:
+            seg_rgb = seg_mapper.to_rgba(slice_seg)
+            h_seg = plt.imshow(seg_rgb, **display_params_seg)
+        elif 'contour' in vis_type:
+            h_seg = plot_contours_in_slice(slice_seg)
+
         plt.axis('off')
 
-        # encoding the souce of the object (image/line) being displayed
-        handle_seg.set_label('seg {} {}'.format(dim_index, slice_num))
-        handle_mri.set_label('mri {} {}'.format(dim_index, slice_num))
+        # # encoding the souce of the object (image/line) being displayed
+        # handle_seg.set_label('seg {} {}'.format(dim_index, slice_num))
+        # handle_mri.set_label('mri {} {}'.format(dim_index, slice_num))
 
-        axes_seg.append(handle_seg)
-        axes_mri.append(handle_mri)
+        handles_seg.append(h_seg)
+        handles_mri.append(h_mri)
 
     # hiding unused axes
     for ua in range(total_num_panels, len(ax)):
@@ -117,7 +126,25 @@ def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
                         bottom=0.01, top=0.99,
                         wspace=0.05, hspace=0.02)
 
-    return fig, axes_mri, axes_seg, figsize
+    return fig, handles_mri, handles_seg, figsize
+
+
+def plot_contours_in_slice(slice_seg):
+    """Returns a contour around the data in slice (after binarization)"""
+
+    binary_slice_seg = np.zeros_like(slice_seg)
+    binary_slice_seg[slice_seg > 0] = binary_pixel_value
+    contour_list = find_contours(binary_slice_seg, level=contour_level)
+
+    line_break = [np.NaN, np.NaN]
+    clist_w_breaks = [line_break] * (2 * len(contour_list) - 1)
+    clist_w_breaks[::2] = contour_list
+    single_contour = np.vstack(clist_w_breaks)
+    # display contours (notice the switch of x and y!)
+    contour_handle = plt.plot(single_contour[:, 1], single_contour[:, 0],
+                              color=contour_face_color, linewidth=contour_line_width)
+
+    return contour_handle[0]
 
 
 def make_vis_pial_surface(fs_dir, subject_id, out_dir, annot_file='aparc.annot'):
