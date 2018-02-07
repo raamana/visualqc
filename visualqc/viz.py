@@ -65,7 +65,8 @@ def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
     # display surfaces
     for sf_counter, ((hemi, view), spath) in enumerate(surf_vis.items()):
         plt.sca(ax[sf_counter])
-        img = crop_image(mpimg.imread(spath))
+        img = mpimg.imread(spath)
+        # img = crop_image(img)
         plt.imshow(img)
         ax[sf_counter].text(0, 0, '{} {}'.format(hemi, view))
         plt.axis('off')
@@ -83,6 +84,10 @@ def overlay_images(mri, seg, alpha_mri=0.8, alpha_seg=0.7,
         handle_seg = plt.imshow(seg_rgb, **display_params_seg)
         handle_mri = plt.imshow(mri_rgb, **display_params_mri)
         plt.axis('off')
+
+        # encoding the souce of the object (image/line) being displayed
+        handle_seg.set_label('seg {} {}'.format(dim_index, slice_num))
+        handle_mri.set_label('mri {} {}'.format(dim_index, slice_num))
 
         axes_seg.append(handle_seg)
         axes_mri.append(handle_mri)
@@ -238,13 +243,15 @@ class ReviewInterface(object):
         """Callback for mouse events."""
 
         if self.prev_axis is not None:
-            if event.inaxes not in [self.slider.ax, self.radio_bt_rating.ax, self.radio_bt_quit.ax]:
+            if event.inaxes not in [self.slider.ax, self.radio_bt_rating.ax, self.radio_bt_quit.ax] \
+                    and event.button not in [3]: # allowing toggling of overlay in zoomed-in state with right click
                 self.prev_axis.set_position(self.prev_ax_pos)
                 self.prev_axis.set_zorder(0)
                 self.prev_axis.patch.set_alpha(0.5)
                 self.zoomed_in = False
 
         # right click to toggle overlay
+        # TODO another useful appl could be to use right click to record erroneous slices
         if event.button in [3]:
             if self.latest_alpha_seg != 0.0:
                 self.prev_alpha_seg = self.latest_alpha_seg
