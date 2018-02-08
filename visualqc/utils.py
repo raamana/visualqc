@@ -164,6 +164,8 @@ def void_subcortical_symmetrize_cortical(aseg, null_label=0):
     left_ctx = np.logical_and(aseg >= left_baseline, aseg < 2000)
     right_ctx = np.logical_and(aseg >= right_baseline, aseg < 3000)
 
+    # labels 1000 and 2000 are unknown, so making them background is okay!
+    # if not we need to make the baselines smaller by 1, to map 1000 and 2000 to 1
     symmetric_aseg[left_ctx] = aseg[left_ctx] - left_baseline
     symmetric_aseg[right_ctx] = aseg[right_ctx] - right_baseline
 

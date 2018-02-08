@@ -147,17 +147,22 @@ def plot_contours_in_slice(slice_seg, unique_labels, color4label):
         if not binary_slice_seg.any():
             continue
 
-        contours = find_contours(binary_slice_seg, level=contour_level)
-        if len(contours) > 1:
-            # TODO try to build a LineCollection instead, easy for bulk manipulation
-            single_contour = join_contours(contours) # joining them, in case there are multiple
-        else:
-            single_contour = contours[0]
+        # using pyplot-builtin contour
+        ctr_h = plt.contour(binary_slice_seg, levels=[cfg.contour_level, ],
+                          colors=(color4label[index],), linewidths=cfg.contour_line_width)
+        contour_handles.append(ctr_h)
 
-        # display contours (notice the switch of x and y!)
-        ctr_h = plt.plot(single_contour[:, 1], single_contour[:, 0],
-                                  color=color4label[index], linewidth=contour_line_width)
-        contour_handles.append(ctr_h[0])
+        # # skimage solution
+        # contours = find_contours(binary_slice_seg, level=contour_level)
+        # if len(contours) > 1:
+        #     single_contour = join_contours(contours) # joining them, in case there are multiple
+        # else:
+        #     single_contour = contours[0]
+        #
+        # # display contours (notice the switch of x and y!)
+        # ctr_h = plt.plot(single_contour[:, 1], single_contour[:, 0],
+        #                           color=color4label[index], linewidth=contour_line_width)
+        # contour_handles.append(ctr_h[0])
 
     return contour_handles
 
