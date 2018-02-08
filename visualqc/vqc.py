@@ -16,12 +16,13 @@ from visualqc.config import default_out_dir_name, default_mri_name, default_seg_
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set, \
     check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, \
     check_out_dir, get_path_for_subject
+from matplotlib.colors import is_color_like
 from visualqc.viz import review_and_rate
 
 
 def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
                  mri_name=default_mri_name, seg_name=default_seg_name,
-                 alpha_set=default_alpha_set,
+                 alpha_set=default_alpha_set, contour_color=cfg.default_contour_face_color,
                  views=default_views, num_slices=default_num_slices, num_rows=default_num_rows):
     """Generate the required visualizations for the specified subjects."""
 
@@ -30,8 +31,9 @@ def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
         print('Reviewing {}'.format(subject_id))
         t1_mri, overlay_seg, out_path = _prepare_images(fs_dir, subject_id, mri_name, seg_name,
                                                         out_dir, vis_type, label_set)
-        ratings[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg, vis_type=vis_type, out_dir=out_dir,
-                                                        fs_dir=fs_dir, subject_id=subject_id,
+        ratings[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg,
+                                                        vis_type=vis_type, contour_color=contour_color,
+                                                        out_dir=out_dir, fs_dir=fs_dir, subject_id=subject_id,
                                                         views=views, num_rows=num_rows, num_slices=num_slices,
                                                         output_path=out_path,
                                                         alpha_mri=alpha_set[0], alpha_seg=alpha_set[1],
@@ -183,6 +185,7 @@ def get_parser():
 
     help_text_contour_color = textwrap.dedent("""
     Specifies the color to use for the contours overlaid on MRI (when vis_type requested prescribes contours). 
+    Color can be specified in many ways as documented in https://matplotlib.org/users/colors.html
     Default: {}.
     \n""".format(cfg.default_contour_face_color))
 
@@ -274,21 +277,25 @@ def parse_args():
 
     num_slices, num_rows = check_finite_int(user_args.num_slices, user_args.num_rows)
 
+    contour_color = user_args.contour_color
+    if not is_color_like(contour_color):
+        raise ValueError('Specified color is not valid. Choose a valid spec from\n https://matplotlib.org/users/colors.html')
+
     return in_dir, id_list, out_dir, vis_type, label_set, \
-           alpha_set, views, num_slices, num_rows, mri_name, seg_name
+           alpha_set, views, num_slices, num_rows, mri_name, seg_name, contour_color
 
 
 def cli_run():
     """Main entry point."""
 
     fs_dir, id_list, out_dir, vis_type, label_set, alpha_set, \
-    views, num_slices, num_rows, mri_name, seg_name = parse_args()
+    views, num_slices, num_rows, mri_name, seg_name, contour_color = parse_args()
 
     if vis_type is not None:
         # matplotlib.interactive(True)
         run_workflow(vis_type=vis_type, label_set=label_set,
                      fs_dir=fs_dir, id_list=id_list,
-                     mri_name=mri_name, seg_name=seg_name,
+                     mri_name=mri_name, seg_name=seg_name, contour_color=contour_color,
                      out_dir=out_dir, alpha_set=alpha_set,
                      views=views, num_slices=num_slices, num_rows=num_rows)
         print('Results are available in:\n\t{}'.format(out_dir))

@@ -20,8 +20,8 @@ import traceback
 
 
 def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alpha_seg,
-                   vis_type=default_vis_type, out_dir=None,
-                   fs_dir=None, subject_id=None,
+                   vis_type=default_vis_type, contour_color=cfg.default_contour_face_color,
+                   out_dir=None, fs_dir=None, subject_id=None,
                    views=default_views, num_slices_per_view=default_num_slices,
                    num_rows_per_view=default_num_rows, figsize=None,
                    annot=None, padding=default_padding,
@@ -92,7 +92,7 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
             seg_rgb = seg_mapper.to_rgba(slice_seg)
             h_seg = plt.imshow(seg_rgb, **display_params_seg)
         elif 'contour' in vis_type:
-            h_seg = plot_contours_in_slice(slice_seg)
+            h_seg = plot_contours_in_slice(slice_seg, contour_color=contour_color)
 
         plt.axis('off')
 
@@ -131,7 +131,7 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
     return fig, handles_mri, handles_seg, figsize
 
 
-def plot_contours_in_slice(slice_seg):
+def plot_contours_in_slice(slice_seg, contour_color=cfg.default_contour_face_color):
     """Returns a contour around the data in slice (after binarization)"""
 
     binary_slice_seg = np.zeros_like(slice_seg)
@@ -144,7 +144,7 @@ def plot_contours_in_slice(slice_seg):
     single_contour = np.vstack(clist_w_breaks)
     # display contours (notice the switch of x and y!)
     contour_handle = plt.plot(single_contour[:, 1], single_contour[:, 0],
-                              color=default_contour_face_color, linewidth=contour_line_width)
+                              color=contour_color, linewidth=contour_line_width)
 
     return contour_handle[0]
 
@@ -347,6 +347,7 @@ def review_and_rate(mri,
                     seg,
                     alpha_mri=default_alpha_mri,
                     alpha_seg=default_alpha_seg,
+                    contour_color=cfg.default_contour_face_color,
                     rating_list=default_rating_list,
                     views=default_views,
                     num_slices=default_num_slices,
@@ -364,6 +365,7 @@ def review_and_rate(mri,
 
     fig, axes_mri, axes_seg, figsize = overlay_images(mri, seg, alpha_mri=alpha_mri, alpha_seg=alpha_seg,
                                                       vis_type=vis_type, out_dir=out_dir,
+                                                      contour_color=contour_color,
                                                       fs_dir=fs_dir, subject_id=subject_id,
                                                       views=views, num_slices_per_view=num_slices,
                                                       figsize=figsize, num_rows_per_view=num_rows, padding=padding,
