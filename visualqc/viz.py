@@ -149,6 +149,7 @@ def plot_contours_in_slice(slice_seg, unique_labels, color4label):
 
         contours = find_contours(binary_slice_seg, level=contour_level)
         if len(contours) > 1:
+            # TODO try to build a LineCollection instead, easy for bulk manipulation
             single_contour = join_contours(contours) # joining them, in case there are multiple
         else:
             single_contour = contours[0]
@@ -186,8 +187,8 @@ def make_vis_pial_surface(fs_dir, subject_id, out_dir, annot_file='aparc.annot')
             # run the script only if all the visualizations were not generated before
             all_vis_exist = all([pexists(vis_path) for vis_path in vis_files.values()])
             if not all_vis_exist:
-                run_tksurfer_script(fs_dir, subject_id, hemi, script_file)
-                # add only those that exist (some fail to be generated)
+                exit_code = run_tksurfer_script(fs_dir, subject_id, hemi, script_file)
+
             vis_list[hemi_l].update(vis_files)
         except:
             traceback.print_exc()
