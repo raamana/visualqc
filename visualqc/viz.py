@@ -64,6 +64,15 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
     normalize_mri = colors.Normalize(vmin=mri.min(), vmax=mri.max(), clip=True)
     mri_mapper = cm.ScalarMappable(norm=normalize_mri, cmap='gray')
 
+    # deciding colors for the whole image
+    unique_labels = np.unique(seg)
+    # removing background - 0 stays 0
+    unique_labels = np.delete(unique_labels, 0)
+    if len(unique_labels) == 1:
+        color4label = [contour_color]
+    else:
+        color4label = seg_mapper.to_rgba(unique_labels)
+
     handles_seg = list()
     handles_mri = list()
 
@@ -92,7 +101,7 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
             seg_rgb = seg_mapper.to_rgba(slice_seg)
             h_seg = plt.imshow(seg_rgb, **display_params_seg)
         elif 'contour' in vis_type:
-            h_seg = plot_contours_in_slice(slice_seg, contour_color=contour_color)
+            h_seg = plot_contours_in_slice(slice_seg, unique_labels, color4label)
 
         plt.axis('off')
 
@@ -100,8 +109,11 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
         # handle_seg.set_label('seg {} {}'.format(dim_index, slice_num))
         # handle_mri.set_label('mri {} {}'.format(dim_index, slice_num))
 
-        handles_seg.append(h_seg)
         handles_mri.append(h_mri)
+        if len(h_seg) >= 1:
+            handles_seg.extend(h_seg)
+        else:
+            handles_seg.append(h_seg)
 
     # hiding unused axes
     for ua in range(total_num_panels, len(ax)):
@@ -131,22 +143,37 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
     return fig, handles_mri, handles_seg, figsize
 
 
-def plot_contours_in_slice(slice_seg, contour_color=cfg.default_contour_face_color):
+def plot_contours_in_slice(slice_seg, unique_labels, color4label):
     """Returns a contour around the data in slice (after binarization)"""
 
-    binary_slice_seg = np.zeros_like(slice_seg)
-    binary_slice_seg[slice_seg > 0] = binary_pixel_value
-    contour_list = find_contours(binary_slice_seg, level=contour_level)
+    contour_handles = list()
+    for index, label in enumerate(unique_labels):
+        binary_slice_seg = slice_seg == label
+        if not binary_slice_seg.any():
+            continue
 
-    line_break = [np.NaN, np.NaN]
-    clist_w_breaks = [line_break] * (2 * len(contour_list) - 1)
+        contours = find_contours(binary_slice_seg, level=contour_level)
+        if len(contours) > 1:
+            single_contour = join_contours(contours) # joining them, in case there are multiple
+        else:
+            single_contour = contours[0]
+
+        # display contours (notice the switch of x and y!)
+        ctr_h = plt.plot(single_contour[:, 1], single_contour[:, 0],
+                                  color=color4label[index], linewidth=contour_line_width)
+        contour_handles.append(ctr_h[0])
+
+    return contour_handles
+
+
+def join_contours(contour_list):
+    """Joins multiple contour segments into a single object with line breaks"""
+
+    clist_w_breaks = [cfg.line_break] * (2 * len(contour_list) - 1)
     clist_w_breaks[::2] = contour_list
     single_contour = np.vstack(clist_w_breaks)
-    # display contours (notice the switch of x and y!)
-    contour_handle = plt.plot(single_contour[:, 1], single_contour[:, 0],
-                              color=contour_color, linewidth=contour_line_width)
 
-    return contour_handle[0]
+    return single_contour
 
 
 def make_vis_pial_surface(fs_dir, subject_id, out_dir, annot_file='aparc.annot'):

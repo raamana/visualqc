@@ -3,6 +3,8 @@ Central place to store the config info
 
 """
 
+import numpy as np
+
 # default values
 default_out_dir_name = 'visualqc'
 annot_vis_dir_name = 'annot_visualizations'
@@ -11,10 +13,10 @@ default_seg_name = 'aparc+aseg.mgz'
 required_files = (default_mri_name, default_seg_name)
 
 default_freesurfer_dir = None
-freesurfer_vis_types = ('cortical_volumetric', 'cortical_contour',
-                        'labels_volumetric', 'labels_contour')
-visualization_combination_choices = ('cortical_volumetric', 'cortical_contour',
-                                     'labels_volumetric', 'labels_contour')
+cortical_types = ('cortical_volumetric', 'cortical_contour')
+label_types = ('labels_volumetric', 'labels_contour')
+freesurfer_vis_types = cortical_types + label_types
+visualization_combination_choices = cortical_types + label_types
 default_vis_type = 'cortical_contour'
 
 freesurfer_vis_cmd = 'tksurfer'
@@ -50,3 +52,4 @@ default_contour_face_color = 'yellow' # '#cccc00' # 'yellow'
 contour_line_width = 1
 binary_pixel_value = 1
 contour_level = 0.5
+line_break = [np.NaN, np.NaN]

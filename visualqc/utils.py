@@ -4,6 +4,7 @@ import os
 import warnings
 from os import makedirs
 from shutil import copyfile, which
+import visualqc.config as cfg
 from visualqc.config import suffix_ratings_dir, file_name_ratings, file_name_ratings_backup, \
     visualization_combination_choices, default_out_dir_name, freesurfer_vis_types, freesurfer_vis_cmd
 from genericpath import exists as pexists
@@ -405,7 +406,7 @@ def check_labels(vis_type, label_set):
                          'Choose one of:\n{}'.format(visualization_combination_choices))
 
     if label_set is not None:
-        if vis_type not in ['label_set', 'labels']:
+        if vis_type not in cfg.label_types:
             raise ValueError('Invalid selection of vis_type when labels are specifed. Choose --vis_type labels')
 
         label_set = np.array(label_set).astype('int16')
