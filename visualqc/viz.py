@@ -128,17 +128,12 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
 
     if output_path is not None:
         # no space left unused
-        plt.subplots_adjust(left=0.01, right=0.99,
-                            bottom=0.01, top=0.99,
-                            wspace=0.05, hspace=0.02)
-
+        plt.subplots_adjust(**cfg.no_blank_area)
         output_path = output_path.replace(' ', '_')
         fig.savefig(output_path + '.png', bbox_inches='tight')
 
     # leaving some space on the right for review elements
-    plt.subplots_adjust(left=0.01, right=0.9,
-                        bottom=0.01, top=0.99,
-                        wspace=0.05, hspace=0.02)
+    plt.subplots_adjust(**cfg.review_area)
 
     return fig, handles_mri, handles_seg, figsize
 
@@ -274,26 +269,30 @@ class ReviewInterface(object):
         self.prev_ax_pos = None
 
         self.rating_list = rating_list
-        ax_radio = plt.axes(cfg.position_rating_axis, facecolor='#009b8c')
+        ax_radio = plt.axes(cfg.position_rating_axis, facecolor=cfg.color_rating_axis, aspect='equal')
         self.radio_bt_rating = RadioButtons(ax_radio, self.rating_list,
                                             active=None, activecolor='orange')
 
-        ax_quit = plt.axes(cfg.position_navig_options, facecolor='#0084b4')
+        ax_quit = plt.axes(cfg.position_navig_options, facecolor=cfg.color_quit_axis, aspect='equal')
         self.radio_bt_quit = RadioButtons(ax_quit, navig_options,
                                           active=None, activecolor='orange')
 
-        ax_slider = plt.axes(cfg.position_slider_seg_alpha, facecolor='#fa8072')
+        ax_slider = plt.axes(cfg.position_slider_seg_alpha, facecolor=cfg.color_slider_axis)
         self.slider = Slider(ax_slider, label='transparency',
                              valmin=0.0, valmax=1.0, valinit=0.7, valfmt='%1.2f')
         self.slider.label.set_position((0.99, 1.5))
         self.slider.on_changed(self.set_alpha_value)
 
         for txt_lbl in self.radio_bt_quit.labels + self.radio_bt_rating.labels:
-            txt_lbl.set_color('#fff6da')
-            txt_lbl.set_fontweight('bold')
+            txt_lbl.set(color=cfg.text_color_review, fontweight='normal')
+
+        for circ in self.radio_bt_quit.circles + self.radio_bt_rating.circles:
+            circ.set(radius=0.06)
 
         self.radio_bt_rating.on_clicked(self.save_rating)
         self.radio_bt_quit.on_clicked(self.advance_or_quit)
+
+    # TODO implement key press handling e.g. ratings as letters (G, B etc) or numbers (1-5)
 
     def on_mouse(self, event):
         """Callback for mouse events."""
