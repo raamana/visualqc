@@ -2,16 +2,15 @@ __all__ = ['read_image', 'check_image_is_3d']
 
 import os
 import warnings
+from genericpath import exists as pexists
 from os import makedirs
+from os.path import realpath, join as pjoin
 from shutil import copyfile, which
+import nibabel as nib
+import numpy as np
 import visualqc.config as cfg
 from visualqc.config import suffix_ratings_dir, file_name_ratings, file_name_ratings_backup, \
     visualization_combination_choices, default_out_dir_name, freesurfer_vis_types, freesurfer_vis_cmd
-from genericpath import exists as pexists
-from os.path import realpath, join as pjoin
-import numpy as np
-import nibabel as nib
-from matplotlib.colors import ListedColormap
 
 
 def read_image(img_spec, error_msg='image'):

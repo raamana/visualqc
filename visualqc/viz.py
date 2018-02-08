@@ -1,22 +1,21 @@
 __all__ = ['review_and_rate']
 
-from matplotlib import pyplot as plt, colors, cm
+import traceback
+from os import makedirs
+from os.path import join as pjoin, exists as pexists
+from subprocess import check_call
+
 import matplotlib.image as mpimg
-from matplotlib.widgets import RadioButtons, Slider
 import numpy as np
-from skimage.measure import find_contours
+from matplotlib import pyplot as plt, colors, cm
+from matplotlib.widgets import RadioButtons, Slider
 from mrivis.color_maps import get_freesurfer_cmap
-from mrivis.utils import check_params, crop_to_seg_extents, crop_image
-from visualqc.utils import get_axis, pick_slices, check_layout
+from mrivis.utils import check_params, crop_to_seg_extents
 from visualqc import config as cfg
-from visualqc.config import zoomed_position, annot_vis_dir_name, binary_pixel_value, \
-    default_contour_face_color, contour_level, contour_line_width, default_vis_type, default_padding, \
+from visualqc.config import zoomed_position, annot_vis_dir_name, default_vis_type, default_padding, \
     default_views, default_num_slices, default_num_rows, default_alpha_mri, default_alpha_seg, \
     default_rating_list, default_navigation_options
-from os.path import realpath, join as pjoin, exists as pexists
-from os import makedirs
-from subprocess import check_call
-import traceback
+from visualqc.utils import get_axis, pick_slices, check_layout
 
 
 def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alpha_seg,

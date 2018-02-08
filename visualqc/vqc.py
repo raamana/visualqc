@@ -3,20 +3,19 @@
 """Main module."""
 
 import argparse
-import os
 import sys
 import textwrap
-from os.path import join as pjoin, exists as pexists
+from os.path import join as pjoin
 
+from matplotlib.colors import is_color_like
 from visualqc import config as cfg
 from visualqc.config import default_out_dir_name, default_mri_name, default_seg_name, \
-    visualization_combination_choices, default_label_set, default_alpha_set, freesurfer_vis_types, \
-    default_views, default_num_slices, default_num_rows, default_vis_type, default_freesurfer_dir, default_user_dir, \
+    visualization_combination_choices, default_label_set, default_alpha_set, default_views, default_num_slices, \
+    default_num_rows, default_vis_type, default_freesurfer_dir, default_user_dir, \
     default_alpha_mri, default_alpha_seg
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set, \
     check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, \
     check_out_dir, get_path_for_subject
-from matplotlib.colors import is_color_like
 from visualqc.viz import review_and_rate
 
 
