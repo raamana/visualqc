@@ -1,5 +1,5 @@
-Usage and examples
------------------------
+Usage
+-----
 
 The command line interface for ``visualqc`` is strongly recommended. If the installation was successful, options could be obtained by typing one of the following commands:
 
@@ -22,9 +22,5 @@ If you don't see the command line options listed below, go to :doc:`usage_manual
 
 If you don't see any command line usage info shown above, go to :doc:`usage_manual` page.
 
-A rough example of usage can be:
 
-.. code-block:: bash
-
-    visualqc --fs_dir /project/freesurfer
-
+Examples showing the usage of ``visualqc`` can be found at :doc:`examples`.

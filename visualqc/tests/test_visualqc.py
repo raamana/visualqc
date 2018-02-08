@@ -44,5 +44,5 @@ def test_gen_single_view():
 
 
 # test_gen()
-# test_gen_label_focus()
-test_gen_single_view()
+test_gen_label_focus()
+# test_gen_single_view()

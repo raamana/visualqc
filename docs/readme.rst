@@ -38,44 +38,40 @@ Features
 * Allows to focus on a single or a set of arbitrary segmentations (hippocampus, or PCG or DMN etc) if necessary
 * Automatically detect and flag outliers (coming soon)
 
-Gallery
--------
+Gallery (contour)
+-----------------
 
-Some examples of how the interface looks are shown below. The first screenshot showcases the use case wherein we can review the accuracy of Freesufer's cortical parcellation against the original MRI (note one axis is zoomed-in):
+Some examples of how the interface looks are shown below. The first screenshot showcases the use case wherein we can review the accuracy of Freesufer's cortical parcellation against the original MRI (note that only one view is shown and one panel is zoomed-in):
 
-.. image:: vis/cortical_zoomed_in.png
+.. image:: vis/contour/visual_qc_cortical_contour__Pitt_0050034_v1_ns18_4x6.png
 
-In the second screenshot, we show the use case for a single label (subcortical segmentation, tissue class or cortical ROI) - shown here is hippocampus:
+In the second screenshot, we show the use case for a single label (subcortical segmentation, tissue class or cortical ROI) - shown here are hippocampus and amygdala:
 
-.. image:: vis/hippocampus_not_zoomed_in.png
+.. image:: vis/contour/visual_qc_labels_contour_53_Pitt_0050039_v012_ns18_9x6.png
 
-Focusing on multiple subcortical structures:
+We can also add nearby amygdala:
 
-.. image:: vis/subcortical_multiple.png
+.. image:: vis/contour/visual_qc_labels_contour_53_54_Pitt_0050036_v02_ns21_6x7.png
 
 And you can add as many ROIs as you like:
 
-.. image:: vis/subcortical_even_more.png
+.. image:: vis/contour/visual_qc_labels_contour_10_11_12_13_NYU_0051036.png
 
-ROIs could be from anywhere in the MRI (including big cortical labels too!). For example, let's look at posterior cingulate (label 1023 in Freesurfer ColorLUT) in the left hemi-sphere :
+ROIs could be from anywhere in the MRI (including big cortical labels too!). For example, let's look at Insula (label 1035 in Freesurfer ColorLUT) in the left hemi-sphere :
 
-.. image:: vis/lh-posteriorcingulate_1023.png
+.. image:: vis/contour/visual_qc_labels_contour_1035_Pitt_0050032_v02_ns21_6x7.png
 
-And, how about insula?
+And, how about middle temporal?
 
-.. image:: vis/insula_1035.png
+.. image:: vis/contour/visual_qc_labels_contour_2015_Pitt_0050035_v02_ns21_6x7.png
 
-You can also combine as many cortical ROIs as you wish and zoom in on them to get every detail you need to judge their accuracy:
+Let's just focus on axial view to get more detail:
 
-.. image:: vis/single_label_cortical_zoomed_in.png
+.. image:: vis/contour/visual_qc_labels_contour_2015_Pitt_0050039_v2_ns27_3x9.png
 
 
+Gallery (filled)
+----------------
 
-Credits
----------
-
-This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
-
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
+Fore more visualizations e.g. those with filled labels instead of contours, refer to :doc:`gallery_filled`.
 
