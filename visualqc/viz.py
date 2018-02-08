@@ -42,14 +42,15 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
     slices = pick_slices(mri.shape, views, num_slices_per_view)
     num_volumetric_slices = len(slices)
     total_num_panels = num_volumetric_slices + num_surf_vis
-
-    num_cols = check_layout(total_num_panels, num_views, num_rows_per_view)
+    num_rows_for_surf_vis = 1 if num_surf_vis > 0 else 0
+    num_rows = num_rows + num_rows_for_surf_vis
+    num_cols = check_layout(total_num_panels, num_views, num_rows_per_view, num_rows_for_surf_vis)
 
     plt.style.use('dark_background')
 
     if figsize is None:
         # figsize = [min(15,4*num_rows), min(12,4*num_cols)] # max (15,12)
-        figsize = [4 * num_rows, 4 * num_cols]
+        figsize = [4 * num_rows, 2* num_cols]
     fig, ax = plt.subplots(num_rows, num_cols, figsize=figsize)
 
     display_params_mri = dict(interpolation='none', aspect='equal', origin='lower',
@@ -130,7 +131,8 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
         # no space left unused
         plt.subplots_adjust(**cfg.no_blank_area)
         output_path = output_path.replace(' ', '_')
-        fig.savefig(output_path + '.png', bbox_inches='tight')
+        layout_str = 'v{}_ns{}_{}x{}'.format(''.join([ str(v) for v in views]),num_slices_per_view,num_rows,num_cols)
+        fig.savefig(output_path + '_{}.png'.format(layout_str), bbox_inches='tight')
 
     # leaving some space on the right for review elements
     plt.subplots_adjust(**cfg.review_area)

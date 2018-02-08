@@ -78,7 +78,7 @@ def pick_slices(img_shape, view_set, num_slices):
     """Picks the slices to display in each dimension"""
 
     num_views = len(view_set)
-    skip_count = int(np.floor(num_slices / num_views))
+    skip_count = min(5 ,int(np.floor(num_slices / num_views)))
 
     slices = list()
     for view in view_set:
@@ -94,10 +94,10 @@ def pick_slices(img_shape, view_set, num_slices):
     return slices
 
 
-def check_layout(total_num_slices, num_views, num_rows):
+def check_layout(total_num_slices, num_views, num_rows_per_view, num_rows_for_surf_vis):
     """Ensures all odd cases are dealt with"""
 
-    num_cols = int(np.ceil(total_num_slices / (num_views * num_rows)))
+    num_cols = int(np.ceil(total_num_slices / ((num_views * num_rows_per_view) + num_rows_for_surf_vis)))
 
     return num_cols
 
