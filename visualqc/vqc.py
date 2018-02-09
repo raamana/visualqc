@@ -6,7 +6,7 @@ import argparse
 import sys
 import textwrap
 from os.path import join as pjoin
-
+import warnings
 from matplotlib.colors import is_color_like
 from visualqc import config as cfg
 from visualqc.config import default_out_dir_name, default_mri_name, default_seg_name, \
@@ -25,12 +25,12 @@ def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
                  views=default_views, num_slices=default_num_slices, num_rows=default_num_rows):
     """Generate the required visualizations for the specified subjects."""
 
-    ratings, ratings_dir, incomplete_list, prev_done = get_ratings(out_dir, id_list)
+    ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(out_dir, id_list)
     for subject_id in incomplete_list:
         print('Reviewing {}'.format(subject_id))
         t1_mri, overlay_seg, out_path = _prepare_images(fs_dir, subject_id, mri_name, seg_name,
                                                         out_dir, vis_type, label_set)
-        ratings[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg,
+        ratings[subject_id], notes[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg,
                                                         vis_type=vis_type, contour_color=contour_color,
                                                         out_dir=out_dir, fs_dir=fs_dir, subject_id=subject_id,
                                                         views=views, num_rows=num_rows, num_slices=num_slices,
@@ -48,7 +48,7 @@ def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
             break
 
     print('Saving ratings .. \n')
-    save_ratings(ratings, out_dir)
+    save_ratings(ratings, notes, out_dir)
 
     return
 
@@ -292,12 +292,15 @@ def cli_run():
 
     if vis_type is not None:
         # matplotlib.interactive(True)
-        run_workflow(vis_type=vis_type, label_set=label_set,
-                     fs_dir=fs_dir, id_list=id_list,
-                     mri_name=mri_name, seg_name=seg_name, contour_color=contour_color,
-                     out_dir=out_dir, alpha_set=alpha_set,
-                     views=views, num_slices=num_slices, num_rows=num_rows)
-        print('Results are available in:\n\t{}'.format(out_dir))
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            warnings.filterwarnings("ignore", category=FutureWarning)
+            run_workflow(vis_type=vis_type, label_set=label_set,
+                         fs_dir=fs_dir, id_list=id_list,
+                         mri_name=mri_name, seg_name=seg_name, contour_color=contour_color,
+                         out_dir=out_dir, alpha_set=alpha_set,
+                         views=views, num_slices=num_slices, num_rows=num_rows)
+            print('Results are available in:\n\t{}'.format(out_dir))
     else:
         raise ValueError('Invalid state for visualQC!\n\t Ensure proper combination of arguments is used.')
 

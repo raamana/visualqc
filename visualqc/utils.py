@@ -244,37 +244,42 @@ def get_ratings(out_dir, id_list):
         prev_ratings = pjoin(ratings_dir, file_name_ratings)
         prev_ratings_backup = pjoin(ratings_dir, file_name_ratings_backup)
         if pexists(prev_ratings):
-            ratings = load_ratings_csv(prev_ratings)
+            ratings, notes = load_ratings_csv(prev_ratings)
             copyfile(prev_ratings, prev_ratings_backup)
             # finding the remaining
             prev_done = set(ratings.keys())
             incomplete_list = list(set(id_list) - prev_done)
         else:
             ratings = dict()
+            notes = dict()
     else:
         makedirs(ratings_dir, exist_ok=True)
         ratings = dict()
+        notes = dict()
 
     if len(prev_done) > 0:
         print('Ratings for {} subjects were restored from previous backup'.format(len(prev_done)))
 
     print('To be reviewed : {}'.format(len(incomplete_list)))
 
-    return ratings, ratings_dir, incomplete_list, prev_done
+    return ratings, notes, ratings_dir, incomplete_list, prev_done
 
 
 def load_ratings_csv(prev_ratings):
     """read CSV into a dict"""
 
     if pexists(prev_ratings):
-        info_dict = dict([line.strip().split(',') for line in open(prev_ratings).readlines()])
+        csv_values = [line.strip().split(',') for line in open(prev_ratings).readlines()]
+        ratings = { item[0]: item[1] for item in csv_values}
+        notes   = { item[0]: item[2] for item in csv_values}
     else:
-        info_dict = dict()
+        ratings = dict()
+        notes = dict()
 
-    return info_dict
+    return ratings, notes
 
 
-def save_ratings(ratings, out_dir):
+def save_ratings(ratings, notes, out_dir):
     """Save ratings before closing shop."""
 
     ratings_dir = pjoin(out_dir, suffix_ratings_dir)
@@ -286,7 +291,7 @@ def save_ratings(ratings, out_dir):
     if pexists(ratings_file):
         copyfile(ratings_file, prev_ratings_backup)
 
-    lines = '\n'.join(['{},{}'.format(sid, rating) for sid, rating in ratings.items()])
+    lines = '\n'.join(['{},{},{}'.format(sid, rating, notes[sid]) for sid, rating in ratings.items()])
     try:
         with open(ratings_file, 'w') as cf:
             cf.write(lines)
