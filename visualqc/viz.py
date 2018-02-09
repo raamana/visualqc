@@ -8,7 +8,7 @@ from subprocess import check_call
 import matplotlib.image as mpimg
 import numpy as np
 from matplotlib import pyplot as plt, colors, cm
-from matplotlib.widgets import RadioButtons, Slider
+from matplotlib.widgets import RadioButtons, Slider, TextBox
 from mrivis.color_maps import get_freesurfer_cmap
 from mrivis.utils import check_params, crop_to_seg_extents
 from visualqc import config as cfg
@@ -269,6 +269,7 @@ class ReviewInterface(object):
         self.latest_alpha_seg = alpha_seg
 
         self.user_rating = None
+        self.user_notes = None
         self.quit_now = False
 
         self.zoomed_in = False
@@ -279,6 +280,12 @@ class ReviewInterface(object):
         ax_radio = plt.axes(cfg.position_rating_axis, facecolor=cfg.color_rating_axis, aspect='equal')
         self.radio_bt_rating = RadioButtons(ax_radio, self.rating_list,
                                             active=None, activecolor='orange')
+
+        ax_text = plt.axes(cfg.position_text_input) # , facecolor=cfg.color_textbox_input, aspect='equal'
+        self.text_box = TextBox(ax_text, color=cfg.text_box_color, hovercolor=cfg.text_box_color,
+                                label=cfg.textbox_title, initial=cfg.textbox_initial_text)
+        self.text_box.label.update(dict(color=cfg.text_box_text_color, wrap=True,
+                                   verticalalignment='top', horizontalalignment='left'))
 
         ax_quit = plt.axes(cfg.position_navig_options, facecolor=cfg.color_quit_axis, aspect='equal')
         self.radio_bt_quit = RadioButtons(ax_quit, navig_options,
@@ -291,12 +298,15 @@ class ReviewInterface(object):
         self.slider.on_changed(self.set_alpha_value)
 
         for txt_lbl in self.radio_bt_quit.labels + self.radio_bt_rating.labels:
-            txt_lbl.set(color=cfg.text_color_review, fontweight='normal')
+            txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
 
         for circ in self.radio_bt_quit.circles + self.radio_bt_rating.circles:
             circ.set(radius=0.06)
 
         self.radio_bt_rating.on_clicked(self.save_rating)
+        self.text_box.on_submit(self.save_user_notes)
+        # matplotlib hands if we connect two events to the same callback
+        # self.text_box.on_text_change(self.save_user_notes_duplicate)
         self.radio_bt_quit.on_clicked(self.advance_or_quit)
 
     # TODO implement key press handling e.g. ratings as letters (G, B etc) or numbers (1-5)
@@ -305,11 +315,12 @@ class ReviewInterface(object):
         """Callback for mouse events."""
 
         if self.prev_axis is not None:
-            if event.inaxes not in [self.slider.ax, self.radio_bt_rating.ax, self.radio_bt_quit.ax] \
+            if event.inaxes not in [self.slider.ax, self.radio_bt_rating.ax,
+                                    self.text_box.ax, self.radio_bt_quit.ax] \
                     and event.button not in [3]: # allowing toggling of overlay in zoomed-in state with right click
                 self.prev_axis.set_position(self.prev_ax_pos)
-                self.prev_axis.set_zorder(0)
-                self.prev_axis.patch.set_alpha(0.5)
+                # self.prev_axis.set_zorder(0)
+                # self.prev_axis.patch.set_alpha(0.5)
                 self.zoomed_in = False
 
         # right click to toggle overlay
@@ -351,6 +362,18 @@ class ReviewInterface(object):
 
         # print('  rating {}'.format(label))
         self.user_rating = label
+        return
+
+    def save_user_notes(self, text_entered):
+        """Saves user free-form notes from textbox."""
+
+        self.user_notes = text_entered
+        return
+
+    def save_user_notes_duplicate(self, text_entered):
+        """Saves user free-form notes from textbox."""
+
+        self.user_notes = text_entered
         return
 
     def advance_or_quit(self, label):
@@ -416,4 +439,4 @@ def review_and_rate(mri,
     # fig.canvas.mpl_disconnect(con_id_scroll)
     plt.close()
 
-    return interact_ui.user_rating, interact_ui.quit_now
+    return interact_ui.user_rating, interact_ui.user_notes, interact_ui.quit_now
