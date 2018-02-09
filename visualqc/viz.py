@@ -284,8 +284,8 @@ class ReviewInterface(object):
         ax_text = plt.axes(cfg.position_text_input) # , facecolor=cfg.color_textbox_input, aspect='equal'
         self.text_box = TextBox(ax_text, color=cfg.text_box_color, hovercolor=cfg.text_box_color,
                                 label=cfg.textbox_title, initial=cfg.textbox_initial_text)
-        self.text_box.label.update(dict(color=cfg.text_box_text_color, wrap=True,
-                                   verticalalignment='top', horizontalalignment='left'))
+        # self.text_box.label.update(dict(color=cfg.text_box_text_color, wrap=True,
+        #                            verticalalignment='top', horizontalalignment='left'))
 
         ax_quit = plt.axes(cfg.position_navig_options, facecolor=cfg.color_quit_axis, aspect='equal')
         self.radio_bt_quit = RadioButtons(ax_quit, navig_options,
@@ -306,7 +306,7 @@ class ReviewInterface(object):
         self.radio_bt_rating.on_clicked(self.save_rating)
         self.text_box.on_submit(self.save_user_notes)
         # matplotlib hands if we connect two events to the same callback
-        # self.text_box.on_text_change(self.save_user_notes_duplicate)
+        self.text_box.on_text_change(self.save_user_notes_duplicate)
         self.radio_bt_quit.on_clicked(self.advance_or_quit)
 
     # TODO implement key press handling e.g. ratings as letters (G, B etc) or numbers (1-5)
@@ -319,8 +319,8 @@ class ReviewInterface(object):
                                     self.text_box.ax, self.radio_bt_quit.ax] \
                     and event.button not in [3]: # allowing toggling of overlay in zoomed-in state with right click
                 self.prev_axis.set_position(self.prev_ax_pos)
-                # self.prev_axis.set_zorder(0)
-                # self.prev_axis.patch.set_alpha(0.5)
+                self.prev_axis.set_zorder(0)
+                self.prev_axis.patch.set_alpha(0.5)
                 self.zoomed_in = False
 
         # right click to toggle overlay

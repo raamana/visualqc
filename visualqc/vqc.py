@@ -39,7 +39,7 @@ def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
                                                         annot='ID {}'.format(subject_id))
         # informing only when it was rated!
         if ratings[subject_id] is not None:
-            print('id {} rating {}'.format(subject_id, ratings[subject_id]))
+            print('id {} rating {} notes {}'.format(subject_id, ratings[subject_id], notes[subject_id]))
         else:
             ratings.pop(subject_id)
 
