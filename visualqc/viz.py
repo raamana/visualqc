@@ -38,7 +38,7 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
 
     num_views = len(views)
     num_rows = num_rows_per_view * num_views
-    slices = pick_slices(mri.shape, views, num_slices_per_view)
+    slices = pick_slices(seg, views, num_slices_per_view)
     num_volumetric_slices = len(slices)
     total_num_panels = num_volumetric_slices + num_surf_vis
     num_rows_for_surf_vis = 1 if num_surf_vis > 0 else 0
