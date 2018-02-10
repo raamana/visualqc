@@ -34,8 +34,8 @@ default_num_rows = 2
 default_padding = 5  # pixels/voxels
 
 default_navigation_options = ("Next", "Quit")
-default_rating_list = ('Good', 'Suspect', 'Bad', 'Failed', 'Later')
-map_short_rating = dict(g='Good', s='Suspect', b='Bad', f='Failed', l='Later')
+default_rating_list = ('Good', 'Doubtful', 'Bad', 'Error', 'Later')
+map_short_rating = dict(g='Good', d='Doubtful', b='Bad', e='Error', l='Later')
 default_rating_list_shortform = map_short_rating.keys()
 
 textbox_title = ''
@@ -43,16 +43,19 @@ textbox_initial_text = 'Your Notes:' #Text(text='Your Notes:', )
 
 color_rating_axis = '#009b8c'
 color_textbox_input = '#009b8c'
-color_quit_axis = '#0084b4'
+color_quit_axis = '#009b8c'
 color_slider_axis = '#fa8072'
 text_box_color = 'xkcd:grey'
 text_box_text_color = 'black'
 text_option_color = 'white'
+color_navig_text = 'black'
 
 position_rating_axis = [0.905, 0.78, 0.085, 0.2]
 position_slider_seg_alpha = [0.905, 0.74, 0.07, 0.02]
-position_text_input = [0.9, 0.4, 0.095, 0.3]
+position_text_input = [0.9, 0.42, 0.095, 0.2]
 position_navig_options = [0.905, 0.27, 0.07, 0.12]
+position_quit_button = [0.905, 0.27, 0.07, 0.04]
+position_next_button = [0.905, 0.35, 0.07, 0.04]
 annot_position = (0.95, 0.03)
 
 review_area = dict(left=0.01, right=0.9,

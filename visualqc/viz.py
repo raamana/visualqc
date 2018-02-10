@@ -8,7 +8,7 @@ from subprocess import check_call
 import matplotlib.image as mpimg
 import numpy as np
 from matplotlib import pyplot as plt, colors, cm
-from matplotlib.widgets import RadioButtons, Slider, TextBox
+from matplotlib.widgets import RadioButtons, Slider, TextBox, Button
 from mrivis.color_maps import get_freesurfer_cmap
 from mrivis.utils import check_params, crop_to_seg_extents
 from visualqc import config as cfg
@@ -277,46 +277,64 @@ class ReviewInterface(object):
         self.prev_ax_pos = None
 
         self.rating_list = rating_list
+
         ax_radio = plt.axes(cfg.position_rating_axis, facecolor=cfg.color_rating_axis, aspect='equal')
         self.radio_bt_rating = RadioButtons(ax_radio, self.rating_list,
                                             active=None, activecolor='orange')
+        self.radio_bt_rating.on_clicked(self.save_rating)
+        for txt_lbl in self.radio_bt_rating.labels:
+            txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
 
-        ax_text = plt.axes(cfg.position_text_input) # , facecolor=cfg.color_textbox_input, aspect='equal'
-        self.text_box = TextBox(ax_text, color=cfg.text_box_color, hovercolor=cfg.text_box_color,
-                                label=cfg.textbox_title, initial=cfg.textbox_initial_text)
-        # self.text_box.label.update(dict(color=cfg.text_box_text_color, wrap=True,
-        #                            verticalalignment='top', horizontalalignment='left'))
+        for circ in self.radio_bt_rating.circles:
+            circ.set(radius=0.06)
 
-        ax_quit = plt.axes(cfg.position_navig_options, facecolor=cfg.color_quit_axis, aspect='equal')
-        self.radio_bt_quit = RadioButtons(ax_quit, navig_options,
-                                          active=None, activecolor='orange')
 
+        # ax_quit = plt.axes(cfg.position_navig_options, facecolor=cfg.color_quit_axis, aspect='equal')
+        # self.radio_bt_quit = RadioButtons(ax_quit, navig_options,
+        #                                   active=None, activecolor='orange')
+        # self.radio_bt_quit.on_clicked(self.advance_or_quit)
+        # for txt_lbl in self.radio_bt_quit.labels:
+        #     txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
+        #
+        # for circ in self.radio_bt_quit.circles:
+        #     circ.set(radius=0.06)
+
+
+        # implementing two separate buttons for navigation (mulitple radio button has issues)
+        ax_bt_quit = plt.axes(cfg.position_quit_button, facecolor=cfg.color_quit_axis, aspect='equal')
+        ax_bt_next = plt.axes(cfg.position_next_button, facecolor=cfg.color_quit_axis, aspect='equal')
+        self.bt_quit = Button(ax_bt_quit, 'Quit', hovercolor='orange')
+        self.bt_next = Button(ax_bt_next, 'Next', hovercolor='orange')
+        self.bt_quit.on_clicked(self.quit)
+        self.bt_next.on_clicked(self.next)
+        self.bt_quit.label.set_color(cfg.color_navig_text)
+        self.bt_next.label.set_color(cfg.color_navig_text)
+
+        # alpha slider
         ax_slider = plt.axes(cfg.position_slider_seg_alpha, facecolor=cfg.color_slider_axis)
         self.slider = Slider(ax_slider, label='transparency',
                              valmin=0.0, valmax=1.0, valinit=0.7, valfmt='%1.2f')
         self.slider.label.set_position((0.99, 1.5))
         self.slider.on_changed(self.set_alpha_value)
 
-        for txt_lbl in self.radio_bt_quit.labels + self.radio_bt_rating.labels:
-            txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
-
-        for circ in self.radio_bt_quit.circles + self.radio_bt_rating.circles:
-            circ.set(radius=0.06)
-
-        self.radio_bt_rating.on_clicked(self.save_rating)
+        # user notes
+        ax_text = plt.axes(cfg.position_text_input) # , facecolor=cfg.color_textbox_input, aspect='equal'
+        self.text_box = TextBox(ax_text, color=cfg.text_box_color, hovercolor=cfg.text_box_color,
+                                label=cfg.textbox_title, initial=cfg.textbox_initial_text)
+        self.text_box.label.update(dict(color=cfg.text_box_text_color, wrap=True,
+                                   verticalalignment='top', horizontalalignment='left'))
         self.text_box.on_submit(self.save_user_notes)
-        # matplotlib hands if we connect two events to the same callback
-        self.text_box.on_text_change(self.save_user_notes_duplicate)
-        self.radio_bt_quit.on_clicked(self.advance_or_quit)
+        # matplotlib has issues if we connect two events to the same callback
+        # self.text_box.on_text_change(self.save_user_notes_duplicate)
 
-    # TODO implement key press handling e.g. ratings as letters (G, B etc) or numbers (1-5)
 
     def on_mouse(self, event):
         """Callback for mouse events."""
 
         if self.prev_axis is not None:
+            # TODO when the UI is finalzed, include all the non-data axes here
             if event.inaxes not in [self.slider.ax, self.radio_bt_rating.ax,
-                                    self.text_box.ax, self.radio_bt_quit.ax] \
+                                    self.bt_next.ax, self.bt_quit.ax] \
                     and event.button not in [3]: # allowing toggling of overlay in zoomed-in state with right click
                 self.prev_axis.set_position(self.prev_ax_pos)
                 self.prev_axis.set_zorder(0)
@@ -344,7 +362,6 @@ class ReviewInterface(object):
 
         plt.draw()
 
-        return
 
     def do_shortcuts(self, input):
         """Callback to handle keyboard shortcuts to rate and advance."""
@@ -354,6 +371,9 @@ class ReviewInterface(object):
         if key_pressed in ['right', ' ', 'space']:
             self.user_rating = self.radio_bt_rating.value_selected
             self.next()
+        if key_pressed in ['ctrl+q', 'q+ctrl']:
+            self.user_rating = self.radio_bt_rating.value_selected
+            self.quit()
         else:
             if key_pressed in cfg.default_rating_list_shortform:
                 self.user_rating = cfg.map_short_rating[key_pressed]
@@ -362,8 +382,6 @@ class ReviewInterface(object):
                 self.toggle_overlay()
             else:
                 pass
-
-        return
 
     def toggle_overlay(self):
         """Toggles the overlay by setting alpha to 0 and back."""
@@ -386,20 +404,19 @@ class ReviewInterface(object):
 
         # print('  rating {}'.format(label))
         self.user_rating = label
-        return
 
     def save_user_notes(self, text_entered):
         """Saves user free-form notes from textbox."""
 
         self.user_notes = text_entered
-        return
 
     def save_user_notes_duplicate(self, text_entered):
         """Saves user free-form notes from textbox."""
 
         self.user_notes = text_entered
-        return
 
+    # TODO this callback for 2nd radio button is not getting executed properly
+    # tracing revelas, some problems set_active callback
     def advance_or_quit(self, label):
         """Signal to quit"""
 
@@ -408,15 +425,13 @@ class ReviewInterface(object):
         else:
             self.next()
 
-        return
-
-    def quit(self):
+    def quit(self, ignore_arg=None):
         "terminator"
 
         self.quit_now = True
         plt.close(self.fig)
 
-    def next(self):
+    def next(self, ignore_arg=None):
         "terminator"
 
         self.quit_now = False
@@ -431,7 +446,6 @@ class ReviewInterface(object):
         # update figure
         plt.draw()
 
-        return
 
 
 def review_and_rate(mri,
@@ -462,10 +476,10 @@ def review_and_rate(mri,
                                                       figsize=figsize, num_rows_per_view=num_rows, padding=padding,
                                                       annot=annot, output_path=output_path)
 
-    interact_ui = ReviewInterface(fig, axes_seg, axes_mri, alpha_seg, rating_list)
+    rating_ui = ReviewInterface(fig, axes_seg, axes_mri, alpha_seg, rating_list)
 
-    con_id_click = fig.canvas.mpl_connect('button_press_event', interact_ui.on_mouse)
-    con_id_keybd = fig.canvas.mpl_connect('key_press_event', interact_ui.do_shortcuts)
+    con_id_click = fig.canvas.mpl_connect('button_press_event', rating_ui.on_mouse)
+    con_id_keybd = fig.canvas.mpl_connect('key_press_event', rating_ui.do_shortcuts)
     # con_id_scroll = fig.canvas.mpl_connect('scroll_event', on_mouse)
 
     fig.set_size_inches(figsize)
@@ -476,4 +490,4 @@ def review_and_rate(mri,
     # fig.canvas.mpl_disconnect(con_id_scroll)
     plt.close()
 
-    return interact_ui.user_rating, interact_ui.user_notes, interact_ui.quit_now
+    return rating_ui.user_rating, rating_ui.user_notes, rating_ui.quit_now
