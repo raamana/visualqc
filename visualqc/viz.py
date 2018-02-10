@@ -326,12 +326,7 @@ class ReviewInterface(object):
         # right click to toggle overlay
         # TODO another useful appl could be to use right click to record erroneous slices
         if event.button in [3]:
-            if self.latest_alpha_seg != 0.0:
-                self.prev_alpha_seg = self.latest_alpha_seg
-                self.latest_alpha_seg = 0.0
-            else:
-                self.latest_alpha_seg = self.prev_alpha_seg
-            self.update()
+            self.toggle_overlay()
 
         # double click to zoom in to any axis
         elif event.dblclick and event.inaxes is not None:
@@ -350,6 +345,35 @@ class ReviewInterface(object):
         plt.draw()
 
         return
+
+    def do_shortcuts(self, input):
+        """Callback to handle keyboard shortcuts to rate and advance."""
+
+        key_pressed = input.key.lower()
+        # print(key_pressed)
+        if key_pressed in ['right', ' ', 'space']:
+            self.user_rating = self.radio_bt_rating.value_selected
+            self.next()
+        else:
+            if key_pressed in cfg.default_rating_list_shortform:
+                self.user_rating = cfg.map_short_rating[key_pressed]
+                self.radio_bt_rating.set_active(cfg.default_rating_list.index(self.user_rating))
+            elif key_pressed in ['t']:
+                self.toggle_overlay()
+            else:
+                pass
+
+        return
+
+    def toggle_overlay(self):
+        """Toggles the overlay by setting alpha to 0 and back."""
+
+        if self.latest_alpha_seg != 0.0:
+            self.prev_alpha_seg = self.latest_alpha_seg
+            self.latest_alpha_seg = 0.0
+        else:
+            self.latest_alpha_seg = self.prev_alpha_seg
+        self.update()
 
     def set_alpha_value(self, latest_value):
         """" Use the slider to set alpha."""
@@ -380,22 +404,33 @@ class ReviewInterface(object):
         """Signal to quit"""
 
         if label.upper() == u'QUIT':
-            self.quit_now = True
-            plt.close(self.fig)
+            self.quit()
         else:
-            self.quit_now = False
-            plt.close(self.fig)
+            self.next()
 
         return
 
-    def update(self):
+    def quit(self):
+        "terminator"
 
-        # updating seg alpha for all axes
+        self.quit_now = True
+        plt.close(self.fig)
+
+    def next(self):
+        "terminator"
+
+        self.quit_now = False
+        plt.close(self.fig)
+
+    def update(self):
+        """updating seg alpha for all axes"""
+
         for ax in self.axes_seg:
             ax.set_alpha(self.latest_alpha_seg)
 
-        # self.fig.canvas.draw_idle()
-        # plt.draw()
+        # update figure
+        plt.draw()
+
         return
 
 
@@ -430,12 +465,14 @@ def review_and_rate(mri,
     interact_ui = ReviewInterface(fig, axes_seg, axes_mri, alpha_seg, rating_list)
 
     con_id_click = fig.canvas.mpl_connect('button_press_event', interact_ui.on_mouse)
+    con_id_keybd = fig.canvas.mpl_connect('key_press_event', interact_ui.do_shortcuts)
     # con_id_scroll = fig.canvas.mpl_connect('scroll_event', on_mouse)
 
     fig.set_size_inches(figsize)
     plt.show()
 
     fig.canvas.mpl_disconnect(con_id_click)
+    fig.canvas.mpl_disconnect(con_id_keybd)
     # fig.canvas.mpl_disconnect(con_id_scroll)
     plt.close()
 

@@ -33,8 +33,11 @@ default_num_slices = 12
 default_num_rows = 2
 default_padding = 5  # pixels/voxels
 
-default_rating_list = ('Good', 'Suspect', 'Bad', 'Failed', 'Later')
 default_navigation_options = ("Next", "Quit")
+default_rating_list = ('Good', 'Suspect', 'Bad', 'Failed', 'Later')
+map_short_rating = dict(g='Good', s='Suspect', b='Bad', f='Failed', l='Later')
+default_rating_list_shortform = map_short_rating.keys()
+
 textbox_title = ''
 textbox_initial_text = 'Your Notes:' #Text(text='Your Notes:', )
 
