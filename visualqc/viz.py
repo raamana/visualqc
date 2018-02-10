@@ -332,9 +332,9 @@ class ReviewInterface(object):
         """Callback for mouse events."""
 
         if self.prev_axis is not None:
-            # TODO when the UI is finalzed, include all the non-data axes here
+            # include all the non-data axes here (so they wont be zoomed-in)
             if event.inaxes not in [self.slider.ax, self.radio_bt_rating.ax,
-                                    self.bt_next.ax, self.bt_quit.ax] \
+                                    self.bt_next.ax, self.bt_quit.ax, self.text_box.ax] \
                     and event.button not in [3]: # allowing toggling of overlay in zoomed-in state with right click
                 self.prev_axis.set_position(self.prev_ax_pos)
                 self.prev_axis.set_zorder(0)

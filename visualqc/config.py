@@ -34,8 +34,9 @@ default_num_rows = 2
 default_padding = 5  # pixels/voxels
 
 default_navigation_options = ("Next", "Quit")
-default_rating_list = ('Good', 'Doubtful', 'Bad', 'Error', 'Later')
-map_short_rating = dict(g='Good', d='Doubtful', b='Bad', e='Error', l='Later')
+# shortcuts L, F, S have actions on matplotlib interface, so choosing other words
+default_rating_list = ('Good', 'Doubtful', 'Bad', 'Error', 'Review later')
+map_short_rating = dict(g='Good', d='Doubtful', b='Bad', e='Error', r='Review later')
 default_rating_list_shortform = map_short_rating.keys()
 
 textbox_title = ''
