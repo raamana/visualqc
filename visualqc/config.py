@@ -50,13 +50,13 @@ text_box_text_color = 'black'
 text_option_color = 'white'
 color_navig_text = 'black'
 
-position_rating_axis = [0.905, 0.78, 0.085, 0.2]
-position_slider_seg_alpha = [0.905, 0.74, 0.07, 0.02]
-position_text_input = [0.9, 0.42, 0.095, 0.2]
-position_navig_options = [0.905, 0.27, 0.07, 0.12]
-position_quit_button = [0.905, 0.27, 0.07, 0.04]
-position_next_button = [0.905, 0.35, 0.07, 0.04]
-annot_position = (0.95, 0.03)
+annot_position            = (0.950, 0.98)
+position_rating_axis      = [0.905, 0.76, 0.080, 0.2]
+position_text_input       = [0.900, 0.55, 0.095, 0.2]
+position_slider_seg_alpha = [0.905, 0.48, 0.07, 0.02]
+position_next_button      = [0.905, 0.35, 0.07, 0.04]
+position_quit_button      = [0.905, 0.27, 0.07, 0.04]
+position_navig_options    = [0.905, 0.27, 0.07, 0.12]
 
 review_area = dict(left=0.01, right=0.9,
                    bottom=0.01, top=0.99,
