@@ -366,6 +366,10 @@ class ReviewInterface(object):
     def do_shortcuts(self, input):
         """Callback to handle keyboard shortcuts to rate and advance."""
 
+        # ignore keyboard input when mouse within Notes textbox
+        if input.inaxes == self.text_box.ax:
+            return
+
         key_pressed = input.key.lower()
         # print(key_pressed)
         if key_pressed in ['right', ' ', 'space']:
@@ -415,7 +419,7 @@ class ReviewInterface(object):
 
         self.user_notes = text_entered
 
-    # TODO this callback for 2nd radio button is not getting executed properly
+    # this callback for 2nd radio button is not getting executed properly
     # tracing revelas, some problems set_active callback
     def advance_or_quit(self, label):
         """Signal to quit"""
