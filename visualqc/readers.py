@@ -6,18 +6,21 @@ Data reader module.
 import numpy as np
 from os.path import join as pjoin, exists as pexists, realpath
 
-def read_aseg_stats(seg_stats_file):
+def read_aseg_stats(fs_dir, id):
     """
     Returns the volumes of both the subcortical and whole brain segmentations, found in Freesurfer output: subid/stats/aseg.stats
 
     Parameters
     ----------
-    seg_stats_file : str
-        Abs path to aseg.stats file.
+    fs_dir : str
+        Abs path to Freesurfer's SUBJECTS_DIR
+
+    id : str
+        String identifying a given subject
 
     """
 
-    seg_stats_file = realpath(seg_stats_file)
+    seg_stats_file = realpath(pjoin(fs_dir, id, 'stats', 'aseg.stats'))
     if not pexists(seg_stats_file):
         raise IOError('given path does not exist : {}'.format(seg_stats_file))
 
@@ -33,6 +36,18 @@ def read_aseg_stats(seg_stats_file):
     out_data = np.hstack((subcortical_data.flatten(), wb_data.flatten()))
 
     return out_data
+
+
+def read_aparc_stats_wholebrain(fs_dir, id):
+    """Convenient routine to obtain the whole brain cortical ROI stats."""
+
+    aparc_stats = list()
+    for hm in ('lh', 'rh'):
+        stats_path = pjoin(fs_dir, id, 'stats', '{}.aparc.stats'.format(hm))
+        hm_data = read_aparc_stats(stats_path)
+        aparc_stats.append(hm_data)
+
+    return np.hstack(aparc_stats)
 
 
 def read_aparc_stats(stats_file):
