@@ -292,15 +292,12 @@ def cli_run():
 
     if vis_type is not None:
         # matplotlib.interactive(True)
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-            warnings.filterwarnings("ignore", category=FutureWarning)
-            run_workflow(vis_type=vis_type, label_set=label_set,
-                         fs_dir=fs_dir, id_list=id_list,
-                         mri_name=mri_name, seg_name=seg_name, contour_color=contour_color,
-                         out_dir=out_dir, alpha_set=alpha_set,
-                         views=views, num_slices=num_slices, num_rows=num_rows)
-            print('Results are available in:\n\t{}'.format(out_dir))
+        run_workflow(vis_type=vis_type, label_set=label_set,
+                     fs_dir=fs_dir, id_list=id_list,
+                     mri_name=mri_name, seg_name=seg_name, contour_color=contour_color,
+                     out_dir=out_dir, alpha_set=alpha_set,
+                     views=views, num_slices=num_slices, num_rows=num_rows)
+        print('Results are available in:\n\t{}'.format(out_dir))
     else:
         raise ValueError('Invalid state for visualQC!\n\t Ensure proper combination of arguments is used.')
 
@@ -308,4 +305,10 @@ def cli_run():
 
 
 if __name__ == '__main__':
-    cli_run()
+
+    # disabling all not severe warnings
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        warnings.filterwarnings("ignore", category=FutureWarning)
+
+        cli_run()
