@@ -368,8 +368,7 @@ def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name):
             raise IOError('Given ID list does not exist!')
 
         try:
-            # read all lines and strip them of newlines/spaces
-            id_list = [line.strip('\n ') for line in open(id_list_in)]
+            id_list = read_id_list(id_list_in)
         except:
             raise IOError('unable to read the ID list.')
     else:
@@ -402,6 +401,14 @@ def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name):
     print('{} subjects are usable for review.'.format(len(id_list_out)))
 
     return id_list_out
+
+
+def read_id_list(id_list_file):
+    """Read all lines and strip them of newlines/spaces."""
+
+    id_list = np.array([line.strip('\n ') for line in open(id_list_file)])
+
+    return id_list
 
 
 def get_path_for_subject(in_dir, subject_id, req_file, vis_type):

@@ -5,8 +5,9 @@ Data reader module.
 """
 import numpy as np
 from os.path import join as pjoin, exists as pexists, realpath
+from visualqc.utils import read_id_list
 
-def read_aseg_stats(fs_dir, id):
+def read_aseg_stats(fs_dir, id, include_global_areas=False):
     """
     Returns the volumes of both the subcortical and whole brain segmentations, found in Freesurfer output: subid/stats/aseg.stats
 
@@ -27,15 +28,40 @@ def read_aseg_stats(fs_dir, id):
     stats = np.loadtxt(seg_stats_file, dtype="i1,i1,i4,f4,S50,f4,f4,f4,f4,f4")
     # returning volumes only:
     subcortical_data = np.array([seg[3] for seg in stats])
+    out_data = subcortical_data.flatten()
+
+    if include_global_areas:
+        wb_data = read_volumes_global_areas(seg_stats_file)
+        out_data = np.hstack((out_data, wb_data))
+
+    return out_data
+
+
+def read_volumes_global_areas(seg_stats_file):
+    """Returns the volumes of big global areas such as the ICV, Left/Right hemisphere cortical gray/white matter volume, Subcortical gray matter volume and Supratentorial volume etc.
+
+
+    Order of the return values is as it appears in the original aseg.stats file (not as mentioned above).
+    """
+
+    # Snippet from the relevant part of the aseg.stats
+    # Measure lhCortex, lhCortexVol, Left hemisphere cortical gray matter volume, 234615.987869, mm^3
+    # Measure rhCortex, rhCortexVol, Right hemisphere cortical gray matter volume, 260948.684264, mm^3
+    # Measure Cortex, CortexVol, Total cortical gray matter volume, 495564.672133, mm^3
+    # Measure lhCorticalWhiteMatter, lhCorticalWhiteMatterVol, Left hemisphere cortical white matter volume, 222201.531250, mm^3
+    # Measure rhCorticalWhiteMatter, rhCorticalWhiteMatterVol, Right hemisphere cortical white matter volume, 232088.671875, mm^3
+    # Measure CorticalWhiteMatter, CorticalWhiteMatterVol, Total cortical white matter volume, 454290.203125, mm^3
+    # Measure SubCortGray, SubCortGrayVol, Subcortical gray matter volume, 188561.000000, mm^3
+    # Measure TotalGray, TotalGrayVol, Total gray matter volume, 684125.672133, mm^3
+    # Measure SupraTentorial, SupraTentorialVol, Supratentorial volume, 1046623.140109, mm^3
+    # Measure IntraCranialVol, ICV, Intracranial Volume, 1137205.249190, mm^3
 
     wb_regex_pattern = r'# Measure ([\w/+_\- ]+), ([\w/+_\- ]+), ([\w/+_\- ]+), ([\d\.]+), ([\w/+_\-^]+)'
     datatypes = np.dtype('U100,U100,U100,f8,U10')
     stats = np.fromregex(seg_stats_file, wb_regex_pattern, dtype=datatypes)
     wb_data = np.array([seg[3] for seg in stats])
 
-    out_data = np.hstack((subcortical_data.flatten(), wb_data.flatten()))
-
-    return out_data
+    return wb_data.flatten()
 
 
 def read_aparc_stats_wholebrain(fs_dir, id):
@@ -50,7 +76,7 @@ def read_aparc_stats_wholebrain(fs_dir, id):
     return np.hstack(aparc_stats)
 
 
-def read_aparc_stats(stats_file):
+def read_aparc_stats(stats_file, include_whole_brain_stats=False):
     """Read statistics on cortical features (such as thickness, curvature etc) produced by Freesurfer.
 
     file_path would contain whether it is from the right or left hemisphere.
@@ -71,7 +97,18 @@ def read_aparc_stats(stats_file):
     for idx, stat in enumerate(roi_stats):
         roi_stats_values[idx, :] = [stat[feat] for feat in subset]
 
-    # whole cortex
+    stats = roi_stats_values.flatten()
+    if include_whole_brain_stats:
+        wb_stats = read_global_mean_surf_area_thickness(stats_file)
+        stats = np.hstack((stats, wb_stats))
+
+    return stats
+
+
+def read_global_mean_surf_area_thickness(stats_file):
+    """Returns total surface area of the white surface, and global mean cortical thickness"""
+
+    # Snippet from the relevant part of aparc.stats
     # Measure Cortex, NumVert, Number of Vertices, 120233, unitless
     # Measure Cortex, WhiteSurfArea, White Surface Total Area, 85633.5, mm^2
     # Measure Cortex, MeanThickness, Mean Thickness, 2.59632, mm
@@ -81,7 +118,6 @@ def read_aparc_stats(stats_file):
     wb_stats = np.fromregex(stats_file, wb_regex_pattern, dtype=wb_aparc_dtype)
 
     # concatenating while surf total area and global mean thickness
-    stats = np.hstack((roi_stats_values.flatten(), (wb_stats[1][2], wb_stats[2][2])))
+    stats = [wb_stats[1][2], wb_stats[2][2]]
 
     return stats
-
