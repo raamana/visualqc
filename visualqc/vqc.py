@@ -263,10 +263,10 @@ def get_parser():
     \n""".format(cfg.default_outlier_fraction))
 
     help_text_outlier_feat_types = textwrap.dedent("""
-    Type of features to be employed in training the outlier detection method.  Could be: 
-        'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label), 
-        'subcortical' (aseg.stats: volumes of several subcortical structures), 
-        or 'both' (using both aseg and aparc stats).
+    Type of features to be employed in training the outlier detection method.  It could be one of  
+    'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label), 
+    'subcortical' (aseg.stats: volumes of several subcortical structures), 
+    or 'both' (using both aseg and aparc stats).
     
     Default: {} {}.
     \n""".format(cfg.freesurfer_features_outlier_detection[0], cfg.freesurfer_features_outlier_detection[1]))

@@ -1,5 +1,5 @@
-Usage
------
+Command line usage
+------------------
 
 The command line interface for ``visualqc`` is strongly recommended. If the installation was successful, options could be obtained by typing one of the following commands:
 
