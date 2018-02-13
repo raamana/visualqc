@@ -17,6 +17,7 @@ from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, che
     check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, \
     check_out_dir, get_path_for_subject, check_outlier_params
 from visualqc.viz import review_and_rate
+from visualqc.outliers import outlier_advisory
 
 
 class QCWorkflow():
@@ -51,6 +52,10 @@ class QCWorkflow():
         self.seg_name = seg_name
         self.contour_color = contour_color
 
+        self.outlier_method = outlier_method
+        self.outlier_fraction = outlier_fraction
+        self.outlier_feat_types = outlier_feat_types
+
         self.rating_list = rating_list
 
     def save(self):
@@ -73,13 +78,18 @@ def run_workflow(qcw):
     """Generate the required visualizations for the specified subjects."""
 
     #TODO perform outlier detection prior to starting any rating
+    outliers_by_sample, outliers_by_feature = outlier_advisory(qcw)
 
     ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(qcw.out_dir, qcw.id_list)
     for subject_id in incomplete_list:
-        print('Reviewing {}'.format(subject_id))
+        flagged_as_outlier = subject_id in outliers_by_sample
+        outlier_alert_msg = 'Flagged as a \npossible outlier by \n{}'.format(outliers_by_sample[subject_id]) if flagged_as_outlier else ' '
+        print('Reviewing {} {}'.format(subject_id, outlier_alert_msg))
         t1_mri, overlay_seg, out_path = _prepare_images(qcw, subject_id)
         ratings[subject_id], notes[subject_id], quit_now = review_and_rate(qcw, t1_mri, overlay_seg,
                                                                            subject_id=subject_id,
+                                                                           flagged_as_outlier=flagged_as_outlier,
+                                                                           outlier_alerts=outliers_by_sample.get(subject_id, None), # None, if id not in dict
                                                                            output_path=out_path,
                                                                            annot='ID {}'.format(subject_id))
         # informing only when it was rated!

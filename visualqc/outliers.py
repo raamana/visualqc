@@ -14,12 +14,7 @@ from genericpath import exists as pexists
 from os import makedirs
 from os.path import join as pjoin
 
-def outlier_advisory(fs_dir,
-                     id_list_file,
-                     feature_list=cfg.freesurfer_features_outlier_detection,
-                     method='isolation_forest',
-                     fraction_of_outliers=.3,
-                     out_dir=None):
+def outlier_advisory(qcw):
     """
     Performs outlier detection based on chosen types of data and technique.
 
@@ -33,26 +28,26 @@ def outlier_advisory(fs_dir,
 
     """
 
-    if not pexists(out_dir):
-        makedirs(out_dir)
+    if not pexists(qcw.out_dir):
+        makedirs(qcw.out_dir)
 
     outliers_by_feature = dict()
-    id_list = read_id_list(id_list_file)
 
-    for feature_type in feature_list:
-        features = gather_freesurfer_data(fs_dir, id_list, feature_type)
-        out_file = pjoin(out_dir,'{}_{}_{}.txt'.format(cfg.outlier_list_prefix, method, feature_type))
+    for feature_type in qcw.outlier_feat_types:
+        print('Running outlier detection based on {} measures:'.format(feature_type))
+        features = gather_freesurfer_data(qcw.in_dir, qcw.id_list, feature_type)
+        out_file = pjoin(qcw.out_dir,'{}_{}_{}.txt'.format(cfg.outlier_list_prefix, qcw.outlier_method, feature_type))
         outliers_by_feature[feature_type] = detect_outliers(features,
-                                                            id_list,
-                                                            method=method,
+                                                            qcw.id_list,
+                                                            method=qcw.outlier_method,
                                                             out_file=out_file,
-                                                            fraction_of_outliers=fraction_of_outliers)
+                                                            fraction_of_outliers=qcw.outlier_fraction)
 
     # re-organizing the identified outliers by sample
     outliers_by_sample = dict()
-    for id in id_list:
+    for id in qcw.id_list:
         # each id contains a list of all feature types that flagged it as an outlier
-        outliers_by_sample[id] = [ feat for feat in feature_list if id in outliers_by_feature[feat] ]
+        outliers_by_sample[id] = [ feat for feat in qcw.outlier_feat_types if id in outliers_by_feature[feat] ]
 
     # dropping the IDs that were not flagged by any feature
     # so a imple ID in dict would reveal whether it was ever suspected as an outlier

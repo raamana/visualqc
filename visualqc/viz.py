@@ -9,6 +9,7 @@ import matplotlib.image as mpimg
 import numpy as np
 from matplotlib import pyplot as plt, colors, cm
 from matplotlib.widgets import RadioButtons, Slider, TextBox, Button
+from matplotlib.patches import Rectangle
 from mrivis.color_maps import get_freesurfer_cmap
 from mrivis.utils import check_params, crop_to_seg_extents
 from visualqc import config as cfg
@@ -118,10 +119,9 @@ def overlay_images(qcw, mri, seg,
     for ua in range(total_num_panels, len(ax)):
         ax[ua].set_visible(False)
 
-    # displaying some annotation text if provided
     if annot is not None:
-        title_handle = fig.suptitle(annot, backgroundcolor='black', color='white', fontsize='large')
-        title_handle.set_position(cfg.annot_position)
+        h_annot = fig.suptitle(annot, **cfg.annot_text_props)
+        h_annot.set_position(cfg.position_annot_text)
 
     fig.set_size_inches(figsize)
 
@@ -258,14 +258,17 @@ class ReviewInterface(object):
     """Class to layout interaction elements and define callbacks. """
 
     def __init__(self, fig, axes_seg, axes_mri, alpha_seg,
-                 rating_list,
-                 navig_options=default_navigation_options):
+                 rating_list, flagged_as_outlier, outlier_alerts,
+                 navig_options=default_navigation_options,
+                 annot=None):
         "Constructor."
 
         self.fig = fig
         self.axes_seg = axes_seg
         self.axes_mri = axes_mri
         self.latest_alpha_seg = alpha_seg
+
+        self.flagged_as_outlier = flagged_as_outlier
 
         self.user_rating = None
         self.user_notes = None
@@ -277,8 +280,23 @@ class ReviewInterface(object):
 
         self.rating_list = rating_list
 
+        # displaying some annotation text if provided
+        if annot is not None:
+            h_annot = fig.text(cfg.position_annot_text[0], cfg.position_annot_text[1], **cfg.annot_text_props)
+
         # TODO indicate if subject_id is detected as a possible outlier,
         # right above the rating area (blinking perhaps?)
+        if self.flagged_as_outlier and outlier_alerts is not None:
+            ax_alert = plt.axes(cfg.position_outlier_alert_box)
+            ax_alert.axis('off')
+            h_rect = Rectangle((0, 0), 1, 1, zorder=-1, facecolor='xkcd:coral', alpha=0.2)
+            ax_alert.add_patch(h_rect)
+            alert_msg = 'Flagged as an outlier'
+            fig.text(cfg.position_outlier_alert[0], cfg.position_outlier_alert[1],
+                     alert_msg, **cfg.annot_text_props)
+            for idx, cause in enumerate(outlier_alerts):
+                fig.text(cfg.position_outlier_alert[0], cfg.position_outlier_alert[1] - (idx+1) * 0.02,
+                         cause, color=cfg.alert_colors_outlier[cause], **cfg.annot_text_props)
 
         ax_radio = plt.axes(cfg.position_rating_axis, facecolor=cfg.color_rating_axis, aspect='equal')
         self.radio_bt_rating = RadioButtons(ax_radio, self.rating_list,
@@ -305,8 +323,8 @@ class ReviewInterface(object):
         # implementing two separate buttons for navigation (mulitple radio button has issues)
         ax_bt_quit = plt.axes(cfg.position_quit_button, facecolor=cfg.color_quit_axis, aspect='equal')
         ax_bt_next = plt.axes(cfg.position_next_button, facecolor=cfg.color_quit_axis, aspect='equal')
-        self.bt_quit = Button(ax_bt_quit, 'Quit', hovercolor='orange')
-        self.bt_next = Button(ax_bt_next, 'Next', hovercolor='orange')
+        self.bt_quit = Button(ax_bt_quit, 'Quit', hovercolor='red')
+        self.bt_next = Button(ax_bt_next, 'Next', hovercolor='xkcd:greenish')
         self.bt_quit.on_clicked(self.quit)
         self.bt_next.on_clicked(self.next)
         self.bt_quit.label.set_color(cfg.color_navig_text)
@@ -458,6 +476,8 @@ def review_and_rate(qcw,
                     mri,
                     seg,
                     subject_id=None,
+                    flagged_as_outlier=False,
+                    outlier_alerts=None,
                     output_path=None,
                     annot=None,
                     figsize=None,
@@ -467,7 +487,8 @@ def review_and_rate(qcw,
     fig, axes_mri, axes_seg, figsize = overlay_images(qcw, mri, seg, subject_id=subject_id,
                                                       figsize=figsize, annot=annot, output_path=output_path)
 
-    rating_ui = ReviewInterface(fig, axes_seg, axes_mri, qcw.alpha_seg, qcw.rating_list)
+    rating_ui = ReviewInterface(fig, axes_seg, axes_mri, qcw.alpha_seg, qcw.rating_list,
+                                flagged_as_outlier, outlier_alerts, annot)
 
     con_id_click = fig.canvas.mpl_connect('button_press_event', rating_ui.on_mouse)
     con_id_keybd = fig.canvas.mpl_connect('key_press_event', rating_ui.do_shortcuts)

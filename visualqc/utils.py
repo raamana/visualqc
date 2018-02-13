@@ -400,7 +400,7 @@ def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name):
 
     print('{} subjects are usable for review.'.format(len(id_list_out)))
 
-    return id_list_out
+    return np.array(id_list_out)
 
 
 def read_id_list(id_list_file):
