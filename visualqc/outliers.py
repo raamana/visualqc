@@ -16,7 +16,7 @@ from os.path import join as pjoin
 
 def outlier_advisory(fs_dir,
                      id_list_file,
-                     feature_list=cfg.freesurfer_feature_types_for_outlier_detection,
+                     feature_list=cfg.freesurfer_features_outlier_detection,
                      method='isolation_forest',
                      fraction_of_outliers=.3,
                      out_dir=None):

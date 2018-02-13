@@ -188,58 +188,101 @@ def get_parser():
     Default: {}.
     \n""".format(cfg.default_contour_face_color))
 
-    parser.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
+    help_text_outlier_detection_method = textwrap.dedent("""
+    Method used to detect the outliers.
+    
+    For more info, read http://scikit-learn.org/stable/modules/outlier_detection.html
+    
+    Default: {}.
+    \n""".format(cfg.default_outlier_detection_method))
+
+    help_text_outlier_fraction = textwrap.dedent("""
+    Fraction of outliers expected in the given sample. Must be >= 1/n and <= (n-1)/n, 
+    where n is the number of samples in the current sample.
+
+    For more info, read http://scikit-learn.org/stable/modules/outlier_detection.html
+
+    Default: {}.
+    \n""".format(cfg.default_outlier_fraction))
+
+    help_text_outlier_feat_types = textwrap.dedent("""
+    Type of features to be employed in training the outlier detection method.  Could be: 
+        'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label), 
+        'subcortical' (aseg.stats: volumes of several subcortical structures), 
+        or 'both' (using both aseg and aparc stats).
+    
+    Default: {} {}.
+    \n""".format(cfg.freesurfer_features_outlier_detection[0], cfg.freesurfer_features_outlier_detection[1]))
+
+    in_out = parser.add_argument_group('Input and output', ' ')
+    in_out.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
                         default=default_freesurfer_dir,
                         required=False, help=help_text_fs_dir)
 
-    parser.add_argument("-i", "--id_list", action="store", dest="id_list",
+    in_out.add_argument("-i", "--id_list", action="store", dest="id_list",
                         default=None, required=False, help=help_text_id_list)
 
-    parser.add_argument("-v", "--vis_type", action="store", dest="vis_type",
+    in_out.add_argument("-u", "--user_dir", action="store", dest="user_dir",
+                        default=default_user_dir,
+                        required=False, help=help_text_user_dir)
+
+    in_out.add_argument("-o", "--out_dir", action="store", dest="out_dir",
+                        required=False, help=help_text_out_dir,
+                        default=None)
+
+    data_source = parser.add_argument_group('Sources of data', ' ')
+    data_source.add_argument("-l", "--labels", action="store", dest="labels",
+                        default=default_label_set, required=False, nargs='+',
+                        help=help_text_label, metavar='label')
+
+    data_source.add_argument("-m", "--mri_name", action="store", dest="mri_name",
+                        default=default_mri_name, required=False,
+                        help=help_text_mri_name)
+
+    data_source.add_argument("-g", "--seg_name", action="store", dest="seg_name",
+                        default=default_seg_name, required=False,
+                        help=help_text_seg_name)
+
+    vis_args = parser.add_argument_group('Visualization options', ' ')
+    vis_args.add_argument("-v", "--vis_type", action="store", dest="vis_type",
                         choices=visualization_combination_choices,
                         default=default_vis_type, required=False,
                         help=help_text_vis_type)
 
-    parser.add_argument("-o", "--out_dir", action="store", dest="out_dir",
-                        required=False, help=help_text_out_dir,
-                        default=None)
+    vis_args.add_argument("-c", "--contour_color", action="store", dest="contour_color",
+                        default=cfg.default_contour_face_color, required=False,
+                        help=help_text_contour_color)
 
-    parser.add_argument("-a", "--alpha_set", action="store", dest="alpha_set",
+    vis_args.add_argument("-a", "--alpha_set", action="store", dest="alpha_set",
                         metavar='alpha', nargs=2,
                         default=default_alpha_set,
                         required=False, help=help_text_alphas)
 
-    parser.add_argument("-l", "--labels", action="store", dest="labels",
-                        default=default_label_set, required=False, nargs='+',
-                        help=help_text_label, metavar='label')
+    outliers = parser.add_argument_group('Outlier detection', 'options related to automatically detecting possible outliers')
+    outliers.add_argument("-olm", "--outlier_method", action="store", dest="outlier_method",
+                          default=cfg.default_outlier_detection_method, required=False,
+                          help=help_text_outlier_detection_method)
 
-    parser.add_argument("-m", "--mri_name", action="store", dest="mri_name",
-                        default=default_mri_name, required=False,
-                        help=help_text_mri_name)
+    outliers.add_argument("-olf", "--outlier_fraction", action="store", dest="outlier_fraction",
+                          default=cfg.default_outlier_fraction, required=False,
+                          help=help_text_outlier_fraction)
 
-    parser.add_argument("-g", "--seg_name", action="store", dest="seg_name",
-                        default=default_seg_name, required=False,
-                        help=help_text_seg_name)
+    outliers.add_argument("-olt", "--outlier_feat_types", action="store", dest="outlier_feat_types",
+                          default=cfg.freesurfer_features_outlier_detection, required=False,
+                          help=help_text_outlier_feat_types)
 
-    parser.add_argument("-w", "--views", action="store", dest="views",
+    layout = parser.add_argument_group('Layout options', ' ')
+    layout.add_argument("-w", "--views", action="store", dest="views",
                         default=default_views, required=False, nargs='+',
                         help=help_text_views)
 
-    parser.add_argument("-s", "--num_slices", action="store", dest="num_slices",
+    layout.add_argument("-s", "--num_slices", action="store", dest="num_slices",
                         default=default_num_slices, required=False,
                         help=help_text_num_slices)
 
-    parser.add_argument("-r", "--num_rows", action="store", dest="num_rows",
+    layout.add_argument("-r", "--num_rows", action="store", dest="num_rows",
                         default=default_num_rows, required=False,
                         help=help_text_num_rows)
-
-    parser.add_argument("-c", "--contour_color", action="store", dest="contour_color",
-                        default=cfg.default_contour_face_color, required=False,
-                        help=help_text_contour_color)
-
-    parser.add_argument("-u", "--user_dir", action="store", dest="user_dir",
-                        default=default_user_dir,
-                        required=False, help=help_text_user_dir)
 
     return parser
 

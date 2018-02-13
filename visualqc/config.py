@@ -11,8 +11,11 @@ default_mri_name = 'brainmask.mgz'
 default_seg_name = 'aparc+aseg.mgz'
 required_files = (default_mri_name, default_seg_name)
 
-freesurfer_feature_types_for_outlier_detection = ('cortical', 'subcortical')
+freesurfer_features_outlier_detection = ('cortical', 'subcortical')
 outlier_list_prefix = 'possible_outliers'
+
+default_outlier_detection_method = 'isolation_forest'
+default_outlier_fraction = 0.2
 
 default_freesurfer_dir = None
 cortical_types = ('cortical_volumetric', 'cortical_contour')
