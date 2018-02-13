@@ -422,6 +422,35 @@ def get_path_for_subject(in_dir, subject_id, req_file, vis_type):
     return out_path
 
 
+def check_outlier_params(method, fraction, feat_types, id_list):
+    """Validates parameters related to outlier detection"""
+
+    method = method.lower()
+    if method not in cfg.avail_outlier_detection_methods:
+        raise ValueError('Chosen outlier detection method invalid or not implemented.'
+                         '\n\tChoose one of {}'.format(cfg.avail_outlier_detection_methods))
+
+    fraction = np.float64(fraction)
+    # not clipping automatically to force the user to think about it.
+    # fraction = min(max(1 / ns, fraction), 0.5)
+    ns = len(id_list)  # number of samples
+    if fraction < 1/ns:
+        raise ValueError('Invalid fraction of outliers: must be more than 1/n (to enable detection of atleast 1)')
+
+    if fraction > 0.5:
+        raise ValueError('Invalid fraction of outliers: can not be more than 50%')
+
+    if not isinstance(feat_types, list):
+        feat_types = [feat_types,]
+
+    feat_types = [ feat.lower() for feat in feat_types ]
+    for feat in feat_types:
+        if feat not in cfg.features_outlier_detection:
+            raise ValueError('{} features for outlier detection is not recognized or implemented'.format(feat))
+
+    return method, fraction, feat_types
+
+
 def check_labels(vis_type, label_set):
     """Validates the selections."""
 

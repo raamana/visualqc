@@ -12,10 +12,12 @@ default_seg_name = 'aparc+aseg.mgz'
 required_files = (default_mri_name, default_seg_name)
 
 freesurfer_features_outlier_detection = ('cortical', 'subcortical')
+features_outlier_detection = freesurfer_features_outlier_detection
 outlier_list_prefix = 'possible_outliers'
 
 default_outlier_detection_method = 'isolation_forest'
 default_outlier_fraction = 0.2
+avail_outlier_detection_methods = ('isolation_forest', )
 
 default_freesurfer_dir = None
 cortical_types = ('cortical_volumetric', 'cortical_contour')

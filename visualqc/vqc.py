@@ -15,7 +15,7 @@ from visualqc.config import default_out_dir_name, default_mri_name, default_seg_
     default_alpha_mri, default_alpha_seg
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set, \
     check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, \
-    check_out_dir, get_path_for_subject
+    check_out_dir, get_path_for_subject, check_outlier_params
 from visualqc.viz import review_and_rate
 
 
@@ -31,12 +31,16 @@ def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
         t1_mri, overlay_seg, out_path = _prepare_images(fs_dir, subject_id, mri_name, seg_name,
                                                         out_dir, vis_type, label_set)
         ratings[subject_id], notes[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg,
-                                                        vis_type=vis_type, contour_color=contour_color,
-                                                        out_dir=out_dir, fs_dir=fs_dir, subject_id=subject_id,
-                                                        views=views, num_rows=num_rows, num_slices=num_slices,
-                                                        output_path=out_path,
-                                                        alpha_mri=alpha_set[0], alpha_seg=alpha_set[1],
-                                                        annot='ID {}'.format(subject_id))
+                                                                           vis_type=vis_type,
+                                                                           contour_color=contour_color,
+                                                                           out_dir=out_dir, fs_dir=fs_dir,
+                                                                           subject_id=subject_id,
+                                                                           views=views, num_rows=num_rows,
+                                                                           num_slices=num_slices,
+                                                                           output_path=out_path,
+                                                                           alpha_mri=alpha_set[0],
+                                                                           alpha_seg=alpha_set[1],
+                                                                           annot='ID {}'.format(subject_id))
         # informing only when it was rated!
         if ratings[subject_id] is not None:
             print('id {} rating {} notes {}'.format(subject_id, ratings[subject_id], notes[subject_id]))
@@ -57,7 +61,8 @@ def _prepare_images(in_dir, subject_id, mri_name, seg_name, out_dir, vis_type, l
     """Actual routine to generate the visualizations. """
 
     # we ensured these files exist and are not empty
-    t1_mri_path = get_path_for_subject(in_dir, subject_id, mri_name, vis_type) # pjoin(in_dir, subject_id, 'mri', mri_name)
+    t1_mri_path = get_path_for_subject(in_dir, subject_id, mri_name,
+                                       vis_type)  # pjoin(in_dir, subject_id, 'mri', mri_name)
     fs_seg_path = get_path_for_subject(in_dir, subject_id, seg_name, vis_type)
 
     t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
@@ -71,7 +76,7 @@ def _prepare_images(in_dir, subject_id, mri_name, seg_name, out_dir, vis_type, l
         fs_seg = get_label_set(fs_seg, label_set)
 
     suffix = ''
-    if vis_type in ('cortical_volumetric','cortical_contour'):
+    if vis_type in ('cortical_volumetric', 'cortical_contour'):
         out_seg = void_subcortical_symmetrize_cortical(fs_seg)
         # generate pial surface
 
@@ -232,33 +237,34 @@ def get_parser():
 
     data_source = parser.add_argument_group('Sources of data', ' ')
     data_source.add_argument("-l", "--labels", action="store", dest="labels",
-                        default=default_label_set, required=False, nargs='+',
-                        help=help_text_label, metavar='label')
+                             default=default_label_set, required=False, nargs='+',
+                             help=help_text_label, metavar='label')
 
     data_source.add_argument("-m", "--mri_name", action="store", dest="mri_name",
-                        default=default_mri_name, required=False,
-                        help=help_text_mri_name)
+                             default=default_mri_name, required=False,
+                             help=help_text_mri_name)
 
     data_source.add_argument("-g", "--seg_name", action="store", dest="seg_name",
-                        default=default_seg_name, required=False,
-                        help=help_text_seg_name)
+                             default=default_seg_name, required=False,
+                             help=help_text_seg_name)
 
     vis_args = parser.add_argument_group('Visualization options', ' ')
     vis_args.add_argument("-v", "--vis_type", action="store", dest="vis_type",
-                        choices=visualization_combination_choices,
-                        default=default_vis_type, required=False,
-                        help=help_text_vis_type)
+                          choices=visualization_combination_choices,
+                          default=default_vis_type, required=False,
+                          help=help_text_vis_type)
 
     vis_args.add_argument("-c", "--contour_color", action="store", dest="contour_color",
-                        default=cfg.default_contour_face_color, required=False,
-                        help=help_text_contour_color)
+                          default=cfg.default_contour_face_color, required=False,
+                          help=help_text_contour_color)
 
     vis_args.add_argument("-a", "--alpha_set", action="store", dest="alpha_set",
-                        metavar='alpha', nargs=2,
-                        default=default_alpha_set,
-                        required=False, help=help_text_alphas)
+                          metavar='alpha', nargs=2,
+                          default=default_alpha_set,
+                          required=False, help=help_text_alphas)
 
-    outliers = parser.add_argument_group('Outlier detection', 'options related to automatically detecting possible outliers')
+    outliers = parser.add_argument_group('Outlier detection',
+                                         'options related to automatically detecting possible outliers')
     outliers.add_argument("-olm", "--outlier_method", action="store", dest="outlier_method",
                           default=cfg.default_outlier_detection_method, required=False,
                           help=help_text_outlier_detection_method)
@@ -321,10 +327,16 @@ def parse_args():
 
     contour_color = user_args.contour_color
     if not is_color_like(contour_color):
-        raise ValueError('Specified color is not valid. Choose a valid spec from\n https://matplotlib.org/users/colors.html')
+        raise ValueError(
+            'Specified color is not valid. Choose a valid spec from\n https://matplotlib.org/users/colors.html')
 
-    return in_dir, id_list, out_dir, vis_type, label_set, \
-           alpha_set, views, num_slices, num_rows, mri_name, seg_name, contour_color
+    outlier_method, outlier_fraction, outlier_feat_types = check_outlier_params(user_args.outlier_method,
+                                                                                user_args.outlier_fraction,
+                                                                                user_args.outlier_feat_types, id_list)
+
+    return in_dir, id_list, out_dir, vis_type, label_set, alpha_set, \
+           outlier_method, outlier_fraction, outlier_feat_types, \
+           views, num_slices, num_rows, mri_name, seg_name, contour_color
 
 
 def cli_run():
@@ -348,7 +360,6 @@ def cli_run():
 
 
 if __name__ == '__main__':
-
     # disabling all not severe warnings
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
