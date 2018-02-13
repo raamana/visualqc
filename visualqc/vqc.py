@@ -19,27 +19,66 @@ from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, che
 from visualqc.viz import review_and_rate
 
 
-def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
-                 mri_name=default_mri_name, seg_name=default_seg_name,
-                 alpha_set=default_alpha_set, contour_color=cfg.default_contour_face_color,
-                 views=default_views, num_slices=default_num_slices, num_rows=default_num_rows):
+class QCWorkflow():
+    """
+    Class encapsulating the necessary parameters to run the workflow.
+    """
+
+    def __init__(self, in_dir, id_list, out_dir,
+                 vis_type, label_set, alpha_set,
+                 outlier_method, outlier_fraction, outlier_feat_types,
+                 views, num_slices, num_rows,
+                 mri_name, seg_name, contour_color,
+                 rating_list=cfg.default_rating_list):
+        """Constructor"""
+
+        self.in_dir = in_dir
+        self.id_list = id_list
+        self.out_dir = out_dir
+
+        self.vis_type = vis_type
+        self.label_set = label_set
+
+        self.alpha_set = alpha_set
+        self.alpha_mri = self.alpha_set[0]
+        self.alpha_seg = self.alpha_set[1]
+
+        self.views = views
+        self.num_slices = num_slices
+        self.num_rows = num_rows
+
+        self.mri_name = mri_name
+        self.seg_name = seg_name
+        self.contour_color = contour_color
+
+        self.rating_list = rating_list
+
+    def save(self):
+        """
+        Saves the state of the QC workflow for restoring later on,
+            as well as for future reference.
+
+        """
+
+        pass
+
+    def reload(self):
+        """Method to reload the saved state."""
+
+        pass
+
+
+
+def run_workflow(qcw):
     """Generate the required visualizations for the specified subjects."""
 
-    ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(out_dir, id_list)
+    ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(qcw.out_dir, qcw.id_list)
     for subject_id in incomplete_list:
         print('Reviewing {}'.format(subject_id))
-        t1_mri, overlay_seg, out_path = _prepare_images(fs_dir, subject_id, mri_name, seg_name,
-                                                        out_dir, vis_type, label_set)
-        ratings[subject_id], notes[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg,
-                                                                           vis_type=vis_type,
-                                                                           contour_color=contour_color,
-                                                                           out_dir=out_dir, fs_dir=fs_dir,
+        t1_mri, overlay_seg, out_path = _prepare_images(qcw, subject_id)
+        ratings[subject_id], notes[subject_id], quit_now = review_and_rate(qcw, t1_mri, overlay_seg,
                                                                            subject_id=subject_id,
-                                                                           views=views, num_rows=num_rows,
-                                                                           num_slices=num_slices,
                                                                            output_path=out_path,
-                                                                           alpha_mri=alpha_set[0],
-                                                                           alpha_seg=alpha_set[1],
                                                                            annot='ID {}'.format(subject_id))
         # informing only when it was rated!
         if ratings[subject_id] is not None:
@@ -52,18 +91,19 @@ def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
             break
 
     print('Saving ratings .. \n')
-    save_ratings(ratings, notes, out_dir)
+    save_ratings(ratings, notes, qcw.out_dir)
 
     return
 
 
-def _prepare_images(in_dir, subject_id, mri_name, seg_name, out_dir, vis_type, label_set):
+def _prepare_images(qcw, subject_id):
     """Actual routine to generate the visualizations. """
 
+    # qcw.fs_dir, qcw.subject_id, qcw.mri_name, qcw.seg_name, qcw.out_dir, qcw.vis_type, qcw.label_set
+
     # we ensured these files exist and are not empty
-    t1_mri_path = get_path_for_subject(in_dir, subject_id, mri_name,
-                                       vis_type)  # pjoin(in_dir, subject_id, 'mri', mri_name)
-    fs_seg_path = get_path_for_subject(in_dir, subject_id, seg_name, vis_type)
+    t1_mri_path = get_path_for_subject(qcw.in_dir, subject_id, qcw.mri_name, qcw.vis_type)
+    fs_seg_path = get_path_for_subject(qcw.in_dir, subject_id, qcw.seg_name, qcw.vis_type)
 
     t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
     fs_seg = read_image(fs_seg_path, error_msg='segmentation')
@@ -72,28 +112,28 @@ def _prepare_images(in_dir, subject_id, mri_name, seg_name, out_dir, vis_type, l
         raise ValueError('size mismatch! MRI: {} Seg: {}\n'
                          'Size must match in all dimensions.'.format(t1_mri.shape, fs_seg.shape))
 
-    if label_set is not None:
-        fs_seg = get_label_set(fs_seg, label_set)
+    if qcw.label_set is not None:
+        fs_seg = get_label_set(fs_seg, qcw.label_set)
 
     suffix = ''
-    if vis_type in ('cortical_volumetric', 'cortical_contour'):
+    if qcw.vis_type in ('cortical_volumetric', 'cortical_contour'):
         out_seg = void_subcortical_symmetrize_cortical(fs_seg)
         # generate pial surface
 
-    elif vis_type in ('labels_volumetric', 'labels_contour'):
+    elif qcw.vis_type in ('labels_volumetric', 'labels_contour'):
         out_seg = fs_seg
-        if label_set is not None:
-            suffix = '_'.join([str(lbl) for lbl in list(label_set)])
+        if qcw.label_set is not None:
+            suffix = '_'.join([str(lbl) for lbl in list(qcw.label_set)])
     else:
         raise NotImplementedError('Other visualization combinations have not been implemented yet! Stay tuned.')
 
-    out_path = pjoin(out_dir, 'visual_qc_{}_{}_{}'.format(vis_type, suffix, subject_id))
+    out_path = pjoin(qcw.out_dir, 'visual_qc_{}_{}_{}'.format(qcw.vis_type, suffix, subject_id))
 
     return t1_mri, out_seg, out_path
 
 
 def get_parser():
-    "Parser to specify arguments and their defaults."
+    """Parser to specify arguments and their defaults."""
 
     parser = argparse.ArgumentParser(prog="visualqc", formatter_class=argparse.RawTextHelpFormatter,
                                      description='visualqc: rate accuracy of anatomical segmentations and parcellations')
@@ -334,25 +374,24 @@ def parse_args():
                                                                                 user_args.outlier_fraction,
                                                                                 user_args.outlier_feat_types, id_list)
 
-    return in_dir, id_list, out_dir, vis_type, label_set, alpha_set, \
-           outlier_method, outlier_fraction, outlier_feat_types, \
-           views, num_slices, num_rows, mri_name, seg_name, contour_color
+    qcw = QCWorkflow(in_dir, id_list, out_dir,
+                     vis_type, label_set, alpha_set,
+                     outlier_method, outlier_fraction, outlier_feat_types,
+                     views, num_slices, num_rows,
+                     mri_name, seg_name, contour_color)
+
+    return qcw
 
 
 def cli_run():
     """Main entry point."""
 
-    fs_dir, id_list, out_dir, vis_type, label_set, alpha_set, \
-    views, num_slices, num_rows, mri_name, seg_name, contour_color = parse_args()
+    qcw = parse_args()
 
-    if vis_type is not None:
+    if qcw.vis_type is not None:
         # matplotlib.interactive(True)
-        run_workflow(vis_type=vis_type, label_set=label_set,
-                     fs_dir=fs_dir, id_list=id_list,
-                     mri_name=mri_name, seg_name=seg_name, contour_color=contour_color,
-                     out_dir=out_dir, alpha_set=alpha_set,
-                     views=views, num_slices=num_slices, num_rows=num_rows)
-        print('Results are available in:\n\t{}'.format(out_dir))
+        run_workflow(qcw)
+        print('Results are available in:\n\t{}'.format(qcw.out_dir))
     else:
         raise ValueError('Invalid state for visualQC!\n\t Ensure proper combination of arguments is used.')
 

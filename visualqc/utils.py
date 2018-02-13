@@ -440,7 +440,7 @@ def check_outlier_params(method, fraction, feat_types, id_list):
     if fraction > 0.5:
         raise ValueError('Invalid fraction of outliers: can not be more than 50%')
 
-    if not isinstance(feat_types, list):
+    if not isinstance(feat_types, (list, tuple)):
         feat_types = [feat_types,]
 
     feat_types = [ feat.lower() for feat in feat_types ]
