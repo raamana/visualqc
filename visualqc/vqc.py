@@ -72,6 +72,8 @@ class QCWorkflow():
 def run_workflow(qcw):
     """Generate the required visualizations for the specified subjects."""
 
+    #TODO perform outlier detection prior to starting any rating
+
     ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(qcw.out_dir, qcw.id_list)
     for subject_id in incomplete_list:
         print('Reviewing {}'.format(subject_id))
@@ -92,6 +94,7 @@ def run_workflow(qcw):
 
     print('Saving ratings .. \n')
     save_ratings(ratings, notes, qcw.out_dir)
+    #TODO save QCW
 
     return
 
@@ -348,6 +351,8 @@ def parse_args():
         user_args = parser.parse_args()
     except:
         parser.exit(1)
+
+    # TODO methods to restore from previous runs, without having re-enter all parameters
 
     vis_type, label_set = check_labels(user_args.vis_type, user_args.labels)
 

@@ -277,6 +277,9 @@ class ReviewInterface(object):
 
         self.rating_list = rating_list
 
+        # TODO indicate if subject_id is detected as a possible outlier,
+        # right above the rating area (blinking perhaps?)
+
         ax_radio = plt.axes(cfg.position_rating_axis, facecolor=cfg.color_rating_axis, aspect='equal')
         self.radio_bt_rating = RadioButtons(ax_radio, self.rating_list,
                                             active=None, activecolor='orange')
