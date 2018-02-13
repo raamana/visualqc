@@ -77,7 +77,6 @@ class QCWorkflow():
 def run_workflow(qcw):
     """Generate the required visualizations for the specified subjects."""
 
-    #TODO perform outlier detection prior to starting any rating
     outliers_by_sample, outliers_by_feature = outlier_advisory(qcw)
 
     ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(qcw.out_dir, qcw.id_list)

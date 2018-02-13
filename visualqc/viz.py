@@ -284,12 +284,11 @@ class ReviewInterface(object):
         if annot is not None:
             h_annot = fig.text(cfg.position_annot_text[0], cfg.position_annot_text[1], **cfg.annot_text_props)
 
-        # TODO indicate if subject_id is detected as a possible outlier,
         # right above the rating area (blinking perhaps?)
         if self.flagged_as_outlier and outlier_alerts is not None:
             ax_alert = plt.axes(cfg.position_outlier_alert_box)
             ax_alert.axis('off')
-            h_rect = Rectangle((0, 0), 1, 1, zorder=-1, facecolor='xkcd:coral', alpha=0.2)
+            h_rect = Rectangle((0, 0), 1, 1, zorder=-1, facecolor='xkcd:coral', alpha=0.25)
             ax_alert.add_patch(h_rect)
             alert_msg = 'Flagged as an outlier'
             fig.text(cfg.position_outlier_alert[0], cfg.position_outlier_alert[1],

@@ -52,7 +52,7 @@ default_rating_list_shortform = map_short_rating.keys()
 textbox_title = ''
 textbox_initial_text = 'Your Notes:' #Text(text='Your Notes:', )
 
-color_rating_axis = '#009b8c'
+color_rating_axis = 'xkcd:slate'
 color_textbox_input = '#009b8c'
 color_quit_axis = '#009b8c'
 color_slider_axis = '#fa8072'
