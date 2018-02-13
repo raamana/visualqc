@@ -70,13 +70,13 @@ def read_aparc_stats_wholebrain(fs_dir, id):
     aparc_stats = list()
     for hm in ('lh', 'rh'):
         stats_path = pjoin(fs_dir, id, 'stats', '{}.aparc.stats'.format(hm))
-        hm_data = read_aparc_stats(stats_path)
+        hm_data = read_aparc_stats_in_hemi(stats_path)
         aparc_stats.append(hm_data)
 
     return np.hstack(aparc_stats)
 
 
-def read_aparc_stats(stats_file, include_whole_brain_stats=False):
+def read_aparc_stats_in_hemi(stats_file, include_whole_brain_stats=False):
     """Read statistics on cortical features (such as thickness, curvature etc) produced by Freesurfer.
 
     file_path would contain whether it is from the right or left hemisphere.
@@ -121,3 +121,28 @@ def read_global_mean_surf_area_thickness(stats_file):
     stats = [wb_stats[1][2], wb_stats[2][2]]
 
     return stats
+
+
+def gather_freesurfer_data(fs_dir,
+                           id_list,
+                           feature_type='whole_brain'):
+    """
+    Reads all the relevant features to perform outlier detection on.
+
+    feature_type could be cortical, subcortical, or whole_brain.
+
+    """
+
+    feature_type = feature_type.lower()
+    if feature_type in ['cortical', ]:
+        features = np.vstack([read_aparc_stats_wholebrain(fs_dir, id) for id in id_list])
+    elif feature_type in ['subcortical', ]:
+        features = np.vstack([read_aseg_stats(fs_dir, id) for id in id_list])
+    elif feature_type in ['whole_brain', 'wholebrain']:
+        cortical = np.vstack([read_aparc_stats_wholebrain(fs_dir, id) for id in id_list])
+        sub_ctx = np.vstack([read_aseg_stats(fs_dir, id) for id in id_list])
+        features = np.hstack((cortical, sub_ctx))
+    else:
+        raise ValueError('Invalid type of features requested.')
+
+    return features

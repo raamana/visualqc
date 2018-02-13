@@ -3,12 +3,12 @@
 Outlier detection module.
 
 """
+__all__ = ['outlier_advisory']
 
 import numpy as np
 from scipy import stats
 import visualqc.config as cfg
-from visualqc.readers import read_aparc_stats_wholebrain, read_aseg_stats
-from visualqc.utils import read_id_list
+from visualqc.readers import gather_freesurfer_data
 from sklearn.ensemble import IsolationForest
 from genericpath import exists as pexists
 from os import makedirs
@@ -54,31 +54,6 @@ def outlier_advisory(qcw):
     outliers_by_sample = { id : flag_list for id, flag_list in outliers_by_sample.items() if flag_list }
 
     return outliers_by_sample, outliers_by_feature
-
-
-def gather_freesurfer_data(fs_dir,
-                           id_list,
-                           feature_type='whole_brain'):
-    """
-    Reads all the relevant features to perform outlier detection on.
-
-    feature_type could be cortical, subcortical, or whole_brain.
-
-    """
-
-    feature_type = feature_type.lower()
-    if feature_type in ['cortical', ]:
-        features = np.vstack([read_aparc_stats_wholebrain(fs_dir, id) for id in id_list])
-    elif feature_type in ['subcortical', ]:
-        features = np.vstack([read_aseg_stats(fs_dir, id) for id in id_list])
-    elif feature_type in ['whole_brain', 'wholebrain']:
-        cortical = np.vstack([read_aparc_stats_wholebrain(fs_dir, id) for id in id_list])
-        sub_ctx = np.vstack([read_aseg_stats(fs_dir, id) for id in id_list])
-        features = np.hstack((cortical, sub_ctx))
-    else:
-        raise ValueError('Invalid type of features requested.')
-
-    return features
 
 
 def detect_outliers(features,

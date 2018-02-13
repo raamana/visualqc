@@ -16,5 +16,5 @@ del get_versions
 from visualqc import vqc
 from visualqc.vqc import run_workflow
 from visualqc.viz import review_and_rate
-from visualqc.readers import read_aparc_stats, read_aseg_stats, read_aparc_stats_wholebrain
+from visualqc.readers import gather_freesurfer_data, read_aparc_stats_in_hemi, read_aseg_stats, read_aparc_stats_wholebrain
 from visualqc.outliers import outlier_advisory
