@@ -3,8 +3,8 @@ __all__ = ['review_and_rate']
 import traceback
 from os import makedirs
 from os.path import join as pjoin, exists as pexists
-from subprocess import check_call
-
+import subprocess
+from subprocess import check_output
 import matplotlib.image as mpimg
 import numpy as np
 from matplotlib import pyplot as plt, colors, cm
@@ -249,9 +249,17 @@ def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir,
 def run_tksurfer_script(in_dir, subject_id, hemi, script_file):
     """Runs a given TCL script to generate visualizations"""
 
-    exit_code = check_call(['tksurfer', '-sdir', in_dir, subject_id, hemi, 'pial', '-tcl', script_file], shell=False)
+    try:
+        cmd_args = ['tksurfer', '-sdir', in_dir, subject_id, hemi, 'pial', '-tcl', script_file]
+        txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
+    except subprocess.CalledProcessError as tksurfer_exc:
+        print('Error running tksurfer to generate 3d surface visualizations - skipping them.')
+        exit_code = tksurfer_exc.returncode
+        txt_out = tksurfer_exc.output
+    else:
+        exit_code = 0
 
-    return exit_code
+    return txt_out, exit_code
 
 
 class ReviewInterface(object):
