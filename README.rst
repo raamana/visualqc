@@ -26,7 +26,7 @@ Assessing and guranteeing the accuracy of any automatic segmentation (be it gray
 Neuroimagers familiar with `ENIGMA quality control (QC) protocols <http://enigma.ini.usc.edu/protocols/imaging-protocols/>`_ would especially find this tool much easier. In addition to integrating valuable experience and knowledge from those protocols, this tool makes it easy so you don't have to deal with multiple scripts (to generate images and combine visualizations), and no alternating between multiple spreadsheets to keep track of ratings. Additional advantages include zooming in and needing to use only a single tool to QC both cortical and subcortical segmentations.
 
 * Free software: MIT license
-* Documentation: https://visualqc.readthedocs.io.
+* Documentation: https://raamana.github.io/visualqc
 
 
 Features
