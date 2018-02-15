@@ -1,7 +1,0 @@
-REPONAME=`basename $PWD`
-
-rm -rf dist build ${REPONAME}.egg-info 
-python setup.py sdist bdist_wheel
-
-twine upload dist/*
-

@@ -1,5 +1,0 @@
-nibabel
-matplotlib>=2.1.1
-mrivis
-numpy
-scikit-learn
