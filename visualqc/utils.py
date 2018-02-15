@@ -375,20 +375,25 @@ def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name):
         # get all IDs in the given folder
         id_list = [folder for folder in os.listdir(in_dir) if os.path.isdir(pjoin(in_dir, folder))]
 
-    required_files = (mri_name, seg_name)
+    required_files = dict(mri=mri_name, seg=seg_name)
 
     id_list_out = list()
     id_list_err = list()
     invalid_list = list()
 
+    # this dict contains existing files for each ID
+    # useful to open external programs like tkmedit
+    images_for_id = dict()
+
     for subject_id in id_list:
-        path_list = [get_path_for_subject(in_dir, subject_id, req_file, vis_type) for req_file in required_files]
-        invalid = [this_file for this_file in path_list if not pexists(this_file) or os.path.getsize(this_file) <= 0]
+        path_list = { img : get_path_for_subject(in_dir, subject_id, name, vis_type) for img, name in required_files.items() }
+        invalid = [pfile for pfile in path_list.values() if not pexists(pfile) or os.path.getsize(pfile) <= 0]
         if len(invalid) > 0:
             id_list_err.append(subject_id)
             invalid_list.extend(invalid)
         else:
             id_list_out.append(subject_id)
+            images_for_id[subject_id] = path_list
 
     if len(id_list_err) > 0:
         warnings.warn('The following subjects do NOT have all the required files or some are empty - skipping them!')
@@ -400,7 +405,7 @@ def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name):
 
     print('{} subjects are usable for review.'.format(len(id_list_out)))
 
-    return np.array(id_list_out)
+    return np.array(id_list_out), images_for_id
 
 
 def read_id_list(id_list_file):

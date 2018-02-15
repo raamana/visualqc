@@ -25,7 +25,7 @@ class QCWorkflow():
     Class encapsulating the necessary parameters to run the workflow.
     """
 
-    def __init__(self, in_dir, id_list, out_dir,
+    def __init__(self, in_dir, id_list, images_for_id, out_dir,
                  vis_type, label_set, alpha_set,
                  outlier_method, outlier_fraction, outlier_feat_types,
                  views, num_slices, num_rows,
@@ -50,6 +50,7 @@ class QCWorkflow():
 
         self.mri_name = mri_name
         self.seg_name = seg_name
+        self.images_for_id = images_for_id
         self.contour_color = contour_color
 
         self.outlier_method = outlier_method
@@ -369,7 +370,7 @@ def parse_args():
 
     mri_name = user_args.mri_name
     seg_name = user_args.seg_name
-    id_list = check_id_list(user_args.id_list, in_dir, vis_type, mri_name, seg_name)
+    id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type, mri_name, seg_name)
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
 
@@ -388,7 +389,7 @@ def parse_args():
                                                                                 user_args.outlier_fraction,
                                                                                 user_args.outlier_feat_types, id_list)
 
-    qcw = QCWorkflow(in_dir, id_list, out_dir,
+    qcw = QCWorkflow(in_dir, id_list, images_for_id, out_dir,
                      vis_type, label_set, alpha_set,
                      outlier_method, outlier_fraction, outlier_feat_types,
                      views, num_slices, num_rows,

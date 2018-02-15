@@ -265,8 +265,10 @@ def run_tksurfer_script(in_dir, subject_id, hemi, script_file):
 class ReviewInterface(object):
     """Class to layout interaction elements and define callbacks. """
 
-    def __init__(self, fig, axes_seg, axes_mri, alpha_seg,
-                 rating_list, flagged_as_outlier, outlier_alerts,
+    def __init__(self, fig,
+                 axes_seg, axes_mri,
+                 qcw, subject_id,
+                 flagged_as_outlier, outlier_alerts,
                  navig_options=default_navigation_options,
                  annot=None):
         "Constructor."
@@ -274,8 +276,8 @@ class ReviewInterface(object):
         self.fig = fig
         self.axes_seg = axes_seg
         self.axes_mri = axes_mri
-        self.latest_alpha_seg = alpha_seg
-
+        self.latest_alpha_seg = qcw.alpha_seg
+        self.rating_list = qcw.rating_list
         self.flagged_as_outlier = flagged_as_outlier
 
         self.user_rating = None
@@ -285,8 +287,6 @@ class ReviewInterface(object):
         self.zoomed_in = False
         self.prev_axis = None
         self.prev_ax_pos = None
-
-        self.rating_list = rating_list
 
         # displaying some annotation text if provided
         if annot is not None:
@@ -336,6 +336,9 @@ class ReviewInterface(object):
         self.bt_next.on_clicked(self.next)
         self.bt_quit.label.set_color(cfg.color_navig_text)
         self.bt_next.label.set_color(cfg.color_navig_text)
+
+        # # with qcw and subject id available here, we can add a button to
+        # TODO open images directly in tkmedit with qcw.images_for_id[subject_id]['mri'] ... ['seg']
 
         # alpha slider
         ax_slider = plt.axes(cfg.position_slider_seg_alpha, facecolor=cfg.color_slider_axis)
@@ -494,8 +497,7 @@ def review_and_rate(qcw,
     fig, axes_mri, axes_seg, figsize = overlay_images(qcw, mri, seg, subject_id=subject_id,
                                                       figsize=figsize, annot=annot, output_path=output_path)
 
-    rating_ui = ReviewInterface(fig, axes_seg, axes_mri, qcw.alpha_seg, qcw.rating_list,
-                                flagged_as_outlier, outlier_alerts, annot)
+    rating_ui = ReviewInterface(fig, axes_seg, axes_mri, qcw, subject_id, flagged_as_outlier, outlier_alerts, annot)
 
     con_id_click = fig.canvas.mpl_connect('button_press_event', rating_ui.on_mouse)
     con_id_keybd = fig.canvas.mpl_connect('key_press_event', rating_ui.do_shortcuts)
