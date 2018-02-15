@@ -1,0 +1,293 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>visualqc &mdash; visualqc 0.1+29.g47076e9 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="visualqc 0.1+29.g47076e9 documentation" href="index.html"/>
+        <link rel="next" title="Installation" href="installation.html"/>
+        <link rel="prev" title="Welcome to visualqc’s documentation!" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> visualqc
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1+29.g47076e9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">visualqc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gallery-contour">Gallery (contour)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gallery-filled">Gallery (filled)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Command line usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to.html">Review interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">visualqc</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>visualqc</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/readme.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="visualqc">
+<h1>visualqc<a class="headerlink" href="#visualqc" title="Permalink to this headline">¶</a></h1>
+<a class="reference external image-reference" href="https://pypi.python.org/pypi/visualqc"><img alt="https://img.shields.io/pypi/v/visualqc.svg" src="https://img.shields.io/pypi/v/visualqc.svg" /></a>
+<a class="reference external image-reference" href="https://travis-ci.org/raamana/visualqc"><img alt="https://img.shields.io/travis/raamana/visualqc.svg" src="https://img.shields.io/travis/raamana/visualqc.svg" /></a>
+<a class="reference external image-reference" href="https://visualqc.readthedocs.io/en/latest/?badge=latest"><img alt="Documentation Status" src="https://readthedocs.org/projects/visualqc/badge/?version=latest" /></a>
+<a class="reference external image-reference" href="https://pyup.io/repos/github/raamana/visualqc/"><img alt="Updates" src="https://pyup.io/repos/github/raamana/visualqc/shield.svg" /></a>
+<p>Tool to automate the quality control of MRI segmentations (gray and white matter, cortical, subcortical and other arbitrary segmentations) produced by Freesurfer and other tools.</p>
+<img alt="_images/vqc_logo_small.png" src="_images/vqc_logo_small.png" />
+<p>Assessing and guranteeing the accuracy of any automatic segmentation (be it gray or white surfaces for cortical thickness, or a subortical segmentation) requires manual visual inspection. Not just one slice. Or one view. But many slices in all the views to ensure the 3d segmentation is accurate at the voxel-level. This process, in its most banal form, is quite cumbersome and time-consuming. Without any assistive tool, it requires opening both the MRI and segmentation for one subject in an editor that can overlay and color them properly, and manually reviewing one slice at a time, navigate through many many slices, and record your rating in a spreadsheet. And repeat this process for multiple subjects. In some even more demanding tasks (such as assessing the accuracy of cortical thickness e.g. generated by Freesurfer), you may need to review multiple types of visualizations, such as surface-redering with different labels colored appropriately, in addition to voxel-wise overlay on MRI. Without an automatic tool, this process allows too many human mistakes, over the span of 100s of subjects over many weeks jumping through multiple visualization software and spreadsheets. <code class="docutils literal"><span class="pre">visualqc</span></code> aims to reduce that to a single command to seamlessly record the ratings of accuracy and navigate through 100s of subjects with ease. All you need to do is sit back, focus your exper eye on the accuracy and <code class="docutils literal"><span class="pre">visualqc</span></code> takes care of the flow and bookkeeping.</p>
+<p>Neuroimagers familiar with <a class="reference external" href="http://enigma.ini.usc.edu/protocols/imaging-protocols/">ENIGMA quality control (QC) protocols</a> would especially find this tool much easier. In addition to integrating valuable experience and knowledge from those protocols, this tool makes it easy so you don’t have to deal with multiple scripts (to generate images and combine visualizations), and no alternating between multiple spreadsheets to keep track of ratings. Additional advantages include zooming in and needing to use only a single tool to QC both cortical and subcortical segmentations.</p>
+<ul class="simple">
+<li>Free software: MIT license</li>
+<li>Documentation: <a class="reference external" href="https://visualqc.readthedocs.io">https://visualqc.readthedocs.io</a>.</li>
+</ul>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Makes the review and rating workflow seamless and easy! It is simple as: visualize the auto-generated overlay, review, zoom-in wherever you need, rate the quality, and proceed to next!</li>
+<li>Display multiple slices in multiple views, and easily navigate all subjects in a dataset</li>
+<li>Allows you to zoom in to any view/slice to ensure you won’t miss any detail</li>
+<li>Allows you to control the transparency of overlay to your expert preference</li>
+<li>Allows to focus on a single or a set of arbitrary segmentations (hippocampus, or PCG or DMN etc) if necessary</li>
+<li>Automatically detect and flag outliers (coming soon)</li>
+</ul>
+</div>
+<div class="section" id="gallery-contour">
+<h2>Gallery (contour)<a class="headerlink" href="#gallery-contour" title="Permalink to this headline">¶</a></h2>
+<p>Some examples of how the interface looks are shown below. The first screenshot showcases the use case wherein we can review the accuracy of Freesufer’s cortical parcellation against the original MRI (note that only one view is shown and one panel is zoomed-in):</p>
+<img alt="_images/visual_qc_cortical_contour__Pitt_0050034_v1_ns18_4x6.png" src="_images/visual_qc_cortical_contour__Pitt_0050034_v1_ns18_4x6.png" />
+<p>In this screenshot, we show the user interface showing the elements to rating, notes and alerts from outlier detection module:</p>
+<img alt="_images/new_ui_with_outlier_alert_notes.png" src="_images/new_ui_with_outlier_alert_notes.png" />
+<p>In the screenshot below, we show the use case for a single label (subcortical segmentation, tissue class or cortical ROI) - shown here are hippocampus and amygdala:</p>
+<img alt="_images/visual_qc_labels_contour_53_Pitt_0050039_v012_ns18_9x6.png" src="_images/visual_qc_labels_contour_53_Pitt_0050039_v012_ns18_9x6.png" />
+<p>We can also add nearby amygdala:</p>
+<img alt="_images/visual_qc_labels_contour_53_54_Pitt_0050036_v02_ns21_6x7.png" src="_images/visual_qc_labels_contour_53_54_Pitt_0050036_v02_ns21_6x7.png" />
+<p>And you can add as many ROIs as you like:</p>
+<img alt="_images/visual_qc_labels_contour_10_11_12_13_NYU_0051036.png" src="_images/visual_qc_labels_contour_10_11_12_13_NYU_0051036.png" />
+<p>ROIs could be from anywhere in the MRI (including big cortical labels too!). For example, let’s look at Insula (label 1035 in Freesurfer ColorLUT) in the left hemi-sphere :</p>
+<img alt="_images/visual_qc_labels_contour_1035_Pitt_0050032_v02_ns21_6x7.png" src="_images/visual_qc_labels_contour_1035_Pitt_0050032_v02_ns21_6x7.png" />
+<p>And, how about middle temporal?</p>
+<img alt="_images/visual_qc_labels_contour_2015_Pitt_0050035_v02_ns21_6x7.png" src="_images/visual_qc_labels_contour_2015_Pitt_0050035_v02_ns21_6x7.png" />
+<p>Let’s just focus on axial view to get more detail:</p>
+<img alt="_images/visual_qc_labels_contour_2015_Pitt_0050039_v2_ns27_3x9.png" src="_images/visual_qc_labels_contour_2015_Pitt_0050039_v2_ns27_3x9.png" />
+</div>
+<div class="section" id="gallery-filled">
+<h2>Gallery (filled)<a class="headerlink" href="#gallery-filled" title="Permalink to this headline">¶</a></h2>
+<p>Fore more visualizations e.g. those with filled labels instead of contours, refer to <a class="reference internal" href="gallery_filled.html"><span class="doc">Gallery (filled)</span></a>.</p>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to visualqc’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Pradeep Reddy Raamana.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1+29.g47076e9',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
