@@ -15,28 +15,83 @@ from visualqc.config import default_out_dir_name, default_mri_name, default_seg_
     default_alpha_mri, default_alpha_seg
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set, \
     check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, \
-    check_out_dir, get_path_for_subject
+    check_out_dir, get_path_for_subject, check_outlier_params
 from visualqc.viz import review_and_rate
+from visualqc.outliers import outlier_advisory
 
 
-def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
-                 mri_name=default_mri_name, seg_name=default_seg_name,
-                 alpha_set=default_alpha_set, contour_color=cfg.default_contour_face_color,
-                 views=default_views, num_slices=default_num_slices, num_rows=default_num_rows):
+class QCWorkflow():
+    """
+    Class encapsulating the necessary parameters to run the workflow.
+    """
+
+    def __init__(self, in_dir, id_list, images_for_id, out_dir,
+                 vis_type, label_set, alpha_set,
+                 outlier_method, outlier_fraction, outlier_feat_types,
+                 views, num_slices, num_rows,
+                 mri_name, seg_name, contour_color,
+                 rating_list=cfg.default_rating_list):
+        """Constructor"""
+
+        self.in_dir = in_dir
+        self.id_list = id_list
+        self.out_dir = out_dir
+
+        self.vis_type = vis_type
+        self.label_set = label_set
+
+        self.alpha_set = alpha_set
+        self.alpha_mri = self.alpha_set[0]
+        self.alpha_seg = self.alpha_set[1]
+
+        self.views = views
+        self.num_slices = num_slices
+        self.num_rows = num_rows
+
+        self.mri_name = mri_name
+        self.seg_name = seg_name
+        self.images_for_id = images_for_id
+        self.contour_color = contour_color
+
+        self.outlier_method = outlier_method
+        self.outlier_fraction = outlier_fraction
+        self.outlier_feat_types = outlier_feat_types
+
+        self.rating_list = rating_list
+
+    def save(self):
+        """
+        Saves the state of the QC workflow for restoring later on,
+            as well as for future reference.
+
+        """
+
+        pass
+
+    def reload(self):
+        """Method to reload the saved state."""
+
+        pass
+
+
+
+def run_workflow(qcw):
     """Generate the required visualizations for the specified subjects."""
 
-    ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(out_dir, id_list)
+    outliers_by_sample, outliers_by_feature = outlier_advisory(qcw)
+
+    ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(qcw.out_dir, qcw.id_list)
     for subject_id in incomplete_list:
-        print('Reviewing {}'.format(subject_id))
-        t1_mri, overlay_seg, out_path = _prepare_images(fs_dir, subject_id, mri_name, seg_name,
-                                                        out_dir, vis_type, label_set)
-        ratings[subject_id], notes[subject_id], quit_now = review_and_rate(t1_mri, overlay_seg,
-                                                        vis_type=vis_type, contour_color=contour_color,
-                                                        out_dir=out_dir, fs_dir=fs_dir, subject_id=subject_id,
-                                                        views=views, num_rows=num_rows, num_slices=num_slices,
-                                                        output_path=out_path,
-                                                        alpha_mri=alpha_set[0], alpha_seg=alpha_set[1],
-                                                        annot='ID {}'.format(subject_id))
+        flagged_as_outlier = subject_id in outliers_by_sample
+        outlier_alert_msg = 'Flagged as a \npossible outlier by \n{}'.format(outliers_by_sample[subject_id]) if flagged_as_outlier else ' '
+        print('Reviewing {} {}'.format(subject_id, outlier_alert_msg))
+        t1_mri, overlay_seg, out_path = _prepare_images(qcw, subject_id)
+        ratings[subject_id], notes[subject_id], quit_now = review_and_rate(qcw, t1_mri, overlay_seg,
+                                                                           subject_id=subject_id,
+                                                                           flagged_as_outlier=flagged_as_outlier,
+                                                                           outlier_alerts=outliers_by_sample.get(subject_id, None), # None, if id not in dict
+                                                                           output_path=out_path,
+                                                                           annot='ID {}'.format(subject_id))
         # informing only when it was rated!
         if ratings[subject_id] is not None:
             print('id {} rating {} notes {}'.format(subject_id, ratings[subject_id], notes[subject_id]))
@@ -48,17 +103,20 @@ def run_workflow(vis_type, label_set, fs_dir, id_list, out_dir,
             break
 
     print('Saving ratings .. \n')
-    save_ratings(ratings, notes, out_dir)
+    save_ratings(ratings, notes, qcw.out_dir)
+    #TODO save QCW
 
     return
 
 
-def _prepare_images(in_dir, subject_id, mri_name, seg_name, out_dir, vis_type, label_set):
+def _prepare_images(qcw, subject_id):
     """Actual routine to generate the visualizations. """
 
+    # qcw.fs_dir, qcw.subject_id, qcw.mri_name, qcw.seg_name, qcw.out_dir, qcw.vis_type, qcw.label_set
+
     # we ensured these files exist and are not empty
-    t1_mri_path = get_path_for_subject(in_dir, subject_id, mri_name, vis_type) # pjoin(in_dir, subject_id, 'mri', mri_name)
-    fs_seg_path = get_path_for_subject(in_dir, subject_id, seg_name, vis_type)
+    t1_mri_path = get_path_for_subject(qcw.in_dir, subject_id, qcw.mri_name, qcw.vis_type)
+    fs_seg_path = get_path_for_subject(qcw.in_dir, subject_id, qcw.seg_name, qcw.vis_type)
 
     t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
     fs_seg = read_image(fs_seg_path, error_msg='segmentation')
@@ -67,28 +125,28 @@ def _prepare_images(in_dir, subject_id, mri_name, seg_name, out_dir, vis_type, l
         raise ValueError('size mismatch! MRI: {} Seg: {}\n'
                          'Size must match in all dimensions.'.format(t1_mri.shape, fs_seg.shape))
 
-    if label_set is not None:
-        fs_seg = get_label_set(fs_seg, label_set)
+    if qcw.label_set is not None:
+        fs_seg = get_label_set(fs_seg, qcw.label_set)
 
     suffix = ''
-    if vis_type in ('cortical_volumetric','cortical_contour'):
+    if qcw.vis_type in ('cortical_volumetric', 'cortical_contour'):
         out_seg = void_subcortical_symmetrize_cortical(fs_seg)
         # generate pial surface
 
-    elif vis_type in ('labels_volumetric', 'labels_contour'):
+    elif qcw.vis_type in ('labels_volumetric', 'labels_contour'):
         out_seg = fs_seg
-        if label_set is not None:
-            suffix = '_'.join([str(lbl) for lbl in list(label_set)])
+        if qcw.label_set is not None:
+            suffix = '_'.join([str(lbl) for lbl in list(qcw.label_set)])
     else:
         raise NotImplementedError('Other visualization combinations have not been implemented yet! Stay tuned.')
 
-    out_path = pjoin(out_dir, 'visual_qc_{}_{}_{}'.format(vis_type, suffix, subject_id))
+    out_path = pjoin(qcw.out_dir, 'visual_qc_{}_{}_{}'.format(qcw.vis_type, suffix, subject_id))
 
     return t1_mri, out_seg, out_path
 
 
 def get_parser():
-    "Parser to specify arguments and their defaults."
+    """Parser to specify arguments and their defaults."""
 
     parser = argparse.ArgumentParser(prog="visualqc", formatter_class=argparse.RawTextHelpFormatter,
                                      description='visualqc: rate accuracy of anatomical segmentations and parcellations')
@@ -188,58 +246,102 @@ def get_parser():
     Default: {}.
     \n""".format(cfg.default_contour_face_color))
 
-    parser.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
+    help_text_outlier_detection_method = textwrap.dedent("""
+    Method used to detect the outliers.
+    
+    For more info, read http://scikit-learn.org/stable/modules/outlier_detection.html
+    
+    Default: {}.
+    \n""".format(cfg.default_outlier_detection_method))
+
+    help_text_outlier_fraction = textwrap.dedent("""
+    Fraction of outliers expected in the given sample. Must be >= 1/n and <= (n-1)/n, 
+    where n is the number of samples in the current sample.
+
+    For more info, read http://scikit-learn.org/stable/modules/outlier_detection.html
+
+    Default: {}.
+    \n""".format(cfg.default_outlier_fraction))
+
+    help_text_outlier_feat_types = textwrap.dedent("""
+    Type of features to be employed in training the outlier detection method.  It could be one of  
+    'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label), 
+    'subcortical' (aseg.stats: volumes of several subcortical structures), 
+    or 'both' (using both aseg and aparc stats).
+    
+    Default: {} {}.
+    \n""".format(cfg.freesurfer_features_outlier_detection[0], cfg.freesurfer_features_outlier_detection[1]))
+
+    in_out = parser.add_argument_group('Input and output', ' ')
+    in_out.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
                         default=default_freesurfer_dir,
                         required=False, help=help_text_fs_dir)
 
-    parser.add_argument("-i", "--id_list", action="store", dest="id_list",
+    in_out.add_argument("-i", "--id_list", action="store", dest="id_list",
                         default=None, required=False, help=help_text_id_list)
 
-    parser.add_argument("-v", "--vis_type", action="store", dest="vis_type",
-                        choices=visualization_combination_choices,
-                        default=default_vis_type, required=False,
-                        help=help_text_vis_type)
+    in_out.add_argument("-u", "--user_dir", action="store", dest="user_dir",
+                        default=default_user_dir,
+                        required=False, help=help_text_user_dir)
 
-    parser.add_argument("-o", "--out_dir", action="store", dest="out_dir",
+    in_out.add_argument("-o", "--out_dir", action="store", dest="out_dir",
                         required=False, help=help_text_out_dir,
                         default=None)
 
-    parser.add_argument("-a", "--alpha_set", action="store", dest="alpha_set",
-                        metavar='alpha', nargs=2,
-                        default=default_alpha_set,
-                        required=False, help=help_text_alphas)
+    data_source = parser.add_argument_group('Sources of data', ' ')
+    data_source.add_argument("-l", "--labels", action="store", dest="labels",
+                             default=default_label_set, required=False, nargs='+',
+                             help=help_text_label, metavar='label')
 
-    parser.add_argument("-l", "--labels", action="store", dest="labels",
-                        default=default_label_set, required=False, nargs='+',
-                        help=help_text_label, metavar='label')
+    data_source.add_argument("-m", "--mri_name", action="store", dest="mri_name",
+                             default=default_mri_name, required=False,
+                             help=help_text_mri_name)
 
-    parser.add_argument("-m", "--mri_name", action="store", dest="mri_name",
-                        default=default_mri_name, required=False,
-                        help=help_text_mri_name)
+    data_source.add_argument("-g", "--seg_name", action="store", dest="seg_name",
+                             default=default_seg_name, required=False,
+                             help=help_text_seg_name)
 
-    parser.add_argument("-g", "--seg_name", action="store", dest="seg_name",
-                        default=default_seg_name, required=False,
-                        help=help_text_seg_name)
+    vis_args = parser.add_argument_group('Visualization options', ' ')
+    vis_args.add_argument("-v", "--vis_type", action="store", dest="vis_type",
+                          choices=visualization_combination_choices,
+                          default=default_vis_type, required=False,
+                          help=help_text_vis_type)
 
-    parser.add_argument("-w", "--views", action="store", dest="views",
+    vis_args.add_argument("-c", "--contour_color", action="store", dest="contour_color",
+                          default=cfg.default_contour_face_color, required=False,
+                          help=help_text_contour_color)
+
+    vis_args.add_argument("-a", "--alpha_set", action="store", dest="alpha_set",
+                          metavar='alpha', nargs=2,
+                          default=default_alpha_set,
+                          required=False, help=help_text_alphas)
+
+    outliers = parser.add_argument_group('Outlier detection',
+                                         'options related to automatically detecting possible outliers')
+    outliers.add_argument("-olm", "--outlier_method", action="store", dest="outlier_method",
+                          default=cfg.default_outlier_detection_method, required=False,
+                          help=help_text_outlier_detection_method)
+
+    outliers.add_argument("-olf", "--outlier_fraction", action="store", dest="outlier_fraction",
+                          default=cfg.default_outlier_fraction, required=False,
+                          help=help_text_outlier_fraction)
+
+    outliers.add_argument("-olt", "--outlier_feat_types", action="store", dest="outlier_feat_types",
+                          default=cfg.freesurfer_features_outlier_detection, required=False,
+                          help=help_text_outlier_feat_types)
+
+    layout = parser.add_argument_group('Layout options', ' ')
+    layout.add_argument("-w", "--views", action="store", dest="views",
                         default=default_views, required=False, nargs='+',
                         help=help_text_views)
 
-    parser.add_argument("-s", "--num_slices", action="store", dest="num_slices",
+    layout.add_argument("-s", "--num_slices", action="store", dest="num_slices",
                         default=default_num_slices, required=False,
                         help=help_text_num_slices)
 
-    parser.add_argument("-r", "--num_rows", action="store", dest="num_rows",
+    layout.add_argument("-r", "--num_rows", action="store", dest="num_rows",
                         default=default_num_rows, required=False,
                         help=help_text_num_rows)
-
-    parser.add_argument("-c", "--contour_color", action="store", dest="contour_color",
-                        default=cfg.default_contour_face_color, required=False,
-                        help=help_text_contour_color)
-
-    parser.add_argument("-u", "--user_dir", action="store", dest="user_dir",
-                        default=default_user_dir,
-                        required=False, help=help_text_user_dir)
 
     return parser
 
@@ -260,13 +362,15 @@ def parse_args():
     except:
         parser.exit(1)
 
+    # TODO methods to restore from previous runs, without having re-enter all parameters
+
     vis_type, label_set = check_labels(user_args.vis_type, user_args.labels)
 
     in_dir = check_input_dir(user_args.fs_dir, user_args.user_dir, vis_type)
 
     mri_name = user_args.mri_name
     seg_name = user_args.seg_name
-    id_list = check_id_list(user_args.id_list, in_dir, vis_type, mri_name, seg_name)
+    id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type, mri_name, seg_name)
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
 
@@ -278,29 +382,31 @@ def parse_args():
 
     contour_color = user_args.contour_color
     if not is_color_like(contour_color):
-        raise ValueError('Specified color is not valid. Choose a valid spec from\n https://matplotlib.org/users/colors.html')
+        raise ValueError(
+            'Specified color is not valid. Choose a valid spec from\n https://matplotlib.org/users/colors.html')
 
-    return in_dir, id_list, out_dir, vis_type, label_set, \
-           alpha_set, views, num_slices, num_rows, mri_name, seg_name, contour_color
+    outlier_method, outlier_fraction, outlier_feat_types = check_outlier_params(user_args.outlier_method,
+                                                                                user_args.outlier_fraction,
+                                                                                user_args.outlier_feat_types, id_list)
+
+    qcw = QCWorkflow(in_dir, id_list, images_for_id, out_dir,
+                     vis_type, label_set, alpha_set,
+                     outlier_method, outlier_fraction, outlier_feat_types,
+                     views, num_slices, num_rows,
+                     mri_name, seg_name, contour_color)
+
+    return qcw
 
 
 def cli_run():
     """Main entry point."""
 
-    fs_dir, id_list, out_dir, vis_type, label_set, alpha_set, \
-    views, num_slices, num_rows, mri_name, seg_name, contour_color = parse_args()
+    qcw = parse_args()
 
-    if vis_type is not None:
+    if qcw.vis_type is not None:
         # matplotlib.interactive(True)
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-            warnings.filterwarnings("ignore", category=FutureWarning)
-            run_workflow(vis_type=vis_type, label_set=label_set,
-                         fs_dir=fs_dir, id_list=id_list,
-                         mri_name=mri_name, seg_name=seg_name, contour_color=contour_color,
-                         out_dir=out_dir, alpha_set=alpha_set,
-                         views=views, num_slices=num_slices, num_rows=num_rows)
-            print('Results are available in:\n\t{}'.format(out_dir))
+        run_workflow(qcw)
+        print('Results are available in:\n\t{}'.format(qcw.out_dir))
     else:
         raise ValueError('Invalid state for visualQC!\n\t Ensure proper combination of arguments is used.')
 
@@ -308,4 +414,9 @@ def cli_run():
 
 
 if __name__ == '__main__':
-    cli_run()
+    # disabling all not severe warnings
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        warnings.filterwarnings("ignore", category=FutureWarning)
+
+        cli_run()

@@ -16,6 +16,7 @@ requirements = [
     'matplotlib',
     'mrivis',
     'nibabel'
+    'scikit-learn'
 ]
 
 setup_requirements = [

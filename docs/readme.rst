@@ -47,7 +47,11 @@ Some examples of how the interface looks are shown below. The first screenshot s
 
 .. image:: vis/contour/visual_qc_cortical_contour__Pitt_0050034_v1_ns18_4x6.png
 
-In the second screenshot, we show the use case for a single label (subcortical segmentation, tissue class or cortical ROI) - shown here are hippocampus and amygdala:
+In this screenshot, we show the user interface showing the elements to rating, notes and alerts from outlier detection module:
+
+.. image:: vis/contour/new_ui_with_outlier_alert_notes.png
+
+In the screenshot below, we show the use case for a single label (subcortical segmentation, tissue class or cortical ROI) - shown here are hippocampus and amygdala:
 
 .. image:: vis/contour/visual_qc_labels_contour_53_Pitt_0050039_v012_ns18_9x6.png
 

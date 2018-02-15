@@ -4,8 +4,8 @@ __pycache__/
 *$py.class
 example_datasets
 docs/logo
-visualqc/tests
-.idea
+*.xdebug_tksurfer
+.idea/
 
 # C extensions
 *.so
