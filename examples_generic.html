@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Examples (Generic) &mdash; visualqc 0.1+44.g544c328.dirty documentation</title>
+  <title>Examples (Generic) &mdash; visualqc 0.1+45.g67b9950.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.1+44.g544c328.dirty documentation" href="index.html"/>
+    <link rel="top" title="visualqc 0.1+45.g67b9950.dirty documentation" href="index.html"/>
         <link rel="next" title="Contributing" href="contributing.html"/>
         <link rel="prev" title="Examples (Freesurfer)" href="examples.html"/> 
 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.1+44.g544c328.dirty
+                0.1+45.g67b9950.dirty
               </div>
             
           
@@ -174,11 +174,31 @@
 <li>name of the segmentation with <code class="docutils literal"><span class="pre">--seg_name</span></code> (or <code class="docutils literal"><span class="pre">-g</span></code>) that is to be overlaid on the MRI.</li>
 </ol>
 </div></blockquote>
-<p>If you would like to review all the subjects (each with their own folder) in <code class="docutils literal"><span class="pre">/project/MR_segmentation</span></code>, who segmentation(s) are stored in <code class="docutils literal"><span class="pre">roi_set.nii</span></code> whose T1/anatomical MRI is stored in <code class="docutils literal"><span class="pre">mri.nii</span></code>, you would issue the following command:</p>
+<p>If you would like to review all the subjects (each with their own folder) in <code class="docutils literal"><span class="pre">/project/MR_segmentation</span></code>, who segmentation(s) are stored in <code class="docutils literal"><span class="pre">roi_set.nii</span></code> whose T1/anatomical MRI is stored in <code class="docutils literal"><span class="pre">mri.nii</span></code>. The folder heirarchy (within <code class="docutils literal"><span class="pre">/project/MR_segmentation</span></code>) might look like this:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>.
+<span class="p">|</span>-- atlas1
+<span class="p">|</span>   <span class="p">|</span>-- mri.nii
+<span class="p">|</span>   <span class="sb">`</span>-- roi_set.nii
+<span class="p">|</span>-- atlas2
+<span class="p">|</span>   <span class="p">|</span>-- mri.nii
+<span class="p">|</span>   <span class="sb">`</span>-- roi_set.nii
+<span class="p">|</span>-- sub_01
+<span class="p">|</span>   <span class="p">|</span>-- mri.nii
+<span class="p">|</span>   <span class="sb">`</span>-- roi_set.nii
+<span class="sb">`</span>-- sub_04
+    <span class="p">|</span>-- mri.nii
+    <span class="sb">`</span>-- roi_set.nii
+</pre></div>
+</div>
+<p>In that case, you would issue the following command:</p>
 <div class="highlight-bash"><div class="highlight"><pre><span></span>visualqc --in_dir /project/MR_segmentation --mri_name mri.nii --seg_name roi_set.nii
 </pre></div>
 </div>
-<p>This creates an output directory called <code class="docutils literal"><span class="pre">visualqc</span></code> in the input directory specified <code class="docutils literal"><span class="pre">/project/MR_segmentation</span></code>, to store the visualizations generated, along with the ratings and notes provided by the user. You can also change the output directory with the <code class="docutils literal"><span class="pre">-o</span></code> option.</p>
+<p>This will process the four subjects (atlas1, atlas2, sub_01, sub_04) sequentially, and creates an output directory called <code class="docutils literal"><span class="pre">visualqc</span></code> in the input directory specified <code class="docutils literal"><span class="pre">/project/MR_segmentation</span></code>, to store the visualizations generated, along with the ratings and notes provided by the user. You can also change the output directory with the <code class="docutils literal"><span class="pre">-o</span></code> option. You can also limit the review to a subject of IDs, by using a predefined list by a specifiying an id list with <code class="docutils literal"><span class="pre">--id_list</span></code> or <code class="docutils literal"><span class="pre">-i</span></code> option, containing one ID per line. An example (focusing only on the 2 atlases) could like:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>atlas1
+atlas2
+</pre></div>
+</div>
 </div>
 
 
@@ -225,7 +245,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1+44.g544c328.dirty',
+            VERSION:'0.1+45.g67b9950.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
