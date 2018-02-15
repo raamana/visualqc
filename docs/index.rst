@@ -9,8 +9,10 @@ Contents:
    readme
    installation
    usage
+   file_formats
    how_to
    examples
+   examples_generic
    contributing
    authors
    history
