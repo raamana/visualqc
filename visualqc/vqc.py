@@ -16,7 +16,7 @@ from visualqc.config import default_out_dir_name, default_mri_name, default_seg_
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set, \
     check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, \
     check_out_dir, get_path_for_subject, check_outlier_params
-from visualqc.viz import review_and_rate
+from visualqc.viz import review_and_rate, generate_required_visualizations
 from visualqc.outliers import outlier_advisory
 
 
@@ -26,6 +26,7 @@ class QCWorkflow():
     """
 
     def __init__(self, in_dir, id_list, images_for_id, out_dir,
+                 prepare_first,
                  vis_type, label_set, alpha_set,
                  outlier_method, outlier_fraction, outlier_feat_types, disable_outlier_detection,
                  views, num_slices, num_rows,
@@ -57,6 +58,7 @@ class QCWorkflow():
         self.outlier_fraction = outlier_fraction
         self.outlier_feat_types = outlier_feat_types
         self.disable_outlier_detection = disable_outlier_detection
+        self.prepare_first = prepare_first
 
         self.rating_list = rating_list
 
@@ -78,6 +80,9 @@ class QCWorkflow():
 
 def run_workflow(qcw):
     """Generate the required visualizations for the specified subjects."""
+
+    if qcw.prepare_first:
+        generate_required_visualizations(qcw)
 
     outliers_by_sample, outliers_by_feature = outlier_advisory(qcw)
 
@@ -279,6 +284,12 @@ def get_parser():
     This flag disables outlier detection and alerts altogether.
     \n""")
 
+    help_text_prepare = textwrap.dedent("""
+    This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations. 
+    This makes the switch from one subject to the next, even more seamless (saving few seconds :) ).
+    
+    Default: False (required visualizations are generated only on demand, which can take 5-10 seconds for each subject).
+    \n""")
 
     in_out = parser.add_argument_group('Input and output', ' ')
     in_out.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
@@ -354,6 +365,11 @@ def get_parser():
                         default=default_num_rows, required=False,
                         help=help_text_num_rows)
 
+    wf_args = parser.add_argument_group('Workflow', 'Options related to workflow e.g. to pre-generate all the visualizations required')
+    wf_args.add_argument("-p", "--prepare_first", action="store_true", dest="prepare_first",
+                          help=help_text_prepare)
+
+
     return parser
 
 
@@ -403,6 +419,7 @@ def parse_args():
                                                                                 id_list)
 
     qcw = QCWorkflow(in_dir, id_list, images_for_id, out_dir,
+                     user_args.prepare_first,
                      vis_type, label_set, alpha_set,
                      outlier_method, outlier_fraction, outlier_feat_types, no_outlier_detection,
                      views, num_slices, num_rows,

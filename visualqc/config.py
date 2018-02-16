@@ -28,6 +28,8 @@ freesurfer_vis_types = cortical_types + label_types
 visualization_combination_choices = cortical_types + label_types
 default_vis_type = 'cortical_contour'
 
+surface_view_angles = ['lateral', 'medial', 'transverse']
+
 freesurfer_vis_cmd = 'tksurfer'
 
 default_label_set = None

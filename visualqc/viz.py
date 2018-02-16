@@ -7,6 +7,7 @@ import subprocess
 from subprocess import check_output
 import matplotlib.image as mpimg
 import numpy as np
+import time
 from matplotlib import pyplot as plt, colors, cm
 from matplotlib.widgets import RadioButtons, Slider, TextBox, Button
 from matplotlib.patches import Rectangle
@@ -17,6 +18,37 @@ from visualqc.config import zoomed_position, annot_vis_dir_name, default_vis_typ
     default_views, default_num_slices, default_num_rows, default_alpha_mri, default_alpha_seg, \
     default_rating_list, default_navigation_options
 from visualqc.utils import get_axis, pick_slices, check_layout
+
+
+def generate_required_visualizations(qcw):
+    """Method to pre-generate all the necessary visualizations, for the given workflow."""
+
+    if 'cortical' in qcw.vis_type and qcw.in_dir is not None and qcw.out_dir is not None:
+        print('Pre-generating visualizations for {} ... Please wait!'.format(qcw.vis_type))
+        start_time_vis_whole = time.time()
+        vis_times = list()
+        num_subjects = len(qcw.id_list)
+        max_len = max([len(sid) for sid in qcw.id_list])+3
+        for ii, subject_id in enumerate(qcw.id_list):
+            print('processing {id:>{max_len}} ({ii}/{nn}) ... '.format(ii=ii, nn=num_subjects,
+                                                                     id=subject_id, max_len=max_len), end='')
+            start_time_vis_subject = time.time()
+            surf_vis = make_vis_pial_surface(qcw.in_dir, subject_id, qcw.out_dir)
+            print(' done.')
+            vis_times.append(time.time()-start_time_vis_subject)
+
+        # computing processing times
+        end_time_vis_whole = time.time()
+        total_vis_wf_time = end_time_vis_whole - start_time_vis_whole
+        vis_times = np.array(vis_times).astype('float64')
+        mean_vis_time = vis_times.mean()
+        print('Time took per subject : {:.3f} seconds per subject, '
+              'and {:3} seconds for {} subjects.'.format(mean_vis_time, total_vis_wf_time, num_subjects))
+
+    else:
+        print('Given {} vis_type does not need any visualizations to be pre-generated.'.format(qcw.vis_type))
+
+    return
 
 
 def overlay_images(qcw, mri, seg,
@@ -218,7 +250,7 @@ def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir,
 
     script_file = pjoin(out_vis_dir, 'vis_annot_{}.tcl'.format(hemi))
     vis = dict()
-    for view in ['lateral', 'medial', 'transverse']:
+    for view in cfg.surface_view_angles:
         vis[view] = pjoin(out_vis_dir, '{}_{}_{}.tif'.format(subject_id, hemi, view))
 
     img_format = 'tiff'  # rgb does not work
