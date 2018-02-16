@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Examples (Generic) &mdash; visualqc 0.1+46.gc55dfbf.dirty documentation</title>
+  <title>Examples (Generic) &mdash; visualqc 0.2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.1+46.gc55dfbf.dirty documentation" href="index.html"/>
+    <link rel="top" title="visualqc 0.2 documentation" href="index.html"/>
         <link rel="next" title="Contributing" href="contributing.html"/>
         <link rel="prev" title="Examples (Freesurfer)" href="examples.html"/> 
 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.1+46.gc55dfbf.dirty
+                0.2
               </div>
             
           
@@ -170,7 +170,6 @@
 <blockquote>
 <div><ol class="arabic simple">
 <li>path to parent folder of the images using <code class="docutils literal"><span class="pre">--user_dir</span></code> or <code class="docutils literal"><span class="pre">-u</span></code> option, which contains a seprate folder for each subject ID</li>
-<li>type of visualization to be labels with <code class="docutils literal"><span class="pre">--vis_type</span> <span class="pre">labels_contour</span></code> (if you <strong>don’t</strong> want them to be filled), or <code class="docutils literal"><span class="pre">--vis_type</span> <span class="pre">labels_volumetric</span></code> (if you <strong>want</strong> them to be filled to check voxel-wise accuracy with transparent overlay).</li>
 <li>name of the anatomical MRI with <code class="docutils literal"><span class="pre">--mri_name</span></code> (or <code class="docutils literal"><span class="pre">-m</span></code>) and</li>
 <li>name of the segmentation with <code class="docutils literal"><span class="pre">--seg_name</span></code> (or <code class="docutils literal"><span class="pre">-g</span></code>) that is to be overlaid on the MRI.</li>
 </ol>
@@ -192,11 +191,7 @@
 </pre></div>
 </div>
 <p>In that case, you would issue the following command:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>visualqc --user_dir /project/MR_segmentation --vis_type labels_contour --mri_name mri.nii --seg_name roi_set.nii
-</pre></div>
-</div>
-<p>Or in a slighlty shorter way:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>visualqc -u /project/MR_segmentation -v labels_contour -m mri.nii -g roi_set.nii
+<div class="highlight-bash"><div class="highlight"><pre><span></span>visualqc --in_dir /project/MR_segmentation --mri_name mri.nii --seg_name roi_set.nii
 </pre></div>
 </div>
 <p>This will process the four subjects (atlas1, atlas2, sub_01, sub_04) sequentially, and creates an output directory called <code class="docutils literal"><span class="pre">visualqc</span></code> in the input directory specified <code class="docutils literal"><span class="pre">/project/MR_segmentation</span></code>, to store the visualizations generated, along with the ratings and notes provided by the user. You can also change the output directory with the <code class="docutils literal"><span class="pre">-o</span></code> option. You can also limit the review to a subject of IDs, by using a predefined list by a specifiying an id list with <code class="docutils literal"><span class="pre">--id_list</span></code> or <code class="docutils literal"><span class="pre">-i</span></code> option, containing one ID per line. An example (focusing only on the 2 atlases) could like:</p>
@@ -250,7 +245,7 @@ atlas2
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1+46.gc55dfbf.dirty',
+            VERSION:'0.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
