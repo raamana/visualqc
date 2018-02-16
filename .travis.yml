@@ -28,10 +28,12 @@ install:
   - pip install -e .
 
 language: python
+cache: pip
 python:
-- 3.6
-- 3.5
-- 3.4
-- 3.3
+  - 3.6
+  - 3.5
+  - 3.4
+  - 3.3
+
 script:
-  - travis_wait 999 pytest --verbose --cov=.
+  - travis_wait 999 pytest --verbose
