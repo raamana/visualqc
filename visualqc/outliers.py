@@ -32,6 +32,11 @@ def outlier_advisory(qcw):
         makedirs(qcw.out_dir)
 
     outliers_by_feature = dict()
+    outliers_by_sample = dict()
+
+    if qcw.disable_outlier_detection:
+        print('outlier detection: disabled, as requested.')
+        return outliers_by_sample, outliers_by_feature
 
     for feature_type in qcw.outlier_feat_types:
         print('Running outlier detection based on {} measures:'.format(feature_type))
@@ -44,7 +49,6 @@ def outlier_advisory(qcw):
                                                             fraction_of_outliers=qcw.outlier_fraction)
 
     # re-organizing the identified outliers by sample
-    outliers_by_sample = dict()
     for id in qcw.id_list:
         # each id contains a list of all feature types that flagged it as an outlier
         outliers_by_sample[id] = [ feat for feat in qcw.outlier_feat_types if id in outliers_by_feature[feat] ]

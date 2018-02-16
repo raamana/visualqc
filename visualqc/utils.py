@@ -32,7 +32,7 @@ def read_image(img_spec, error_msg='image'):
 
     img = check_image_is_3d(img)
 
-    if not np.issubdtype(img.dtype, np.float):
+    if not np.issubdtype(img.dtype, np.float64):
         img = img.astype('float32')
 
     return img
@@ -427,8 +427,12 @@ def get_path_for_subject(in_dir, subject_id, req_file, vis_type):
     return out_path
 
 
-def check_outlier_params(method, fraction, feat_types, id_list):
+def check_outlier_params(method, fraction, feat_types, disable_outlier_detection, id_list):
     """Validates parameters related to outlier detection"""
+
+    if disable_outlier_detection:
+        method = fraction = feat_types = None
+        return method, fraction, feat_types, disable_outlier_detection
 
     method = method.lower()
     if method not in cfg.avail_outlier_detection_methods:
@@ -453,7 +457,7 @@ def check_outlier_params(method, fraction, feat_types, id_list):
         if feat not in cfg.features_outlier_detection:
             raise ValueError('{} features for outlier detection is not recognized or implemented'.format(feat))
 
-    return method, fraction, feat_types
+    return method, fraction, feat_types, disable_outlier_detection
 
 
 def check_labels(vis_type, label_set):

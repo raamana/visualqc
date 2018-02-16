@@ -27,7 +27,7 @@ class QCWorkflow():
 
     def __init__(self, in_dir, id_list, images_for_id, out_dir,
                  vis_type, label_set, alpha_set,
-                 outlier_method, outlier_fraction, outlier_feat_types,
+                 outlier_method, outlier_fraction, outlier_feat_types, disable_outlier_detection,
                  views, num_slices, num_rows,
                  mri_name, seg_name, contour_color,
                  rating_list=cfg.default_rating_list):
@@ -56,6 +56,7 @@ class QCWorkflow():
         self.outlier_method = outlier_method
         self.outlier_fraction = outlier_fraction
         self.outlier_feat_types = outlier_feat_types
+        self.disable_outlier_detection = disable_outlier_detection
 
         self.rating_list = rating_list
 
@@ -83,13 +84,15 @@ def run_workflow(qcw):
     ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(qcw.out_dir, qcw.id_list)
     for subject_id in incomplete_list:
         flagged_as_outlier = subject_id in outliers_by_sample
-        outlier_alert_msg = 'Flagged as a \npossible outlier by \n{}'.format(outliers_by_sample[subject_id]) if flagged_as_outlier else ' '
+        alerts_outlier = outliers_by_sample.get(subject_id, None) # None, if id not in dict
+        outlier_alert_msg = 'Flagged as \n\ta possible outlier by these measures:\n\t{}'.format(alerts_outlier) \
+            if flagged_as_outlier else ' '
         print('Reviewing {} {}'.format(subject_id, outlier_alert_msg))
         t1_mri, overlay_seg, out_path = _prepare_images(qcw, subject_id)
         ratings[subject_id], notes[subject_id], quit_now = review_and_rate(qcw, t1_mri, overlay_seg,
                                                                            subject_id=subject_id,
                                                                            flagged_as_outlier=flagged_as_outlier,
-                                                                           outlier_alerts=outliers_by_sample.get(subject_id, None), # None, if id not in dict
+                                                                           outlier_alerts=alerts_outlier,
                                                                            output_path=out_path,
                                                                            annot='ID {}'.format(subject_id))
         # informing only when it was rated!
@@ -272,6 +275,11 @@ def get_parser():
     Default: {} {}.
     \n""".format(cfg.freesurfer_features_outlier_detection[0], cfg.freesurfer_features_outlier_detection[1]))
 
+    help_text_disable_outlier_detection = textwrap.dedent("""
+    This flag disables outlier detection and alerts altogether.
+    \n""")
+
+
     in_out = parser.add_argument_group('Input and output', ' ')
     in_out.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
                         default=default_freesurfer_dir,
@@ -301,7 +309,7 @@ def get_parser():
                              default=default_seg_name, required=False,
                              help=help_text_seg_name)
 
-    vis_args = parser.add_argument_group('Visualization options', ' ')
+    vis_args = parser.add_argument_group('Overlay options', ' ')
     vis_args.add_argument("-v", "--vis_type", action="store", dest="vis_type",
                           choices=visualization_combination_choices,
                           default=default_vis_type, required=False,
@@ -329,6 +337,9 @@ def get_parser():
     outliers.add_argument("-olt", "--outlier_feat_types", action="store", dest="outlier_feat_types",
                           default=cfg.freesurfer_features_outlier_detection, required=False,
                           help=help_text_outlier_feat_types)
+
+    outliers.add_argument("-old", "--disable_outlier_detection", action="store_true", dest="disable_outlier_detection",
+                          required=False, help=help_text_disable_outlier_detection)
 
     layout = parser.add_argument_group('Layout options', ' ')
     layout.add_argument("-w", "--views", action="store", dest="views",
@@ -385,13 +396,15 @@ def parse_args():
         raise ValueError(
             'Specified color is not valid. Choose a valid spec from\n https://matplotlib.org/users/colors.html')
 
-    outlier_method, outlier_fraction, outlier_feat_types = check_outlier_params(user_args.outlier_method,
+    outlier_method, outlier_fraction, outlier_feat_types, no_outlier_detection = check_outlier_params(user_args.outlier_method,
                                                                                 user_args.outlier_fraction,
-                                                                                user_args.outlier_feat_types, id_list)
+                                                                                user_args.outlier_feat_types,
+                                                                                user_args.disable_outlier_detection,
+                                                                                id_list)
 
     qcw = QCWorkflow(in_dir, id_list, images_for_id, out_dir,
                      vis_type, label_set, alpha_set,
-                     outlier_method, outlier_fraction, outlier_feat_types,
+                     outlier_method, outlier_fraction, outlier_feat_types, no_outlier_detection,
                      views, num_slices, num_rows,
                      mri_name, seg_name, contour_color)
 
