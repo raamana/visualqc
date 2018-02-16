@@ -28,6 +28,11 @@ freesurfer_vis_types = cortical_types + label_types
 visualization_combination_choices = cortical_types + label_types
 default_vis_type = 'cortical_contour'
 
+# these vis types would need to be identified by more than one label
+vis_types_with_multiple_ROIs = ('labels_volumetric', 'labels_contour')
+
+surface_view_angles = ['lateral', 'medial', 'transverse']
+
 freesurfer_vis_cmd = 'tksurfer'
 
 default_label_set = None
@@ -48,6 +53,7 @@ default_navigation_options = ("Next", "Quit")
 default_rating_list = ('Good', 'Doubtful', 'Bad', 'Error', 'Review later')
 map_short_rating = dict(g='Good', d='Doubtful', b='Bad', e='Error', r='Review later')
 default_rating_list_shortform = map_short_rating.keys()
+ratings_not_to_be_recorded = [None, ]
 
 textbox_title = ''
 textbox_initial_text = 'Your Notes:' #Text(text='Your Notes:', )
@@ -80,7 +86,7 @@ no_blank_area = dict(left=0.01, right=0.99,
 
 suffix_ratings_dir = 'ratings'
 file_name_ratings = 'ratings.all.csv'
-file_name_ratings_backup = 'backup_ratings.all.csv'
+prefix_backup = 'backup'
 
 # visualization layout
 zoomed_position = [0.15, 0.15, 0.7, 0.7]
