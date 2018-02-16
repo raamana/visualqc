@@ -6,19 +6,8 @@ visualqc
 .. image:: https://img.shields.io/pypi/v/visualqc.svg
         :target: https://pypi.python.org/pypi/visualqc
 
-.. image:: https://img.shields.io/travis/raamana/visualqc.svg
-        :target: https://travis-ci.org/raamana/visualqc
 
-.. image:: https://readthedocs.org/projects/visualqc/badge/?version=latest
-        :target: https://visualqc.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
-
-.. image:: https://pyup.io/repos/github/raamana/visualqc/shield.svg
-     :target: https://pyup.io/repos/github/raamana/visualqc/
-     :alt: Updates
-
-
-Tool to automate the quality control of MRI segmentations (gray and white matter, cortical, subcortical and other arbitrary segmentations) produced by Freesurfer and other tools.
+Tool to automate the quality control workflow of MRI segmentations (gray and white matter, cortical, subcortical and other arbitrary segmentations) produced by Freesurfer and other tools.
 
 .. image:: vqc_logo_small.png
 
@@ -27,18 +16,20 @@ Assessing and guranteeing the accuracy of any automatic segmentation (be it gray
 Neuroimagers familiar with `ENIGMA quality control (QC) protocols <http://enigma.ini.usc.edu/protocols/imaging-protocols/>`_ would especially find this tool much easier. In addition to integrating valuable experience and knowledge from those protocols, this tool makes it easy so you don't have to deal with multiple scripts (to generate images and combine visualizations), and no alternating between multiple spreadsheets to keep track of ratings. Additional advantages include zooming in and needing to use only a single tool to QC both cortical and subcortical segmentations.
 
 * Free software: MIT license
-* Documentation: https://raamana.github.io/visualqc
+* Documentation: https://visualqc.readthedocs.io.
 
 
 Features
 --------
 
-* Makes the review and rating workflow seamless and easy! It is simple as: visualize the auto-generated overlay, review, zoom-in wherever you need, rate the quality, and proceed to next!
+* Makes the review and rating workflow seamless and easy! It is simple as: visualize the auto-generated overlay, review, zoom-in wherever you need, rate the quality, make notes and proceed to next!
+* Automatically detect and flag outliers (in testing) based on over 500 measurements from Freesurfer
 * Display multiple slices in multiple views, and easily navigate all subjects in a dataset
-* Allows you to zoom in to any view/slice to ensure you won't miss any detail
+* Allows you to zoom in to any view/slice to ensure you won't miss any detail. No need to squint your eyes!
+* Keyboard shortcuts to speed up the process, no need to lift your fingers!
+* Allows to make arbitrary notes on the current segmentation/parcellation
 * Allows you to control the transparency of overlay to your expert preference
-* Allows to focus on a single or a set of arbitrary segmentations (hippocampus, or PCG or DMN etc) if necessary
-* Automatically detect and flag outliers (coming soon)
+* Allows to focus on a single or a set of arbitrary segmentations (hippocampus, or PCG or DMN etc) if necessary.
 
 Gallery (contour)
 -----------------
