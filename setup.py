@@ -12,10 +12,12 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
+    'scipy',
     'numpy',
     'matplotlib',
     'mrivis',
-    'nibabel'
+    'nibabel',
+    'scikit-learn'
 ]
 
 setup_requirements = [

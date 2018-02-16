@@ -2,7 +2,7 @@
 History
 =======
 
-0.1.0 (2017-10-05)
+0.1 (2018-02-08)
 ------------------
 
-* First release on PyPI.
+* Early access release on PyPI/github.

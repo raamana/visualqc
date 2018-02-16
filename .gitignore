@@ -4,6 +4,8 @@ __pycache__/
 *$py.class
 example_datasets
 docs/logo
+*.xdebug_tksurfer
+.idea/
 
 # C extensions
 *.so

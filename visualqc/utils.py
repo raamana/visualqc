@@ -368,28 +368,32 @@ def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name):
             raise IOError('Given ID list does not exist!')
 
         try:
-            # read all lines and strip them of newlines/spaces
-            id_list = [line.strip('\n ') for line in open(id_list_in)]
+            id_list = read_id_list(id_list_in)
         except:
             raise IOError('unable to read the ID list.')
     else:
         # get all IDs in the given folder
         id_list = [folder for folder in os.listdir(in_dir) if os.path.isdir(pjoin(in_dir, folder))]
 
-    required_files = (mri_name, seg_name)
+    required_files = dict(mri=mri_name, seg=seg_name)
 
     id_list_out = list()
     id_list_err = list()
     invalid_list = list()
 
+    # this dict contains existing files for each ID
+    # useful to open external programs like tkmedit
+    images_for_id = dict()
+
     for subject_id in id_list:
-        path_list = [get_path_for_subject(in_dir, subject_id, req_file, vis_type) for req_file in required_files]
-        invalid = [this_file for this_file in path_list if not pexists(this_file) or os.path.getsize(this_file) <= 0]
+        path_list = { img : get_path_for_subject(in_dir, subject_id, name, vis_type) for img, name in required_files.items() }
+        invalid = [pfile for pfile in path_list.values() if not pexists(pfile) or os.path.getsize(pfile) <= 0]
         if len(invalid) > 0:
             id_list_err.append(subject_id)
             invalid_list.extend(invalid)
         else:
             id_list_out.append(subject_id)
+            images_for_id[subject_id] = path_list
 
     if len(id_list_err) > 0:
         warnings.warn('The following subjects do NOT have all the required files or some are empty - skipping them!')
@@ -401,7 +405,15 @@ def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name):
 
     print('{} subjects are usable for review.'.format(len(id_list_out)))
 
-    return id_list_out
+    return np.array(id_list_out), images_for_id
+
+
+def read_id_list(id_list_file):
+    """Read all lines and strip them of newlines/spaces."""
+
+    id_list = np.array([line.strip('\n ') for line in open(id_list_file)])
+
+    return id_list
 
 
 def get_path_for_subject(in_dir, subject_id, req_file, vis_type):
@@ -413,6 +425,35 @@ def get_path_for_subject(in_dir, subject_id, req_file, vis_type):
         out_path = realpath(pjoin(in_dir, subject_id, req_file))
 
     return out_path
+
+
+def check_outlier_params(method, fraction, feat_types, id_list):
+    """Validates parameters related to outlier detection"""
+
+    method = method.lower()
+    if method not in cfg.avail_outlier_detection_methods:
+        raise ValueError('Chosen outlier detection method invalid or not implemented.'
+                         '\n\tChoose one of {}'.format(cfg.avail_outlier_detection_methods))
+
+    fraction = np.float64(fraction)
+    # not clipping automatically to force the user to think about it.
+    # fraction = min(max(1 / ns, fraction), 0.5)
+    ns = len(id_list)  # number of samples
+    if fraction < 1/ns:
+        raise ValueError('Invalid fraction of outliers: must be more than 1/n (to enable detection of atleast 1)')
+
+    if fraction > 0.5:
+        raise ValueError('Invalid fraction of outliers: can not be more than 50%')
+
+    if not isinstance(feat_types, (list, tuple)):
+        feat_types = [feat_types,]
+
+    feat_types = [ feat.lower() for feat in feat_types ]
+    for feat in feat_types:
+        if feat not in cfg.features_outlier_detection:
+            raise ValueError('{} features for outlier detection is not recognized or implemented'.format(feat))
+
+    return method, fraction, feat_types
 
 
 def check_labels(vis_type, label_set):

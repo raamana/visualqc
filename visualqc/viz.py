@@ -3,12 +3,13 @@ __all__ = ['review_and_rate']
 import traceback
 from os import makedirs
 from os.path import join as pjoin, exists as pexists
-from subprocess import check_call
-
+import subprocess
+from subprocess import check_output
 import matplotlib.image as mpimg
 import numpy as np
 from matplotlib import pyplot as plt, colors, cm
 from matplotlib.widgets import RadioButtons, Slider, TextBox, Button
+from matplotlib.patches import Rectangle
 from mrivis.color_maps import get_freesurfer_cmap
 from mrivis.utils import check_params, crop_to_seg_extents
 from visualqc import config as cfg
@@ -18,27 +19,27 @@ from visualqc.config import zoomed_position, annot_vis_dir_name, default_vis_typ
 from visualqc.utils import get_axis, pick_slices, check_layout
 
 
-def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alpha_seg,
-                   vis_type=default_vis_type, contour_color=cfg.default_contour_face_color,
-                   out_dir=None, fs_dir=None, subject_id=None,
-                   views=default_views, num_slices_per_view=default_num_slices,
-                   num_rows_per_view=default_num_rows, figsize=None,
-                   annot=None, padding=default_padding,
+def overlay_images(qcw, mri, seg,
+                   subject_id=None,
+                   annot=None,
+                   figsize=None,
+                   padding=default_padding,
                    output_path=None):
     """Backend engine for overlaying a given seg on MRI with freesurfer label."""
 
-    num_rows_per_view, num_slices_per_view, padding = check_params(num_rows_per_view, num_slices_per_view, padding)
+    num_rows_per_view, num_slices_per_view, padding = check_params(qcw.num_rows, qcw.num_slices, padding)
     mri, seg = crop_to_seg_extents(mri, seg, padding)
 
     surf_vis = dict()  # empty - no vis to include
-    if 'cortical' in vis_type:
-        if fs_dir is not None and subject_id is not None and out_dir is not None:
-            surf_vis = make_vis_pial_surface(fs_dir, subject_id, out_dir)
+    # TODO broaden this to include subcortical structures as well
+    if 'cortical' in qcw.vis_type:
+        if qcw.in_dir is not None and subject_id is not None and qcw.out_dir is not None:
+            surf_vis = make_vis_pial_surface(qcw.in_dir, subject_id, qcw.out_dir)
     num_surf_vis = len(surf_vis)
 
-    num_views = len(views)
+    num_views = len(qcw.views)
     num_rows = num_rows_per_view * num_views
-    slices = pick_slices(seg, views, num_slices_per_view)
+    slices = pick_slices(seg, qcw.views, num_slices_per_view)
     num_volumetric_slices = len(slices)
     total_num_panels = num_volumetric_slices + num_surf_vis
     num_rows_for_surf_vis = 1 if num_surf_vis > 0 else 0
@@ -53,12 +54,12 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
     fig, ax = plt.subplots(num_rows, num_cols, figsize=figsize)
 
     display_params_mri = dict(interpolation='none', aspect='equal', origin='lower',
-                              alpha=alpha_mri)
+                              alpha=qcw.alpha_mri)
     display_params_seg = dict(interpolation='none', aspect='equal', origin='lower',
-                              alpha=alpha_seg)
+                              alpha=qcw.alpha_seg)
 
     normalize_labels = colors.Normalize(vmin=seg.min(), vmax=seg.max(), clip=True)
-    fs_cmap = get_freesurfer_cmap(vis_type)
+    fs_cmap = get_freesurfer_cmap(qcw.vis_type)
     seg_mapper = cm.ScalarMappable(norm=normalize_labels, cmap=fs_cmap)
 
     normalize_mri = colors.Normalize(vmin=mri.min(), vmax=mri.max(), clip=True)
@@ -69,7 +70,7 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
     # removing background - 0 stays 0
     unique_labels = np.delete(unique_labels, 0)
     if len(unique_labels) == 1:
-        color4label = [contour_color]
+        color4label = [qcw.contour_color]
     else:
         color4label = seg_mapper.to_rgba(unique_labels)
 
@@ -97,10 +98,10 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
         mri_rgb = mri_mapper.to_rgba(slice_mri)
         h_mri = plt.imshow(mri_rgb, **display_params_mri)
 
-        if 'volumetric' in vis_type:
+        if 'volumetric' in qcw.vis_type:
             seg_rgb = seg_mapper.to_rgba(slice_seg)
             h_seg = plt.imshow(seg_rgb, **display_params_seg)
-        elif 'contour' in vis_type:
+        elif 'contour' in qcw.vis_type:
             h_seg = plot_contours_in_slice(slice_seg, unique_labels, color4label)
 
         plt.axis('off')
@@ -119,10 +120,9 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
     for ua in range(total_num_panels, len(ax)):
         ax[ua].set_visible(False)
 
-    # displaying some annotation text if provided
     if annot is not None:
-        title_handle = fig.suptitle(annot, backgroundcolor='black', color='white', fontsize='large')
-        title_handle.set_position(cfg.annot_position)
+        h_annot = fig.suptitle(annot, **cfg.annot_text_props)
+        h_annot.set_position(cfg.position_annot_text)
 
     fig.set_size_inches(figsize)
 
@@ -130,7 +130,7 @@ def overlay_images(mri, seg, alpha_mri=default_alpha_seg, alpha_seg=default_alph
         # no space left unused
         plt.subplots_adjust(**cfg.no_blank_area)
         output_path = output_path.replace(' ', '_')
-        layout_str = 'v{}_ns{}_{}x{}'.format(''.join([ str(v) for v in views]),num_slices_per_view,num_rows,num_cols)
+        layout_str = 'v{}_ns{}_{}x{}'.format(''.join([ str(v) for v in qcw.views]),num_slices_per_view,num_rows,num_cols)
         fig.savefig(output_path + '_{}.png'.format(layout_str), bbox_inches='tight')
 
     # leaving some space on the right for review elements
@@ -178,7 +178,7 @@ def join_contours(contour_list):
     return single_contour
 
 
-def make_vis_pial_surface(fs_dir, subject_id, out_dir, annot_file='aparc.annot'):
+def make_vis_pial_surface(in_dir, subject_id, out_dir, annot_file='aparc.annot'):
     """Generate screenshot for the pial surface in different views"""
 
     out_vis_dir = pjoin(out_dir, annot_vis_dir_name)
@@ -193,7 +193,7 @@ def make_vis_pial_surface(fs_dir, subject_id, out_dir, annot_file='aparc.annot')
             # run the script only if all the visualizations were not generated before
             all_vis_exist = all([pexists(vis_path) for vis_path in vis_files.values()])
             if not all_vis_exist:
-                exit_code = run_tksurfer_script(fs_dir, subject_id, hemi, script_file)
+                exit_code = run_tksurfer_script(in_dir, subject_id, hemi, script_file)
 
             vis_list[hemi_l].update(vis_files)
         except:
@@ -247,26 +247,39 @@ def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir,
     return script_file, vis
 
 
-def run_tksurfer_script(fs_dir, subject_id, hemi, script_file):
+def run_tksurfer_script(in_dir, subject_id, hemi, script_file):
     """Runs a given TCL script to generate visualizations"""
 
-    exit_code = check_call(['tksurfer', '-sdir', fs_dir, subject_id, hemi, 'pial', '-tcl', script_file], shell=False)
+    try:
+        cmd_args = ['tksurfer', '-sdir', in_dir, subject_id, hemi, 'pial', '-tcl', script_file]
+        txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
+    except subprocess.CalledProcessError as tksurfer_exc:
+        print('Error running tksurfer to generate 3d surface visualizations - skipping them.')
+        exit_code = tksurfer_exc.returncode
+        txt_out = tksurfer_exc.output
+    else:
+        exit_code = 0
 
-    return exit_code
+    return txt_out, exit_code
 
 
 class ReviewInterface(object):
     """Class to layout interaction elements and define callbacks. """
 
-    def __init__(self, fig, axes_seg, axes_mri, alpha_seg,
-                 rating_list,
-                 navig_options=default_navigation_options):
+    def __init__(self, fig,
+                 axes_seg, axes_mri,
+                 qcw, subject_id,
+                 flagged_as_outlier, outlier_alerts,
+                 navig_options=default_navigation_options,
+                 annot=None):
         "Constructor."
 
         self.fig = fig
         self.axes_seg = axes_seg
         self.axes_mri = axes_mri
-        self.latest_alpha_seg = alpha_seg
+        self.latest_alpha_seg = qcw.alpha_seg
+        self.rating_list = qcw.rating_list
+        self.flagged_as_outlier = flagged_as_outlier
 
         self.user_rating = None
         self.user_notes = None
@@ -276,7 +289,22 @@ class ReviewInterface(object):
         self.prev_axis = None
         self.prev_ax_pos = None
 
-        self.rating_list = rating_list
+        # displaying some annotation text if provided
+        if annot is not None:
+            h_annot = fig.text(cfg.position_annot_text[0], cfg.position_annot_text[1], **cfg.annot_text_props)
+
+        # right above the rating area (blinking perhaps?)
+        if self.flagged_as_outlier and outlier_alerts is not None:
+            ax_alert = plt.axes(cfg.position_outlier_alert_box)
+            ax_alert.axis('off')
+            h_rect = Rectangle((0, 0), 1, 1, zorder=-1, facecolor='xkcd:coral', alpha=0.25)
+            ax_alert.add_patch(h_rect)
+            alert_msg = 'Flagged as an outlier'
+            fig.text(cfg.position_outlier_alert[0], cfg.position_outlier_alert[1],
+                     alert_msg, **cfg.annot_text_props)
+            for idx, cause in enumerate(outlier_alerts):
+                fig.text(cfg.position_outlier_alert[0], cfg.position_outlier_alert[1] - (idx+1) * 0.02,
+                         cause, color=cfg.alert_colors_outlier[cause], **cfg.annot_text_props)
 
         ax_radio = plt.axes(cfg.position_rating_axis, facecolor=cfg.color_rating_axis, aspect='equal')
         self.radio_bt_rating = RadioButtons(ax_radio, self.rating_list,
@@ -303,12 +331,15 @@ class ReviewInterface(object):
         # implementing two separate buttons for navigation (mulitple radio button has issues)
         ax_bt_quit = plt.axes(cfg.position_quit_button, facecolor=cfg.color_quit_axis, aspect='equal')
         ax_bt_next = plt.axes(cfg.position_next_button, facecolor=cfg.color_quit_axis, aspect='equal')
-        self.bt_quit = Button(ax_bt_quit, 'Quit', hovercolor='orange')
-        self.bt_next = Button(ax_bt_next, 'Next', hovercolor='orange')
+        self.bt_quit = Button(ax_bt_quit, 'Quit', hovercolor='red')
+        self.bt_next = Button(ax_bt_next, 'Next', hovercolor='xkcd:greenish')
         self.bt_quit.on_clicked(self.quit)
         self.bt_next.on_clicked(self.next)
         self.bt_quit.label.set_color(cfg.color_navig_text)
         self.bt_next.label.set_color(cfg.color_navig_text)
+
+        # # with qcw and subject id available here, we can add a button to
+        # TODO open images directly in tkmedit with qcw.images_for_id[subject_id]['mri'] ... ['seg']
 
         # alpha slider
         ax_slider = plt.axes(cfg.position_slider_seg_alpha, facecolor=cfg.color_slider_axis)
@@ -452,35 +483,22 @@ class ReviewInterface(object):
 
 
 
-def review_and_rate(mri,
+def review_and_rate(qcw,
+                    mri,
                     seg,
-                    alpha_mri=default_alpha_mri,
-                    alpha_seg=default_alpha_seg,
-                    contour_color=cfg.default_contour_face_color,
-                    rating_list=default_rating_list,
-                    views=default_views,
-                    num_slices=default_num_slices,
-                    num_rows=default_num_rows,
-                    vis_type=default_vis_type,
-                    fs_dir=None,
                     subject_id=None,
-                    out_dir=None,
-                    annot=None,
-                    padding=default_padding,
+                    flagged_as_outlier=False,
+                    outlier_alerts=None,
                     output_path=None,
+                    annot=None,
                     figsize=None,
                     **kwargs):
     "Produces a collage of various slices from different orientations in the given 3D image"
 
-    fig, axes_mri, axes_seg, figsize = overlay_images(mri, seg, alpha_mri=alpha_mri, alpha_seg=alpha_seg,
-                                                      vis_type=vis_type, out_dir=out_dir,
-                                                      contour_color=contour_color,
-                                                      fs_dir=fs_dir, subject_id=subject_id,
-                                                      views=views, num_slices_per_view=num_slices,
-                                                      figsize=figsize, num_rows_per_view=num_rows, padding=padding,
-                                                      annot=annot, output_path=output_path)
+    fig, axes_mri, axes_seg, figsize = overlay_images(qcw, mri, seg, subject_id=subject_id,
+                                                      figsize=figsize, annot=annot, output_path=output_path)
 
-    rating_ui = ReviewInterface(fig, axes_seg, axes_mri, alpha_seg, rating_list)
+    rating_ui = ReviewInterface(fig, axes_seg, axes_mri, qcw, subject_id, flagged_as_outlier, outlier_alerts, annot)
 
     con_id_click = fig.canvas.mpl_connect('button_press_event', rating_ui.on_mouse)
     con_id_keybd = fig.canvas.mpl_connect('key_press_event', rating_ui.do_shortcuts)

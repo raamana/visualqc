@@ -6,18 +6,8 @@ visualqc
 .. image:: https://img.shields.io/pypi/v/visualqc.svg
         :target: https://pypi.python.org/pypi/visualqc
 
-.. image:: https://img.shields.io/travis/raamana/visualqc.svg
-        :target: https://travis-ci.org/raamana/visualqc
 
-.. image:: https://readthedocs.org/projects/visualqc/badge/?version=latest
-        :target: https://visualqc.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
-
-.. image:: https://pyup.io/repos/github/raamana/visualqc/shield.svg
-     :target: https://pyup.io/repos/github/raamana/visualqc/
-     :alt: Updates
-
-Tool to automate the quality control of MRI segmentations (gray and white matter, cortical, subcortical and other arbitrary segmentations) produced by Freesurfer and other tools.
+Tool to automate the quality control workflow of MRI segmentations (gray and white matter, cortical, subcortical and other arbitrary segmentations) produced by Freesurfer and other tools.
 
 .. image:: docs/vqc_logo_small.png
 
@@ -32,12 +22,14 @@ Neuroimagers familiar with `ENIGMA quality control (QC) protocols <http://enigma
 Features
 --------
 
-* Makes the review and rating workflow seamless and easy! It is simple as: visualize the auto-generated overlay, review, zoom-in wherever you need, rate the quality, and proceed to next!
+* Makes the review and rating workflow seamless and easy! It is simple as: visualize the auto-generated overlay, review, zoom-in wherever you need, rate the quality, make notes and proceed to next!
+* Automatically detect and flag outliers (in testing) based on over 500 measurements from Freesurfer
 * Display multiple slices in multiple views, and easily navigate all subjects in a dataset
-* Allows you to zoom in to any view/slice to ensure you won't miss any detail
+* Allows you to zoom in to any view/slice to ensure you won't miss any detail. No need to squint your eyes!
+* Keyboard shortcuts to speed up the process, no need to lift your fingers!
+* Allows to make arbitrary notes on the current segmentation/parcellation
 * Allows you to control the transparency of overlay to your expert preference
-* Allows to focus on a single or a set of arbitrary segmentations (hippocampus, or PCG or DMN etc) if necessary
-* Automatically detect and flag outliers (coming soon)
+* Allows to focus on a single or a set of arbitrary segmentations (hippocampus, or PCG or DMN etc) if necessary.
 
 Gallery (contour)
 -----------------
@@ -46,7 +38,11 @@ Some examples of how the interface looks are shown below. The first screenshot s
 
 .. image:: docs/vis/contour/visual_qc_cortical_contour__Pitt_0050034_v1_ns18_4x6.png
 
-In the second screenshot, we show the use case for a single label (subcortical segmentation, tissue class or cortical ROI) - shown here are hippocampus and amygdala:
+In this screenshot, we show the user interface showing the elements to rating, notes and alerts from outlier detection module:
+
+.. image:: docs/vis/contour/new_ui_with_outlier_alert_notes.png
+
+In the screenshot below, we show the use case for a single label (subcortical segmentation, tissue class or cortical ROI) - shown here are hippocampus and amygdala:
 
 .. image:: docs/vis/contour/visual_qc_labels_contour_53_Pitt_0050039_v012_ns18_9x6.png
 
