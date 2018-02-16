@@ -61,6 +61,15 @@ class QCWorkflow():
         self.prepare_first = prepare_first
 
         self.rating_list = rating_list
+        self._generate_vis_type_suffix()
+
+    def _generate_vis_type_suffix(self):
+        """Generates a distinct suffix for a given vis type and labels. """
+
+        self.suffix = ''
+        if self.vis_type in cfg.vis_types_with_multiple_ROIs:
+            if self.label_set is not None:
+                self.suffix = '_'.join([str(lbl) for lbl in list(self.label_set)])
 
     def save(self):
         """
@@ -86,14 +95,19 @@ def run_workflow(qcw):
 
     outliers_by_sample, outliers_by_feature = outlier_advisory(qcw)
 
-    ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(qcw.out_dir, qcw.id_list)
+    ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(qcw)
     for subject_id in incomplete_list:
         flagged_as_outlier = subject_id in outliers_by_sample
         alerts_outlier = outliers_by_sample.get(subject_id, None) # None, if id not in dict
         outlier_alert_msg = '\n\tFlagged as a possible outlier by these measures:\n\t{}'.format(alerts_outlier) \
             if flagged_as_outlier else ' '
         print('\nReviewing {} {}'.format(subject_id, outlier_alert_msg))
-        t1_mri, overlay_seg, out_path = _prepare_images(qcw, subject_id)
+        t1_mri, overlay_seg, out_path, skip_subject = _prepare_images(qcw, subject_id)
+
+        if skip_subject:
+            print('Skipping current subject ..')
+            continue
+
         ratings[subject_id], notes[subject_id], quit_now = review_and_rate(qcw, t1_mri, overlay_seg,
                                                                            subject_id=subject_id,
                                                                            flagged_as_outlier=flagged_as_outlier,
@@ -111,7 +125,7 @@ def run_workflow(qcw):
             break
 
     print('Saving ratings .. \n')
-    save_ratings(ratings, notes, qcw.out_dir)
+    save_ratings(ratings, notes, qcw)
     #TODO save QCW
 
     return
@@ -133,24 +147,24 @@ def _prepare_images(qcw, subject_id):
         raise ValueError('size mismatch! MRI: {} Seg: {}\n'
                          'Size must match in all dimensions.'.format(t1_mri.shape, fs_seg.shape))
 
+    skip_subject = False
     if qcw.label_set is not None:
-        fs_seg = get_label_set(fs_seg, qcw.label_set)
+        fs_seg, roi_set_empty = get_label_set(fs_seg, qcw.label_set)
+        if roi_set_empty:
+            skip_subject = True
+            print('segmentation image for this subject does not contain requested label set!')
 
-    suffix = ''
     if qcw.vis_type in ('cortical_volumetric', 'cortical_contour'):
         out_seg = void_subcortical_symmetrize_cortical(fs_seg)
-        # generate pial surface
-
     elif qcw.vis_type in ('labels_volumetric', 'labels_contour'):
+        # TODO in addition to checking file exists, we need to requested labels exist, for label vis_type
         out_seg = fs_seg
-        if qcw.label_set is not None:
-            suffix = '_'.join([str(lbl) for lbl in list(qcw.label_set)])
     else:
         raise NotImplementedError('Other visualization combinations have not been implemented yet! Stay tuned.')
 
-    out_path = pjoin(qcw.out_dir, 'visual_qc_{}_{}_{}'.format(qcw.vis_type, suffix, subject_id))
+    out_path = pjoin(qcw.out_dir, 'visual_qc_{}_{}_{}'.format(qcw.vis_type, qcw.suffix, subject_id))
 
-    return t1_mri, out_seg, out_path
+    return t1_mri, out_seg, out_path, skip_subject
 
 
 def get_parser():

@@ -1,22 +1,23 @@
 __all__ = ['review_and_rate']
 
+import subprocess
+import time
 import traceback
 from os import makedirs
 from os.path import join as pjoin, exists as pexists
-import subprocess
 from subprocess import check_output
+
 import matplotlib.image as mpimg
 import numpy as np
-import time
 from matplotlib import pyplot as plt, colors, cm
-from matplotlib.widgets import RadioButtons, Slider, TextBox, Button
 from matplotlib.patches import Rectangle
+from matplotlib.widgets import RadioButtons, Slider, TextBox, Button
 from mrivis.color_maps import get_freesurfer_cmap
 from mrivis.utils import check_params, crop_to_seg_extents
+
 from visualqc import config as cfg
-from visualqc.config import zoomed_position, annot_vis_dir_name, default_vis_type, default_padding, \
-    default_views, default_num_slices, default_num_rows, default_alpha_mri, default_alpha_seg, \
-    default_rating_list, default_navigation_options
+from visualqc.config import zoomed_position, annot_vis_dir_name, default_padding, \
+    default_navigation_options
 from visualqc.utils import get_axis, pick_slices, check_layout
 
 
@@ -69,6 +70,8 @@ def overlay_images(qcw, mri, seg,
             surf_vis = make_vis_pial_surface(qcw.in_dir, subject_id, qcw.out_dir)
     num_surf_vis = len(surf_vis)
 
+    # TODO calculation below is redundant, if surf vis does not fail
+    # i.e. if num_surf_vis is fixed, no need to recompute for every subject
     num_views = len(qcw.views)
     num_rows = num_rows_per_view * num_views
     slices = pick_slices(seg, qcw.views, num_slices_per_view)

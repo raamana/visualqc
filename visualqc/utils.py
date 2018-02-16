@@ -9,8 +9,7 @@ from shutil import copyfile, which
 import nibabel as nib
 import numpy as np
 import visualqc.config as cfg
-from visualqc.config import suffix_ratings_dir, file_name_ratings, file_name_ratings_backup, \
-    visualization_combination_choices, default_out_dir_name, freesurfer_vis_types, freesurfer_vis_cmd
+from visualqc.config import visualization_combination_choices, default_out_dir_name, freesurfer_vis_types, freesurfer_vis_cmd
 
 
 def read_image(img_spec, error_msg='image'):
@@ -60,7 +59,11 @@ def get_label_set(seg, label_set, background=0):
     for index, label in enumerate(unique_labels):
         out_seg[out_seg == label] = index + 1  # index=0 would make it background
 
-    return out_seg
+    roi_set_empty = False
+    if np.count_nonzero(out_seg) < 1:
+        roi_set_empty = True
+
+    return out_seg, roi_set_empty
 
 
 def get_axis(array, axis, slice_num):
@@ -232,23 +235,24 @@ def get_freesurfer_color_LUT():
     return LUT
 
 
-def get_ratings(out_dir, id_list):
+def get_ratings(qcw):
     """Creates a separate folder for ratings, backing up any previous sessions."""
 
     # making a copy
-    incomplete_list = list(id_list)
+    incomplete_list = list(qcw.id_list)
     prev_done = []  # empty list
 
-    ratings_dir = pjoin(out_dir, suffix_ratings_dir)
+    ratings_dir = pjoin(qcw.out_dir, cfg.suffix_ratings_dir)
     if pexists(ratings_dir):
+        file_name_ratings = '{}_{}_{}'.format(qcw.vis_type, qcw.suffix, cfg.file_name_ratings)
         prev_ratings = pjoin(ratings_dir, file_name_ratings)
-        prev_ratings_backup = pjoin(ratings_dir, file_name_ratings_backup)
+        prev_ratings_backup = pjoin(ratings_dir, '{}_{}'.format(cfg.prefix_backup, file_name_ratings))
         if pexists(prev_ratings):
             ratings, notes = load_ratings_csv(prev_ratings)
             copyfile(prev_ratings, prev_ratings_backup)
             # finding the remaining
             prev_done = set(ratings.keys())
-            incomplete_list = list(set(id_list) - prev_done)
+            incomplete_list = list(set(qcw.id_list) - prev_done)
         else:
             ratings = dict()
             notes = dict()
@@ -279,15 +283,16 @@ def load_ratings_csv(prev_ratings):
     return ratings, notes
 
 
-def save_ratings(ratings, notes, out_dir):
+def save_ratings(ratings, notes, qcw):
     """Save ratings before closing shop."""
 
-    ratings_dir = pjoin(out_dir, suffix_ratings_dir)
+    ratings_dir = pjoin(qcw.out_dir, cfg.suffix_ratings_dir)
     if not pexists(ratings_dir):
         makedirs(ratings_dir)
 
+    file_name_ratings = '{}_{}_{}'.format(qcw.vis_type, qcw.suffix, cfg.file_name_ratings)
     ratings_file = pjoin(ratings_dir, file_name_ratings)
-    prev_ratings_backup = pjoin(ratings_dir, file_name_ratings_backup)
+    prev_ratings_backup = pjoin(ratings_dir, '{}_{}'.format(cfg.prefix_backup, file_name_ratings))
     if pexists(ratings_file):
         copyfile(ratings_file, prev_ratings_backup)
 
