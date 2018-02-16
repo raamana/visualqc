@@ -495,14 +495,20 @@ class ReviewInterface(object):
     def quit(self, ignore_arg=None):
         "terminator"
 
-        self.quit_now = True
-        plt.close(self.fig)
+        if self.user_rating in cfg.ratings_not_to_be_recorded:
+            print('You have not rated the current subject! Please rate it before you can advance to next subject, or to quit.')
+        else:
+            self.quit_now = True
+            plt.close(self.fig)
 
     def next(self, ignore_arg=None):
         "terminator"
 
-        self.quit_now = False
-        plt.close(self.fig)
+        if self.user_rating in cfg.ratings_not_to_be_recorded:
+            print('You have not rated the current subject! Please rate it before you can advance to next subject, or to quit.')
+        else:
+            self.quit_now = False
+            plt.close(self.fig)
 
     def update(self):
         """updating seg alpha for all axes"""

@@ -50,6 +50,7 @@ default_navigation_options = ("Next", "Quit")
 default_rating_list = ('Good', 'Doubtful', 'Bad', 'Error', 'Review later')
 map_short_rating = dict(g='Good', d='Doubtful', b='Bad', e='Error', r='Review later')
 default_rating_list_shortform = map_short_rating.keys()
+ratings_not_to_be_recorded = [None, ]
 
 textbox_title = ''
 textbox_initial_text = 'Your Notes:' #Text(text='Your Notes:', )

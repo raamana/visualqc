@@ -39,7 +39,7 @@ def outlier_advisory(qcw):
         return outliers_by_sample, outliers_by_feature
 
     for feature_type in qcw.outlier_feat_types:
-        print('Running outlier detection based on {} measures:'.format(feature_type))
+        print('\nRunning outlier detection based on {} measures:'.format(feature_type))
         features = gather_freesurfer_data(qcw.in_dir, qcw.id_list, feature_type)
         out_file = pjoin(qcw.out_dir,'{}_{}_{}.txt'.format(cfg.outlier_list_prefix, qcw.outlier_method, feature_type))
         outliers_by_feature[feature_type] = detect_outliers(features,

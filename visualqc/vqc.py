@@ -90,9 +90,9 @@ def run_workflow(qcw):
     for subject_id in incomplete_list:
         flagged_as_outlier = subject_id in outliers_by_sample
         alerts_outlier = outliers_by_sample.get(subject_id, None) # None, if id not in dict
-        outlier_alert_msg = 'Flagged as \n\ta possible outlier by these measures:\n\t{}'.format(alerts_outlier) \
+        outlier_alert_msg = '\n\tFlagged as a possible outlier by these measures:\n\t{}'.format(alerts_outlier) \
             if flagged_as_outlier else ' '
-        print('Reviewing {} {}'.format(subject_id, outlier_alert_msg))
+        print('\nReviewing {} {}'.format(subject_id, outlier_alert_msg))
         t1_mri, overlay_seg, out_path = _prepare_images(qcw, subject_id)
         ratings[subject_id], notes[subject_id], quit_now = review_and_rate(qcw, t1_mri, overlay_seg,
                                                                            subject_id=subject_id,
@@ -101,7 +101,7 @@ def run_workflow(qcw):
                                                                            output_path=out_path,
                                                                            annot='ID {}'.format(subject_id))
         # informing only when it was rated!
-        if ratings[subject_id] is not None:
+        if ratings[subject_id] not in cfg.ratings_not_to_be_recorded:
             print('id {} rating {} notes {}'.format(subject_id, ratings[subject_id], notes[subject_id]))
         else:
             ratings.pop(subject_id)

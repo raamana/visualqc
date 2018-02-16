@@ -258,9 +258,9 @@ def get_ratings(out_dir, id_list):
         notes = dict()
 
     if len(prev_done) > 0:
-        print('Ratings for {} subjects were restored from previous backup'.format(len(prev_done)))
+        print('\nRatings for {} subjects were restored from previous backup'.format(len(prev_done)))
 
-    print('To be reviewed : {}'.format(len(incomplete_list)))
+    print('To be reviewed : {}\n'.format(len(incomplete_list)))
 
     return ratings, notes, ratings_dir, incomplete_list, prev_done
 
