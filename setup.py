@@ -15,7 +15,7 @@ requirements = [
     'numpy',
     'matplotlib',
     'mrivis',
-    'nibabel'
+    'nibabel',
     'scikit-learn'
 ]
 
