@@ -31,6 +31,7 @@ def overlay_images(qcw, mri, seg,
     mri, seg = crop_to_seg_extents(mri, seg, padding)
 
     surf_vis = dict()  # empty - no vis to include
+    # TODO broaden this to include subcortical structures as well
     if 'cortical' in qcw.vis_type:
         if qcw.in_dir is not None and subject_id is not None and qcw.out_dir is not None:
             surf_vis = make_vis_pial_surface(qcw.in_dir, subject_id, qcw.out_dir)
