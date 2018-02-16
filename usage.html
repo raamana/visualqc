@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Command line usage &mdash; visualqc 0.2 documentation</title>
+  <title>Command line usage &mdash; visualqc 0.2+0.ge81fdb8.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.2 documentation" href="index.html"/>
+    <link rel="top" title="visualqc 0.2+0.ge81fdb8.dirty documentation" href="index.html"/>
         <link rel="next" title="Data formats and requirements" href="file_formats.html"/>
         <link rel="prev" title="Installation" href="installation.html"/> 
 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.2
+                0.2+0.ge81fdb8.dirty
               </div>
             
           
@@ -96,9 +96,10 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Command line usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#Input and output">Input and output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Sources of data">Sources of data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Visualization options">Visualization options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Overlay options">Overlay options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Outlier detection">Outlier detection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Layout options">Layout options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Workflow">Workflow</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="file_formats.html">Data formats and requirements</a></li>
@@ -184,8 +185,8 @@ visualqc -h
                 <span class="p">[</span><span class="o">-</span><span class="n">l</span> <span class="n">label</span> <span class="p">[</span><span class="n">label</span> <span class="o">...</span><span class="p">]]</span> <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">MRI_NAME</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">g</span> <span class="n">SEG_NAME</span><span class="p">]</span>
                 <span class="p">[</span><span class="o">-</span><span class="n">v</span> <span class="p">{</span><span class="n">cortical_volumetric</span><span class="p">,</span><span class="n">cortical_contour</span><span class="p">,</span><span class="n">labels_volumetric</span><span class="p">,</span><span class="n">labels_contour</span><span class="p">}]</span>
                 <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">CONTOUR_COLOR</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">a</span> <span class="n">alpha</span> <span class="n">alpha</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">olm</span> <span class="n">OUTLIER_METHOD</span><span class="p">]</span>
-                <span class="p">[</span><span class="o">-</span><span class="n">olf</span> <span class="n">OUTLIER_FRACTION</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">olt</span> <span class="n">OUTLIER_FEAT_TYPES</span><span class="p">]</span>
-                <span class="p">[</span><span class="o">-</span><span class="n">w</span> <span class="n">VIEWS</span> <span class="p">[</span><span class="n">VIEWS</span> <span class="o">...</span><span class="p">]]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span> <span class="n">NUM_SLICES</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">r</span> <span class="n">NUM_ROWS</span><span class="p">]</span>
+                <span class="p">[</span><span class="o">-</span><span class="n">olf</span> <span class="n">OUTLIER_FRACTION</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">olt</span> <span class="n">OUTLIER_FEAT_TYPES</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">old</span><span class="p">]</span>
+                <span class="p">[</span><span class="o">-</span><span class="n">w</span> <span class="n">VIEWS</span> <span class="p">[</span><span class="n">VIEWS</span> <span class="o">...</span><span class="p">]]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span> <span class="n">NUM_SLICES</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">r</span> <span class="n">NUM_ROWS</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span><span class="p">]</span>
 </pre></div>
 </div>
 <div class="section" id="Input and output">
@@ -262,8 +263,8 @@ Make sure to choose the right vis_type.</p>
 </tbody>
 </table>
 </div>
-<div class="section" id="Visualization options">
-<h2>Visualization options<a class="headerlink" href="#Visualization options" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="Overlay options">
+<h2>Overlay options<a class="headerlink" href="#Overlay options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils option-list" frame="void" rules="none">
 <col class="option" />
 <col class="description" />
@@ -321,6 +322,10 @@ where n is the number of samples in the current sample.</p>
 or ‘both’ (using both aseg and aparc stats).</p>
 <p class="last">Default: cortical subcortical.</p>
 </td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd>-old, --disable_outlier_detection</kbd></td>
+</tr>
+<tr><td>&#160;</td><td>This flag disables outlier detection and alerts altogether.</td></tr>
 </tbody>
 </table>
 </div>
@@ -345,6 +350,23 @@ Default: 12.</td></tr>
 <kbd>-r, --num_rows</kbd></td>
 <td>Specifies the number of rows to display per each axis.
 Default: 2.</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="Workflow">
+<h2>Workflow<a class="headerlink" href="#Workflow" title="Permalink to this headline">¶</a></h2>
+<p>Options related to workflow e.g. to pre-generate all the visualizations required</p>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd>-p, --prepare_first</kbd></td>
+</tr>
+<tr><td>&#160;</td><td><p class="first">This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations.
+This makes the switch from one subject to the next, even more seamless (saving few seconds :) ).</p>
+<p class="last">Default: False (required visualizations are generated only on demand, which can take 5-10 seconds for each subject).</p>
+</td></tr>
 </tbody>
 </table>
 </div>
@@ -395,7 +417,7 @@ Default: 2.</td></tr>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.2',
+            VERSION:'0.2+0.ge81fdb8.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
