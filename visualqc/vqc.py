@@ -71,6 +71,15 @@ class QCWorkflow():
             if self.label_set is not None:
                 self.suffix = '_'.join([str(lbl) for lbl in list(self.label_set)])
 
+    def save_cmd(self):
+        """Saves the command issued by the user for debugging purposes"""
+
+        cmd_file = pjoin(self.out_dir, 'cmd_issued.visualqc')
+        with open(cmd_file, 'w') as cf:
+            cf.write('{}\n'.format(' '.join(sys.argv)))
+
+        return
+
     def save(self):
         """
         Saves the state of the QC workflow for restoring later on,
@@ -438,6 +447,9 @@ def parse_args():
                      outlier_method, outlier_fraction, outlier_feat_types, no_outlier_detection,
                      views, num_slices, num_rows,
                      mri_name, seg_name, contour_color)
+
+    # if the workflow could be instantiated, it means things are in order!
+    qcw.save_cmd()
 
     return qcw
 
