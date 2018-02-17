@@ -1,6 +1,7 @@
 __all__ = ['read_image', 'check_image_is_3d']
 
 import os
+import sys
 import warnings
 from genericpath import exists as pexists
 from os import makedirs
@@ -262,9 +263,13 @@ def get_ratings(qcw):
         notes = dict()
 
     if len(prev_done) > 0:
-        print('\nRatings for {} subjects were restored from previous backup'.format(len(prev_done)))
+        print('\nRatings for {}/{} subjects were restored.'.format(len(prev_done), len(qcw.id_list)))
 
-    print('To be reviewed : {}\n'.format(len(incomplete_list)))
+    if len(incomplete_list) < 1:
+        print('No subjects to review/rate - exiting.')
+        sys.exit(0)
+    else:
+        print('To be reviewed : {}\n'.format(len(incomplete_list)))
 
     return ratings, notes, ratings_dir, incomplete_list, prev_done
 
