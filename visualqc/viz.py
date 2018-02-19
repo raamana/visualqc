@@ -1,22 +1,55 @@
 __all__ = ['review_and_rate']
 
+import subprocess
+import time
 import traceback
 from os import makedirs
 from os.path import join as pjoin, exists as pexists
-import subprocess
 from subprocess import check_output
+
 import matplotlib.image as mpimg
 import numpy as np
 from matplotlib import pyplot as plt, colors, cm
-from matplotlib.widgets import RadioButtons, Slider, TextBox, Button
 from matplotlib.patches import Rectangle
+from matplotlib.widgets import RadioButtons, Slider, TextBox, Button
 from mrivis.color_maps import get_freesurfer_cmap
 from mrivis.utils import check_params, crop_to_seg_extents
+
 from visualqc import config as cfg
-from visualqc.config import zoomed_position, annot_vis_dir_name, default_vis_type, default_padding, \
-    default_views, default_num_slices, default_num_rows, default_alpha_mri, default_alpha_seg, \
-    default_rating_list, default_navigation_options
+from visualqc.config import zoomed_position, annot_vis_dir_name, default_padding, \
+    default_navigation_options
 from visualqc.utils import get_axis, pick_slices, check_layout
+
+
+def generate_required_visualizations(qcw):
+    """Method to pre-generate all the necessary visualizations, for the given workflow."""
+
+    if 'cortical' in qcw.vis_type and qcw.in_dir is not None and qcw.out_dir is not None:
+        print('Pre-generating visualizations for {} ... Please wait!'.format(qcw.vis_type))
+        start_time_vis_whole = time.time()
+        vis_times = list()
+        num_subjects = len(qcw.id_list)
+        max_len = max([len(sid) for sid in qcw.id_list])+3
+        for ii, subject_id in enumerate(qcw.id_list):
+            print('processing {id:>{max_len}} ({ii}/{nn}) ... '.format(ii=ii, nn=num_subjects,
+                                                                     id=subject_id, max_len=max_len), end='')
+            start_time_vis_subject = time.time()
+            surf_vis = make_vis_pial_surface(qcw.in_dir, subject_id, qcw.out_dir)
+            print(' done.')
+            vis_times.append(time.time()-start_time_vis_subject)
+
+        # computing processing times
+        end_time_vis_whole = time.time()
+        total_vis_wf_time = end_time_vis_whole - start_time_vis_whole
+        vis_times = np.array(vis_times).astype('float64')
+        mean_vis_time = vis_times.mean()
+        print('Time took per subject : {:.3f} seconds per subject, '
+              'and {:3} seconds for {} subjects.'.format(mean_vis_time, total_vis_wf_time, num_subjects))
+
+    else:
+        print('Given {} vis_type does not need any visualizations to be pre-generated.'.format(qcw.vis_type))
+
+    return
 
 
 def overlay_images(qcw, mri, seg,
@@ -37,6 +70,8 @@ def overlay_images(qcw, mri, seg,
             surf_vis = make_vis_pial_surface(qcw.in_dir, subject_id, qcw.out_dir)
     num_surf_vis = len(surf_vis)
 
+    # TODO calculation below is redundant, if surf vis does not fail
+    # i.e. if num_surf_vis is fixed, no need to recompute for every subject
     num_views = len(qcw.views)
     num_rows = num_rows_per_view * num_views
     slices = pick_slices(seg, qcw.views, num_slices_per_view)
@@ -218,7 +253,7 @@ def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir,
 
     script_file = pjoin(out_vis_dir, 'vis_annot_{}.tcl'.format(hemi))
     vis = dict()
-    for view in ['lateral', 'medial', 'transverse']:
+    for view in cfg.surface_view_angles:
         vis[view] = pjoin(out_vis_dir, '{}_{}_{}.tif'.format(subject_id, hemi, view))
 
     img_format = 'tiff'  # rgb does not work
@@ -463,14 +498,20 @@ class ReviewInterface(object):
     def quit(self, ignore_arg=None):
         "terminator"
 
-        self.quit_now = True
-        plt.close(self.fig)
+        if self.user_rating in cfg.ratings_not_to_be_recorded:
+            print('You have not rated the current subject! Please rate it before you can advance to next subject, or to quit.')
+        else:
+            self.quit_now = True
+            plt.close(self.fig)
 
     def next(self, ignore_arg=None):
         "terminator"
 
-        self.quit_now = False
-        plt.close(self.fig)
+        if self.user_rating in cfg.ratings_not_to_be_recorded:
+            print('You have not rated the current subject! Please rate it before you can advance to next subject, or to quit.')
+        else:
+            self.quit_now = False
+            plt.close(self.fig)
 
     def update(self):
         """updating seg alpha for all axes"""

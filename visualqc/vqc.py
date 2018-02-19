@@ -16,7 +16,7 @@ from visualqc.config import default_out_dir_name, default_mri_name, default_seg_
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set, \
     check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, \
     check_out_dir, get_path_for_subject, check_outlier_params
-from visualqc.viz import review_and_rate
+from visualqc.viz import review_and_rate, generate_required_visualizations
 from visualqc.outliers import outlier_advisory
 
 
@@ -26,8 +26,9 @@ class QCWorkflow():
     """
 
     def __init__(self, in_dir, id_list, images_for_id, out_dir,
+                 prepare_first,
                  vis_type, label_set, alpha_set,
-                 outlier_method, outlier_fraction, outlier_feat_types,
+                 outlier_method, outlier_fraction, outlier_feat_types, disable_outlier_detection,
                  views, num_slices, num_rows,
                  mri_name, seg_name, contour_color,
                  rating_list=cfg.default_rating_list):
@@ -56,8 +57,19 @@ class QCWorkflow():
         self.outlier_method = outlier_method
         self.outlier_fraction = outlier_fraction
         self.outlier_feat_types = outlier_feat_types
+        self.disable_outlier_detection = disable_outlier_detection
+        self.prepare_first = prepare_first
 
         self.rating_list = rating_list
+        self._generate_vis_type_suffix()
+
+    def _generate_vis_type_suffix(self):
+        """Generates a distinct suffix for a given vis type and labels. """
+
+        self.suffix = ''
+        if self.vis_type in cfg.vis_types_with_multiple_ROIs:
+            if self.label_set is not None:
+                self.suffix = '_'.join([str(lbl) for lbl in list(self.label_set)])
 
     def save(self):
         """
@@ -78,22 +90,32 @@ class QCWorkflow():
 def run_workflow(qcw):
     """Generate the required visualizations for the specified subjects."""
 
+    if qcw.prepare_first:
+        generate_required_visualizations(qcw)
+
     outliers_by_sample, outliers_by_feature = outlier_advisory(qcw)
 
-    ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(qcw.out_dir, qcw.id_list)
+    ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(qcw)
     for subject_id in incomplete_list:
         flagged_as_outlier = subject_id in outliers_by_sample
-        outlier_alert_msg = 'Flagged as a \npossible outlier by \n{}'.format(outliers_by_sample[subject_id]) if flagged_as_outlier else ' '
-        print('Reviewing {} {}'.format(subject_id, outlier_alert_msg))
-        t1_mri, overlay_seg, out_path = _prepare_images(qcw, subject_id)
+        alerts_outlier = outliers_by_sample.get(subject_id, None) # None, if id not in dict
+        outlier_alert_msg = '\n\tFlagged as a possible outlier by these measures:\n\t{}'.format(alerts_outlier) \
+            if flagged_as_outlier else ' '
+        print('\nReviewing {} {}'.format(subject_id, outlier_alert_msg))
+        t1_mri, overlay_seg, out_path, skip_subject = _prepare_images(qcw, subject_id)
+
+        if skip_subject:
+            print('Skipping current subject ..')
+            continue
+
         ratings[subject_id], notes[subject_id], quit_now = review_and_rate(qcw, t1_mri, overlay_seg,
                                                                            subject_id=subject_id,
                                                                            flagged_as_outlier=flagged_as_outlier,
-                                                                           outlier_alerts=outliers_by_sample.get(subject_id, None), # None, if id not in dict
+                                                                           outlier_alerts=alerts_outlier,
                                                                            output_path=out_path,
                                                                            annot='ID {}'.format(subject_id))
         # informing only when it was rated!
-        if ratings[subject_id] is not None:
+        if ratings[subject_id] not in cfg.ratings_not_to_be_recorded:
             print('id {} rating {} notes {}'.format(subject_id, ratings[subject_id], notes[subject_id]))
         else:
             ratings.pop(subject_id)
@@ -103,7 +125,7 @@ def run_workflow(qcw):
             break
 
     print('Saving ratings .. \n')
-    save_ratings(ratings, notes, qcw.out_dir)
+    save_ratings(ratings, notes, qcw)
     #TODO save QCW
 
     return
@@ -125,24 +147,24 @@ def _prepare_images(qcw, subject_id):
         raise ValueError('size mismatch! MRI: {} Seg: {}\n'
                          'Size must match in all dimensions.'.format(t1_mri.shape, fs_seg.shape))
 
+    skip_subject = False
     if qcw.label_set is not None:
-        fs_seg = get_label_set(fs_seg, qcw.label_set)
+        fs_seg, roi_set_empty = get_label_set(fs_seg, qcw.label_set)
+        if roi_set_empty:
+            skip_subject = True
+            print('segmentation image for this subject does not contain requested label set!')
 
-    suffix = ''
     if qcw.vis_type in ('cortical_volumetric', 'cortical_contour'):
         out_seg = void_subcortical_symmetrize_cortical(fs_seg)
-        # generate pial surface
-
     elif qcw.vis_type in ('labels_volumetric', 'labels_contour'):
+        # TODO in addition to checking file exists, we need to requested labels exist, for label vis_type
         out_seg = fs_seg
-        if qcw.label_set is not None:
-            suffix = '_'.join([str(lbl) for lbl in list(qcw.label_set)])
     else:
         raise NotImplementedError('Other visualization combinations have not been implemented yet! Stay tuned.')
 
-    out_path = pjoin(qcw.out_dir, 'visual_qc_{}_{}_{}'.format(qcw.vis_type, suffix, subject_id))
+    out_path = pjoin(qcw.out_dir, 'visual_qc_{}_{}_{}'.format(qcw.vis_type, qcw.suffix, subject_id))
 
-    return t1_mri, out_seg, out_path
+    return t1_mri, out_seg, out_path, skip_subject
 
 
 def get_parser():
@@ -272,6 +294,17 @@ def get_parser():
     Default: {} {}.
     \n""".format(cfg.freesurfer_features_outlier_detection[0], cfg.freesurfer_features_outlier_detection[1]))
 
+    help_text_disable_outlier_detection = textwrap.dedent("""
+    This flag disables outlier detection and alerts altogether.
+    \n""")
+
+    help_text_prepare = textwrap.dedent("""
+    This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations. 
+    This makes the switch from one subject to the next, even more seamless (saving few seconds :) ).
+    
+    Default: False (required visualizations are generated only on demand, which can take 5-10 seconds for each subject).
+    \n""")
+
     in_out = parser.add_argument_group('Input and output', ' ')
     in_out.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
                         default=default_freesurfer_dir,
@@ -301,7 +334,7 @@ def get_parser():
                              default=default_seg_name, required=False,
                              help=help_text_seg_name)
 
-    vis_args = parser.add_argument_group('Visualization options', ' ')
+    vis_args = parser.add_argument_group('Overlay options', ' ')
     vis_args.add_argument("-v", "--vis_type", action="store", dest="vis_type",
                           choices=visualization_combination_choices,
                           default=default_vis_type, required=False,
@@ -330,6 +363,9 @@ def get_parser():
                           default=cfg.freesurfer_features_outlier_detection, required=False,
                           help=help_text_outlier_feat_types)
 
+    outliers.add_argument("-old", "--disable_outlier_detection", action="store_true", dest="disable_outlier_detection",
+                          required=False, help=help_text_disable_outlier_detection)
+
     layout = parser.add_argument_group('Layout options', ' ')
     layout.add_argument("-w", "--views", action="store", dest="views",
                         default=default_views, required=False, nargs='+',
@@ -342,6 +378,11 @@ def get_parser():
     layout.add_argument("-r", "--num_rows", action="store", dest="num_rows",
                         default=default_num_rows, required=False,
                         help=help_text_num_rows)
+
+    wf_args = parser.add_argument_group('Workflow', 'Options related to workflow e.g. to pre-generate all the visualizations required')
+    wf_args.add_argument("-p", "--prepare_first", action="store_true", dest="prepare_first",
+                          help=help_text_prepare)
+
 
     return parser
 
@@ -385,13 +426,16 @@ def parse_args():
         raise ValueError(
             'Specified color is not valid. Choose a valid spec from\n https://matplotlib.org/users/colors.html')
 
-    outlier_method, outlier_fraction, outlier_feat_types = check_outlier_params(user_args.outlier_method,
+    outlier_method, outlier_fraction, outlier_feat_types, no_outlier_detection = check_outlier_params(user_args.outlier_method,
                                                                                 user_args.outlier_fraction,
-                                                                                user_args.outlier_feat_types, id_list)
+                                                                                user_args.outlier_feat_types,
+                                                                                user_args.disable_outlier_detection,
+                                                                                id_list)
 
     qcw = QCWorkflow(in_dir, id_list, images_for_id, out_dir,
+                     user_args.prepare_first,
                      vis_type, label_set, alpha_set,
-                     outlier_method, outlier_fraction, outlier_feat_types,
+                     outlier_method, outlier_fraction, outlier_feat_types, no_outlier_detection,
                      views, num_slices, num_rows,
                      mri_name, seg_name, contour_color)
 
