@@ -104,7 +104,7 @@ def run_workflow(qcw):
 
     outliers_by_sample, outliers_by_feature = outlier_advisory(qcw)
 
-    ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(qcw)
+    ratings, notes, incomplete_list = get_ratings(qcw)
     for subject_id in incomplete_list:
         flagged_as_outlier = subject_id in outliers_by_sample
         alerts_outlier = outliers_by_sample.get(subject_id, None) # None, if id not in dict
@@ -396,7 +396,7 @@ def get_parser():
     return parser
 
 
-def parse_args():
+def parse_user_args():
     """Parser/validator for the cmd line args."""
 
     parser = get_parser()
@@ -457,7 +457,7 @@ def parse_args():
 def cli_run():
     """Main entry point."""
 
-    qcw = parse_args()
+    qcw = parse_user_args()
 
     if qcw.vis_type is not None:
         # matplotlib.interactive(True)
