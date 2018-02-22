@@ -9,4 +9,5 @@ export PATH=$HOME:$PATH
 echo "PATH : $PATH"
 ls -ltr
 echo "creating a fake tksurfer at: "
-which tksurfer
+tkpath=`which tksurfer`
+echo $tkpath
