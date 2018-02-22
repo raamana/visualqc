@@ -20,6 +20,8 @@ annot_text_props = dict(horizontalalignment='center', fontsize='large')
 default_outlier_detection_method = 'isolation_forest'
 default_outlier_fraction = 0.2
 avail_outlier_detection_methods = ('isolation_forest', )
+# OLD -> OutLier Detection
+avail_OLD_source_of_features = ('freesurfer',)
 
 default_freesurfer_dir = None
 cortical_types = ('cortical_volumetric', 'cortical_contour')

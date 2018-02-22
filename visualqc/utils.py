@@ -335,16 +335,18 @@ def check_input_dir(fs_dir, user_dir, vis_type):
             raise IOError('Freesurfer directory specified does not exist!')
         else:
             in_dir = fs_dir
+            type_of_features = 'freesurfer'
     elif fs_dir is None:
         if not pexists(user_dir):
             raise IOError('User-specified input directory does not exist!')
         else:
             in_dir = user_dir
+            type_of_features = 'generic'
 
     if not pexists(in_dir):
         raise IOError('Invalid specification - check proper combination of --fs_dir and --user_dir')
 
-    return in_dir
+    return in_dir, type_of_features
 
 
 def freesurfer_installed():
@@ -437,7 +439,8 @@ def get_path_for_subject(in_dir, subject_id, req_file, vis_type):
     return out_path
 
 
-def check_outlier_params(method, fraction, feat_types, disable_outlier_detection, id_list):
+def check_outlier_params(method, fraction, feat_types, disable_outlier_detection,
+                         id_list, vis_type, type_of_features):
     """Validates parameters related to outlier detection"""
 
     if disable_outlier_detection:
@@ -446,8 +449,13 @@ def check_outlier_params(method, fraction, feat_types, disable_outlier_detection
 
     method = method.lower()
     if method not in cfg.avail_outlier_detection_methods:
-        raise ValueError('Chosen outlier detection method invalid or not implemented.'
+        raise NotImplementedError('Chosen outlier detection method invalid or not implemented.'
                          '\n\tChoose one of {}'.format(cfg.avail_outlier_detection_methods))
+
+    if vis_type.lower() not in cfg.freesurfer_vis_types or type_of_features not in cfg.avail_OLD_source_of_features:
+        raise NotImplementedError('Outlier detection based on the current source of features/visualization is not implemented.\n'
+                                  'Allowed visualization types: {}\n'
+                                  'Allowed feature types: {}'.format(cfg.freesurfer_vis_types, cfg.avail_OLD_source_of_features))
 
     fraction = np.float64(fraction)
     # not clipping automatically to force the user to think about it.
@@ -465,7 +473,7 @@ def check_outlier_params(method, fraction, feat_types, disable_outlier_detection
     feat_types = [ feat.lower() for feat in feat_types ]
     for feat in feat_types:
         if feat not in cfg.features_outlier_detection:
-            raise ValueError('{} features for outlier detection is not recognized or implemented'.format(feat))
+            raise NotImplementedError('{} features for outlier detection is not recognized or implemented'.format(feat))
 
     return method, fraction, feat_types, disable_outlier_detection
 

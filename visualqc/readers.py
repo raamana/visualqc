@@ -4,7 +4,7 @@ Data reader module.
 
 """
 from os.path import join as pjoin, exists as pexists, realpath
-
+from visualqc import config as cfg
 import numpy as np
 
 
@@ -124,8 +124,7 @@ def read_global_mean_surf_area_thickness(stats_file):
     return stats
 
 
-def gather_freesurfer_data(fs_dir,
-                           id_list,
+def gather_freesurfer_data(qcw,
                            feature_type='whole_brain'):
     """
     Reads all the relevant features to perform outlier detection on.
@@ -134,14 +133,18 @@ def gather_freesurfer_data(fs_dir,
 
     """
 
+    if qcw.source_of_features not in cfg.avail_OLD_source_of_features:
+        raise NotImplementedError('Reader for the given source of features ({}) '
+                                  'is currently not implemented.'.format(qcw.source_of_features))
+
     feature_type = feature_type.lower()
     if feature_type in ['cortical', ]:
-        features = np.vstack([read_aparc_stats_wholebrain(fs_dir, id) for id in id_list])
+        features = np.vstack([read_aparc_stats_wholebrain(qcw.in_dir, id) for id in qcw.id_list])
     elif feature_type in ['subcortical', ]:
-        features = np.vstack([read_aseg_stats(fs_dir, id) for id in id_list])
+        features = np.vstack([read_aseg_stats(qcw.fs_dir, id) for id in qcw.id_list])
     elif feature_type in ['whole_brain', 'wholebrain']:
-        cortical = np.vstack([read_aparc_stats_wholebrain(fs_dir, id) for id in id_list])
-        sub_ctx = np.vstack([read_aseg_stats(fs_dir, id) for id in id_list])
+        cortical = np.vstack([read_aparc_stats_wholebrain(qcw.in_dir, id) for id in qcw.id_list])
+        sub_ctx = np.vstack([read_aseg_stats(qcw.fs_dir, id) for id in qcw.id_list])
         features = np.hstack((cortical, sub_ctx))
     else:
         raise ValueError('Invalid type of features requested.')

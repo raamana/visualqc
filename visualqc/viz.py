@@ -24,6 +24,7 @@ from visualqc.utils import get_axis, pick_slices, check_layout
 def generate_required_visualizations(qcw):
     """Method to pre-generate all the necessary visualizations, for the given workflow."""
 
+    print('\n')
     if 'cortical' in qcw.vis_type and qcw.in_dir is not None and qcw.out_dir is not None:
         print('Pre-generating visualizations for {} ... Please wait!'.format(qcw.vis_type))
         start_time_vis_whole = time.time()
@@ -48,6 +49,8 @@ def generate_required_visualizations(qcw):
 
     else:
         print('Given {} vis_type does not need any visualizations to be pre-generated.'.format(qcw.vis_type))
+
+    print('\n')
 
     return
 

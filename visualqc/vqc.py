@@ -26,8 +26,7 @@ class QCWorkflow():
     """
 
     def __init__(self, in_dir, id_list, images_for_id, out_dir,
-                 prepare_first,
-                 vis_type, label_set, alpha_set,
+                 prepare_first, vis_type, source_of_features, label_set, alpha_set,
                  outlier_method, outlier_fraction, outlier_feat_types, disable_outlier_detection,
                  views, num_slices, num_rows,
                  mri_name, seg_name, contour_color,
@@ -40,6 +39,7 @@ class QCWorkflow():
 
         self.vis_type = vis_type
         self.label_set = label_set
+        self.source_of_features = source_of_features
 
         self.alpha_set = alpha_set
         self.alpha_mri = self.alpha_set[0]
@@ -416,7 +416,7 @@ def parse_user_args():
 
     vis_type, label_set = check_labels(user_args.vis_type, user_args.labels)
 
-    in_dir = check_input_dir(user_args.fs_dir, user_args.user_dir, vis_type)
+    in_dir, source_of_features = check_input_dir(user_args.fs_dir, user_args.user_dir, vis_type)
 
     mri_name = user_args.mri_name
     seg_name = user_args.seg_name
@@ -439,11 +439,11 @@ def parse_user_args():
                                                                                 user_args.outlier_fraction,
                                                                                 user_args.outlier_feat_types,
                                                                                 user_args.disable_outlier_detection,
-                                                                                id_list)
+                                                                                id_list, vis_type, source_of_features)
 
     qcw = QCWorkflow(in_dir, id_list, images_for_id, out_dir,
                      user_args.prepare_first,
-                     vis_type, label_set, alpha_set,
+                     vis_type, source_of_features, label_set, alpha_set,
                      outlier_method, outlier_fraction, outlier_feat_types, no_outlier_detection,
                      views, num_slices, num_rows,
                      mri_name, seg_name, contour_color)
