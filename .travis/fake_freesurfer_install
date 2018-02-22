@@ -1,5 +1,8 @@
 #!/bin/bash
 
 export FREESURFER_HOME=$HOME
+echo "setting up FREESURFER_HOME to be $FREESURFER_HOME "
 
 touch tksurfer
+echo "creating a fake tksurfer at: "
+which tksurfer
