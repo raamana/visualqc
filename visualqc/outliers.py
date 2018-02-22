@@ -49,9 +49,9 @@ def outlier_advisory(qcw):
                                                             fraction_of_outliers=qcw.outlier_fraction)
 
     # re-organizing the identified outliers by sample
-    for id in qcw.id_list:
+    for sid in qcw.id_list:
         # each id contains a list of all feature types that flagged it as an outlier
-        outliers_by_sample[id] = [ feat for feat in qcw.outlier_feat_types if id in outliers_by_feature[feat] ]
+        outliers_by_sample[sid] = [ feat for feat in qcw.outlier_feat_types if sid in outliers_by_feature[feat] ]
 
     # dropping the IDs that were not flagged by any feature
     # so a imple ID in dict would reveal whether it was ever suspected as an outlier

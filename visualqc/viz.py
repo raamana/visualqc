@@ -34,7 +34,7 @@ def generate_required_visualizations(qcw):
             print('processing {id:>{max_len}} ({ii}/{nn}) ... '.format(ii=ii, nn=num_subjects,
                                                                      id=subject_id, max_len=max_len), end='')
             start_time_vis_subject = time.time()
-            surf_vis = make_vis_pial_surface(qcw.in_dir, subject_id, qcw.out_dir)
+            make_vis_pial_surface(qcw.in_dir, subject_id, qcw.out_dir)
             print(' done.')
             vis_times.append(time.time()-start_time_vis_subject)
 
@@ -228,7 +228,7 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir, annot_file='aparc.annot')
             # run the script only if all the visualizations were not generated before
             all_vis_exist = all([pexists(vis_path) for vis_path in vis_files.values()])
             if not all_vis_exist:
-                exit_code = run_tksurfer_script(in_dir, subject_id, hemi, script_file)
+                _, _ = run_tksurfer_script(in_dir, subject_id, hemi, script_file)
 
             vis_list[hemi_l].update(vis_files)
         except:
@@ -326,7 +326,7 @@ class ReviewInterface(object):
 
         # displaying some annotation text if provided
         if annot is not None:
-            h_annot = fig.text(cfg.position_annot_text[0], cfg.position_annot_text[1], **cfg.annot_text_props)
+            fig.text(cfg.position_annot_text[0], cfg.position_annot_text[1], **cfg.annot_text_props)
 
         # right above the rating area (blinking perhaps?)
         if self.flagged_as_outlier and outlier_alerts is not None:
@@ -429,14 +429,14 @@ class ReviewInterface(object):
         plt.draw()
 
 
-    def do_shortcuts(self, input):
+    def do_shortcuts(self, key_in):
         """Callback to handle keyboard shortcuts to rate and advance."""
 
-        # ignore keyboard input when mouse within Notes textbox
-        if input.inaxes == self.text_box.ax:
+        # ignore keyboard key_in when mouse within Notes textbox
+        if key_in.inaxes == self.text_box.ax:
             return
 
-        key_pressed = input.key.lower()
+        key_pressed = key_in.key.lower()
         # print(key_pressed)
         if key_pressed in ['right', ' ', 'space']:
             self.user_rating = self.radio_bt_rating.value_selected

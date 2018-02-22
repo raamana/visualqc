@@ -6,6 +6,9 @@ visualqc
 .. image:: https://img.shields.io/pypi/v/visualqc.svg
         :target: https://pypi.python.org/pypi/visualqc
 
+.. image:: https://api.codacy.com/project/badge/Grade/2da8c2b4dbcd433eb4943eb52f0b00d6
+        :target: https://www.codacy.com/app/raamana/visualqc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=raamana/visualqc&amp;utm_campaign=Badge_Grade
+
 
 Tool to automate the quality control workflow of MRI segmentations (gray and white matter, cortical, subcortical and other arbitrary segmentations) produced by Freesurfer and other tools.
 

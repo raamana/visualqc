@@ -271,7 +271,7 @@ def get_ratings(qcw):
     else:
         print('To be reviewed : {}\n'.format(len(incomplete_list)))
 
-    return ratings, notes, ratings_dir, incomplete_list, prev_done
+    return ratings, notes, incomplete_list
 
 
 def load_ratings_csv(prev_ratings):

@@ -3,11 +3,12 @@
 Data reader module.
 
 """
-import numpy as np
 from os.path import join as pjoin, exists as pexists, realpath
-from visualqc.utils import read_id_list
 
-def read_aseg_stats(fs_dir, id, include_global_areas=False):
+import numpy as np
+
+
+def read_aseg_stats(fs_dir, subject_id, include_global_areas=False):
     """
     Returns the volumes of both the subcortical and whole brain segmentations, found in Freesurfer output: subid/stats/aseg.stats
 
@@ -16,12 +17,12 @@ def read_aseg_stats(fs_dir, id, include_global_areas=False):
     fs_dir : str
         Abs path to Freesurfer's SUBJECTS_DIR
 
-    id : str
+    subject_id : str
         String identifying a given subject
 
     """
 
-    seg_stats_file = realpath(pjoin(fs_dir, id, 'stats', 'aseg.stats'))
+    seg_stats_file = realpath(pjoin(fs_dir, subject_id, 'stats', 'aseg.stats'))
     if not pexists(seg_stats_file):
         raise IOError('given path does not exist : {}'.format(seg_stats_file))
 
@@ -64,12 +65,12 @@ def read_volumes_global_areas(seg_stats_file):
     return wb_data.flatten()
 
 
-def read_aparc_stats_wholebrain(fs_dir, id):
+def read_aparc_stats_wholebrain(fs_dir, subject_id):
     """Convenient routine to obtain the whole brain cortical ROI stats."""
 
     aparc_stats = list()
     for hm in ('lh', 'rh'):
-        stats_path = pjoin(fs_dir, id, 'stats', '{}.aparc.stats'.format(hm))
+        stats_path = pjoin(fs_dir, subject_id, 'stats', '{}.aparc.stats'.format(hm))
         hm_data = read_aparc_stats_in_hemi(stats_path)
         aparc_stats.append(hm_data)
 
