@@ -5,5 +5,8 @@ echo "setting up FREESURFER_HOME to be $FREESURFER_HOME "
 
 touch tksurfer
 chmod a+x tksurfer
+export PATH=$HOME:$PATH
+echo "PATH : $PATH"
+ls -ltr
 echo "creating a fake tksurfer at: "
 which tksurfer
