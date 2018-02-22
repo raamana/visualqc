@@ -35,5 +35,13 @@ python:
   - 3.4
   - 3.3
 
+
+branches:
+  only:
+    - master
+
+before_script:
+  - source .travis/fake_freesurfer_install
+
 script:
   - travis_wait 999 pytest --verbose
