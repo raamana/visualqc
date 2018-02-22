@@ -8,6 +8,8 @@ Contents:
 
    readme
    installation
+   use_cases
+   recommended_usage
    usage
    file_formats
    how_to

@@ -23,6 +23,21 @@ you through the process.
 .. _Python installation guide: http://docs.python-guide.org/en/latest/starting/installation/
 
 
+Requirements
+-------------
+
+ - Python version 3 or higher is required. I strongly recommend upgrading to python 3 if possible. If not, I recommend `conda to manage different versions of python <https://conda.io/docs/user-guide/tasks/manage-python.html>`_.
+
+ - The following python packages are required, which will be automatically installed when you issue the above command:
+
+    - nibabel
+    - matplotlib>=2.1.1
+    - mrivis
+    - scipy
+    - numpy
+    - scikit-learn
+
+
 From sources
 ------------
 
