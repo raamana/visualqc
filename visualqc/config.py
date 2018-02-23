@@ -97,3 +97,6 @@ contour_line_width = 1
 binary_pixel_value = 1
 contour_level = 0.5
 line_break = [np.NaN, np.NaN]
+
+# to recognize the CI test environment
+CI_env_variables = ('TRAVIS', 'CONTINUOUS_INTEGRATION')

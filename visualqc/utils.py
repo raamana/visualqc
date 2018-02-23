@@ -316,6 +316,7 @@ def check_input_dir(fs_dir, user_dir, vis_type):
     """Ensures proper input is specified."""
 
     in_dir = fs_dir
+    type_of_features = 'freesurfer'
     if fs_dir is None and user_dir is None:
         raise ValueError('At least one of --fs_dir or --user_dir must be specified.')
 
@@ -323,7 +324,7 @@ def check_input_dir(fs_dir, user_dir, vis_type):
         if user_dir is not None:
             raise ValueError('Only one of --fs_dir or --user_dir can be specified.')
 
-        if not freesurfer_installed():
+        if not in_CI_tests() and not freesurfer_installed():
             raise EnvironmentError(
                 'Freesurfer functionality is requested(e.g. visualizing annotations), but is not installed!')
 
@@ -356,6 +357,18 @@ def freesurfer_installed():
         return False
 
     return True
+
+
+def in_CI_tests():
+    """
+    Detects whether the program is running in a continuous integration environment.
+
+    GUI testing is not automated yet, and hence not tested.
+    """
+
+    currently_in_CI = any([os.getenv(var, '').strip().lower() in ['true'] for var in cfg.CI_env_variables])
+
+    return currently_in_CI
 
 
 def check_out_dir(out_dir, fs_dir):
