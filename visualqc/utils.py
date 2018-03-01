@@ -372,7 +372,7 @@ def check_out_dir(out_dir, fs_dir):
     return out_dir
 
 
-def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name):
+def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name=None):
     """Checks to ensure each subject listed has the required files and returns only those that can be processed."""
 
     if id_list_in is not None:
@@ -387,7 +387,10 @@ def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name):
         # get all IDs in the given folder
         id_list = [folder for folder in os.listdir(in_dir) if os.path.isdir(pjoin(in_dir, folder))]
 
-    required_files = dict(mri=mri_name, seg=seg_name)
+    if seg_name is not None:
+        required_files = {'mri': mri_name, 'seg': seg_name}
+    else:
+        required_files = {'mri': mri_name}
 
     id_list_out = list()
     id_list_err = list()
@@ -431,7 +434,7 @@ def read_id_list(id_list_file):
 def get_path_for_subject(in_dir, subject_id, req_file, vis_type):
     """Constructs the path for the image file based on chosen input and visualization type"""
 
-    if vis_type in freesurfer_vis_types:
+    if vis_type is not None and vis_type in freesurfer_vis_types:
         out_path = realpath(pjoin(in_dir, subject_id, 'mri', req_file))
     else:
         out_path = realpath(pjoin(in_dir, subject_id, req_file))
