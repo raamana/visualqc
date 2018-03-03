@@ -97,3 +97,18 @@ contour_line_width = 1
 binary_pixel_value = 1
 contour_level = 0.5
 line_break = [np.NaN, np.NaN]
+
+
+## ----------------------------------------------------------------------------
+# T1 mri specific
+## ----------------------------------------------------------------------------
+
+t1_mri_default_issue_list = ('None', 'Contrast', 'Motion', 'Ringing', 'Ghosting',
+                             'Weird', 'Other', "I'm tired", 'Review later')
+t1_mri_map_short_rating = {'n': 'None',    'c': 'Contrast',  'm': 'Motion',
+                           'r': 'Ringing', 'g': 'Ghosting',  'w': 'Weird',
+                           'o': 'Other',   't': "I'm tired", 'v': 'Review later'}
+t1_mri_default_rating_list_shortform = map_short_rating.keys()
+
+
+## ----------------------------------------------------------------------------
