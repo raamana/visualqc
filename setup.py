@@ -42,7 +42,8 @@ setup(
     packages=find_packages(include=['visualqc']),
     entry_points={
         'console_scripts': [
-            'visualqc=visualqc.__main__:main'
+            'visualqc=visualqc.__main__:main',
+            'T1_mri_visualqc=visualqc.__t1_mri__:main'
         ]
     },
     include_package_data=True,
