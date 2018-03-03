@@ -1,6 +1,6 @@
 """
 
-Image processing utlities
+Image processing utilities
 
 """
 
@@ -17,7 +17,7 @@ def background_mask(mri, thresh_perc=1):
     background_mask = grad_magnitude < thresh_val
 
     se36 = ndimage.generate_binary_structure(3, 6)
-    closed = ndimage.binary_closing(background_mask, se36, iterations=3)
+    closed = ndimage.binary_closing(background_mask, se36, iterations=6)
     final_mask = ndimage.binary_erosion(closed, se36, iterations=5)
 
     return final_mask
