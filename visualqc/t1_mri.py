@@ -13,7 +13,8 @@ from visualqc import config as cfg
 from visualqc.workflows import BaseWorkflow
 from visualqc.utils import check_id_list, check_input_dir, check_views, check_finite_int, check_out_dir, \
     check_outlier_params
-
+from mrivis.utils import check_params, crop_to_seg_extents
+from matplotlib import pyplot as plt, colors, cm
 
 class RatingWorkflow(BaseWorkflow):
     """
@@ -49,6 +50,22 @@ class RatingWorkflow(BaseWorkflow):
         self.outlier_feat_types = outlier_feat_types
         self.disable_outlier_detection = disable_outlier_detection
         self.prepare_first = prepare_first
+
+    def prepare(self):
+        """Main method to run the entire workflow"""
+
+        self.open_figure()
+        self.add_UI()
+
+    def open_figure(self):
+
+        self.figsize = [15, 12]
+        self.fig = plt.figure(figsize=self.figsize)
+
+    def add_UI(self):
+        """Adds the review UI with defaults"""
+
+
 
 
 def get_parser():
@@ -255,6 +272,8 @@ def make_workflow_from_user_options():
 def run_workflow(qcw):
     """Generate the required visualizations for the specified subjects."""
 
+
+
     return
 
 
@@ -268,7 +287,8 @@ def cli_run():
         run_workflow(wf)
         print('Results are available in:\n\t{}'.format(wf.out_dir))
     else:
-        raise ValueError('Invalid state for visualQC!\n\t Ensure proper combination of arguments is used.')
+        raise ValueError('Invalid state for visualQC!\n'
+                         '\t Ensure proper combination of arguments is used.')
 
     return
 
