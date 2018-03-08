@@ -3,7 +3,7 @@ Module defining various interfaces, base and derived.
 
 """
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from visualqc import config as cfg
 from matplotlib.widgets import RadioButtons, CheckButtons, Button, TextBox
 from matplotlib import pyplot as plt
@@ -43,24 +43,6 @@ class BaseReviewInterface(ABC):
                           cfg.position_annot_text[1],
                           **cfg.annot_text_props)
 
-    def add_rating_UI(self):
-        """Rating"""
-
-        ax_radio = plt.axes(cfg.position_rating_axis,
-                            facecolor=cfg.color_rating_axis,
-                            aspect='equal')
-        self.radio_bt_rating = RadioButtons(ax_radio,
-                                            self.rating_list,
-                                            active=None,
-                                            activecolor='orange')
-        self.radio_bt_rating.on_clicked(self.save_rating)
-        for txt_lbl in self.radio_bt_rating.labels:
-            txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
-
-        for circ in self.radio_bt_rating.circles:
-            circ.set(radius=0.06)
-
-
     def add_navigation(self):
         """Navigation elements"""
 
@@ -91,12 +73,6 @@ class BaseReviewInterface(ABC):
         self.text_box.on_submit(self.save_user_notes)
 
 
-    def save_rating(self, label):
-        """Update the rating"""
-
-        # print('  rating {}'.format(label))
-        self.user_rating = label
-
     def save_user_notes(self, text_entered):
         """Saves user free-form notes from textbox."""
 
@@ -124,7 +100,40 @@ class BaseReviewInterface(ABC):
             self.quit_now = False
             self.reset_figure()
 
+    @abstractmethod
     def reset_figure(self):
         """ Resets the state of UI and clears the axes. """
 
-        self.radio_bt_rating.set_active(None)
+
+class PialWhiteSurfReviewInterface(BaseReviewInterface):
+    """Review interface to rate the quality of pial and white matter surfaces on T1 mri."""
+
+    def __init__(self, fig, qcw, axes_base, axes_overlay):
+        """Constructor"""
+
+        super().__init__(fig, qcw, axes_base, axes_overlay)
+
+
+    def add_rating_UI(self):
+        """Rating"""
+
+        ax_radio = plt.axes(cfg.position_rating_axis,
+                            facecolor=cfg.color_rating_axis,
+                            aspect='equal')
+        self.radio_bt_rating = RadioButtons(ax_radio,
+                                            self.rating_list,
+                                            active=None,
+                                            activecolor='orange')
+        self.radio_bt_rating.on_clicked(self.save_rating)
+        for txt_lbl in self.radio_bt_rating.labels:
+            txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
+
+        for circ in self.radio_bt_rating.circles:
+            circ.set(radius=0.06)
+
+
+    def save_rating(self, label):
+        """Update the rating"""
+
+        # print('  rating {}'.format(label))
+        self.user_rating = label
