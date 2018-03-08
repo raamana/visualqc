@@ -38,6 +38,16 @@ def read_image(img_spec, error_msg='image'):
     return img
 
 
+def scale_0to1(image):
+    """Scale the two images to [0, 1] based on min/max."""
+
+    min_value = image.min()
+    max_value = image.max()
+    image = (image - min_value) / (max_value-min_value)
+
+    return image
+
+
 def get_label_set(seg, label_set, background=0):
     """Extracts only the required labels"""
 
