@@ -19,7 +19,7 @@ annot_text_props = dict(horizontalalignment='center', fontsize='large')
 
 default_outlier_detection_method = 'isolation_forest'
 default_outlier_fraction = 0.2
-avail_outlier_detection_methods = ('isolation_forest', )
+avail_outlier_detection_methods = ('isolation_forest',)
 # OLD -> OutLier Detection
 avail_OLD_source_of_features = ('freesurfer',)
 
@@ -58,7 +58,7 @@ default_rating_list_shortform = map_short_rating.keys()
 ratings_not_to_be_recorded = [None, ]
 
 textbox_title = ''
-textbox_initial_text = 'Your Notes:' #Text(text='Your Notes:', )
+textbox_initial_text = 'Your Notes:'  # Text(text='Your Notes:', )
 
 color_rating_axis = 'xkcd:slate'
 color_textbox_input = '#009b8c'
@@ -69,15 +69,15 @@ text_box_text_color = 'black'
 text_option_color = 'white'
 color_navig_text = 'black'
 
-position_annot_text       = (0.950, 0.98)
-position_outlier_alert    = (0.950, 0.92)
-position_outlier_alert_box= [0.902, 0.87, 0.097, 0.07 ]
-position_rating_axis      = [0.905, 0.65, 0.09, 0.2  ]
-position_text_input       = [0.900, 0.43, 0.095, 0.2  ]
-position_slider_seg_alpha = [0.905, 0.35, 0.07 , 0.02 ]
-position_next_button      = [0.905, 0.20, 0.07 , 0.04 ]
-position_quit_button      = [0.905, 0.13, 0.07 , 0.04 ]
-position_navig_options    = [0.905, 0.21, 0.07 , 0.12 ]
+position_annot_text = (0.950, 0.98)
+position_outlier_alert = (0.950, 0.92)
+position_outlier_alert_box = [0.902, 0.87, 0.097, 0.07]
+position_rating_axis = [0.905, 0.65, 0.09, 0.2]
+position_text_input = [0.900, 0.43, 0.095, 0.2]
+position_slider_seg_alpha = [0.905, 0.35, 0.07, 0.02]
+position_next_button = [0.905, 0.20, 0.07, 0.04]
+position_quit_button = [0.905, 0.13, 0.07, 0.04]
+position_navig_options = [0.905, 0.21, 0.07, 0.12]
 
 review_area = dict(left=0.01, right=0.9,
                    bottom=0.01, top=0.99,
@@ -98,17 +98,19 @@ binary_pixel_value = 1
 contour_level = 0.5
 line_break = [np.NaN, np.NaN]
 
-
 ## ----------------------------------------------------------------------------
 # T1 mri specific
 ## ----------------------------------------------------------------------------
 
 t1_mri_default_issue_list = ('None', 'Contrast', 'Motion', 'Ringing', 'Ghosting',
                              'Weird', 'Other', "I'm tired", 'Review later')
-t1_mri_map_short_rating = {'n': 'None',    'c': 'Contrast',  'm': 'Motion',
-                           'r': 'Ringing', 'g': 'Ghosting',  'w': 'Weird',
-                           'o': 'Other',   't': "I'm tired", 'v': 'Review later'}
+t1_mri_default_issue_list_abbreviation = {'n': 'None', 'c': 'Contrast', 'm': 'Motion',
+                                          'r': 'Ringing', 'g': 'Ghosting', 'w': 'Weird',
+                                          'o': 'Other', 't': "I'm tired", 'v': 'Review later'}
 t1_mri_default_rating_list_shortform = map_short_rating.keys()
 
+num_bins_histogram_intensity_distribution = 100
+
+checkbox_rect_width = 0.02
 
 ## ----------------------------------------------------------------------------

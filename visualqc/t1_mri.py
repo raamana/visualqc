@@ -11,12 +11,75 @@ from os.path import join as pjoin
 import warnings
 from visualqc import config as cfg
 from visualqc.workflows import BaseWorkflow
+from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import check_id_list, check_input_dir, check_views, check_finite_int, check_out_dir, \
     check_outlier_params
 from mrivis.utils import check_params, crop_to_seg_extents
 from matplotlib import pyplot as plt, colors, cm
+from matplotlib.widgets import CheckButtons
 
-class RatingWorkflow(BaseWorkflow):
+
+class T1MriInterface(BaseReviewInterface):
+    """Custom interface for rating the quality of T1 MRI scan."""
+
+    def __init__(self,
+                 fig,
+                 qcw,
+                 axes_base,
+                 axes_overlay,
+                 issue_list=cfg.t1_mri_default_issue_list):
+        """Constructor"""
+
+        super().__init__(fig, qcw, axes_base, axes_overlay)
+
+        self.issue_list = issue_list
+
+    def add_checkboxes(self):
+        """
+        Checkboxes offer the ability to select multiple tags such as Motion, Ghosting Aliasing etc,
+            instead of one from a list of mutual exclusive rating options (such as Good, Bad, Error etc).
+
+        """
+
+        ax_checkbox = plt.axes(cfg.position_rating_axis, facecolor=cfg.color_rating_axis, aspect='equal')
+        self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list, actives=None)
+        self.checkbox.on_clicked(self.save_issues)
+        for txt_lbl in self.checkbox.labels:
+            txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
+
+        for rect in self.checkbox.rectangles:
+            rect.set_width(cfg.checkbox_rect_width)
+
+    def save_issues(self, labels):
+        """Update the rating"""
+
+        # print('  rating {}'.format(label))
+        self.user_rated_issues = labels
+
+    def reset_figure(self):
+        "Resets the figure to prepare it for display of next subject."
+
+        self.clear_all_axes()
+        self.clear_checkboxes()
+
+    def clear_all_axes(self):
+        """clearing all axes"""
+
+        for ax in self.axes_base:
+            ax.cla()
+
+    def clear_checkboxes(self):
+        """Clears all checkboxes"""
+
+        cbox_statuses = self.checkbox.get_status()
+        for index in range(len(self.issue_list)):
+            # if it was selected already, toggle it.
+            if cbox_statuses[index]:
+                # set_active() is actually a toggle() operation
+                self.checkbox.set_active(index)
+
+
+class RatingWorkflowT1(BaseWorkflow):
     """
     Rating workflow without any overlay.
     """
@@ -51,11 +114,29 @@ class RatingWorkflow(BaseWorkflow):
         self.disable_outlier_detection = disable_outlier_detection
         self.prepare_first = prepare_first
 
-    def prepare(self):
+    def preprocess(self):
+        """
+        Preprocesses the input data (compute features, make complex visualizations),
+            before starting the review process.
+        """
+
+        print('Preprocessing data - please wait .. (or contemplate the vastness of universe! )')
+        
+
+
+    def prepare_UI(self):
         """Main method to run the entire workflow"""
 
         self.open_figure()
         self.add_UI()
+        self.detect_outliers()
+
+    def run(self):
+        """Workhorse for the workflow!"""
+
+        subject_counter = 0
+
+
 
     def open_figure(self):
 
@@ -65,6 +146,11 @@ class RatingWorkflow(BaseWorkflow):
     def add_UI(self):
         """Adds the review UI with defaults"""
 
+
+    def detect_outliers(self):
+        """Runs outlier detection and reports the ids flagged as outliers."""
+
+        outliers_by_sample, outliers_by_feature = self.outlier_advisory()
 
 
 
@@ -257,14 +343,14 @@ def make_workflow_from_user_options():
                                                                     user_args.disable_outlier_detection,
                                                                     id_list, source_of_features)
 
-    wf = RatingWorkflow(id_list, in_dir, out_dir,
-                        cfg.t1_mri_default_issue_list,
-                        mri_name,
-                        outlier_method, outlier_fraction,
-                        outlier_feat_types, disable_outlier_detection,
-                        user_args.prepare_first,
-                        vis_type,
-                        views, num_slices_per_view, num_rows_per_view)
+    wf = RatingWorkflowT1(id_list, in_dir, out_dir,
+                          cfg.t1_mri_default_issue_list,
+                          mri_name,
+                          outlier_method, outlier_fraction,
+                          outlier_feat_types, disable_outlier_detection,
+                          user_args.prepare_first,
+                          vis_type,
+                          views, num_slices_per_view, num_rows_per_view)
 
     return wf
 
@@ -272,6 +358,9 @@ def make_workflow_from_user_options():
 def run_workflow(qcw):
     """Generate the required visualizations for the specified subjects."""
 
+    qcw.preprocess()
+    qcw.prepare_UI()
+    qcw.run()
 
 
     return
