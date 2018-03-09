@@ -14,7 +14,7 @@ from visualqc.config import default_out_dir_name, default_mri_name, default_seg_
     default_num_rows, default_vis_type, default_freesurfer_dir, default_user_dir, \
     default_alpha_mri, default_alpha_seg
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set, \
-    check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, \
+    check_finite_int, restore_previous_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, \
     check_out_dir, get_path_for_subject, check_outlier_params
 from visualqc.viz import review_and_rate, generate_required_visualizations
 from visualqc.outliers import outlier_advisory
@@ -104,7 +104,7 @@ def run_workflow(qcw):
 
     outliers_by_sample, outliers_by_feature = outlier_advisory(qcw)
 
-    ratings, notes, incomplete_list = get_ratings(qcw)
+    ratings, notes, incomplete_list = restore_previous_ratings(qcw)
     for subject_id in incomplete_list:
         flagged_as_outlier = subject_id in outliers_by_sample
         alerts_outlier = outliers_by_sample.get(subject_id, None) # None, if id not in dict

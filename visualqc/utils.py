@@ -246,7 +246,7 @@ def get_freesurfer_color_LUT():
     return LUT
 
 
-def get_ratings(qcw):
+def restore_previous_ratings(qcw):
     """Creates a separate folder for ratings, backing up any previous sessions."""
 
     # making a copy
