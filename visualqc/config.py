@@ -111,6 +111,9 @@ t1_mri_default_rating_list_shortform = map_short_rating.keys()
 
 num_bins_histogram_intensity_distribution = 100
 
+# outlier detection (OLD)
+t1_mri_features_OLD = ('histogram_whole_scan', )
+
 checkbox_rect_width = 0.02
 
 ## ----------------------------------------------------------------------------
