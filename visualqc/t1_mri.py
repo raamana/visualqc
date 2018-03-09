@@ -22,6 +22,7 @@ from matplotlib.widgets import CheckButtons
 class T1MriInterface(BaseReviewInterface):
     """Custom interface for rating the quality of T1 MRI scan."""
 
+
     def __init__(self,
                  fig,
                  qcw,
@@ -33,6 +34,7 @@ class T1MriInterface(BaseReviewInterface):
         super().__init__(fig, qcw, axes_base, axes_overlay)
 
         self.issue_list = issue_list
+
 
     def add_checkboxes(self):
         """
@@ -50,11 +52,13 @@ class T1MriInterface(BaseReviewInterface):
         for rect in self.checkbox.rectangles:
             rect.set_width(cfg.checkbox_rect_width)
 
+
     def save_issues(self, labels):
         """Update the rating"""
 
         # print('  rating {}'.format(label))
         self.user_rated_issues = labels
+
 
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
@@ -62,11 +66,13 @@ class T1MriInterface(BaseReviewInterface):
         self.clear_all_axes()
         self.clear_checkboxes()
 
+
     def clear_all_axes(self):
         """clearing all axes"""
 
         for ax in self.axes_base:
             ax.cla()
+
 
     def clear_checkboxes(self):
         """Clears all checkboxes"""
@@ -98,7 +104,9 @@ class RatingWorkflowT1(BaseWorkflow):
                  views, num_slices_per_view, num_rows_per_view):
         """Constructor"""
 
-        super().__init__(id_list, in_dir, out_dir, rating_list)
+        super().__init__(id_list, in_dir, out_dir, rating_list,
+                         outlier_method, outlier_fraction,
+                         outlier_feat_types, disable_outlier_detection)
 
         self.vis_type = vis_type
         self.mri_name = mri_name
@@ -108,50 +116,85 @@ class RatingWorkflowT1(BaseWorkflow):
         self.num_slices_per_view = num_slices_per_view
         self.num_rows = num_rows_per_view
 
-        self.outlier_method = outlier_method
-        self.outlier_fraction = outlier_fraction
-        self.outlier_feat_types = outlier_feat_types
-        self.disable_outlier_detection = disable_outlier_detection
         self.prepare_first = prepare_first
+
+        from visualqc.features import extract_T1_features
+        self.feature_extractor = extract_T1_features
+
 
     def preprocess(self):
         """
-        Preprocesses the input data (compute features, make complex visualizations),
+        Preprocess the input data
+            e.g. compute features, make complex visualizations etc.
             before starting the review process.
         """
 
-        print('Preprocessing data - please wait .. (or contemplate the vastness of universe! )')
-        
+        print('Preprocessing data - please wait .. '
+              '\n\t(or contemplate the vastness of universe! )')
+        self.extract_features()
+        self.detect_outliers()
+        self.restore_ratings()
 
+        # no complex vis to generate - skipping
 
     def prepare_UI(self):
         """Main method to run the entire workflow"""
 
         self.open_figure()
         self.add_UI()
-        self.detect_outliers()
-
-    def run(self):
-        """Workhorse for the workflow!"""
-
-        subject_counter = 0
-
 
 
     def open_figure(self):
+        """Creates the master figure to show everything in."""
 
         self.figsize = [15, 12]
         self.fig = plt.figure(figsize=self.figsize)
 
+
     def add_UI(self):
         """Adds the review UI with defaults"""
 
+        pass
 
-    def detect_outliers(self):
-        """Runs outlier detection and reports the ids flagged as outliers."""
+    def restore_ratings(self):
+        """Restores any ratings from previous sessions."""
 
-        outliers_by_sample, outliers_by_feature = self.outlier_advisory()
+        from visualqc.utils import restore_previous_ratings
+        self.ratings, self.notes, self.incomplete_list = restore_previous_ratings(self)
 
+    def run(self):
+        """Workhorse for the workflow!"""
+
+        for subject_id in self.incomplete_list:
+            flagged_as_outlier = subject_id in self.by_sample
+            alerts_outlier = self.by_sample.get(subject_id, None)  # None, if id not in dict
+            outlier_alert_msg = '\n\tFlagged as a possible outlier by these measures:\n\t{}'.format(alerts_outlier) \
+                if flagged_as_outlier else ' '
+            print('\nReviewing {} {}'.format(subject_id, outlier_alert_msg))
+            t1_mri, overlay_seg, out_path, skip_subject = _prepare_images(qcw, subject_id)
+
+            if skip_subject:
+                print('Skipping current subject ..')
+                continue
+
+            self.ratings[subject_id], self.notes[subject_id], self.quit_now = review_and_rate(self, t1_mri, overlay_seg,
+                                                                               subject_id=subject_id,
+                                                                               flagged_as_outlier=flagged_as_outlier,
+                                                                               outlier_alerts=alerts_outlier,
+                                                                               output_path=out_path,
+                                                                               annot='ID {}'.format(subject_id))
+            # informing only when it was rated!
+            if self.ratings[subject_id] not in cfg.ratings_not_to_be_recorded:
+                print('id {} rating {} notes {}'.format(subject_id, self.ratings[subject_id], self.notes[subject_id]))
+            else:
+                self.ratings.pop(subject_id)
+
+            if self.quit_now:
+                print('\nUser chosen to quit..')
+                break
+
+        print('Saving ratings .. \n')
+        save_ratings(self.ratings, self.notes, self.qcw)
 
 
 def get_parser():
@@ -338,10 +381,10 @@ def make_workflow_from_user_options():
 
     outlier_method, outlier_fraction, \
     outlier_feat_types, disable_outlier_detection = check_outlier_params(user_args.outlier_method,
-                                                                    user_args.outlier_fraction,
-                                                                    user_args.outlier_feat_types,
-                                                                    user_args.disable_outlier_detection,
-                                                                    id_list, source_of_features)
+                                                                         user_args.outlier_fraction,
+                                                                         user_args.outlier_feat_types,
+                                                                         user_args.disable_outlier_detection,
+                                                                         id_list, source_of_features)
 
     wf = RatingWorkflowT1(id_list, in_dir, out_dir,
                           cfg.t1_mri_default_issue_list,
@@ -361,7 +404,6 @@ def run_workflow(qcw):
     qcw.preprocess()
     qcw.prepare_UI()
     qcw.run()
-
 
     return
 
