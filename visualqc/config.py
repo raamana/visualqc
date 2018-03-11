@@ -72,6 +72,7 @@ position_annot_text = (0.950, 0.98)
 position_outlier_alert = (0.950, 0.92)
 position_outlier_alert_box = [0.902, 0.87, 0.097, 0.07]
 position_rating_axis = [0.905, 0.65, 0.09, 0.2]
+position_checkbox = [0.905, 0.65, 0.09, 0.4]
 position_text_input = [0.900, 0.43, 0.095, 0.2]
 position_slider_seg_alpha = [0.905, 0.35, 0.07, 0.02]
 position_next_button = [0.905, 0.20, 0.07, 0.04]
@@ -113,8 +114,9 @@ num_bins_histogram_intensity_distribution = 100
 # outlier detection (OLD)
 t1_mri_features_OLD = ('histogram_whole_scan', )
 
-checkbox_rect_width = 0.02
-
+checkbox_rect_width  = 0.08
+checkbox_rect_height = 0.06
+checkbox_cross_color = 'xkcd:goldenrod'
 ## ----------------------------------------------------------------------------
 
 features_outlier_detection = freesurfer_features_outlier_detection + t1_mri_features_OLD
