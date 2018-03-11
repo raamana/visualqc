@@ -20,7 +20,6 @@ class BaseWorkflow(ABC):
                  id_list,
                  in_dir,
                  out_dir,
-                 rating_list,
                  outlier_method, outlier_fraction,
                  outlier_feat_types, disable_outlier_detection):
         """Constructor"""
@@ -30,7 +29,6 @@ class BaseWorkflow(ABC):
         self.id_list = id_list
         self.in_dir = in_dir
         self.out_dir = out_dir
-        self.rating_list = rating_list
 
         self.outlier_method = outlier_method
         self.outlier_fraction = outlier_fraction

@@ -13,19 +13,12 @@ class BaseReviewInterface(ABC):
 
     def __init__(self,
                  fig,
-                 qcw,
-                 axes_base,
-                 axes_overlay,
+                 axes,
                  ):
         "Constructor."
 
         self.fig = fig
-        self.rating_list = qcw.rating_list
-
-        self.axes_base = axes_base
-        self.axes_overlay = axes_overlay
-
-        self.latest_alpha_overlay = qcw.alpha_overlay
+        self.axes = axes
 
         self.user_rating = None
         self.user_notes = None
@@ -87,6 +80,7 @@ class BaseReviewInterface(ABC):
                   'to next subject, or to quit.')
         else:
             self.quit_now = True
+            self.capture_user_input()
             self.reset_figure()
 
     def next(self, ignore_arg=None):
@@ -98,7 +92,12 @@ class BaseReviewInterface(ABC):
                   'or to quit.')
         else:
             self.quit_now = False
+            self.capture_user_input()
             self.reset_figure()
+
+    @abstractmethod
+    def capture_user_input(self):
+        """Saves all user input, such as rating/issues/notes etc"""
 
     @abstractmethod
     def reset_figure(self):
@@ -108,11 +107,11 @@ class BaseReviewInterface(ABC):
 class PialWhiteSurfReviewInterface(BaseReviewInterface):
     """Review interface to rate the quality of pial and white matter surfaces on T1 mri."""
 
-    def __init__(self, fig, qcw, axes_base, axes_overlay):
+    def __init__(self, fig, axes, rating_list):
         """Constructor"""
 
-        super().__init__(fig, qcw, axes_base, axes_overlay)
-
+        super().__init__(fig, axes)
+        self.rating_list = rating_list
 
     def add_rating_UI(self):
         """Rating"""
@@ -130,7 +129,6 @@ class PialWhiteSurfReviewInterface(BaseReviewInterface):
 
         for circ in self.radio_bt_rating.circles:
             circ.set(radius=0.06)
-
 
     def save_rating(self, label):
         """Update the rating"""
