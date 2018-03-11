@@ -13,8 +13,9 @@ import warnings
 from visualqc import config as cfg
 from visualqc.workflows import BaseWorkflow
 from visualqc.interfaces import BaseReviewInterface
-from visualqc.utils import check_id_list, check_input_dir, check_views, check_finite_int, check_out_dir, \
-    check_outlier_params, get_path_for_subject, read_image
+from visualqc.utils import check_id_list, check_input_dir, check_views, check_finite_int, check_out_dir, check_outlier_params, get_path_for_subject, \
+    read_image, scale_0to1, pick_slices, get_axis
+from mrivis.utils import crop_image
 import numpy as np
 from matplotlib import pyplot as plt, colors, cm
 from matplotlib.widgets import CheckButtons
@@ -155,13 +156,15 @@ class RatingWorkflowT1(BaseWorkflow):
         self.open_figure()
         self.add_UI()
 
-    def init_layout(self, views, num_rows_per_view, num_slices_per_view):
+    def init_layout(self, views, num_rows_per_view,
+                    num_slices_per_view, padding=cfg.default_padding):
 
         self.views = views
         self.num_slices_per_view = num_slices_per_view
         self.num_rows_per_view = num_rows_per_view
         self.num_rows = len(self.views)*self.num_rows_per_view
         self.num_cols = int((len(self.views) * self.num_slices_per_view) / self.num_rows)
+        self.padding = padding
 
     def open_figure(self):
         """Creates the master figure to show everything in."""
@@ -170,17 +173,20 @@ class RatingWorkflowT1(BaseWorkflow):
         self.fig = plt.figure(figsize=self.figsize)
         self.fig, self.axes = plt.subplots(self.num_rows, self.num_cols, figsize=self.figsize)
         self.axes = self.axes.flatten()
-
-    def add_UI(self):
-        """Adds the review UI with defaults"""
-
-        self.UI = T1MriInterface(self.fig, self.axes, self.issue_list)
+        plt.style.use('dark_background')
+        self.display_params = dict(interpolation='none', aspect='equal',
+                              origin='lower', cmap='gray')
 
     def restore_ratings(self):
         """Restores any ratings from previous sessions."""
 
         from visualqc.utils import restore_previous_ratings
         self.ratings, self.notes, self.incomplete_list = restore_previous_ratings(self)
+
+    def add_UI(self):
+        """Adds the review UI with defaults"""
+
+        self.UI = T1MriInterface(self.fig, self.axes, self.issue_list)
 
     def save_ratings(self):
         """Saves ratings to disk """
@@ -222,7 +228,7 @@ class RatingWorkflowT1(BaseWorkflow):
                 print('Skipping current subject ..')
                 continue
 
-            self.show_collage_T1(t1_mri)
+            self.display_slices(t1_mri)
 
             # TODO updating ratings/notes etc needs to be worked out
             self.capture_user_input(subject_id)
@@ -266,10 +272,19 @@ class RatingWorkflowT1(BaseWorkflow):
 
         return t1_mri, out_vis_path, skip_subject
 
-    def show_collage_T1(self, img):
+    def display_slices(self, img):
         """Adds slice collage to the given axes"""
 
+        # crop and rescale
+        img = crop_image(img, self.padding)
+        img = scale_0to1(img)
 
+        slices = pick_slices(img, self.views, self.num_slices_per_view)
+        for ax_counter, (dim_index, slice_num) in enumerate(slices):
+            plt.sca(self.axes[ax_counter])
+            slice1 = get_axis(img, dim_index, slice_num)
+            plt.imshow(slice1, **self.display_params)
+            plt.axis('off')
 
 
 def get_parser():
