@@ -185,7 +185,14 @@ def gather_T1_features(wf, feature_type='histogram_whole_scan'):
     return features
 
 
-def gather_data(path_list):
-    """Takes in a list of CSVs, and return a table of features."""
+def gather_data(path_list, id_list):
+    """
+    Takes in a list of CSVs, and return a table of features.
 
-    # TODO
+    id_list is to ensure the row order in the matrix.
+
+    """
+
+    features = np.vstack([ np.genfromtxt(path_list[sid]) for sid in id_list])
+
+    return features

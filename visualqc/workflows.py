@@ -8,8 +8,7 @@ import sys
 from abc import ABC, abstractmethod
 from os.path import join as pjoin
 from visualqc import config as cfg
-
-
+import traceback
 
 class BaseWorkflow(ABC):
     """
@@ -76,6 +75,7 @@ class BaseWorkflow(ABC):
                 print('Extracting feature type: {}'.format(feat_type))
                 self.feature_paths[feat_type] = self.feature_extractor(self, feat_type)
             except:
+                traceback.print_exc()
                 print('Unable to extract {} features - skipping them.'.format(feat_type))
 
     def detect_outliers(self):
@@ -96,7 +96,7 @@ class BaseWorkflow(ABC):
         from visualqc.outliers import detect_outliers
         from visualqc.readers import gather_data
         for feature_type in self.outlier_feat_types:
-            features = gather_data(self.feature_paths[feature_type])
+            features = gather_data(self.feature_paths[feature_type], self.id_list)
             if features.shape[0] > self.outlier_fraction*len(self.id_list):
                 print('\nRunning outlier detection based on {} measures:'.format(feature_type))
                 out_file = pjoin(self.out_dir, '{}_{}_{}.txt'.format(cfg.outlier_list_prefix,
