@@ -239,9 +239,16 @@ class RatingWorkflowT1(BaseWorkflow):
         self.fig = plt.figure(figsize=self.figsize)
         self.fig, self.axes = plt.subplots(self.num_rows, self.num_cols, figsize=self.figsize)
         self.axes = self.axes.flatten()
+        # turning off axes for all subplots
+        for ax in self.axes:
+            ax.axis('off')
+
         plt.style.use('dark_background')
         self.display_params = dict(interpolation='none', aspect='equal',
                               origin='lower', cmap='gray')
+
+        # leaving some space on the right for review elements
+        plt.subplots_adjust(**cfg.review_area)
 
     def restore_ratings(self):
         """Restores any ratings from previous sessions."""
