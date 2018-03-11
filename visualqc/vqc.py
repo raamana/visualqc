@@ -14,7 +14,7 @@ from visualqc.config import default_out_dir_name, default_mri_name, default_seg_
     default_num_rows, default_vis_type, default_freesurfer_dir, default_user_dir, \
     default_alpha_mri, default_alpha_seg
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set, \
-    check_finite_int, restore_previous_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, \
+    check_finite_int, restore_previous_ratings, save_ratings_to_disk, check_id_list, check_labels, check_views, check_input_dir, \
     check_out_dir, get_path_for_subject, check_outlier_params
 from visualqc.viz import review_and_rate, generate_required_visualizations
 from visualqc.outliers import outlier_advisory
@@ -134,7 +134,7 @@ def run_workflow(qcw):
             break
 
     print('Saving ratings .. \n')
-    save_ratings(ratings, notes, qcw)
+    save_ratings_to_disk(ratings, notes, qcw)
     #TODO save QCW
 
     return

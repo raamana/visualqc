@@ -298,7 +298,7 @@ def load_ratings_csv(prev_ratings):
     return ratings, notes
 
 
-def save_ratings(ratings, notes, qcw):
+def save_ratings_to_disk(ratings, notes, qcw):
     """Save ratings before closing shop."""
 
     ratings_dir = pjoin(qcw.out_dir, cfg.suffix_ratings_dir)
