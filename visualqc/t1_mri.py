@@ -99,6 +99,59 @@ class T1MriInterface(BaseReviewInterface):
                 # set_active() is actually a toggle() operation
                 self.checkbox.set_active(index)
 
+    def on_mouse(self, event):
+        """Callback for mouse events."""
+
+        if self.prev_axis is not None:
+            # include all the non-data axes here (so they wont be zoomed-in)
+            if event.inaxes not in [self.checkbox.ax, self.text_box.ax,
+                                    self.bt_next.ax, self.bt_quit.ax]:
+                self.prev_axis.set_position(self.prev_ax_pos)
+                self.prev_axis.set_zorder(0)
+                self.prev_axis.patch.set_alpha(0.5)
+                self.zoomed_in = False
+
+        # right click ignored
+        if event.button in [3]:
+            pass
+        # double click to zoom in to any axis
+        elif event.dblclick and event.inaxes is not None:
+            # zoom axes full-screen
+            self.prev_ax_pos = event.inaxes.get_position()
+            event.inaxes.set_position(cfg.zoomed_position)
+            event.inaxes.set_zorder(1) # bring forth
+            event.inaxes.set_facecolor('black') # black
+            event.inaxes.patch.set_alpha(1.0)  # opaque
+            self.zoomed_in = True
+            self.prev_axis = event.inaxes
+
+        else:
+            pass
+
+        plt.draw()
+
+    def on_keyboard(self, key_in):
+        """Callback to handle keyboard shortcuts to rate and advance."""
+
+        # ignore keyboard key_in when mouse within Notes textbox
+        if key_in.inaxes == self.text_box.ax:
+            return
+
+        key_pressed = key_in.key.lower()
+        # print(key_pressed)
+        if key_pressed in ['right', ' ', 'space']:
+            self.user_rated_issues = self.checkbox.labels
+            self.next()
+        if key_pressed in ['ctrl+q', 'q+ctrl']:
+            self.user_rated_issues = self.checkbox.labels
+            self.quit()
+        else:
+            if key_pressed in cfg.t1_mri_default_issue_list_abbreviation:
+                checked_label = cfg.t1_mri_default_issue_list_abbreviation[key_pressed]
+                self.checkbox.set_active(cfg.t1_mri_default_issue_list.index(checked_label))
+            else:
+                pass
+
 
 class RatingWorkflowT1(BaseWorkflow):
     """
@@ -196,6 +249,14 @@ class RatingWorkflowT1(BaseWorkflow):
 
         self.UI = T1MriInterface(self.fig, self.axes, self.issue_list)
 
+        # connecting callbacks
+        self.con_id_click = self.fig.canvas.mpl_connect('button_press_event', self.UI.on_mouse)
+        self.con_id_keybd = self.fig.canvas.mpl_connect('key_press_event', self.UI.on_keyboard)
+        # con_id_scroll = self.fig.canvas.mpl_connect('scroll_event', self.UI.on_scroll)
+
+        self.fig.set_size_inches(self.figsize)
+        plt.show(block=False)
+
     def save_ratings(self):
         """Saves ratings to disk """
 
@@ -292,7 +353,16 @@ class RatingWorkflowT1(BaseWorkflow):
             plt.sca(self.axes[ax_counter])
             slice1 = get_axis(img, dim_index, slice_num)
             plt.imshow(slice1, **self.display_params)
-            plt.axis('off')
+
+        # update figure
+        self.fig.draw()
+
+    def cleanup(self):
+        """Preparating for exit."""
+
+        self.fig.canvas.mpl_disconnect(self.con_id_click)
+        self.fig.canvas.mpl_disconnect(self.con_id_keybd)
+        plt.close('all')
 
 
 def get_parser():
