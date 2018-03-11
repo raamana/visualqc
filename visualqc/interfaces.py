@@ -75,6 +75,14 @@ class BaseReviewInterface(ABC):
 
         self.user_notes = text_entered
 
+    @abstractmethod
+    def on_mouse(self, event):
+        """Callback for mouse events."""
+
+    @abstractmethod
+    def on_keyboard(self, event):
+        """Callback for keyboard events."""
+
     def quit(self, ignore_arg=None):
         "terminator"
 
