@@ -39,6 +39,10 @@ class T1MriInterface(BaseReviewInterface):
         self.issue_list = issue_list
         self.add_checkboxes()
 
+        # this list of artists to be populated later
+        # makes to handy to clean them all
+        self.data_handles = list()
+
 
     def add_checkboxes(self):
         """
@@ -96,14 +100,26 @@ class T1MriInterface(BaseReviewInterface):
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
 
-        self.clear_all_axes()
+        self.clear_data()
         self.clear_checkboxes()
 
-    def clear_all_axes(self):
-        """clearing all axes"""
+    def clear_data(self):
+        """clearing all data/image handles"""
 
-        for ax in self.axes:
-            ax.cla()
+        if self.data_handles:
+            for artist in self.data_handles:
+                artist.remove()
+            # resetting it
+            self.data_handles = list()
+
+
+    # def clear_all_axes(self):
+    #     """clearing all axes"""
+    #
+    #     # # clear axis is an expensive operation
+    #     # # moreover resets them to default, not what we want.
+    #     # for ax in self.axes:
+    #     #     ax.cla()
 
     def clear_checkboxes(self):
         """Clears all checkboxes"""
@@ -380,10 +396,13 @@ class RatingWorkflowT1(BaseWorkflow):
         for ax_counter, (dim_index, slice_num) in enumerate(slices):
             plt.sca(self.axes[ax_counter])
             slice1 = get_axis(img, dim_index, slice_num)
-            plt.imshow(slice1, **self.display_params)
+            im_handle = plt.imshow(slice1, **self.display_params)
+            self.UI.data_handles.append(im_handle)
 
         # update figure
         plt.show()
+
+        return
 
     def cleanup(self):
         """Preparating for exit."""
