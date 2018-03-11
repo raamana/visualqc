@@ -83,10 +83,18 @@ class BaseReviewInterface(ABC):
     def on_keyboard(self, event):
         """Callback for keyboard events."""
 
+    @abstractmethod
+    def allowed_to_advance(self):
+        """
+        Method to ensure work is done for current iteration,
+        before allowing the user to advance to next subject.
+        Returns True if allowed, or False if not.
+        """
+
     def quit(self, ignore_arg=None):
         "terminator"
 
-        if self.user_rating in cfg.ratings_not_to_be_recorded:
+        if not self.allowed_to_advance():
             print('You have not rated the current subject! '
                   'Please rate it before you can advance '
                   'to next subject, or to quit.')
@@ -98,7 +106,7 @@ class BaseReviewInterface(ABC):
     def next(self, ignore_arg=None):
         "advancer"
 
-        if self.user_rating in cfg.ratings_not_to_be_recorded:
+        if not self.allowed_to_advance():
             print('You have not rated the current subject! '
                   'Please rate it before you can advance to next subject, '
                   'or to quit.')

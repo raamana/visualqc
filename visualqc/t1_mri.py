@@ -77,6 +77,22 @@ class T1MriInterface(BaseReviewInterface):
 
         return self.user_notes, self.user_rated_issues
 
+    def allowed_to_advance(self):
+        """
+        Method to ensure work is done for current iteration,
+        before allowing the user to advance to next subject.
+
+        Returns False if atleast one of the following conditions are not met:
+            Atleast Checkbox is checked
+        """
+
+        if any(self.checkbox.get_status()):
+            allowed = True
+        else:
+            allowed = False
+
+        return allowed
+
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
 
@@ -367,7 +383,7 @@ class RatingWorkflowT1(BaseWorkflow):
             plt.imshow(slice1, **self.display_params)
 
         # update figure
-        self.fig.draw()
+        plt.show()
 
     def cleanup(self):
         """Preparating for exit."""
