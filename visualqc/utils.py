@@ -465,17 +465,21 @@ def check_outlier_params(method, fraction, feat_types, disable_outlier_detection
         raise NotImplementedError('Chosen outlier detection method invalid or not implemented.'
                          '\n\tChoose one of {}'.format(cfg.avail_outlier_detection_methods))
 
-    if vis_type.lower() not in cfg.freesurfer_vis_types or type_of_features not in cfg.avail_OLD_source_of_features:
-        raise NotImplementedError('Outlier detection based on the current source of features/visualization is not implemented.\n'
-                                  'Allowed visualization types: {}\n'
-                                  'Allowed feature types: {}'.format(cfg.freesurfer_vis_types, cfg.avail_OLD_source_of_features))
+    if type_of_features not in cfg.avail_OLD_source_of_features:
+        raise NotImplementedError('Outlier detection based on current source of features is not implemented.\n'
+                                  'Allowed feature types: {}'.format(cfg.avail_OLD_source_of_features))
+
+    if type_of_features.lower() == 'freesurfer' and vis_type not in cfg.freesurfer_vis_types:
+        raise NotImplementedError('Outlier detection based on current Freesurfer vis_type is not implemented.\n'
+                                  'Allowed visualization types: {}'.format(cfg.freesurfer_vis_types))
 
     fraction = np.float64(fraction)
     # not clipping automatically to force the user to think about it.
     # fraction = min(max(1 / ns, fraction), 0.5)
     ns = len(id_list)  # number of samples
     if fraction < 1/ns:
-        raise ValueError('Invalid fraction of outliers: must be more than 1/n (to enable detection of atleast 1)')
+        raise ValueError('Invalid fraction of outliers: '
+                         'must be more than 1/n (to enable detection of atleast 1)')
 
     if fraction > 0.5:
         raise ValueError('Invalid fraction of outliers: can not be more than 50%')
@@ -486,7 +490,8 @@ def check_outlier_params(method, fraction, feat_types, disable_outlier_detection
     feat_types = [ feat.lower() for feat in feat_types ]
     for feat in feat_types:
         if feat not in cfg.features_outlier_detection:
-            raise NotImplementedError('{} features for outlier detection is not recognized or implemented'.format(feat))
+            raise NotImplementedError('{} features for outlier detection '
+                                      'is not recognized or implemented'.format(feat))
 
     return method, fraction, feat_types, disable_outlier_detection
 

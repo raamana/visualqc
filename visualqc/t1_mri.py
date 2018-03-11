@@ -13,7 +13,8 @@ import warnings
 from visualqc import config as cfg
 from visualqc.workflows import BaseWorkflow
 from visualqc.interfaces import BaseReviewInterface
-from visualqc.utils import check_id_list, check_input_dir, check_views, check_finite_int, check_out_dir, check_outlier_params, get_path_for_subject, \
+from visualqc.utils import check_id_list, check_input_dir_T1, check_views, \
+    check_finite_int, check_out_dir, check_outlier_params, get_path_for_subject, \
     read_image, scale_0to1, pick_slices, get_axis
 from mrivis.utils import crop_image
 import numpy as np
@@ -132,8 +133,6 @@ class RatingWorkflowT1(BaseWorkflow):
         self.preprocess()
         self.prepare_UI()
         self.loop_through_subjects()
-
-        return
 
     def preprocess(self):
         """
@@ -325,6 +324,14 @@ def get_parser():
 
     \n""")
 
+    help_text_mri_name = textwrap.dedent("""
+    Specifies the name of MRI image to serve as the reference slice.
+    Typical options include orig.mgz, brainmask.mgz, T1.mgz etc.
+    Make sure to choose the right vis_type.
+
+    Default: {} (within the mri folder of Freesurfer format).
+    \n""".format(cfg.default_mri_name))
+
     help_text_out_dir = textwrap.dedent("""
     Output folder to store the visualizations & ratings.
     Default: a new folder called ``{}`` will be created inside the ``fs_dir``
@@ -377,8 +384,8 @@ def get_parser():
     'subcortical' (aseg.stats: volumes of several subcortical structures), 
     or 'both' (using both aseg and aparc stats).
 
-    Default: {} {}.
-    \n""".format(cfg.freesurfer_features_outlier_detection[0], cfg.freesurfer_features_outlier_detection[1]))
+    Default: {}.
+    \n""".format(cfg.t1_mri_features_OLD))
 
     help_text_disable_outlier_detection = textwrap.dedent("""
     This flag disables outlier detection and alerts altogether.
@@ -392,6 +399,10 @@ def get_parser():
     in_out.add_argument("-u", "--user_dir", action="store", dest="user_dir",
                         default=cfg.default_user_dir,
                         required=False, help=help_text_user_dir)
+
+    in_out.add_argument("-m", "--mri_name", action="store", dest="mri_name",
+                             default=cfg.default_mri_name, required=False,
+                             help=help_text_mri_name)
 
     in_out.add_argument("-o", "--out_dir", action="store", dest="out_dir",
                         required=False, help=help_text_out_dir,
@@ -411,7 +422,7 @@ def get_parser():
                           help=help_text_outlier_fraction)
 
     outliers.add_argument("-olt", "--outlier_feat_types", action="store", dest="outlier_feat_types",
-                          default=cfg.freesurfer_features_outlier_detection, required=False,
+                          default=cfg.t1_mri_features_OLD, required=False,
                           help=help_text_outlier_feat_types)
 
     outliers.add_argument("-old", "--disable_outlier_detection", action="store_true",
@@ -456,13 +467,12 @@ def make_workflow_from_user_options():
     except:
         parser.exit(1)
 
-    vis_type = None
-
-    in_dir, source_of_features = check_input_dir(user_args.fs_dir, user_args.user_dir, vis_type)
+    vis_type = 'collage_t1_mri'
+    type_of_features = 't1_mri'
+    in_dir = check_input_dir_T1(user_args.fs_dir, user_args.user_dir)
 
     mri_name = user_args.mri_name
-    seg_name = user_args.seg_name
-    id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type, mri_name, seg_name)
+    id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type, mri_name, seg_name=None)
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
     views = check_views(user_args.views)
@@ -474,7 +484,7 @@ def make_workflow_from_user_options():
                                                                          user_args.outlier_fraction,
                                                                          user_args.outlier_feat_types,
                                                                          user_args.disable_outlier_detection,
-                                                                         id_list, source_of_features)
+                                                                         id_list, vis_type, type_of_features)
 
     wf = RatingWorkflowT1(id_list, in_dir, out_dir,
                           cfg.t1_mri_default_issue_list,

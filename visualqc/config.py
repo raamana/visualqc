@@ -7,12 +7,11 @@ import numpy as np
 # default values
 default_out_dir_name = 'visualqc'
 annot_vis_dir_name = 'annot_visualizations'
-default_mri_name = 'brainmask.mgz'
+default_mri_name = 'orig.mgz' # brainmask would not help check expansion of surfaces into skull
 default_seg_name = 'aparc+aseg.mgz'
 required_files = (default_mri_name, default_seg_name)
 
 freesurfer_features_outlier_detection = ('cortical', 'subcortical')
-features_outlier_detection = freesurfer_features_outlier_detection
 outlier_list_prefix = 'possible_outliers'
 alert_colors_outlier = dict(cortical='xkcd:hot pink', subcortical='xkcd:periwinkle')
 annot_text_props = dict(horizontalalignment='center', fontsize='large')
@@ -21,7 +20,7 @@ default_outlier_detection_method = 'isolation_forest'
 default_outlier_fraction = 0.2
 avail_outlier_detection_methods = ('isolation_forest',)
 # OLD -> OutLier Detection
-avail_OLD_source_of_features = ('freesurfer',)
+avail_OLD_source_of_features = ('freesurfer', 't1_mri')
 
 default_freesurfer_dir = None
 cortical_types = ('cortical_volumetric', 'cortical_contour')
@@ -117,3 +116,5 @@ t1_mri_features_OLD = ('histogram_whole_scan', )
 checkbox_rect_width = 0.02
 
 ## ----------------------------------------------------------------------------
+
+features_outlier_detection = freesurfer_features_outlier_detection + t1_mri_features_OLD
