@@ -322,7 +322,8 @@ def save_ratings_to_disk(ratings, notes, qcw):
     return
 
 
-def check_input_dir(fs_dir, user_dir, vis_type):
+def check_input_dir(fs_dir, user_dir, vis_type,
+                    freesurfer_install_required=True):
     """Ensures proper input is specified."""
 
     in_dir = fs_dir
@@ -333,7 +334,7 @@ def check_input_dir(fs_dir, user_dir, vis_type):
         if user_dir is not None:
             raise ValueError('Only one of --fs_dir or --user_dir can be specified.')
 
-        if not freesurfer_installed():
+        if freesurfer_install_required and not freesurfer_installed():
             raise EnvironmentError(
                 'Freesurfer functionality is requested(e.g. visualizing annotations), but is not installed!')
 
@@ -357,6 +358,36 @@ def check_input_dir(fs_dir, user_dir, vis_type):
         raise IOError('Invalid specification - check proper combination of --fs_dir and --user_dir')
 
     return in_dir, type_of_features
+
+
+def check_input_dir_T1(fs_dir, user_dir):
+    """Ensures proper input is specified."""
+
+    in_dir = fs_dir
+    if fs_dir is None and user_dir is None:
+        raise ValueError('At least one of --fs_dir or --user_dir must be specified.')
+
+    if fs_dir is not None:
+        if user_dir is not None:
+            raise ValueError('Only one of --fs_dir or --user_dir can be specified.')
+
+    if user_dir is None:
+        if not pexists(fs_dir):
+            raise IOError('Freesurfer directory specified does not exist!')
+        else:
+            in_dir = fs_dir
+            type_of_features = 'freesurfer'
+    elif fs_dir is None:
+        if not pexists(user_dir):
+            raise IOError('User-specified input directory does not exist!')
+        else:
+            in_dir = user_dir
+            type_of_features = 'generic'
+
+    if not pexists(in_dir):
+        raise IOError('Invalid specification - check proper combination of --fs_dir and --user_dir')
+
+    return in_dir
 
 
 def freesurfer_installed():
