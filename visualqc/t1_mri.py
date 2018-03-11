@@ -180,6 +180,7 @@ class RatingWorkflowT1(BaseWorkflow):
         self.issue_list = issue_list
         self.mri_name = mri_name
         self.expt_id = 'rate_mri_{}'.format(self.mri_name)
+        self.suffix = self.expt_id
 
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
 
@@ -195,6 +196,7 @@ class RatingWorkflowT1(BaseWorkflow):
         self.preprocess()
         self.prepare_UI()
         self.loop_through_subjects()
+        self.cleanup()
 
     def preprocess(self):
         """
@@ -203,10 +205,13 @@ class RatingWorkflowT1(BaseWorkflow):
             before starting the review process.
         """
 
-        print('Preprocessing data - please wait .. '
-              '\n\t(or contemplate the vastness of universe! )')
-        self.extract_features()
+        if not self.disable_outlier_detection:
+            print('Preprocessing data - please wait .. '
+                  '\n\t(or contemplate the vastness of universe! )')
+            self.extract_features()
         self.detect_outliers()
+
+        print('Restoring ratings from previous session(s), if they exist ..')
         self.restore_ratings()
 
         # no complex vis to generate - skipping
