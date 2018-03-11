@@ -28,6 +28,10 @@ class BaseReviewInterface(ABC):
         self.prev_axis = None
         self.prev_ax_pos = None
 
+        self.add_annot()
+        self.add_navigation()
+        self.add_notes_input()
+
     def add_annot(self, text=None, pos=None):
         """Text at top of UI """
 
