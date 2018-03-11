@@ -268,13 +268,13 @@ class RatingWorkflowT1(BaseWorkflow):
         """Creates the master figure to show everything in."""
 
         self.figsize = [15, 12]
+        plt.style.use('dark_background')
         self.fig, self.axes = plt.subplots(self.num_rows, self.num_cols, figsize=self.figsize)
         self.axes = self.axes.flatten()
         # turning off axes for all subplots
         for ax in self.axes:
             ax.axis('off')
 
-        plt.style.use('dark_background')
         self.display_params = dict(interpolation='none', aspect='equal',
                               origin='lower', cmap='gray')
 
