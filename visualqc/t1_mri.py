@@ -7,17 +7,20 @@ Module to present a base neuroimaging scan, currently T1 mri, without any overla
 import argparse
 import sys
 import textwrap
+from abc import abstractmethod
 from os.path import join as pjoin
 import warnings
 from visualqc import config as cfg
 from visualqc.workflows import BaseWorkflow
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import check_id_list, check_input_dir, check_views, check_finite_int, check_out_dir, \
-    check_outlier_params
-from mrivis.utils import check_params, crop_to_seg_extents
+    check_outlier_params, get_path_for_subject, read_image
+import numpy as np
 from matplotlib import pyplot as plt, colors, cm
 from matplotlib.widgets import CheckButtons
-
+from os import makedirs
+from os.path import join as pjoin, exists as pexists
+from shutil import copyfile, which
 
 class T1MriInterface(BaseReviewInterface):
     """Custom interface for rating the quality of T1 MRI scan."""
@@ -25,13 +28,11 @@ class T1MriInterface(BaseReviewInterface):
 
     def __init__(self,
                  fig,
-                 qcw,
-                 axes_base,
-                 axes_overlay,
+                 axes,
                  issue_list=cfg.t1_mri_default_issue_list):
         """Constructor"""
 
-        super().__init__(fig, qcw, axes_base, axes_overlay)
+        super().__init__(fig, axes)
 
         self.issue_list = issue_list
 
@@ -43,7 +44,8 @@ class T1MriInterface(BaseReviewInterface):
 
         """
 
-        ax_checkbox = plt.axes(cfg.position_rating_axis, facecolor=cfg.color_rating_axis, aspect='equal')
+        ax_checkbox = plt.axes(cfg.position_rating_axis,
+                               facecolor=cfg.color_rating_axis, aspect='equal')
         self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list, actives=None)
         self.checkbox.on_clicked(self.save_issues)
         for txt_lbl in self.checkbox.labels:
@@ -59,6 +61,10 @@ class T1MriInterface(BaseReviewInterface):
         # print('  rating {}'.format(label))
         self.user_rated_issues = labels
 
+    def capture_user_input(self):
+        """Saves all user input, such as rating/issues/notes etc"""
+
+        return self.user_notes, self.user_rated_issues
 
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
@@ -66,13 +72,11 @@ class T1MriInterface(BaseReviewInterface):
         self.clear_all_axes()
         self.clear_checkboxes()
 
-
     def clear_all_axes(self):
         """clearing all axes"""
 
-        for ax in self.axes_base:
+        for ax in self.axes:
             ax.cla()
-
 
     def clear_checkboxes(self):
         """Clears all checkboxes"""
@@ -95,7 +99,7 @@ class RatingWorkflowT1(BaseWorkflow):
                  id_list,
                  in_dir,
                  out_dir,
-                 rating_list,
+                 issue_list,
                  mri_name,
                  outlier_method, outlier_fraction,
                  outlier_feat_types, disable_outlier_detection,
@@ -104,23 +108,31 @@ class RatingWorkflowT1(BaseWorkflow):
                  views, num_slices_per_view, num_rows_per_view):
         """Constructor"""
 
-        super().__init__(id_list, in_dir, out_dir, rating_list,
+        super().__init__(id_list, in_dir, out_dir,
                          outlier_method, outlier_fraction,
                          outlier_feat_types, disable_outlier_detection)
 
         self.vis_type = vis_type
+        self.issue_list = issue_list
         self.mri_name = mri_name
         self.expt_id = 'rate_mri_{}'.format(self.mri_name)
 
-        self.views = views
-        self.num_slices_per_view = num_slices_per_view
-        self.num_rows = num_rows_per_view
+        self.init_layout(views, num_rows_per_view, num_slices_per_view)
 
         self.prepare_first = prepare_first
 
         from visualqc.features import extract_T1_features
         self.feature_extractor = extract_T1_features
 
+
+    def run(self):
+        """Generate the required visualizations for the specified subjects."""
+
+        self.preprocess()
+        self.prepare_UI()
+        self.loop_through_subjects()
+
+        return
 
     def preprocess(self):
         """
@@ -143,18 +155,26 @@ class RatingWorkflowT1(BaseWorkflow):
         self.open_figure()
         self.add_UI()
 
+    def init_layout(self, views, num_rows_per_view, num_slices_per_view):
+
+        self.views = views
+        self.num_slices_per_view = num_slices_per_view
+        self.num_rows_per_view = num_rows_per_view
+        self.num_rows = len(self.views)*self.num_rows_per_view
+        self.num_cols = int((len(self.views) * self.num_slices_per_view) / self.num_rows)
 
     def open_figure(self):
         """Creates the master figure to show everything in."""
 
         self.figsize = [15, 12]
         self.fig = plt.figure(figsize=self.figsize)
-
+        self.fig, self.axes = plt.subplots(self.num_rows, self.num_cols, figsize=self.figsize)
+        self.axes = self.axes.flatten()
 
     def add_UI(self):
         """Adds the review UI with defaults"""
 
-        pass
+        self.UI = T1MriInterface(self.fig, self.axes, self.issue_list)
 
     def restore_ratings(self):
         """Restores any ratings from previous sessions."""
@@ -162,39 +182,94 @@ class RatingWorkflowT1(BaseWorkflow):
         from visualqc.utils import restore_previous_ratings
         self.ratings, self.notes, self.incomplete_list = restore_previous_ratings(self)
 
-    def run(self):
+    def save_ratings(self):
+        """Saves ratings to disk """
+
+        ratings_dir = pjoin(self.out_dir, cfg.suffix_ratings_dir)
+        if not pexists(ratings_dir):
+            makedirs(ratings_dir)
+
+        file_name_ratings = '{}_{}'.format(self.vis_type, cfg.file_name_ratings)
+        ratings_file = pjoin(ratings_dir, file_name_ratings)
+        prev_ratings_backup = pjoin(ratings_dir, '{}_{}'.format(cfg.prefix_backup, file_name_ratings))
+        if pexists(ratings_file):
+            copyfile(ratings_file, prev_ratings_backup)
+
+        # TODO t1 rating is a list of items, not a single string, handle it
+        # add column names: subject_id,issue1,issue2,...,notes etc
+        lines = '\n'.join(['{},{},{}'.format(sid, rating, self.notes[sid]) for sid, rating in self.ratings.items()])
+        try:
+            with open(ratings_file, 'w') as cf:
+                cf.write(lines)
+        except:
+            raise IOError(
+                'Error in saving ratings to file!!\nBackup might be helpful at:\n\t{}'.format(prev_ratings_backup))
+
+    def loop_through_subjects(self):
         """Workhorse for the workflow!"""
 
         for subject_id in self.incomplete_list:
+            self.current_subject_id = subject_id
             flagged_as_outlier = subject_id in self.by_sample
             alerts_outlier = self.by_sample.get(subject_id, None)  # None, if id not in dict
-            outlier_alert_msg = '\n\tFlagged as a possible outlier by these measures:\n\t{}'.format(alerts_outlier) \
-                if flagged_as_outlier else ' '
+            outlier_alert_msg = '\n\tFlagged as a possible outlier ' \
+                                'by these measures:\n\t{}'.format(alerts_outlier) \
+                                    if flagged_as_outlier else ' '
             print('\nReviewing {} {}'.format(subject_id, outlier_alert_msg))
-            t1_mri, overlay_seg, out_path, skip_subject = _prepare_images(qcw, subject_id)
+            t1_mri, out_path, skip_subject = self.load_data(subject_id)
 
             if skip_subject:
                 print('Skipping current subject ..')
                 continue
 
-            self.ratings[subject_id], self.notes[subject_id], self.quit_now = review_and_rate(self, t1_mri, overlay_seg,
-                                                                               subject_id=subject_id,
-                                                                               flagged_as_outlier=flagged_as_outlier,
-                                                                               outlier_alerts=alerts_outlier,
-                                                                               output_path=out_path,
-                                                                               annot='ID {}'.format(subject_id))
+            self.show_collage_T1(t1_mri)
+
+            # TODO updating ratings/notes etc needs to be worked out
+            self.capture_user_input(subject_id)
+            # self.ratings[subject_id], self.notes[subject_id], self.quit_now
+
             # informing only when it was rated!
             if self.ratings[subject_id] not in cfg.ratings_not_to_be_recorded:
-                print('id {} rating {} notes {}'.format(subject_id, self.ratings[subject_id], self.notes[subject_id]))
+                print('id {} rating {} notes {}'.format(subject_id,
+                                                        self.ratings[subject_id],
+                                                        self.notes[subject_id]))
             else:
                 self.ratings.pop(subject_id)
 
-            if self.quit_now:
+            if self.UI.quit_now:
                 print('\nUser chosen to quit..')
                 break
 
         print('Saving ratings .. \n')
-        save_ratings(self.ratings, self.notes, self.qcw)
+        self.save_ratings()
+
+    def capture_user_input(self, subject_id):
+        """Updates all user input to class"""
+
+        self.ratings[subject_id] = self.UI.user_rated_issues
+        self.notes[subject_id] = self.UI.user_notes
+
+    def load_data(self, subject_id):
+        """Loads the image data for display."""
+
+        t1_mri_path = get_path_for_subject(self.in_dir, subject_id, self.mri_name, self.vis_type)
+        t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
+
+        skip_subject = False
+        if np.count_nonzero(t1_mri)==0:
+            skip_subject = True
+            print('MR image is empty!')
+            out_vis_path = None
+        else:
+            # where to save the visualization to
+            out_vis_path = pjoin(self.out_dir, 'visual_qc_{}_{}'.format(self.vis_type, subject_id))
+
+        return t1_mri, out_vis_path, skip_subject
+
+    def show_collage_T1(self, img):
+        """Adds slice collage to the given axes"""
+
+
 
 
 def get_parser():
@@ -398,16 +473,6 @@ def make_workflow_from_user_options():
     return wf
 
 
-def run_workflow(qcw):
-    """Generate the required visualizations for the specified subjects."""
-
-    qcw.preprocess()
-    qcw.prepare_UI()
-    qcw.run()
-
-    return
-
-
 def cli_run():
     """Main entry point."""
 
@@ -415,7 +480,7 @@ def cli_run():
 
     if wf.vis_type is not None:
         # matplotlib.interactive(True)
-        run_workflow(wf)
+        wf.run()
         print('Results are available in:\n\t{}'.format(wf.out_dir))
     else:
         raise ValueError('Invalid state for visualQC!\n'
