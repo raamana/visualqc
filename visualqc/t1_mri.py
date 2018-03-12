@@ -330,6 +330,8 @@ class RatingWorkflowT1(BaseWorkflow):
 
         for subject_id in self.incomplete_list:
             self.current_subject_id = subject_id
+            self.UI.add_annot(subject_id)
+
             flagged_as_outlier = subject_id in self.by_sample
             alerts_outlier = self.by_sample.get(subject_id, None)  # None, if id not in dict
             outlier_alert_msg = '\n\tFlagged as a possible outlier ' \
