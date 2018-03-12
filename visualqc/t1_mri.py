@@ -193,7 +193,7 @@ class RatingWorkflowT1(BaseWorkflow):
                  in_dir,
                  out_dir,
                  issue_list,
-                 mri_name,
+                 mri_name, in_dir_type,
                  outlier_method, outlier_fraction,
                  outlier_feat_types, disable_outlier_detection,
                  prepare_first,
@@ -208,6 +208,7 @@ class RatingWorkflowT1(BaseWorkflow):
         self.vis_type = vis_type
         self.issue_list = issue_list
         self.mri_name = mri_name
+        self.in_dir_type = in_dir_type
         self.expt_id = 'rate_mri_{}'.format(self.mri_name)
         self.suffix = self.expt_id
 
@@ -372,7 +373,8 @@ class RatingWorkflowT1(BaseWorkflow):
     def load_data(self, subject_id):
         """Loads the image data for display."""
 
-        t1_mri_path = get_path_for_subject(self.in_dir, subject_id, self.mri_name, self.vis_type)
+        t1_mri_path = get_path_for_subject(self.in_dir, subject_id, self.mri_name,
+                                           self.vis_type, self.in_dir_type)
         t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
 
         skip_subject = False
@@ -621,10 +623,12 @@ def make_workflow_from_user_options():
 
     vis_type = 'collage_t1_mri'
     type_of_features = 't1_mri'
-    in_dir = check_input_dir_T1(user_args.fs_dir, user_args.user_dir)
+    in_dir, in_dir_type = check_input_dir_T1(user_args.fs_dir, user_args.user_dir)
 
     mri_name = user_args.mri_name
-    id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type, mri_name, seg_name=None)
+    id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type,
+                                           mri_name, seg_name=None,
+                                           in_dir_type=in_dir_type)
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
     views = check_views(user_args.views)
@@ -640,7 +644,7 @@ def make_workflow_from_user_options():
 
     wf = RatingWorkflowT1(id_list, in_dir, out_dir,
                           cfg.t1_mri_default_issue_list,
-                          mri_name,
+                          mri_name, in_dir_type,
                           outlier_method, outlier_fraction,
                           outlier_feat_types, disable_outlier_detection,
                           user_args.prepare_first,

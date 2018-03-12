@@ -387,7 +387,7 @@ def check_input_dir_T1(fs_dir, user_dir):
     if not pexists(in_dir):
         raise IOError('Invalid specification - check proper combination of --fs_dir and --user_dir')
 
-    return in_dir
+    return in_dir, type_of_features
 
 
 def freesurfer_installed():
@@ -413,7 +413,9 @@ def check_out_dir(out_dir, fs_dir):
     return out_dir
 
 
-def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name=None):
+def check_id_list(id_list_in, in_dir, vis_type,
+                  mri_name, seg_name=None,
+                  in_dir_type=None):
     """Checks to ensure each subject listed has the required files and returns only those that can be processed."""
 
     if id_list_in is not None:
@@ -442,7 +444,7 @@ def check_id_list(id_list_in, in_dir, vis_type, mri_name, seg_name=None):
     images_for_id = dict()
 
     for subject_id in id_list:
-        path_list = { img : get_path_for_subject(in_dir, subject_id, name, vis_type) for img, name in required_files.items() }
+        path_list = { img : get_path_for_subject(in_dir, subject_id, name, vis_type, in_dir_type) for img, name in required_files.items() }
         invalid = [pfile for pfile in path_list.values() if not pexists(pfile) or os.path.getsize(pfile) <= 0]
         if len(invalid) > 0:
             id_list_err.append(subject_id)
@@ -472,10 +474,10 @@ def read_id_list(id_list_file):
     return id_list
 
 
-def get_path_for_subject(in_dir, subject_id, req_file, vis_type):
+def get_path_for_subject(in_dir, subject_id, req_file, vis_type, in_dir_type=None):
     """Constructs the path for the image file based on chosen input and visualization type"""
 
-    if vis_type is not None and vis_type in freesurfer_vis_types:
+    if vis_type is not None and (vis_type in freesurfer_vis_types or in_dir_type in ['freesurfer', ]):
         out_path = realpath(pjoin(in_dir, subject_id, 'mri', req_file))
     else:
         out_path = realpath(pjoin(in_dir, subject_id, req_file))
