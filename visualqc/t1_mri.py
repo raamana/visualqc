@@ -104,6 +104,7 @@ class T1MriInterface(BaseReviewInterface):
 
         self.clear_data()
         self.clear_checkboxes()
+        self.clear_notes_annot()
 
     def clear_data(self):
         """clearing all data/image handles"""
@@ -114,14 +115,12 @@ class T1MriInterface(BaseReviewInterface):
             # resetting it
             self.data_handles = list()
 
+    def clear_notes_annot(self):
+        """clearing notes and annotations"""
 
-    # def clear_all_axes(self):
-    #     """clearing all axes"""
-    #
-    #     # # clear axis is an expensive operation
-    #     # # moreover resets them to default, not what we want.
-    #     # for ax in self.axes:
-    #     #     ax.cla()
+        self.text_box.set_val(cfg.textbox_initial_text)
+        # text is matplotlib artist
+        self.annot_text.remove()
 
     def clear_checkboxes(self):
         """Clears all checkboxes"""
