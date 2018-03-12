@@ -396,10 +396,11 @@ class RatingWorkflowT1(BaseWorkflow):
         # stopping the blocking event loop
         self.fig.canvas.stop_event_loop()
 
+    def capture_user_input(self):
         """Updates all user input to class"""
 
-        self.ratings[subject_id] = self.UI.user_rated_issues
-        self.notes[subject_id] = self.UI.user_notes
+        self.ratings[self.current_subject_id] = self.UI.user_rated_issues
+        self.notes[self.current_subject_id] = self.UI.user_notes
 
     def load_data(self, subject_id):
         """Loads the image data for display."""
