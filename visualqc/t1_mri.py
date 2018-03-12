@@ -42,6 +42,8 @@ class T1MriInterface(BaseReviewInterface):
 
         self.issue_list = issue_list
         self.add_checkboxes()
+        self.next_button_callback = next_button_callback
+        self.quit_button_callback = quit_button_callback
 
         # this list of artists to be populated later
         # makes to handy to clean them all
@@ -169,11 +171,9 @@ class T1MriInterface(BaseReviewInterface):
         key_pressed = key_in.key.lower()
         # print(key_pressed)
         if key_pressed in ['right', ' ', 'space']:
-            self.user_rated_issues = self.checkbox.labels
-            self.next()
+            self.next_button_callback()
         if key_pressed in ['ctrl+q', 'q+ctrl']:
-            self.user_rated_issues = self.checkbox.labels
-            self.quit()
+            self.quit_button_callback()
         else:
             if key_pressed in cfg.t1_mri_default_issue_list_abbreviation:
                 checked_label = cfg.t1_mri_default_issue_list_abbreviation[key_pressed]
