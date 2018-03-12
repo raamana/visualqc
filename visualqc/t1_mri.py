@@ -31,10 +31,12 @@ class T1MriInterface(BaseReviewInterface):
     def __init__(self,
                  fig,
                  axes,
-                 issue_list=cfg.t1_mri_default_issue_list):
+                 issue_list=cfg.t1_mri_default_issue_list,
+                 next_button_callback=None,
+                 quit_button_callback=None):
         """Constructor"""
 
-        super().__init__(fig, axes)
+        super().__init__(fig, axes, next_button_callback, quit_button_callback)
 
         self.issue_list = issue_list
         self.add_checkboxes()
@@ -290,7 +292,7 @@ class RatingWorkflowT1(BaseWorkflow):
     def add_UI(self):
         """Adds the review UI with defaults"""
 
-        self.UI = T1MriInterface(self.fig, self.axes, self.issue_list)
+        self.UI = T1MriInterface(self.fig, self.axes, self.issue_list, self.next, self.quit)
 
         # connecting callbacks
         self.con_id_click = self.fig.canvas.mpl_connect('button_press_event', self.UI.on_mouse)
@@ -362,6 +364,28 @@ class RatingWorkflowT1(BaseWorkflow):
         self.save_ratings()
 
     def capture_user_input(self, subject_id):
+    def quit(self, input_event_to_ignore=None):
+        "terminator"
+
+        if self.UI.allowed_to_advance():
+            self.prepare_to_advance()
+            self.quit_now = True
+        else:
+            print('You have not rated the current subject! '
+                  'Please rate it before you can advance '
+                  'to next subject, or to quit..')
+
+    def next(self, input_event_to_ignore=None):
+        "advancer"
+
+        if self.UI.allowed_to_advance():
+            self.prepare_to_advance()
+            self.quit_now = False
+        else:
+            print('You have not rated the current subject! '
+                  'Please rate it before you can advance '
+                  'to next subject, or to quit..')
+
         """Updates all user input to class"""
 
         self.ratings[subject_id] = self.UI.user_rated_issues
