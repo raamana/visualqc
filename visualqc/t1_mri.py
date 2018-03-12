@@ -386,6 +386,14 @@ class RatingWorkflowT1(BaseWorkflow):
                   'Please rate it before you can advance '
                   'to next subject, or to quit..')
 
+    def prepare_to_advance(self):
+        """Work needed before moving to next subject"""
+
+        self.capture_user_input()
+        self.UI.reset_figure()
+        # stopping the blocking event loop
+        self.fig.canvas.stop_event_loop()
+
         """Updates all user input to class"""
 
         self.ratings[subject_id] = self.UI.user_rated_issues
@@ -422,8 +430,9 @@ class RatingWorkflowT1(BaseWorkflow):
             im_handle = plt.imshow(slice1, **self.display_params)
             self.UI.data_handles.append(im_handle)
 
-        # update figure
-        plt.show()
+        self.fig.canvas.manager.show()
+        # starting a 'blocking' loop to let the user interact
+        self.fig.canvas.start_event_loop(timeout=-1)
 
         return
 
