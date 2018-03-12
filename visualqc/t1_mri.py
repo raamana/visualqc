@@ -7,22 +7,24 @@ Module to present a base neuroimaging scan, currently T1 mri, without any overla
 import argparse
 import sys
 import textwrap
-from abc import abstractmethod
-from os.path import join as pjoin
 import warnings
+from os import makedirs
+from os.path import join as pjoin, exists as pexists
+from shutil import copyfile
+
+import matplotlib
+import numpy as np
+from matplotlib import pyplot as plt
+from matplotlib.widgets import CheckButtons
+from mrivis.utils import crop_image
+
 from visualqc import config as cfg
-from visualqc.workflows import BaseWorkflow
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import check_id_list, check_input_dir_T1, check_views, \
     check_finite_int, check_out_dir, check_outlier_params, get_path_for_subject, \
     read_image, scale_0to1, pick_slices, get_axis
-from mrivis.utils import crop_image
-import numpy as np
-from matplotlib import pyplot as plt, colors, cm
-from matplotlib.widgets import CheckButtons
-from os import makedirs
-from os.path import join as pjoin, exists as pexists
-from shutil import copyfile, which
+from visualqc.workflows import BaseWorkflow
+
 
 class T1MriInterface(BaseReviewInterface):
     """Custom interface for rating the quality of T1 MRI scan."""
@@ -71,17 +73,11 @@ class T1MriInterface(BaseReviewInterface):
             x_line1.set_color(cfg.checkbox_cross_color)
             x_line2.set_color(cfg.checkbox_cross_color)
 
-
     def save_issues(self, labels):
         """Update the rating"""
 
         # print('  rating {}'.format(label))
         self.user_rated_issues = labels
-
-    def capture_user_input(self):
-        """Saves all user input, such as rating/issues/notes etc"""
-
-        return self.user_notes, self.user_rated_issues
 
     def allowed_to_advance(self):
         """
@@ -281,6 +277,7 @@ class RatingWorkflowT1(BaseWorkflow):
 
         # leaving some space on the right for review elements
         plt.subplots_adjust(**cfg.review_area)
+        plt.show(block=False)
 
     def restore_ratings(self):
         """Restores any ratings from previous sessions."""
@@ -299,30 +296,6 @@ class RatingWorkflowT1(BaseWorkflow):
         # con_id_scroll = self.fig.canvas.mpl_connect('scroll_event', self.UI.on_scroll)
 
         self.fig.set_size_inches(self.figsize)
-        plt.show(block=False)
-
-    def save_ratings(self):
-        """Saves ratings to disk """
-
-        ratings_dir = pjoin(self.out_dir, cfg.suffix_ratings_dir)
-        if not pexists(ratings_dir):
-            makedirs(ratings_dir)
-
-        file_name_ratings = '{}_{}'.format(self.vis_type, cfg.file_name_ratings)
-        ratings_file = pjoin(ratings_dir, file_name_ratings)
-        prev_ratings_backup = pjoin(ratings_dir, '{}_{}'.format(cfg.prefix_backup, file_name_ratings))
-        if pexists(ratings_file):
-            copyfile(ratings_file, prev_ratings_backup)
-
-        # TODO t1 rating is a list of items, not a single string, handle it
-        # add column names: subject_id,issue1,issue2,...,notes etc
-        lines = '\n'.join(['{},{},{}'.format(sid, rating, self.notes[sid]) for sid, rating in self.ratings.items()])
-        try:
-            with open(ratings_file, 'w') as cf:
-                cf.write(lines)
-        except:
-            raise IOError(
-                'Error in saving ratings to file!!\nBackup might be helpful at:\n\t{}'.format(prev_ratings_backup))
 
     def loop_through_subjects(self):
         """Workhorse for the workflow!"""
@@ -345,10 +318,6 @@ class RatingWorkflowT1(BaseWorkflow):
 
             self.display_slices(t1_mri)
 
-            # TODO updating ratings/notes etc needs to be worked out
-            self.capture_user_input(subject_id)
-            # self.ratings[subject_id], self.notes[subject_id], self.quit_now
-
             # informing only when it was rated!
             if self.ratings[subject_id] not in cfg.ratings_not_to_be_recorded:
                 print('id {} rating {} notes {}'.format(subject_id,
@@ -357,14 +326,13 @@ class RatingWorkflowT1(BaseWorkflow):
             else:
                 self.ratings.pop(subject_id)
 
-            if self.UI.quit_now:
+            if self.quit_now:
                 print('\nUser chosen to quit..')
                 break
 
         print('Saving ratings .. \n')
         self.save_ratings()
 
-    def capture_user_input(self, subject_id):
     def quit(self, input_event_to_ignore=None):
         "terminator"
 
@@ -437,6 +405,30 @@ class RatingWorkflowT1(BaseWorkflow):
         self.fig.canvas.start_event_loop(timeout=-1)
 
         return
+
+    def save_ratings(self):
+        """Saves ratings to disk """
+
+        ratings_dir = pjoin(self.out_dir, cfg.suffix_ratings_dir)
+        if not pexists(ratings_dir):
+            makedirs(ratings_dir)
+
+        file_name_ratings = '{}_{}'.format(self.vis_type, cfg.file_name_ratings)
+        ratings_file = pjoin(ratings_dir, file_name_ratings)
+        prev_ratings_backup = pjoin(ratings_dir, '{}_{}'.format(cfg.prefix_backup, file_name_ratings))
+        if pexists(ratings_file):
+            copyfile(ratings_file, prev_ratings_backup)
+
+        # TODO t1 rating is a list of items, not a single string, handle it
+        # add column names: subject_id,issue1,issue2,...,notes etc
+        lines = '\n'.join(['{},{},{}'.format(sid, rating, self.notes[sid]) for sid, rating in self.ratings.items()])
+        try:
+            with open(ratings_file, 'w') as cf:
+                cf.write(lines)
+        except:
+            raise IOError(
+                'Error in saving ratings to file!!\n'
+                'Backup might be helpful at:\n\t{}'.format(prev_ratings_backup))
 
     def cleanup(self):
         """Preparating for exit."""

@@ -14,7 +14,7 @@ required_files = (default_mri_name, default_seg_name)
 freesurfer_features_outlier_detection = ('cortical', 'subcortical')
 outlier_list_prefix = 'possible_outliers'
 alert_colors_outlier = dict(cortical='xkcd:hot pink', subcortical='xkcd:periwinkle')
-annot_text_props = dict(horizontalalignment='center', fontsize='large')
+annot_text_props = dict(horizontalalignment='center', fontsize='large', color='#c65102')
 
 default_outlier_detection_method = 'isolation_forest'
 default_outlier_fraction = 0.2
@@ -54,10 +54,10 @@ default_navigation_options = ("Next", "Quit")
 default_rating_list = ('Good', 'Doubtful', 'Bad', 'Error', 'Review later')
 map_short_rating = dict(g='Good', d='Doubtful', b='Bad', e='Error', r='Review later')
 default_rating_list_shortform = map_short_rating.keys()
-ratings_not_to_be_recorded = [None, ]
+ratings_not_to_be_recorded = [None, '']
 
 textbox_title = ''
-textbox_initial_text = 'Your Notes:'  # Text(text='Your Notes:', )
+textbox_initial_text = 'Notes: '  # Text(text='Your Notes:', )
 
 color_rating_axis = 'xkcd:slate'
 color_textbox_input = '#009b8c'
