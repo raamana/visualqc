@@ -25,6 +25,8 @@ from visualqc.utils import check_id_list, check_input_dir_T1, check_views, \
     read_image, scale_0to1, pick_slices, get_axis
 from visualqc.workflows import BaseWorkflow
 
+# each rating is a set of labels, join them with a plus delimiter
+_plus_join = lambda label_set: '+'.join(label_set)
 
 class T1MriInterface(BaseReviewInterface):
     """Custom interface for rating the quality of T1 MRI scan."""
@@ -41,7 +43,9 @@ class T1MriInterface(BaseReviewInterface):
         super().__init__(fig, axes, next_button_callback, quit_button_callback)
 
         self.issue_list = issue_list
+        self.user_rated_issues = set()
         self.add_checkboxes()
+
         self.next_button_callback = next_button_callback
         self.quit_button_callback = quit_button_callback
 
@@ -75,11 +79,17 @@ class T1MriInterface(BaseReviewInterface):
             x_line1.set_color(cfg.checkbox_cross_color)
             x_line2.set_color(cfg.checkbox_cross_color)
 
-    def save_issues(self, labels):
+    def save_issues(self, label):
         """Update the rating"""
 
-        # print('  rating {}'.format(label))
-        self.user_rated_issues = labels
+        if label not in [None, 'None']:
+            # implemeting toggle, to mimic checkbox behaviour
+            if label in self.user_rated_issues:
+                self.user_rated_issues.remove(label)
+            else:
+                self.user_rated_issues.add(label)
+        else:
+            self.clear_checkboxes() # clears the issue set also
 
     def allowed_to_advance(self):
         """
@@ -124,11 +134,14 @@ class T1MriInterface(BaseReviewInterface):
         """Clears all checkboxes"""
 
         cbox_statuses = self.checkbox.get_status()
-        for index in range(len(self.issue_list)):
+        for index, this_cbox_active in enumerate(cbox_statuses):
             # if it was selected already, toggle it.
-            if cbox_statuses[index]:
+            if this_cbox_active:
                 # set_active() is actually a toggle() operation
                 self.checkbox.set_active(index)
+
+        # ratings needs to cleared as well.
+        self.user_rated_issues.clear()
 
     def on_mouse(self, event):
         """Callback for mouse events."""
@@ -321,8 +334,7 @@ class RatingWorkflowT1(BaseWorkflow):
 
             # informing only when it was rated!
             if self.ratings[subject_id] not in cfg.ratings_not_to_be_recorded:
-                print('id {} rating {} notes {}'.format(subject_id,
-                                                        self.ratings[subject_id],
+                print('id {} issues {} notes {}'.format(subject_id, _plus_join(self.ratings[subject_id]),
                                                         self.notes[subject_id]))
             else:
                 self.ratings.pop(subject_id)
@@ -367,7 +379,7 @@ class RatingWorkflowT1(BaseWorkflow):
     def capture_user_input(self):
         """Updates all user input to class"""
 
-        self.ratings[self.current_subject_id] = self.UI.user_rated_issues
+        self.ratings[self.current_subject_id] = self.UI.user_rated_issues.copy()
         self.notes[self.current_subject_id] = self.UI.user_notes
 
     def load_data(self, subject_id):
@@ -421,9 +433,8 @@ class RatingWorkflowT1(BaseWorkflow):
         if pexists(ratings_file):
             copyfile(ratings_file, prev_ratings_backup)
 
-        # TODO t1 rating is a list of items, not a single string, handle it
-        # add column names: subject_id,issue1,issue2,...,notes etc
-        lines = '\n'.join(['{},{},{}'.format(sid, rating, self.notes[sid]) for sid, rating in self.ratings.items()])
+        # add column names: subject_id,issue1:issue2:issue3,...,notes etc
+        lines = '\n'.join(['{},{},{}'.format(sid, _plus_join(rating_set), self.notes[sid]) for sid, rating_set in self.ratings.items()])
         try:
             with open(ratings_file, 'w') as cf:
                 cf.write(lines)
