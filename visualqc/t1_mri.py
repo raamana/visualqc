@@ -265,7 +265,7 @@ class RatingWorkflowT1(BaseWorkflow):
     def open_figure(self):
         """Creates the master figure to show everything in."""
 
-        self.figsize = [15, 12]
+        self.figsize = cfg.t1_mri_review_figsize
         plt.style.use('dark_background')
         self.fig, self.axes = plt.subplots(self.num_rows, self.num_cols, figsize=self.figsize)
         self.axes = self.axes.flatten()
