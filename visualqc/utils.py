@@ -253,22 +253,14 @@ def restore_previous_ratings(qcw):
     incomplete_list = list(qcw.id_list)
     prev_done = []  # empty list
 
-    ratings_dir = pjoin(qcw.out_dir, cfg.suffix_ratings_dir)
-    if pexists(ratings_dir):
-        file_name_ratings = '{}_{}_{}'.format(qcw.vis_type, qcw.suffix, cfg.file_name_ratings)
-        prev_ratings = pjoin(ratings_dir, file_name_ratings)
-        prev_ratings_backup = pjoin(ratings_dir, '{}_{}'.format(cfg.prefix_backup, file_name_ratings))
-        if pexists(prev_ratings):
-            ratings, notes = load_ratings_csv(prev_ratings)
-            copyfile(prev_ratings, prev_ratings_backup)
-            # finding the remaining
-            prev_done = set(ratings.keys())
-            incomplete_list = list(set(qcw.id_list) - prev_done)
-        else:
-            ratings = dict()
-            notes = dict()
+    ratings_file, backup_name_ratings = get_ratings_path_info(qcw)
+
+    if pexists(ratings_file):
+        ratings, notes = load_ratings_csv(ratings_file)
+        # finding the remaining
+        prev_done = set(ratings.keys())
+        incomplete_list = list(set(qcw.id_list) - prev_done)
     else:
-        makedirs(ratings_dir, exist_ok=True)
         ratings = dict()
         notes = dict()
 
@@ -301,13 +293,8 @@ def load_ratings_csv(prev_ratings):
 def save_ratings_to_disk(ratings, notes, qcw):
     """Save ratings before closing shop."""
 
-    ratings_dir = pjoin(qcw.out_dir, cfg.suffix_ratings_dir)
-    if not pexists(ratings_dir):
-        makedirs(ratings_dir)
+    ratings_file, prev_ratings_backup = get_ratings_path_info(qcw)
 
-    file_name_ratings = '{}_{}_{}'.format(qcw.vis_type, qcw.suffix, cfg.file_name_ratings)
-    ratings_file = pjoin(ratings_dir, file_name_ratings)
-    prev_ratings_backup = pjoin(ratings_dir, '{}_{}'.format(cfg.prefix_backup, file_name_ratings))
     if pexists(ratings_file):
         copyfile(ratings_file, prev_ratings_backup)
 
@@ -320,6 +307,20 @@ def save_ratings_to_disk(ratings, notes, qcw):
             'Error in saving ratings to file!!\nBackup might be helpful at:\n\t{}'.format(prev_ratings_backup))
 
     return
+
+
+def get_ratings_path_info(qcw):
+    """Common routine to construct the same names"""
+
+    ratings_dir = pjoin(qcw.out_dir, cfg.suffix_ratings_dir)
+    if not pexists(ratings_dir):
+        makedirs(ratings_dir)
+
+    file_name_ratings = '{}_{}_{}'.format(qcw.vis_type, qcw.suffix, cfg.file_name_ratings)
+    ratings_file = pjoin(ratings_dir, file_name_ratings)
+    prev_ratings_backup = pjoin(ratings_dir, '{}_{}'.format(cfg.prefix_backup, file_name_ratings))
+
+    return ratings_file, prev_ratings_backup
 
 
 def check_input_dir(fs_dir, user_dir, vis_type,

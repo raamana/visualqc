@@ -22,7 +22,7 @@ from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import check_id_list, check_input_dir_T1, check_views, \
     check_finite_int, check_out_dir, check_outlier_params, get_path_for_subject, \
-    read_image, scale_0to1, pick_slices, get_axis
+    read_image, scale_0to1, pick_slices, get_axis, get_ratings_path_info
 from visualqc.workflows import BaseWorkflow
 
 # each rating is a set of labels, join them with a plus delimiter
@@ -444,13 +444,8 @@ class RatingWorkflowT1(BaseWorkflow):
     def save_ratings(self):
         """Saves ratings to disk """
 
-        ratings_dir = pjoin(self.out_dir, cfg.suffix_ratings_dir)
-        if not pexists(ratings_dir):
-            makedirs(ratings_dir)
+        ratings_file, prev_ratings_backup = get_ratings_path_info(self)
 
-        file_name_ratings = '{}_{}'.format(self.vis_type, cfg.file_name_ratings)
-        ratings_file = pjoin(ratings_dir, file_name_ratings)
-        prev_ratings_backup = pjoin(ratings_dir, '{}_{}'.format(cfg.prefix_backup, file_name_ratings))
         if pexists(ratings_file):
             copyfile(ratings_file, prev_ratings_backup)
 
