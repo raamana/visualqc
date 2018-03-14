@@ -61,8 +61,7 @@ class T1MriInterface(BaseReviewInterface):
 
         """
 
-        ax_checkbox = plt.axes(cfg.position_checkbox,
-                               facecolor=cfg.color_rating_axis, aspect='equal')
+        ax_checkbox = plt.axes(cfg.position_checkbox, facecolor=cfg.color_rating_axis)
         # initially de-activating all
         actives = [False] * len(self.issue_list)
         self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list, actives=actives)

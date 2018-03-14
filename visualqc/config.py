@@ -72,11 +72,11 @@ position_annot_text = (0.950, 0.98)
 position_outlier_alert = (0.950, 0.92)
 position_outlier_alert_box = [0.902, 0.87, 0.097, 0.07]
 position_rating_axis = [0.905, 0.65, 0.09, 0.2]
-position_checkbox = [0.905, 0.60, 0.09, 0.5]
-position_text_input = [0.900, 0.35, 0.095, 0.2]
+position_checkbox = [0.905, 0.42, 0.09, 0.25]
+position_text_input = [0.900, 0.20, 0.095, 0.2]
 position_slider_seg_alpha = [0.905, 0.35, 0.07, 0.02]
-position_next_button = [0.905, 0.20, 0.07, 0.04]
-position_quit_button = [0.905, 0.13, 0.07, 0.04]
+position_next_button = [0.905, 0.13, 0.07, 0.04]
+position_quit_button = [0.905, 0.07, 0.07, 0.04]
 position_navig_options = [0.905, 0.21, 0.07, 0.12]
 
 review_area = dict(left=0.01, right=0.9,
@@ -108,7 +108,7 @@ t1_mri_default_issue_list = ('None', 'Motion', 'Ringing', 'Ghosting',
 t1_mri_default_issue_list_abbreviation = {'n': 'None',
                                           'b': 'Bright', 'c': 'Contrast', 'd': 'Dark', 'y' : 'Blurry',
                                           'm': 'Motion', 'r': 'Ringing', 'g': 'Ghosting', 'w': 'Weird',
-                                          'o': 'Other', 't': "I'm tired", 'v': 'Review later'}
+                                          'o': 'Other', 't': "i'm Tired", 'v': 'Review later'}
 t1_mri_default_rating_list_shortform = t1_mri_default_issue_list_abbreviation.keys()
 
 num_bins_histogram_intensity_distribution = 100
@@ -116,8 +116,8 @@ num_bins_histogram_intensity_distribution = 100
 # outlier detection (OLD)
 t1_mri_features_OLD = ('histogram_whole_scan', )
 t1_mri_review_figsize = [15, 10]
-checkbox_rect_width  = 0.08
-checkbox_rect_height = 0.06
+checkbox_rect_width  = 0.05
+checkbox_rect_height = 0.05
 checkbox_cross_color = 'xkcd:goldenrod'
 ## ----------------------------------------------------------------------------
 
