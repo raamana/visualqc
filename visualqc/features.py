@@ -6,7 +6,7 @@ Module with algorithms to extract various features of interest for outlier detec
 from visualqc import config as cfg
 from visualqc.utils import read_image, scale_0to1
 import numpy as np
-from os.path import join as pjoin, splitext
+from os.path import join as pjoin, splitext, exists as pexists
 from os import makedirs
 
 def t1_histogram_whole_scan(in_mri_path, num_bins=cfg.num_bins_histogram_intensity_distribution):
@@ -54,10 +54,7 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
 
     """
 
-    from visualqc.utils import get_path_for_subject
-
     feature_type = feature_type.lower()
-    path_to_mri = lambda sid: get_path_for_subject(wf.in_dir, sid, wf.mri_name, wf.vis_type)
     basename = lambda name: splitext(name)[0]
     out_csv_name = '{}_{}_features.csv'.format(basename(wf.mri_name), feature_type)
     path_to_csv = lambda sid: pjoin(wf.out_dir, sid, out_csv_name)
@@ -72,12 +69,13 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
     for counter, sid in enumerate(wf.id_list):
         print('{} : {}/{}'.format(sid, counter+1, num_subjects))
         makedirs(pjoin(wf.out_dir, sid), exist_ok=True)
-        features = extract_method(path_to_mri(sid))
         feat_file = path_to_csv(sid)
-        try:
-            np.savetxt(feat_file, features, delimiter='\n', header=feature_type)
-        except:
-            raise IOError('Unable to save extracted features to disk!')
+        if not pexists(feat_file):
+            features = extract_method(wf.path_getter_input_image(sid))
+            try:
+                np.savetxt(feat_file, features, delimiter='\n', header=feature_type)
+            except:
+                raise IOError('Unable to save extracted features to disk!')
         else:
             feature_paths[sid] = feat_file
 
