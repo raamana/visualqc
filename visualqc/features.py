@@ -71,7 +71,7 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
         makedirs(pjoin(wf.out_dir, sid), exist_ok=True)
         feat_file = path_to_csv(sid)
         if not pexists(feat_file):
-            features = extract_method(wf.path_getter_input_image(sid))
+            features = extract_method(wf.path_getter_inputs(sid))
             try:
                 np.savetxt(feat_file, features, delimiter='\n', header=feature_type)
             except:

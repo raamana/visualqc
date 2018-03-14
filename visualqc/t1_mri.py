@@ -285,9 +285,9 @@ class RatingWorkflowT1(BaseWorkflow):
         self.feature_extractor = extract_T1_features
 
         if self.vis_type is not None and (self.vis_type in cfg.freesurfer_vis_types or self.in_dir_type in ['freesurfer', ]):
-            self.path_getter_input_image = lambda sub_id: realpath(pjoin(self.in_dir, sub_id, 'mri', self.mri_name))
+            self.path_getter_inputs = lambda sub_id: realpath(pjoin(self.in_dir, sub_id, 'mri', self.mri_name))
         else:
-            self.path_getter_input_image = lambda sub_id: realpath(pjoin(self.in_dir, sub_id, self.mri_name))
+            self.path_getter_inputs = lambda sub_id: realpath(pjoin(self.in_dir, sub_id, self.mri_name))
 
     def open_figure(self):
         """Creates the master figure to show everything in."""
@@ -427,8 +427,7 @@ class RatingWorkflowT1(BaseWorkflow):
     def load_data(self, subject_id):
         """Loads the image data for display."""
 
-        t1_mri_path = get_path_for_subject(self.in_dir, subject_id, self.mri_name,
-                                           self.vis_type, self.in_dir_type)
+        t1_mri_path = self.path_getter_inputs(subject_id)
         t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
 
         skip_subject = False
