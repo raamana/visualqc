@@ -187,8 +187,8 @@ class T1MriInterface(BaseReviewInterface):
         if key_pressed in ['ctrl+q', 'q+ctrl']:
             self.quit_button_callback()
         else:
-            if key_pressed in cfg.t1_mri_default_issue_list_abbreviation:
-                checked_label = cfg.t1_mri_default_issue_list_abbreviation[key_pressed]
+            if key_pressed in cfg.abbreviation_t1_mri_default_issue_list:
+                checked_label = cfg.abbreviation_t1_mri_default_issue_list[key_pressed]
                 self.checkbox.set_active(cfg.t1_mri_default_issue_list.index(checked_label))
             else:
                 pass
@@ -407,10 +407,9 @@ class RatingWorkflowT1(BaseWorkflow):
         img = scale_0to1(img)
 
         slices = pick_slices(img, self.views, self.num_slices_per_view)
-        for ax_counter, (dim_index, slice_num) in enumerate(slices):
-            plt.sca(self.axes[ax_counter])
-            slice1 = get_axis(img, dim_index, slice_num)
-            im_handle = plt.imshow(slice1, **self.display_params)
+        for ax_index, (dim_index, slice_index) in enumerate(slices):
+            slice_data = get_axis(img, dim_index, slice_index)
+            im_handle = self.axes[ax_index].imshow(slice_data, **self.display_params)
             self.UI.data_handles.append(im_handle)
 
         self.fig.canvas.manager.show()

@@ -104,12 +104,12 @@ line_break = [np.NaN, np.NaN]
 
 t1_mri_default_issue_list = ('None', 'Motion', 'Ringing', 'Ghosting',
                              'Contrast', 'blurrY', 'Bright', 'Dark',
-                             'Weird', 'Other', "I'm tired", 'reView later')
-t1_mri_default_issue_list_abbreviation = {'n': 'None',
-                                          'b': 'Bright', 'c': 'Contrast', 'd': 'Dark', 'y' : 'Blurry',
+                             'Weird', 'Other', "i'm Tired", 'reView later')
+abbreviation_t1_mri_default_issue_list = {'n': 'None',
+                                          'b': 'Bright', 'c': 'Contrast', 'd': 'Dark', 'y': 'Blurry',
                                           'm': 'Motion', 'r': 'Ringing', 'g': 'Ghosting', 'w': 'Weird',
                                           'o': 'Other', 't': "i'm Tired", 'v': 'Review later'}
-t1_mri_default_rating_list_shortform = t1_mri_default_issue_list_abbreviation.keys()
+t1_mri_default_rating_list_shortform = abbreviation_t1_mri_default_issue_list.keys()
 
 num_bins_histogram_intensity_distribution = 100
 
