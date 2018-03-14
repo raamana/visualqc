@@ -13,8 +13,12 @@ required_files = (default_mri_name, default_seg_name)
 
 freesurfer_features_outlier_detection = ('cortical', 'subcortical')
 outlier_list_prefix = 'possible_outliers'
+alert_background_color = 'xkcd:coral'
 alert_colors_outlier = dict(cortical='xkcd:hot pink', subcortical='xkcd:periwinkle')
 annot_text_props = dict(horizontalalignment='center', fontsize='large', color='#c65102')
+
+alert_text_props = dict(horizontalalignment='center', fontsize='medium',
+                        color='white', backgroundcolor=alert_background_color)
 
 default_outlier_detection_method = 'isolation_forest'
 default_outlier_fraction = 0.2
@@ -102,13 +106,13 @@ line_break = [np.NaN, np.NaN]
 # T1 mri specific
 ## ----------------------------------------------------------------------------
 
-t1_mri_default_issue_list = ('None', 'Motion', 'Ringing', 'Ghosting',
-                             'Contrast', 'blurrY', 'Bright', 'Dark',
+t1_mri_default_issue_list = ('Pass', 'Motion', 'Ringing', 'Ghosting',
+                             'Contrast', 'blurrY', 'Bright', 'Dark', 'Orientation/FOV',
                              'Weird', 'Other', "i'm Tired", 'reView later')
-abbreviation_t1_mri_default_issue_list = {'n': 'None',
-                                          'b': 'Bright', 'c': 'Contrast', 'd': 'Dark', 'y': 'Blurry',
-                                          'm': 'Motion', 'r': 'Ringing', 'g': 'Ghosting', 'w': 'Weird',
-                                          'o': 'Other', 't': "i'm Tired", 'v': 'Review later'}
+abbreviation_t1_mri_default_issue_list = {'p': 'Pass', 'm': 'Motion', 'r': 'Ringing', 'g': 'Ghosting',
+                                          'c': 'Contrast', 'y': 'blurrY', 'b': 'Bright', 'd': 'Dark', 'o' : 'Orientation/FOV',
+                                          'w': 'Weird', 's': 'Something else', 't': "i'm Tired", 'v': 'reView later'}
+
 t1_mri_default_rating_list_shortform = abbreviation_t1_mri_default_issue_list.keys()
 
 num_bins_histogram_intensity_distribution = 100

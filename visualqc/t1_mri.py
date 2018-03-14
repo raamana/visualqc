@@ -9,7 +9,7 @@ import sys
 import textwrap
 import warnings
 from os import makedirs
-from os.path import join as pjoin, exists as pexists
+from os.path import join as pjoin, exists as pexists, realpath
 from shutil import copyfile
 
 import matplotlib
@@ -229,14 +229,11 @@ class RatingWorkflowT1(BaseWorkflow):
         self.in_dir_type = in_dir_type
         self.expt_id = 'rate_mri_{}'.format(self.mri_name)
         self.suffix = self.expt_id
-
-        self.init_layout(views, num_rows_per_view, num_slices_per_view)
-
+        self.current_alert_msg = None
         self.prepare_first = prepare_first
 
-        from visualqc.features import extract_T1_features
-        self.feature_extractor = extract_T1_features
-
+        self.init_layout(views, num_rows_per_view, num_slices_per_view)
+        self.init_getters()
 
     def run(self):
         """Generate the required visualizations for the specified subjects."""
@@ -281,6 +278,17 @@ class RatingWorkflowT1(BaseWorkflow):
         self.num_cols = int((len(self.views) * self.num_slices_per_view) / self.num_rows)
         self.padding = padding
 
+    def init_getters(self):
+        """Initializes the getters methods for input paths and feature readers."""
+
+        from visualqc.features import extract_T1_features
+        self.feature_extractor = extract_T1_features
+
+        if self.vis_type is not None and (self.vis_type in cfg.freesurfer_vis_types or self.in_dir_type in ['freesurfer', ]):
+            self.path_getter_input_image = lambda sub_id: realpath(pjoin(self.in_dir, sub_id, 'mri', self.mri_name))
+        else:
+            self.path_getter_input_image = lambda sub_id: realpath(pjoin(self.in_dir, sub_id, self.mri_name))
+
     def open_figure(self):
         """Creates the master figure to show everything in."""
 
@@ -292,8 +300,9 @@ class RatingWorkflowT1(BaseWorkflow):
         for ax in self.axes:
             ax.axis('off')
 
+        # vmin/vmax are controlled, because we rescale all to [0, 1]
         self.display_params = dict(interpolation='none', aspect='equal',
-                              origin='lower', cmap='gray')
+                              origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
 
         # leaving some space on the right for review elements
         plt.subplots_adjust(**cfg.review_area)
@@ -326,19 +335,37 @@ class RatingWorkflowT1(BaseWorkflow):
         self.ax_hist.set_prop_cycle('color', cfg.color_histogram_t1_mri)
         self.ax_hist.set_title(cfg.title_histogram_t1_mri, fontsize='small')
 
+    def update_alerts(self):
+        """Keeps a box, initially invisible."""
+
+        if self.current_alert_msg is not None:
+            h_alert_text= self.fig.text(cfg.position_outlier_alert[0], cfg.position_outlier_alert[1],
+                                         self.current_alert_msg, **cfg.alert_text_props)
+            # adding it to list of elements to cleared when advancing to next subject
+            self.UI.data_handles.append(h_alert_text)
+
+    def add_outlier_alert(self):
+        """Brings up an alert if subject id is detected to be an outlier."""
+
+        flagged_as_outlier = self.current_subject_id in self.by_sample
+        if flagged_as_outlier:
+            alerts_list = self.by_sample.get(self.current_subject_id, None)  # None, if id not in dict
+            print('\n\tFlagged as a possible outlier by these measures:\n\t{}'.format('\t'.join(alerts_list)))
+
+            strings_to_show = ['Flagged as an outlier:', ] + alerts_list
+            self.current_alert_msg = '\n'.join(strings_to_show)
+            self.update_alerts()
+
     def loop_through_subjects(self):
         """Workhorse for the workflow!"""
 
         for subject_id in self.incomplete_list:
+
+            print('\nReviewing {}'.format(subject_id))
             self.current_subject_id = subject_id
             self.UI.add_annot(subject_id)
+            self.add_outlier_alert()
 
-            flagged_as_outlier = subject_id in self.by_sample
-            alerts_outlier = self.by_sample.get(subject_id, None)  # None, if id not in dict
-            outlier_alert_msg = '\n\tFlagged as a possible outlier ' \
-                                'by these measures:\n\t{}'.format(alerts_outlier) \
-                                    if flagged_as_outlier else ' '
-            print('\nReviewing {} {}'.format(subject_id, outlier_alert_msg))
             t1_mri, out_path, skip_subject = self.load_data(subject_id)
 
             if skip_subject:
