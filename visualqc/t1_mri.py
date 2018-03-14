@@ -263,6 +263,7 @@ class RatingWorkflowT1(BaseWorkflow):
 
         self.open_figure()
         self.add_UI()
+        self.add_histogram()
 
     def init_layout(self, views, num_rows_per_view,
                     num_slices_per_view, padding=cfg.default_padding):
@@ -310,6 +311,15 @@ class RatingWorkflowT1(BaseWorkflow):
 
         self.fig.set_size_inches(self.figsize)
 
+    def add_histogram(self):
+        """Extra axis for histogram"""
+
+        self.ax_hist = plt.axes(cfg.position_histogram_t1_mri)
+        self.ax_hist.set_xticks(cfg.xticks_histogram_t1_mri)
+        self.ax_hist.set_yticks([])
+        self.ax_hist.set_prop_cycle('color', cfg.color_histogram_t1_mri)
+        self.ax_hist.set_title(cfg.title_histogram_t1_mri, fontsize='small')
+
     def loop_through_subjects(self):
         """Workhorse for the workflow!"""
 
@@ -329,7 +339,7 @@ class RatingWorkflowT1(BaseWorkflow):
                 print('Skipping current subject ..')
                 continue
 
-            self.display_slices(t1_mri)
+            self.display_data(t1_mri)
 
             # informing only when it was rated!
             if self.ratings[subject_id] not in cfg.ratings_not_to_be_recorded:
@@ -399,19 +409,26 @@ class RatingWorkflowT1(BaseWorkflow):
 
         return t1_mri, out_vis_path, skip_subject
 
-    def display_slices(self, img):
+    def display_data(self, img):
         """Adds slice collage to the given axes"""
 
         # crop and rescale
         img = crop_image(img, self.padding)
         img = scale_0to1(img)
 
+        # adding slices
         slices = pick_slices(img, self.views, self.num_slices_per_view)
         for ax_index, (dim_index, slice_index) in enumerate(slices):
             slice_data = get_axis(img, dim_index, slice_index)
             im_handle = self.axes[ax_index].imshow(slice_data, **self.display_params)
             self.UI.data_handles.append(im_handle)
 
+        # updating histogram
+        nonzero_values = img.ravel()[np.flatnonzero(img)]
+        _, _, patches_hist = self.ax_hist.hist(nonzero_values, bins=cfg.num_bins_histogram_display)
+        self.UI.data_handles.extend(patches_hist)
+
+        # window management
         self.fig.canvas.manager.show()
         # starting a 'blocking' loop to let the user interact
         self.fig.canvas.start_event_loop(timeout=-1)

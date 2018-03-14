@@ -119,6 +119,13 @@ t1_mri_review_figsize = [15, 10]
 checkbox_rect_width  = 0.05
 checkbox_rect_height = 0.05
 checkbox_cross_color = 'xkcd:goldenrod'
+
+position_histogram_t1_mri = [0.905, 0.7, 0.09, 0.1]
+title_histogram_t1_mri = 'nonzero intensities'
+num_bins_histogram_display = 30
+xticks_histogram_t1_mri = np.arange(0.1, 1.01, 0.2)
+color_histogram_t1_mri = ('#c9ae74') #sandstone
+
 ## ----------------------------------------------------------------------------
 
 features_outlier_detection = freesurfer_features_outlier_detection + t1_mri_features_OLD
