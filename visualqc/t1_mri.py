@@ -44,6 +44,10 @@ class T1MriInterface(BaseReviewInterface):
 
         self.issue_list = issue_list
         self.user_rated_issues = set()
+
+        self.prev_axis = None
+        self.prev_ax_pos = None
+        self.zoomed_in = False
         self.add_checkboxes()
 
         self.next_button_callback = next_button_callback
@@ -158,7 +162,9 @@ class T1MriInterface(BaseReviewInterface):
         if event.button in [3]:
             pass
         # double click to zoom in to any axis
-        elif event.dblclick and event.inaxes is not None:
+        elif event.dblclick and event.inaxes is not None and \
+            event.inaxes not in [self.checkbox.ax, self.text_box.ax,
+                                 self.bt_next.ax, self.bt_quit.ax]:
             # zoom axes full-screen
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(cfg.zoomed_position)
