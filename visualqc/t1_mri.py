@@ -183,7 +183,7 @@ class T1MriInterface(BaseReviewInterface):
         """Callback to handle keyboard shortcuts to rate and advance."""
 
         # ignore keyboard key_in when mouse within Notes textbox
-        if key_in.inaxes == self.text_box.ax:
+        if key_in.inaxes == self.text_box.ax or key_in.key is None:
             return
 
         key_pressed = key_in.key.lower()
@@ -266,7 +266,7 @@ class RatingWorkflowT1(BaseWorkflow):
 
         self.open_figure()
         self.add_UI()
-        self.add_histogram()
+        self.add_histogram_panel()
 
     def init_layout(self, views, num_rows_per_view,
                     num_slices_per_view, padding=cfg.default_padding):
@@ -296,13 +296,17 @@ class RatingWorkflowT1(BaseWorkflow):
         plt.style.use('dark_background')
         self.fig, self.axes = plt.subplots(self.num_rows, self.num_cols, figsize=self.figsize)
         self.axes = self.axes.flatten()
-        # turning off axes for all subplots
-        for ax in self.axes:
-            ax.axis('off')
 
         # vmin/vmax are controlled, because we rescale all to [0, 1]
         self.display_params = dict(interpolation='none', aspect='equal',
                               origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
+
+        # turning off axes, creating image objects
+        self.images = [None] * len(self.axes)
+        empty_image = np.full((10,10), 0.0)
+        for ix, ax in enumerate(self.axes):
+            ax.axis('off')
+            self.images[ix] = ax.imshow(empty_image, **self.display_params)
 
         # leaving some space on the right for review elements
         plt.subplots_adjust(**cfg.review_area)
@@ -326,14 +330,24 @@ class RatingWorkflowT1(BaseWorkflow):
 
         self.fig.set_size_inches(self.figsize)
 
-    def add_histogram(self):
+    def add_histogram_panel(self):
         """Extra axis for histogram"""
 
         self.ax_hist = plt.axes(cfg.position_histogram_t1_mri)
         self.ax_hist.set_xticks(cfg.xticks_histogram_t1_mri)
         self.ax_hist.set_yticks([])
+        self.ax_hist.set_autoscaley_on(True)
         self.ax_hist.set_prop_cycle('color', cfg.color_histogram_t1_mri)
         self.ax_hist.set_title(cfg.title_histogram_t1_mri, fontsize='small')
+
+    def update_histogram(self, img):
+        """Updates histogram with current image data"""
+
+        nonzero_values = img.ravel()[np.flatnonzero(img)]
+        _, _, patches_hist = self.ax_hist.hist(nonzero_values, density=True, bins=cfg.num_bins_histogram_display)
+        self.ax_hist.relim(visible_only=True)
+        self.ax_hist.autoscale_view(scalex=False) # xlim fixed to [0, 1]
+        self.UI.data_handles.extend(patches_hist)
 
     def update_alerts(self):
         """Keeps a box, initially invisible."""
@@ -350,11 +364,14 @@ class RatingWorkflowT1(BaseWorkflow):
         flagged_as_outlier = self.current_subject_id in self.by_sample
         if flagged_as_outlier:
             alerts_list = self.by_sample.get(self.current_subject_id, None)  # None, if id not in dict
-            print('\n\tFlagged as a possible outlier by these measures:\n\t{}'.format('\t'.join(alerts_list)))
+            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'.format('\t'.join(alerts_list)))
 
             strings_to_show = ['Flagged as an outlier:', ] + alerts_list
             self.current_alert_msg = '\n'.join(strings_to_show)
             self.update_alerts()
+        else:
+            self.current_alert_msg = None
+
 
     def loop_through_subjects(self):
         """Workhorse for the workflow!"""
@@ -452,16 +469,16 @@ class RatingWorkflowT1(BaseWorkflow):
         slices = pick_slices(img, self.views, self.num_slices_per_view)
         for ax_index, (dim_index, slice_index) in enumerate(slices):
             slice_data = get_axis(img, dim_index, slice_index)
-            im_handle = self.axes[ax_index].imshow(slice_data, **self.display_params)
-            self.UI.data_handles.append(im_handle)
+            self.images[ax_index].set_data(slice_data)
+            # im_handle = self.axes[ax_index].imshow(slice_data, **self.display_params)
+            # self.UI.data_handles.append(im_handle)
 
         # updating histogram
-        nonzero_values = img.ravel()[np.flatnonzero(img)]
-        _, _, patches_hist = self.ax_hist.hist(nonzero_values, bins=cfg.num_bins_histogram_display)
-        self.UI.data_handles.extend(patches_hist)
+        self.update_histogram(img)
 
         # window management
         self.fig.canvas.manager.show()
+        self.fig.canvas.draw_idle()
         # starting a 'blocking' loop to let the user interact
         self.fig.canvas.start_event_loop(timeout=-1)
 
