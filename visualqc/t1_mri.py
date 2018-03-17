@@ -350,6 +350,25 @@ class RatingWorkflowT1(BaseWorkflow):
         from visualqc.utils import restore_previous_ratings
         self.ratings, self.notes, self.incomplete_list = restore_previous_ratings(self)
 
+    def save_ratings(self):
+        """Saves ratings to disk """
+
+        print('Saving ratings .. \n')
+        ratings_file, prev_ratings_backup = get_ratings_path_info(self)
+
+        if pexists(ratings_file):
+            copyfile(ratings_file, prev_ratings_backup)
+
+        # add column names: subject_id,issue1:issue2:issue3,...,notes etc
+        lines = '\n'.join(['{},{},{}'.format(sid, _plus_join(rating_set), self.notes[sid]) for sid, rating_set in self.ratings.items()])
+        try:
+            with open(ratings_file, 'w') as cf:
+                cf.write(lines)
+        except:
+            raise IOError(
+                'Error in saving ratings to file!!\n'
+                'Backup might be helpful at:\n\t{}'.format(prev_ratings_backup))
+
     def add_UI(self):
         """Adds the review UI with defaults"""
 
@@ -390,7 +409,7 @@ class RatingWorkflowT1(BaseWorkflow):
             # adding it to list of elements to cleared when advancing to next subject
             self.UI.data_handles.append(h_alert_text)
 
-    def add_outlier_alert(self):
+    def add_alerts(self):
         """Brings up an alert if subject id is detected to be an outlier."""
 
         flagged_as_outlier = self.current_subject_id in self.by_sample
@@ -413,7 +432,7 @@ class RatingWorkflowT1(BaseWorkflow):
             print('\nReviewing {}'.format(subject_id))
             self.current_subject_id = subject_id
             self.UI.add_annot(subject_id)
-            self.add_outlier_alert()
+            self.add_alerts()
 
             t1_mri, out_path, skip_subject = self.load_data(subject_id)
 
@@ -433,9 +452,6 @@ class RatingWorkflowT1(BaseWorkflow):
             if self.quit_now:
                 print('\nUser chosen to quit..')
                 break
-
-        print('Saving ratings .. \n')
-        self.save_ratings()
 
     def quit(self, input_event_to_ignore=None):
         "terminator"
@@ -516,26 +532,11 @@ class RatingWorkflowT1(BaseWorkflow):
 
         return
 
-    def save_ratings(self):
-        """Saves ratings to disk """
-
-        ratings_file, prev_ratings_backup = get_ratings_path_info(self)
-
-        if pexists(ratings_file):
-            copyfile(ratings_file, prev_ratings_backup)
-
-        # add column names: subject_id,issue1:issue2:issue3,...,notes etc
-        lines = '\n'.join(['{},{},{}'.format(sid, _plus_join(rating_set), self.notes[sid]) for sid, rating_set in self.ratings.items()])
-        try:
-            with open(ratings_file, 'w') as cf:
-                cf.write(lines)
-        except:
-            raise IOError(
-                'Error in saving ratings to file!!\n'
-                'Backup might be helpful at:\n\t{}'.format(prev_ratings_backup))
-
     def cleanup(self):
         """Preparating for exit."""
+
+        # save ratings before exiting
+        self.save_ratings()
 
         self.fig.canvas.mpl_disconnect(self.con_id_click)
         self.fig.canvas.mpl_disconnect(self.con_id_keybd)
