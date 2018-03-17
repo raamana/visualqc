@@ -106,10 +106,11 @@ line_break = [np.NaN, np.NaN]
 # T1 mri specific
 ## ----------------------------------------------------------------------------
 
-t1_mri_default_issue_list = ('Pass', 'Motion', 'Ringing', 'Ghosting',
+t1_mri_pass_indicator = 'Pass' # TODO Tired and Review Later must also be handled separately??
+t1_mri_default_issue_list = (t1_mri_pass_indicator, 'Motion', 'Ringing', 'Ghosting',
                              'Contrast', 'blurrY', 'Bright', 'Dark', 'Orientation/FOV',
                              'Weird', 'Other', "i'm Tired", 'reView later')
-abbreviation_t1_mri_default_issue_list = {'p': 'Pass', 'm': 'Motion', 'r': 'Ringing', 'g': 'Ghosting',
+abbreviation_t1_mri_default_issue_list = {'p': t1_mri_pass_indicator, 'm': 'Motion', 'r': 'Ringing', 'g': 'Ghosting',
                                           'c': 'Contrast', 'y': 'blurrY', 'b': 'Bright', 'd': 'Dark', 'o' : 'Orientation/FOV',
                                           'w': 'Weird', 's': 'Something else', 't': "i'm Tired", 'v': 'reView later'}
 

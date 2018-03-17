@@ -82,17 +82,62 @@ class T1MriInterface(BaseReviewInterface):
             x_line1.set_color(cfg.checkbox_cross_color)
             x_line2.set_color(cfg.checkbox_cross_color)
 
-    def save_issues(self, label):
-        """Update the rating"""
+        self._index_pass = cfg.t1_mri_default_issue_list.index(cfg.t1_mri_pass_indicator)
 
-        if label not in [None, 'None']:
-            # implemeting toggle, to mimic checkbox behaviour
-            if label in self.user_rated_issues:
-                self.user_rated_issues.remove(label)
-            else:
-                self.user_rated_issues.add(label)
+    def save_issues(self, label):
+        """
+        Update the rating
+
+        This function is called whenever set_active() happens on any label, if checkbox.eventson is True.
+
+        """
+
+        print('Prev set : {}\nCurrent Label : {}'.format(self.get_ratings(), label))
+
+        if label == cfg.t1_mri_pass_indicator:
+            self.clear_checkboxes(except_pass=True)
         else:
-            self.clear_checkboxes() # clears the issue set also
+            self.clear_pass_only_if_on()
+
+        print('New set: {}'.format(self.get_ratings()))
+
+    def clear_checkboxes(self, except_pass=False):
+        """Clears all checkboxes.
+
+        if except_pass=True,
+            does not clear checkbox corresponding to cfg.t1_mri_pass_indicator
+        """
+
+        cbox_statuses = self.checkbox.get_status()
+        for index, this_cbox_active in enumerate(cbox_statuses):
+            if except_pass and index==self._index_pass:
+                continue
+            # if it was selected already, toggle it.
+            if this_cbox_active:
+                # not calling checkbox.set_active() as it calls the callback self.save_issues() each time, if eventson is True
+                self._toggle_visibility_checkbox(index)
+
+    def clear_pass_only_if_on(self):
+        """Clear pass checkbox only"""
+
+        cbox_statuses = self.checkbox.get_status()
+        if cbox_statuses[self._index_pass]:
+            self._toggle_visibility_checkbox(self._index_pass)
+
+    def _toggle_visibility_checkbox(self, index):
+        """toggles the visibility of a given checkbox"""
+
+        l1, l2 = self.checkbox.lines[index]
+        l1.set_visible(not l1.get_visible())
+        l2.set_visible(not l2.get_visible())
+
+    def get_ratings(self):
+        """Returns the final set of checked ratings"""
+
+        cbox_statuses = self.checkbox.get_status()
+        user_ratings = [ cfg.t1_mri_default_issue_list[idx] for idx, this_cbox_active in enumerate(cbox_statuses) if this_cbox_active]
+
+        return user_ratings
 
     def allowed_to_advance(self):
         """
@@ -132,19 +177,6 @@ class T1MriInterface(BaseReviewInterface):
         self.text_box.set_val(cfg.textbox_initial_text)
         # text is matplotlib artist
         self.annot_text.remove()
-
-    def clear_checkboxes(self):
-        """Clears all checkboxes"""
-
-        cbox_statuses = self.checkbox.get_status()
-        for index, this_cbox_active in enumerate(cbox_statuses):
-            # if it was selected already, toggle it.
-            if this_cbox_active:
-                # set_active() is actually a toggle() operation
-                self.checkbox.set_active(index)
-
-        # ratings needs to cleared as well.
-        self.user_rated_issues.clear()
 
     def on_mouse(self, event):
         """Callback for mouse events."""
@@ -438,7 +470,7 @@ class RatingWorkflowT1(BaseWorkflow):
     def capture_user_input(self):
         """Updates all user input to class"""
 
-        self.ratings[self.current_subject_id] = self.UI.user_rated_issues.copy()
+        self.ratings[self.current_subject_id] = self.UI.get_ratings()
         self.notes[self.current_subject_id] = self.UI.user_notes
 
     def load_data(self, subject_id):
