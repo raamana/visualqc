@@ -54,7 +54,7 @@ class BaseWorkflow(ABC):
         self.preprocess()
         self.restore_ratings()
         self.prepare_UI()
-        self.loop_through_subjects()
+        self.loop_through_units()
         self.cleanup()
 
     @abstractmethod
@@ -137,25 +137,25 @@ class BaseWorkflow(ABC):
         else:
             return str_list
 
-    def loop_through_subjects(self):
-        """Method to loop through the subjects to make it all work."""
+    def loop_through_units(self):
+        """Method to loop through the units (subject, session or run) to make it all work."""
 
-        for subject_id in self.incomplete_list:
+        for unit_id in self.incomplete_list:
 
-            print('\nReviewing {}'.format(subject_id))
-            self.current_subject_id = subject_id
-            self.UI.add_annot(subject_id)
+            print('\nReviewing {}'.format(unit_id))
+            self.current_unit_id = unit_id
+            self.UI.add_annot(unit_id)
             self.add_alerts()
 
-            subject_data, skip_subject = self.load_subject(subject_id)
+            unit_data, skip_subject = self.load_unit(unit_id)
 
             if skip_subject:
                 print('Skipping current subject ..')
                 continue
 
-            self.display_subject(subject_data)
+            self.display_unit(unit_data)
             self.show_fig_and_wait()
-            self.print_rating(subject_id)
+            self.print_rating(unit_id)
 
             if self.quit_now:
                 print('\nUser chosen to quit..')
@@ -171,18 +171,18 @@ class BaseWorkflow(ABC):
         self.fig.canvas.start_event_loop(timeout=-1)
 
     @abstractmethod
-    def load_subject(self, subject_id):
+    def load_unit(self, unit_id):
         """Method to load necessary data for a given subject.
 
         Parameters
         ----------
-        subject_id : str
-            Identifier to locate the data for subject in self.in_dir
+        unit_id : str
+            Identifier to locate the data for the given unit (subject, session or run) in self.in_dir
 
         Returns
         -------
         subject_data : object
-            All the data necessary for the self.display_subject() method to display it.
+            All the data necessary for the self.display_unit() method to display it.
 
         skip_subject : bool
             Flag to indicate whether to skip the display and review of subject e.g.
@@ -192,7 +192,7 @@ class BaseWorkflow(ABC):
         """
 
     @abstractmethod
-    def display_subject(self, subject_data):
+    def display_unit(self, subject_data):
         """Display routine."""
 
     @abstractmethod
@@ -232,8 +232,8 @@ class BaseWorkflow(ABC):
     def capture_user_input(self):
         """Updates all user input to class"""
 
-        self.ratings[self.current_subject_id] = self.UI.get_ratings()
-        self.notes[self.current_subject_id] = self.UI.user_notes
+        self.ratings[self.current_unit_id] = self.UI.get_ratings()
+        self.notes[self.current_unit_id] = self.UI.user_notes
 
     def print_rating(self, subject_id):
         """Method to print the rating recorded for the current subject."""

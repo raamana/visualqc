@@ -372,9 +372,9 @@ class RatingWorkflowT1(BaseWorkflow, ABC):
     def add_alerts(self):
         """Brings up an alert if subject id is detected to be an outlier."""
 
-        flagged_as_outlier = self.current_subject_id in self.by_sample
+        flagged_as_outlier = self.current_unit_id in self.by_sample
         if flagged_as_outlier:
-            alerts_list = self.by_sample.get(self.current_subject_id, None)  # None, if id not in dict
+            alerts_list = self.by_sample.get(self.current_unit_id, None)  # None, if id not in dict
             print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'.format('\t'.join(alerts_list)))
 
             strings_to_show = ['Flagged as an outlier:', ] + alerts_list
@@ -383,10 +383,10 @@ class RatingWorkflowT1(BaseWorkflow, ABC):
         else:
             self.current_alert_msg = None
 
-    def load_subject(self, subject_id):
+    def load_unit(self, unit_id):
         """Loads the image data for display."""
 
-        t1_mri_path = self.path_getter_inputs(subject_id)
+        t1_mri_path = self.path_getter_inputs(unit_id)
         t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
 
         skip_subject = False
@@ -395,11 +395,11 @@ class RatingWorkflowT1(BaseWorkflow, ABC):
             print('MR image is empty!')
 
         # # where to save the visualization to
-        # out_vis_path = pjoin(self.out_dir, 'visual_qc_{}_{}'.format(self.vis_type, subject_id))
+        # out_vis_path = pjoin(self.out_dir, 'visual_qc_{}_{}'.format(self.vis_type, unit_id))
 
         return t1_mri, skip_subject
 
-    def display_subject(self, img):
+    def display_unit(self, img):
         """Adds slice collage to the given axes"""
 
         # crop and rescale
