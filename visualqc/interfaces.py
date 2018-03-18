@@ -84,7 +84,7 @@ class BaseReviewInterface(ABC):
     def save_user_notes(self, text_entered):
         """Saves user free-form notes from textbox."""
 
-        self.user_notes = text_entered
+        self.user_notes = str(text_entered).replace(cfg.delimiter, cfg.delimiter_replacement)
 
 
     @abstractmethod

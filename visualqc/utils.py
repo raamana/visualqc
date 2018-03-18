@@ -276,11 +276,16 @@ def restore_previous_ratings(qcw):
     return ratings, notes, incomplete_list
 
 
-def load_ratings_csv(prev_ratings):
-    """read CSV into a dict"""
+def load_ratings_csv(prev_ratings_file):
+    """Reads ratings from a CSV file into a dict.
 
-    if pexists(prev_ratings):
-        csv_values = [line.strip().split(',') for line in open(prev_ratings).readlines()]
+    Format expected in each line:
+    subject_id,ratings,notes
+
+    """
+
+    if pexists(prev_ratings_file):
+        csv_values = [line.strip().split(',') for line in open(prev_ratings_file).readlines()]
         ratings = { item[0]: item[1] for item in csv_values}
         notes   = { item[0]: item[2] for item in csv_values}
     else:

@@ -62,6 +62,13 @@ map_short_rating = dict(g='Good', d='Doubtful', b='Bad', e='Error', r='Review la
 default_rating_list_shortform = map_short_rating.keys()
 ratings_not_to_be_recorded = [None, '']
 
+# for serialization
+delimiter = ','
+# when ratings or notes contain the above delimiter, it will be replaced by this
+delimiter_replacement = ';'
+# when ratings are multiple (in some use cases), how to concat them into a single string without a delimiter
+rating_joiner = '+'
+
 textbox_title = ''
 textbox_initial_text = 'Notes: '  # Text(text='Your Notes:', )
 
@@ -122,7 +129,6 @@ num_bins_histogram_intensity_distribution = 100
 
 # outlier detection (OLD)
 t1_mri_features_OLD = ('histogram_whole_scan', )
-t1_mri_review_figsize = [15, 10]
 checkbox_rect_width  = 0.05
 checkbox_rect_height = 0.05
 checkbox_cross_color = 'xkcd:goldenrod'
