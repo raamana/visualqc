@@ -5,10 +5,14 @@ Module to define base classes.
 """
 
 import sys
-from abc import ABC, abstractmethod
-from os.path import join as pjoin
-from visualqc import config as cfg
 import traceback
+from abc import ABC, abstractmethod
+from os.path import join as pjoin, exists as pexists
+from shutil import copyfile
+
+from visualqc import config as cfg
+from visualqc.utils import load_ratings_csv, get_ratings_path_info
+
 
 class BaseWorkflow(ABC):
     """
@@ -29,12 +33,227 @@ class BaseWorkflow(ABC):
         self.in_dir = in_dir
         self.out_dir = out_dir
 
+        self.ratings = dict()
+        self.notes = dict()
+
         self.outlier_method = outlier_method
         self.outlier_fraction = outlier_fraction
         self.outlier_feat_types = outlier_feat_types
         self.disable_outlier_detection = disable_outlier_detection
 
+        # following properties must be instantiated
         self.feature_extractor = None
+        self.fig = None
+        self.UI = None
+
+        self.quit_now = False
+
+    def run(self):
+        """Entry point after init."""
+
+        self.preprocess()
+        self.restore_ratings()
+        self.prepare_UI()
+        self.loop_through_subjects()
+        self.cleanup()
+
+    @abstractmethod
+    def preprocess(self):
+        """
+        Method to get all required preprocessing done,
+         to get ready to start the review interface.
+
+         """
+
+    @abstractmethod
+    def prepare_UI(self):
+        """
+        Method to prepare UI and add all the elements required for review.
+
+        This is where you
+        - open a figure with the required layout,
+        - must save the figure handle to self.fig
+        - add :class:BaseReviewInterface and save handle to self.UI
+        - add additional ones on top the base review interface.
+
+
+        """
+
+    def restore_ratings(self):
+        """Method to restore ratings from previous sessions, if any."""
+
+        print('Restoring ratings from previous session(s), if they exist ..')
+
+        # making a copy
+        self.incomplete_list = list(self.id_list)
+        prev_done = []  # empty list
+
+        ratings_file, backup_name_ratings = get_ratings_path_info(self)
+
+        if pexists(ratings_file):
+            self.ratings, self.notes = load_ratings_csv(ratings_file)
+            # finding the remaining
+            prev_done = set(self.ratings.keys())
+            self.incomplete_list = list(set(self.id_list) - prev_done)
+        else:
+            self.ratings = dict()
+            self.notes = dict()
+
+        if len(prev_done) > 0:
+            print('\nRatings for {}/{} subjects '
+                  'were restored.'.format(len(prev_done), len(self.id_list)))
+
+        if len(self.incomplete_list) < 1:
+            print('No subjects to review/rate - exiting.')
+            sys.exit(0)
+        else:
+            print('To be reviewed : {}\n'.format(len(self.incomplete_list)))
+
+    def save_ratings(self):
+        """Saves ratings to disk """
+
+        print('Saving ratings .. \n')
+        ratings_file, prev_ratings_backup = get_ratings_path_info(self)
+
+        if pexists(ratings_file):
+            copyfile(ratings_file, prev_ratings_backup)
+
+        # add column names: subject_id,issue1:issue2:issue3,...,notes etc
+        lines = '\n'.join(['{},{},{}'.format(sid, self._join_ratings(rating_set), self.notes[sid]) for sid, rating_set in self.ratings.items()])
+        try:
+            with open(ratings_file, 'w') as cf:
+                cf.write(lines)
+        except:
+            raise IOError(
+                'Error in saving ratings to file!!\n'
+                'Backup might be helpful at:\n\t{}'.format(prev_ratings_backup))
+
+    @staticmethod
+    def _join_ratings(str_list):
+
+        from collections import Iterable
+        if isinstance(str_list, Iterable):
+            return cfg.rating_joiner.join(str_list)
+        else:
+            return str_list
+
+    def loop_through_subjects(self):
+        """Method to loop through the subjects to make it all work."""
+
+        for subject_id in self.incomplete_list:
+
+            print('\nReviewing {}'.format(subject_id))
+            self.current_subject_id = subject_id
+            self.UI.add_annot(subject_id)
+            self.add_alerts()
+
+            subject_data, skip_subject = self.load_subject(subject_id)
+
+            if skip_subject:
+                print('Skipping current subject ..')
+                continue
+
+            self.display_subject(subject_data)
+            self.show_fig_and_wait()
+            self.print_rating(subject_id)
+
+            if self.quit_now:
+                print('\nUser chosen to quit..')
+                break
+
+    def show_fig_and_wait(self):
+        """Show figure and let interaction happen"""
+
+        # window management
+        self.fig.canvas.manager.show()
+        self.fig.canvas.draw_idle()
+        # starting a 'blocking' loop to let the user interact
+        self.fig.canvas.start_event_loop(timeout=-1)
+
+    @abstractmethod
+    def load_subject(self, subject_id):
+        """Method to load necessary data for a given subject.
+
+        Parameters
+        ----------
+        subject_id : str
+            Identifier to locate the data for subject in self.in_dir
+
+        Returns
+        -------
+        subject_data : object
+            All the data necessary for the self.display_subject() method to display it.
+
+        skip_subject : bool
+            Flag to indicate whether to skip the display and review of subject e.g.
+            when necessary data was not available or usable.
+            When returning True, must print a message informing the user why.
+
+        """
+
+    @abstractmethod
+    def display_subject(self, subject_data):
+        """Display routine."""
+
+    @abstractmethod
+    def add_alerts(self):
+        """Method to appropriately alert the reviewer e.g. when subject was flagged as an outlier"""
+
+    def quit(self, input_event_to_ignore=None):
+        "terminator"
+
+        if self.UI.allowed_to_advance():
+            self.prepare_to_advance()
+            self.quit_now = True
+        else:
+            print('You have not rated the current subject! '
+                  'Please rate it before you can advance '
+                  'to next subject, or to quit..')
+
+    def next(self, input_event_to_ignore=None):
+        "advancer"
+
+        if self.UI.allowed_to_advance():
+            self.prepare_to_advance()
+            self.quit_now = False
+        else:
+            print('You have not rated the current subject! '
+                  'Please rate it before you can advance '
+                  'to next subject, or to quit..')
+
+    def prepare_to_advance(self):
+        """Work needed before moving to next subject"""
+
+        self.capture_user_input()
+        self.UI.reset_figure()
+        # stopping the blocking event loop
+        self.fig.canvas.stop_event_loop()
+
+    def capture_user_input(self):
+        """Updates all user input to class"""
+
+        self.ratings[self.current_subject_id] = self.UI.get_ratings()
+        self.notes[self.current_subject_id] = self.UI.user_notes
+
+    def print_rating(self, subject_id):
+        """Method to print the rating recorded for the current subject."""
+
+        if self.ratings[subject_id] not in cfg.ratings_not_to_be_recorded:
+            print('id {} rating: {} '
+                  'notes {}'.format(subject_id, self.ratings[subject_id],
+                                    self.notes[subject_id]))
+        else:
+            # extra check to ensure subject was properly rate.
+            self.ratings.pop(subject_id)
+
+    @abstractmethod
+    def cleanup(self):
+        """
+        Clean up routine to
+        1) save ratings,
+        2) close all callbacks and figures etc.
+        """
+
 
     def save_cmd(self):
         """Saves the command issued by the user for debugging purposes"""

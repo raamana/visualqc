@@ -11,7 +11,7 @@ import warnings
 from os import makedirs
 from os.path import join as pjoin, exists as pexists, realpath
 from shutil import copyfile
-
+from abc import ABC
 import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
@@ -92,14 +92,10 @@ class T1MriInterface(BaseReviewInterface):
 
         """
 
-        print('Prev set : {}\nCurrent Label : {}'.format(self.get_ratings(), label))
-
         if label == cfg.t1_mri_pass_indicator:
             self.clear_checkboxes(except_pass=True)
         else:
             self.clear_pass_only_if_on()
-
-        print('New set: {}'.format(self.get_ratings()))
 
     def clear_checkboxes(self, except_pass=False):
         """Clears all checkboxes.
@@ -232,7 +228,7 @@ class T1MriInterface(BaseReviewInterface):
                 pass
 
 
-class RatingWorkflowT1(BaseWorkflow):
+class RatingWorkflowT1(BaseWorkflow, ABC):
     """
     Rating workflow without any overlay.
     """
@@ -267,14 +263,6 @@ class RatingWorkflowT1(BaseWorkflow):
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
 
-    def run(self):
-        """Generate the required visualizations for the specified subjects."""
-
-        self.preprocess()
-        self.prepare_UI()
-        self.loop_through_subjects()
-        self.cleanup()
-
     def preprocess(self):
         """
         Preprocess the input data
@@ -287,9 +275,6 @@ class RatingWorkflowT1(BaseWorkflow):
                   '\n\t(or contemplate the vastness of universe! )')
             self.extract_features()
         self.detect_outliers()
-
-        print('Restoring ratings from previous session(s), if they exist ..')
-        self.restore_ratings()
 
         # no complex vis to generate - skipping
 
@@ -324,7 +309,7 @@ class RatingWorkflowT1(BaseWorkflow):
     def open_figure(self):
         """Creates the master figure to show everything in."""
 
-        self.figsize = cfg.t1_mri_review_figsize
+        self.figsize = cfg.default_review_figsize
         plt.style.use('dark_background')
         self.fig, self.axes = plt.subplots(self.num_rows, self.num_cols, figsize=self.figsize)
         self.axes = self.axes.flatten()
@@ -343,31 +328,6 @@ class RatingWorkflowT1(BaseWorkflow):
         # leaving some space on the right for review elements
         plt.subplots_adjust(**cfg.review_area)
         plt.show(block=False)
-
-    def restore_ratings(self):
-        """Restores any ratings from previous sessions."""
-
-        from visualqc.utils import restore_previous_ratings
-        self.ratings, self.notes, self.incomplete_list = restore_previous_ratings(self)
-
-    def save_ratings(self):
-        """Saves ratings to disk """
-
-        print('Saving ratings .. \n')
-        ratings_file, prev_ratings_backup = get_ratings_path_info(self)
-
-        if pexists(ratings_file):
-            copyfile(ratings_file, prev_ratings_backup)
-
-        # add column names: subject_id,issue1:issue2:issue3,...,notes etc
-        lines = '\n'.join(['{},{},{}'.format(sid, _plus_join(rating_set), self.notes[sid]) for sid, rating_set in self.ratings.items()])
-        try:
-            with open(ratings_file, 'w') as cf:
-                cf.write(lines)
-        except:
-            raise IOError(
-                'Error in saving ratings to file!!\n'
-                'Backup might be helpful at:\n\t{}'.format(prev_ratings_backup))
 
     def add_UI(self):
         """Adds the review UI with defaults"""
@@ -423,73 +383,7 @@ class RatingWorkflowT1(BaseWorkflow):
         else:
             self.current_alert_msg = None
 
-
-    def loop_through_subjects(self):
-        """Workhorse for the workflow!"""
-
-        for subject_id in self.incomplete_list:
-
-            print('\nReviewing {}'.format(subject_id))
-            self.current_subject_id = subject_id
-            self.UI.add_annot(subject_id)
-            self.add_alerts()
-
-            t1_mri, out_path, skip_subject = self.load_data(subject_id)
-
-            if skip_subject:
-                print('Skipping current subject ..')
-                continue
-
-            self.display_data(t1_mri)
-
-            # informing only when it was rated!
-            if self.ratings[subject_id] not in cfg.ratings_not_to_be_recorded:
-                print('id {} issues {} notes {}'.format(subject_id, _plus_join(self.ratings[subject_id]),
-                                                        self.notes[subject_id]))
-            else:
-                self.ratings.pop(subject_id)
-
-            if self.quit_now:
-                print('\nUser chosen to quit..')
-                break
-
-    def quit(self, input_event_to_ignore=None):
-        "terminator"
-
-        if self.UI.allowed_to_advance():
-            self.prepare_to_advance()
-            self.quit_now = True
-        else:
-            print('You have not rated the current subject! '
-                  'Please rate it before you can advance '
-                  'to next subject, or to quit..')
-
-    def next(self, input_event_to_ignore=None):
-        "advancer"
-
-        if self.UI.allowed_to_advance():
-            self.prepare_to_advance()
-            self.quit_now = False
-        else:
-            print('You have not rated the current subject! '
-                  'Please rate it before you can advance '
-                  'to next subject, or to quit..')
-
-    def prepare_to_advance(self):
-        """Work needed before moving to next subject"""
-
-        self.capture_user_input()
-        self.UI.reset_figure()
-        # stopping the blocking event loop
-        self.fig.canvas.stop_event_loop()
-
-    def capture_user_input(self):
-        """Updates all user input to class"""
-
-        self.ratings[self.current_subject_id] = self.UI.get_ratings()
-        self.notes[self.current_subject_id] = self.UI.user_notes
-
-    def load_data(self, subject_id):
+    def load_subject(self, subject_id):
         """Loads the image data for display."""
 
         t1_mri_path = self.path_getter_inputs(subject_id)
@@ -499,14 +393,13 @@ class RatingWorkflowT1(BaseWorkflow):
         if np.count_nonzero(t1_mri)==0:
             skip_subject = True
             print('MR image is empty!')
-            out_vis_path = None
-        else:
-            # where to save the visualization to
-            out_vis_path = pjoin(self.out_dir, 'visual_qc_{}_{}'.format(self.vis_type, subject_id))
 
-        return t1_mri, out_vis_path, skip_subject
+        # # where to save the visualization to
+        # out_vis_path = pjoin(self.out_dir, 'visual_qc_{}_{}'.format(self.vis_type, subject_id))
 
-    def display_data(self, img):
+        return t1_mri, skip_subject
+
+    def display_subject(self, img):
         """Adds slice collage to the given axes"""
 
         # crop and rescale
@@ -518,19 +411,9 @@ class RatingWorkflowT1(BaseWorkflow):
         for ax_index, (dim_index, slice_index) in enumerate(slices):
             slice_data = get_axis(img, dim_index, slice_index)
             self.images[ax_index].set_data(slice_data)
-            # im_handle = self.axes[ax_index].imshow(slice_data, **self.display_params)
-            # self.UI.data_handles.append(im_handle)
 
         # updating histogram
         self.update_histogram(img)
-
-        # window management
-        self.fig.canvas.manager.show()
-        self.fig.canvas.draw_idle()
-        # starting a 'blocking' loop to let the user interact
-        self.fig.canvas.start_event_loop(timeout=-1)
-
-        return
 
     def cleanup(self):
         """Preparating for exit."""
