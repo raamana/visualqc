@@ -15,7 +15,10 @@ freesurfer_features_outlier_detection = ('cortical', 'subcortical')
 outlier_list_prefix = 'possible_outliers'
 alert_background_color = 'xkcd:coral'
 alert_colors_outlier = dict(cortical='xkcd:hot pink', subcortical='xkcd:periwinkle')
-annot_text_props = dict(horizontalalignment='center', fontsize='large', color='#c65102')
+
+position_annot_text = (0.990, 0.98)
+annot_text_props = dict(ha='right', va='top', multialignment='left',
+                        wrap=True, fontsize='large', color='#c65102')
 
 alert_text_props = dict(horizontalalignment='center', fontsize='medium',
                         color='white', backgroundcolor=alert_background_color)
@@ -81,7 +84,6 @@ text_box_text_color = 'black'
 text_option_color = 'white'
 color_navig_text = 'black'
 
-position_annot_text = (0.950, 0.98)
 position_outlier_alert = (0.950, 0.92)
 position_outlier_alert_box = [0.902, 0.87, 0.097, 0.07]
 position_rating_axis = [0.905, 0.65, 0.09, 0.2]
@@ -138,6 +140,24 @@ title_histogram_t1_mri = 'nonzero intensities'
 num_bins_histogram_display = 30
 xticks_histogram_t1_mri = np.arange(0.1, 1.01, 0.2)
 color_histogram_t1_mri = ('#c9ae74') #sandstone
+
+## ----------------------------------------------------------------------------
+# Functional mri specific
+## ----------------------------------------------------------------------------
+
+func_mri_pass_indicator = 'Pass' # TODO Tired and Review Later must also be handled separately??
+func_mri_default_issue_list = (func_mri_pass_indicator, 'Motion', 'Ringing', 'Ghosting',
+                               'Orientation/FOV', 'Weird', 'Other', "i'm Tired", 'reView later')
+
+abbreviation_func_mri_default_issue_list = {'p': func_mri_pass_indicator, 'm': 'Motion', 'r': 'Ringing',
+                                            'g': 'Ghosting', 'o' : 'Orientation/FOV', 'w': 'Weird',
+                                            's': 'Something else', 't': "i'm Tired", 'v': 'reView later'}
+
+func_mri_default_rating_list_shortform = abbreviation_func_mri_default_issue_list.keys()
+
+func_outlier_features = None
+
+func_mri_BIDS_filters = dict(modalities='func', types='bold')
 
 ## ----------------------------------------------------------------------------
 
