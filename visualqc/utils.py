@@ -13,7 +13,8 @@ import visualqc.config as cfg
 from visualqc.config import visualization_combination_choices, default_out_dir_name, freesurfer_vis_types, freesurfer_vis_cmd
 
 
-def read_image(img_spec, error_msg='image'):
+def read_image(img_spec, error_msg='image',
+               num_dims=3):
     """Image reader. Removes stray values close to zero (smaller than 5 %ile)."""
 
     if isinstance(img_spec, str):
@@ -30,7 +31,12 @@ def read_image(img_spec, error_msg='image'):
         raise ValueError('Invalid input specified! '
                          'Input either a path to image data, or provide 3d Matrix directly.')
 
-    img = check_image_is_3d(img)
+    if num_dims == 3:
+        img = check_image_is_3d(img)
+    elif num_dims == 4:
+        check_image_is_4d(img)
+    else:
+        raise ValueError('Requested check for {} dims - allowed: 3 or 4!')
 
     if not np.issubdtype(img.dtype, np.float64):
         img = img.astype('float32')
@@ -171,6 +177,20 @@ def check_image_is_3d(img):
         raise ValueError('Invalid shape of image : {}'.format(img.shape))
 
     return img
+
+def check_image_is_4d(img):
+    """Ensures the image loaded is 4d and nothing else."""
+
+    if len(img.shape) <= 3:
+        raise ValueError('Input volume must be atleast 4D!')
+    elif len(img.shape) == 4:
+        for dim_size in img.shape:
+            if dim_size < 1:
+                raise ValueError('Atleast one slice must exist in each dimension')
+    elif len(img.shape) > 4:
+        raise ValueError('Invalid shape of image : {}'.format(img.shape))
+
+    return
 
 
 def void_subcortical_symmetrize_cortical(aseg, null_label=0):
