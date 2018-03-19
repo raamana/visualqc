@@ -131,8 +131,7 @@ class BaseWorkflowVisualQC(ABC):
     @staticmethod
     def _join_ratings(str_list):
 
-        from collections import Iterable
-        if isinstance(str_list, Iterable):
+        if isinstance(str_list, (list, tuple)):
             return cfg.rating_joiner.join(str_list)
         else:
             return str_list
