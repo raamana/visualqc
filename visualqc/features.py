@@ -80,3 +80,7 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
             feature_paths[sid] = feat_file
 
     return feature_paths
+
+
+def functional_mri_features():
+    """Extractor from functional MRI scan"""
