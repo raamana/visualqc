@@ -23,7 +23,7 @@ from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import check_id_list, check_input_dir_T1, check_views, \
     check_finite_int, check_out_dir, check_outlier_params, get_path_for_subject, \
     read_image, scale_0to1, pick_slices, get_axis, get_ratings_path_info
-from visualqc.workflows import BaseWorkflow
+from visualqc.workflows import BaseWorkflowVisualQC
 
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
@@ -228,7 +228,7 @@ class T1MriInterface(BaseReviewInterface):
                 pass
 
 
-class RatingWorkflowT1(BaseWorkflow, ABC):
+class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
     """
     Rating workflow without any overlay.
     """

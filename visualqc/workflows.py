@@ -14,7 +14,7 @@ from visualqc import config as cfg
 from visualqc.utils import load_ratings_csv, get_ratings_path_info
 
 
-class BaseWorkflow(ABC):
+class BaseWorkflowVisualQC(ABC):
     """
     Class defining the base workflow for visualqc.
     """
