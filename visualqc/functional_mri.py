@@ -27,6 +27,7 @@ from visualqc.utils import check_id_list, check_input_dir_T1, check_views, \
     read_image, scale_0to1, pick_slices, get_axis, get_ratings_path_info, load_ratings_csv
 from visualqc.workflows import BaseWorkflowVisualQC
 from visualqc.readers import traverse_bids
+from visualqc.image_utils import mask_image
 
 _unbidsify = lambda string : '\n'.join([ s.replace('-',' ') for s in string.split('_') ])
 
@@ -263,3 +264,26 @@ def stdev_bold(func_img):
     # TODO checks for sufficient number of time points before computing SD
 
     return np.std(func_img, axis=3)
+
+
+def compute_DVARS(func_img, mask=None, apply_mask=False):
+    """Computes the DVARS for a given fMRI image."""
+
+    mean_img = np.mean(func_img, axis=3)
+
+    if apply_mask:
+        if mask is None:
+            mask = mask_image(mean_img)
+        mean_img[np.logical_not(mask)] = 0.0
+
+    num_time_points = func_img.shape[3]
+
+    RMS_diff = lambda img2, img1 : np.sqrt(np.mean(np.square(img2-img1)))
+    DVARS_1_to_N = [ RMS_diff(func_img[:,:,:,t], func_img[:,:,:,t-1]) for t in range(1, num_time_points)]
+
+    DVARS = np.nan(num_time_points)
+    # dvars value at time point 0 is set to 0
+    DVARS[0] = 0.0
+    DVARS[1:] = DVARS_1_to_N
+
+    return DVARS
