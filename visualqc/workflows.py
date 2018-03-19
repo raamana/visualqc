@@ -143,7 +143,7 @@ class BaseWorkflowVisualQC(ABC):
 
             print('\nReviewing {}'.format(unit_id))
             self.current_unit_id = unit_id
-            self.UI.add_annot(unit_id)
+            self.identify_unit(unit_id)
             self.add_alerts()
 
             unit_data, skip_subject = self.load_unit(unit_id)
@@ -159,6 +159,19 @@ class BaseWorkflowVisualQC(ABC):
             if self.quit_now:
                 print('\nUser chosen to quit..')
                 break
+
+    def identify_unit(self, unit_id):
+        """
+        Method to inform the user which unit (subject or scan) they are reviewing.
+
+        Deafult location is to the top right.
+
+        This can be overridden by the child class for fancier presentation.
+
+        """
+
+        self.UI.add_annot(unit_id)
+
 
     def show_fig_and_wait(self):
         """Show figure and let interaction happen"""
