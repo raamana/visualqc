@@ -158,7 +158,9 @@ func_mri_default_rating_list_shortform = abbreviation_func_mri_default_issue_lis
 func_outlier_features = None
 
 func_mri_BIDS_filters = dict(modalities='func', types='bold')
-
+# usually done in analyses to try keep the numbers in numerical calculations away from small values
+# not important here, just for display, doing it anyways.
+scale_factor_BOLD = 1000
 ## ----------------------------------------------------------------------------
 
 features_outlier_detection = freesurfer_features_outlier_detection + t1_mri_features_OLD

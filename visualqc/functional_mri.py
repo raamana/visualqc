@@ -222,11 +222,13 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def display_unit(self, func_img):
         """Adds slice collage to the given axes"""
 
+        # TODO should we perform head motion correction before any display at all?
+        # This is what we are trying to visually review !!! why hide/mask it????
         sd_img = stdev_bold(func_img)
 
         # crop and rescale
         sd_img = crop_image(sd_img, self.padding)
-        sd_img = scale_0to1(sd_img)
+        sd_img = scale_0to1(sd_img)*cfg.scale_factor_BOLD
 
         # adding slices
         slices = pick_slices(sd_img, self.views, self.num_slices_per_view)
@@ -248,7 +250,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                         str_list, **cfg.annot_text_props)
 
     def cleanup(self):
-        """Preparating for exit."""
+        """Preparing for exit."""
 
         # save ratings before exiting
         self.save_ratings()
