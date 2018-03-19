@@ -196,3 +196,80 @@ def gather_data(path_list, id_list):
     features = np.vstack([ np.genfromtxt(path_list[sid]) for sid in id_list])
 
     return features
+
+
+def traverse_bids(bids_layout, modalities='func', types='bold',
+             subjects=None, sessions=None, runs=None,
+             tasks=None, events=None, extensions=('nii', 'nii.gz'),
+             **kwargs):
+    """
+    Dataset traverser.
+
+    Args:
+        subjects: list of subjects
+        sessions: list of sessions
+        runs: list of runs
+        ...
+        kwargs : values for the particular type chosen.
+
+    Returns:
+        tuple of existing combinations
+            first item: list of type names identifying the file
+            second item: path to the file identified by the above types.
+
+    """
+
+    meta_types = {'modality'  : modalities,
+                  'type'      : types,
+                  'extensions': extensions,
+                  'subjects'  : subjects,
+                  'sessions'  : sessions,
+                  'runs'      : runs,
+                  'tasks'     : tasks,
+                  'events'    : events}
+    meta_types.update(kwargs)
+    non_empty_types = {type_: values for type_, values in meta_types.items() if values}
+
+    __FIELDS_TO_IGNORE__ = ('filename', 'modality', 'type')
+    __TYPES__ = ['subjects', 'sessions', 'tasks', 'runs', 'events']
+
+    results = bids_layout.get(**non_empty_types)
+    if len(results) < 1:
+        print('No results found!')
+        return None, None
+
+    common_field_set = _unique_in_order(results[0]._fields)
+    if len(results) > 1:
+        for res in results[1:]:
+            _field_set = _unique_in_order(res._fields)
+            common_field_set = [ff for ff in common_field_set if ff in _field_set]
+
+    final_fields = [ unit for unit in common_field_set if unit not in __FIELDS_TO_IGNORE__ ]
+    # TODO final_fields can still have duplicates like: ( 'acquisition', 'acq'); handle it.
+
+    if len(final_fields) < 1:
+        return None, None
+
+    # print('Dataset will be traversed for different values of:\n {}'.format(final_fields))
+    unit_paths = [[[file.__getattribute__(unit) for unit in final_fields], file.filename] for file in results]
+
+    return final_fields, unit_paths
+
+
+def _unique_in_order(seq):
+    """
+    Utility to preserver order while making a set of unique elements.
+
+    Copied from Markus Jarderot's answer at
+     https://stackoverflow.com/questions/480214/how-do-you-remove-duplicates-from-a-list-in-whilst-preserving-order
+
+    Args:
+        seq : sequence
+    Returns:
+        unique_list : list
+            List of unique elements in their original order
+
+    """
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
