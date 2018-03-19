@@ -119,6 +119,7 @@ class BaseWorkflowVisualQC(ABC):
             copyfile(ratings_file, prev_ratings_backup)
 
         # add column names: subject_id,issue1:issue2:issue3,...,notes etc
+        # TODO add path(s) to data (images etc) that produced the review
         lines = '\n'.join(['{},{},{}'.format(sid, self._join_ratings(rating_set), self.notes[sid]) for sid, rating_set in self.ratings.items()])
         try:
             with open(ratings_file, 'w') as cf:
