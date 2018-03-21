@@ -32,7 +32,7 @@ def gradient_magnitude(mri):
     return grad_magnitude
 
 
-def mask_image(input_img, init_percentile=2):
+def mask_image(input_img, update_factor=0.5, init_percentile=2):
     """
     Estimates the foreground mask for a given image.
 
@@ -42,7 +42,8 @@ def mask_image(input_img, init_percentile=2):
     prev_clip_level = np.percentile(input_img, init_percentile)
     while True:
         mask_img = input_img >= prev_clip_level
-        cur_clip_level = 0.5*np.median(input_img[mask_img])
+        cur_clip_level = update_factor*np.median(input_img[mask_img])
+        print((cur_clip_level, prev_clip_level))
         if np.isclose(cur_clip_level, prev_clip_level, rtol=0.05):
             break
         else:
