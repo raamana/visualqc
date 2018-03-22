@@ -94,8 +94,8 @@ position_next_button = [0.905, 0.13, 0.07, 0.04]
 position_quit_button = [0.905, 0.07, 0.07, 0.04]
 position_navig_options = [0.905, 0.21, 0.07, 0.12]
 
-review_area = dict(left=0.01, right=0.9,
-                   bottom=0.01, top=0.99,
+review_area = dict(left  =0.08, right=0.88,
+                   bottom=0.06, top=0.98,
                    wspace=0.05, hspace=0.02)
 no_blank_area = dict(left=0.01, right=0.99,
                      bottom=0.01, top=0.99,
@@ -119,10 +119,10 @@ line_break = [np.NaN, np.NaN]
 
 t1_mri_pass_indicator = 'Pass' # TODO Tired and Review Later must also be handled separately??
 t1_mri_default_issue_list = (t1_mri_pass_indicator, 'Motion', 'Ringing', 'Ghosting',
-                             'Contrast', 'blurrY', 'Bright', 'Dark', 'Orientation/FOV',
+                             'Contrast', 'blurrY', 'Bright', 'Dark', 'Orient/FOV',
                              'Weird', 'Other', "i'm Tired", 'reView later')
 abbreviation_t1_mri_default_issue_list = {'p': t1_mri_pass_indicator, 'm': 'Motion', 'r': 'Ringing', 'g': 'Ghosting',
-                                          'c': 'Contrast', 'y': 'blurrY', 'b': 'Bright', 'd': 'Dark', 'o' : 'Orientation/FOV',
+                                          'c': 'Contrast', 'y': 'blurrY', 'b': 'Bright', 'd': 'Dark', 'o' : 'Orient/FOV',
                                           'w': 'Weird', 's': 'Something else', 't': "i'm Tired", 'v': 'reView later'}
 
 t1_mri_default_rating_list_shortform = abbreviation_t1_mri_default_issue_list.keys()
@@ -147,10 +147,10 @@ color_histogram_t1_mri = ('#c9ae74') #sandstone
 
 func_mri_pass_indicator = 'Pass' # TODO Tired and Review Later must also be handled separately??
 func_mri_default_issue_list = (func_mri_pass_indicator, 'Motion', 'Ringing', 'Ghosting',
-                               'Orientation/FOV', 'Weird', 'Other', "i'm Tired", 'reView later')
+                               'Orient/FOV', 'Weird', 'Other', "i'm Tired", 'reView later')
 
 abbreviation_func_mri_default_issue_list = {'p': func_mri_pass_indicator, 'm': 'Motion', 'r': 'Ringing',
-                                            'g': 'Ghosting', 'o' : 'Orientation/FOV', 'w': 'Weird',
+                                            'g': 'Ghosting', 'o' : 'Orient/FOV', 'w': 'Weird',
                                             's': 'Something else', 't': "i'm Tired", 'v': 'reView later'}
 
 func_mri_default_rating_list_shortform = abbreviation_func_mri_default_issue_list.keys()
@@ -161,6 +161,10 @@ func_mri_BIDS_filters = dict(modalities='func', types='bold')
 # usually done in analyses to try keep the numbers in numerical calculations away from small values
 # not important here, just for display, doing it anyways.
 scale_factor_BOLD = 1000
+
+alpha_stats_overlay = 0.5
+linewidth_stats_fmri = 3
+linestyle_stats_fmri = '-'
 ## ----------------------------------------------------------------------------
 
 features_outlier_detection = freesurfer_features_outlier_detection + t1_mri_features_OLD
