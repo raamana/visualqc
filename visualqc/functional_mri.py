@@ -30,9 +30,98 @@ from visualqc.readers import traverse_bids
 from visualqc.image_utils import mask_image
 
 _unbidsify = lambda string : '\n'.join([ s.replace('-',' ') for s in string.split('_') ])
+_z_score = lambda x: (x - np.mean(x)) / np.std(x)
 
 class FunctionalMRIInterface(T1MriInterface):
     """Interface for the review of fMRI images."""
+
+    def __init__(self,
+                 fig,
+                 axes,
+                 issue_list=cfg.func_mri_default_issue_list,
+                 next_button_callback=None,
+                 quit_button_callback=None,
+                 zoom_in_callback=None,
+                 right_click_callback=None,
+                 total_num_layers=2):
+        """Constructor"""
+
+        super().__init__(fig, axes, issue_list, next_button_callback, quit_button_callback)
+        self.issue_list = issue_list
+
+        self.prev_axis = None
+        self.prev_ax_pos = None
+        self.prev_ax_zorder = None
+        self.prev_visible = False
+        self.zoomed_in = False
+        self.total_num_layers = total_num_layers
+
+        self.next_button_callback = next_button_callback
+        self.quit_button_callback = quit_button_callback
+        self.zoom_in_callback = zoom_in_callback
+        self.right_click_callback = right_click_callback
+
+        super().add_checkboxes()
+
+        # this list of artists to be populated later
+        # makes to handy to clean them all
+        self.data_handles = list()
+
+    def on_mouse(self, event):
+        """Callback for mouse events."""
+
+        if self.prev_axis is not None:
+            # include all the non-data axes here (so they wont be zoomed-in)
+            if event.inaxes not in [self.checkbox.ax, self.text_box.ax,
+                                    self.bt_next.ax, self.bt_quit.ax]:
+                self.prev_axis.set_position(self.prev_ax_pos)
+                self.prev_axis.set_zorder(self.prev_ax_zorder)
+                self.prev_axis.set_visible(self.prev_visible)
+                self.prev_axis.patch.set_alpha(0.5)
+                self.zoomed_in = False
+
+        # right click ignored
+        if event.button in [3]:
+            self.right_click_callback()
+        # double click to zoom in to any axis
+        elif event.dblclick and event.inaxes is not None and \
+            event.inaxes not in [self.checkbox.ax, self.text_box.ax,
+                                 self.bt_next.ax, self.bt_quit.ax]:
+            # zoom axes full-screen
+            self.prev_ax_pos = event.inaxes.get_position()
+            self.prev_ax_zorder = event.inaxes.get_zorder()
+            self.prev_visible = event.inaxes.get_visible()
+            event.inaxes.set_position(cfg.zoomed_position)
+            event.inaxes.set_zorder(self.total_num_layers) # bring forth
+            # event.inaxes.set_facecolor('black') # black
+            event.inaxes.patch.set_alpha(1.0)  # opaque
+            self.zoomed_in = True
+            self.prev_axis = event.inaxes
+
+        else:
+            pass
+
+        plt.draw()
+
+    def on_keyboard(self, key_in):
+        """Callback to handle keyboard shortcuts to rate and advance."""
+
+        # ignore keyboard key_in when mouse within Notes textbox
+        if key_in.inaxes == self.text_box.ax or key_in.key is None:
+            return
+
+        key_pressed = key_in.key.lower()
+        # print(key_pressed)
+        if key_pressed in ['right', ' ', 'space']:
+            self.next_button_callback()
+        if key_pressed in ['ctrl+q', 'q+ctrl']:
+            self.quit_button_callback()
+        else:
+            if key_pressed in cfg.func_mri_default_rating_list_shortform:
+                checked_label = cfg.abbreviation_func_mri_default_issue_list[key_pressed]
+                self.checkbox.set_active(cfg.func_mri_default_issue_list.index(checked_label))
+            else:
+                pass
 
 class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     """
@@ -213,7 +302,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def add_UI(self):
         """Adds the review UI with defaults"""
 
-        self.UI = FunctionalMRIInterface(self.fig, self.axes, self.issue_list, self.next, self.quit)
+        self.UI = FunctionalMRIInterface(self.fig, self.ax_carpet,
+                                         self.issue_list, self.next, self.quit)
 
         # connecting callbacks
         self.con_id_click = self.fig.canvas.mpl_connect('button_press_event', self.UI.on_mouse)
