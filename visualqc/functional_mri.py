@@ -446,7 +446,7 @@ def compute_DVARS(func_img, mean_img=None, mask=None, apply_mask=False):
     RMS_diff = lambda img2, img1 : np.sqrt(np.mean(np.square(img2-img1)))
     DVARS_1_to_N = [ RMS_diff(func_img[:,:,:,t], func_img[:,:,:,t-1]) for t in range(1, num_time_points)]
 
-    DVARS = np.nan(num_time_points)
+    DVARS = np.full(num_time_points, np.nan)
     # dvars value at time point 0 is set to 0
     DVARS[0] = 0.0
     DVARS[1:] = DVARS_1_to_N
