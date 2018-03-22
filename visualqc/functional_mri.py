@@ -235,9 +235,9 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         time_points = list(range(200))
 
         # overlay order -- larger appears on top of smaller
-        self.layer_order_carpet   = 0
-        self.layer_order_stats    = 1
-        self.layer_order_zoomedin = 2
+        self.layer_order_carpet   = 1
+        self.layer_order_stats    = 2
+        self.layer_order_zoomedin = 3
 
         plt.style.use('dark_background')
 
@@ -396,6 +396,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # updating axes limits
         [(a.relim(), a.autoscale_view()) for a in list(self.stats_axes)+[self.ax_carpet, ]]
 
+        self.refresh_layer_order()
 
     def show_timepoint(self, time_pt):
         """Exhibits a selected timepoint on top of stats/carpet"""
@@ -405,6 +406,13 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         for ax_index, (dim_index, slice_index) in enumerate(slices):
             slice_data = get_axis(image3d, dim_index, slice_index)
             self.images_fg[ax_index].set_data(slice_data)
+
+    def refresh_layer_order(self):
+        """Ensures the expected order for layers"""
+
+        for a in self.stats_axes:
+            a.set_zorder(self.layer_order_stats)
+        self.ax_carpet.set_zorder(self.layer_order_carpet)
 
 
     def identify_unit(self, unit_id, counter):
