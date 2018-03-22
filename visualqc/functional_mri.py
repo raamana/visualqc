@@ -136,21 +136,75 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def open_figure(self):
         """Creates the master figure to show everything in."""
 
+        # number of stats to be overlaid on top of carpet plot
+        self.num_stats = 3
         self.figsize = cfg.default_review_figsize
-        plt.style.use('dark_background')
-        self.fig, self.axes = plt.subplots(self.num_rows, self.num_cols, figsize=self.figsize)
-        self.axes = self.axes.flatten()
 
-        # vmin/vmax are controlled, because we rescale all to [0, 1]
-        self.display_params = dict(interpolation='none', aspect='equal',
+        # empty/dummy data for placeholding
+        empty_image = np.full((200,200), 0.0)
+        empty_vec = np.full((200, 1), 0.0)
+        time_points = list(range(200))
+
+        # overlay order -- larger appears on top of smaller
+        self.layer_order_carpet   = 0
+        self.layer_order_stats    = 1
+        self.layer_order_zoomedin = 2
+
+        plt.style.use('dark_background')
+
+        # 1. main carpet, in the background
+        self.fig, self.ax_carpet = plt.subplots(1, 1, figsize=self.figsize)
+        self.ax_carpet.set_zorder(self.layer_order_carpet)
+        #   vmin/vmax are controlled, because we rescale all to [0, 1]
+        self.imshow_params_carpet = dict(interpolation='none', aspect='auto',
                               origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
 
-        # turning off axes, creating image objects
-        self.images = [None] * len(self.axes)
-        empty_image = np.full((10,10), 0.0)
-        for ix, ax in enumerate(self.axes):
+        self.ax_carpet.yaxis.set_visible(False)
+        self.ax_carpet.set_xlabel('time point')
+        self.carpet_handle = self.ax_carpet.imshow(empty_image, **self.imshow_params_carpet)
+        self.ax_carpet.set_frame_on(False)
+
+        # 2. temporal traces of image stats
+        tmp_mat = self.fig.subplots(self.num_stats, 1, sharex=True)
+        self.stats_axes = tmp_mat.flatten()
+        self.stats_handles = [None] * len(self.stats_axes)
+
+        stats = [(empty_vec, 'mean BOLD', 'cyan'),
+                 (empty_vec, 'SD BOLD'  , 'xkcd:orange red'),
+                 (empty_vec, 'DVARS'    , 'xkcd:pine green')]
+        for ix, (ax, (stat, label, color)) in enumerate(zip(self.stats_axes, stats)):
+            (vh, ) = ax.plot(time_points, stat, color=color)
+            self.stats_handles[ix] = vh
+            vh.set_linewidth(cfg.linewidth_stats_fmri)
+            vh.set_linestyle(cfg.linestyle_stats_fmri)
+            ax.xaxis.set_visible(False)
+            ax.set_frame_on(False)
+            ax.spines['left'].set_color(color)
+            ax.set_ylabel(label, color=color)
+            ax.set_zorder(self.layer_order_stats)
+            ax.set_alpha(cfg.alpha_stats_overlay)
+            ax.tick_params(color=color, labelcolor=color)
+            ax.spines['left'].set_position(('outward', 1))
+
+        # sharing the time point axis
+        self.stats_axes[0].get_shared_x_axes().join(self.ax_carpet, self.stats_axes[0])
+        self.stats_axes[0].autoscale()
+
+        # 3. axes to show slices in foreground when a time point is selected
+        matrix_handles = self.fig.subplots(self.num_rows, self.num_cols)
+        self.fg_axes = matrix_handles.flatten()
+
+        # vmin/vmax are controlled, because we rescale all to [0, 1]
+        self.imshow_params_zoomed = dict(interpolation='none', aspect='equal',
+                              origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
+
+        # images to be shown in the forground
+        self.images_fg = [None] * len(self.fg_axes)
+        for ix, ax in enumerate(self.fg_axes):
             ax.axis('off')
-            self.images[ix] = ax.imshow(empty_image, **self.display_params)
+            self.images_fg[ix] = ax.imshow(empty_image, **self.imshow_params_zoomed)
+            ax.set_visible(False)
+            ax.set_zorder(self.layer_order_zoomedin)
 
         # leaving some space on the right for review elements
         plt.subplots_adjust(**cfg.review_area)
