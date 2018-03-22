@@ -48,7 +48,13 @@ def mask_image(input_img, update_factor=0.5, init_percentile=2):
         else:
             prev_clip_level = cur_clip_level
 
-    se36 = ndimage.generate_binary_structure(3, 6)
-    mask_img = ndimage.binary_closing(mask_img, se36, iterations=3)
+    if len(input_img.shape)==3:
+        se = ndimage.generate_binary_structure(3, 6)
+    elif len(input_img.shape)==2:
+        se = ndimage.generate_binary_structure(2, 4)
+    else:
+        raise ValueError('Image must be 2D or 3D')
+
+    mask_img = ndimage.binary_closing(mask_img, se, iterations=3)
 
     return mask_img
