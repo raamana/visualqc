@@ -277,12 +277,25 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Adds slice collage to the given axes"""
 
         # TODO should we perform head motion correction before any display at all?
-        # This is what we are trying to visually review !!! why hide/mask it????
-        sd_img = stdev_bold(func_img)
+
+        mean_img_temporal, stdev_img_temporal = temporal_stats(func_img)
+        mean_signal_spatial, stdev_signal_spatial = spatial_stats(func_img)
+        dvars = compute_DVARS(func_img)
+
+        mask = mask_image(mean_img_temporal, update_factor=0.9, init_percentile=5)
+        masked_func_img = np.full_like(func_img, 0.0)
+        masked_func_img[mask] = func_img[mask]
 
         # crop and rescale
-        sd_img = crop_image(sd_img, self.padding)
-        sd_img = scale_0to1(sd_img)*cfg.scale_factor_BOLD
+        stdev_img_temporal = crop_image(stdev_img_temporal, self.padding)
+        stdev_img_temporal = scale_0to1(stdev_img_temporal)*cfg.scale_factor_BOLD
+
+        num_voxels = np.prod(func_img.shape[0:3])
+        num_time_points = func_img.shape[3]
+        time_points = list(range(num_time_points))
+
+        #
+        carpet = make_carpet(func_img, mask)
 
         # adding slices
         slices = pick_slices(sd_img, self.views, self.num_slices_per_view)
@@ -314,18 +327,11 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.close('all')
 
 
-def stdev_bold(func_img):
-    """Computes the SD over time."""
-
-    # TODO checks for sufficient number of time points before computing SD
-
-    return np.std(func_img, axis=3)
-
-
-def compute_DVARS(func_img, mask=None, apply_mask=False):
+def compute_DVARS(func_img, mean_img=None, mask=None, apply_mask=False):
     """Computes the DVARS for a given fMRI image."""
 
-    mean_img = np.mean(func_img, axis=3)
+    if mean_img is None:
+        mean_img = np.mean(func_img, axis=3)
 
     if apply_mask:
         if mask is None:
