@@ -252,6 +252,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.ax_carpet.set_xlabel('time point')
         self.carpet_handle = self.ax_carpet.imshow(empty_image, **self.imshow_params_carpet)
         self.ax_carpet.set_frame_on(False)
+        self.ax_carpet.set_ylim(auto=True)
 
         # 2. temporal traces of image stats
         tmp_mat = self.fig.subplots(self.num_stats, 1, sharex=True)
@@ -276,7 +277,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             ax.spines['left'].set_position(('outward', 1))
 
         # sharing the time point axis
-        self.stats_axes[0].get_shared_x_axes().join(self.ax_carpet, self.stats_axes[0])
+        self.stats_axes[0].get_shared_x_axes().join(self.ax_carpet.xaxis, self.stats_axes[0].xaxis)
         self.stats_axes[0].autoscale()
 
         # 3. axes to show slices in foreground when a time point is selected
@@ -396,6 +397,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # updating axes limits
         [(a.relim(), a.autoscale_view()) for a in list(self.stats_axes)+[self.ax_carpet, ]]
 
+        # 3. updating axes limits and views
+        self.update_axes_limits(num_time_points, carpet.shape[0])
         self.refresh_layer_order()
 
     def show_timepoint(self, time_pt):
@@ -407,6 +410,15 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             slice_data = get_axis(image3d, dim_index, slice_index)
             self.images_fg[ax_index].set_data(slice_data)
 
+    def update_axes_limits(self, num_time_points, num_voxels_shown):
+        """Synchronizes the x-axis limits and updates the carpet image extents"""
+
+        for a in list(self.stats_axes)+[self.ax_carpet, ]:
+            a.set_xlim(-0.5, num_time_points-0.5)
+            a.set_ylim(auto=True)
+            a.relim()
+            a.autoscale_view()
+        self.carpet_handle.set_extent((-0.5, num_time_points-0.5, -0.5, num_voxels_shown-0.5))
     def refresh_layer_order(self):
         """Ensures the expected order for layers"""
 
