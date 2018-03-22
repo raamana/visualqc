@@ -56,7 +56,7 @@ default_num_slices = 12
 default_num_rows = 2
 default_padding = 5  # pixels/voxels
 
-default_review_figsize = [15, 10]
+default_review_figsize = [13, 9]
 
 default_navigation_options = ("Next", "Quit")
 # shortcuts L, F, S have actions on matplotlib interface, so choosing other words
@@ -163,7 +163,7 @@ func_mri_BIDS_filters = dict(modalities='func', types='bold')
 scale_factor_BOLD = 1000
 
 alpha_stats_overlay = 0.5
-linewidth_stats_fmri = 3
+linewidth_stats_fmri = 2
 linestyle_stats_fmri = '-'
 ## ----------------------------------------------------------------------------
 

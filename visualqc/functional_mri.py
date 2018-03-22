@@ -261,7 +261,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         stats = [(empty_vec, 'mean BOLD', 'cyan'),
                  (empty_vec, 'SD BOLD'  , 'xkcd:orange red'),
-                 (empty_vec, 'DVARS'    , 'xkcd:pine green')]
+                 (empty_vec, 'DVARS'    , 'xkcd:mustard')]
         for ix, (ax, (stat, label, color)) in enumerate(zip(self.stats_axes, stats)):
             (vh, ) = ax.plot(time_points, stat, color=color)
             self.stats_handles[ix] = vh
