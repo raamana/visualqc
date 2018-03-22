@@ -270,6 +270,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             ax.xaxis.set_visible(False)
             ax.set_frame_on(False)
             ax.spines['left'].set_color(color)
+            ax.set_ylim(auto=True)
             ax.set_ylabel(label, color=color)
             ax.set_zorder(self.layer_order_stats)
             ax.set_alpha(cfg.alpha_stats_overlay)
@@ -367,19 +368,10 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def display_unit(self, func_img):
         """Adds slice collage to the given axes"""
 
+        # to help with any callbacks who do not get image data as an argument.
+        self.current_func_img = func_img
+
         # TODO should we perform head motion correction before any display at all?
-
-        mean_img_temporal, stdev_img_temporal = temporal_stats(func_img)
-        mean_signal_spatial, stdev_signal_spatial = spatial_stats(func_img)
-        dvars = compute_DVARS(func_img)
-
-        mask = mask_image(mean_img_temporal, update_factor=0.9, init_percentile=5)
-        masked_func_img = np.full_like(func_img, 0.0)
-        masked_func_img[mask] = func_img[mask]
-
-        # crop and rescale
-        stdev_img_temporal = crop_image(stdev_img_temporal, self.padding)
-        stdev_img_temporal = scale_0to1(stdev_img_temporal)*cfg.scale_factor_BOLD
 
         num_voxels = np.prod(func_img.shape[0:3])
         num_time_points = func_img.shape[3]
@@ -387,26 +379,30 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # 1. compute necessary stats/composites
         carpet, mean_signal_spatial, stdev_signal_spatial, dvars = self.compute_stats()
-        #
-        carpet = make_carpet(func_img, mask)
-        self.carpet_handle.set_data(carpet)
 
-        # overlay stats on top
+        # 2. display/update the data
+        self.carpet_handle.set_data(carpet)
         self.stats_handles[0].set_data(time_points, mean_signal_spatial)
         self.stats_handles[1].set_data(time_points, stdev_signal_spatial)
         # not displaying DVARS for t=0, as its always 0
         self.stats_handles[2].set_data(time_points[1:], dvars[1:])
-        # updating axes limits
-        [(a.relim(), a.autoscale_view()) for a in list(self.stats_axes)+[self.ax_carpet, ]]
 
         # 3. updating axes limits and views
         self.update_axes_limits(num_time_points, carpet.shape[0])
         self.refresh_layer_order()
 
-    def show_timepoint(self, time_pt):
+        # clean up
+        del func_img, carpet, mean_signal_spatial, stdev_signal_spatial, dvars
+
+        print()
+
+
+    def show_timepoint(self, func_img, time_pt):
         """Exhibits a selected timepoint on top of stats/carpet"""
 
         image3d = np.squeeze(self.current_func_img[:,:,:,time_pt])
+        image3d = crop_image(image3d, self.padding)
+        image3d = scale_0to1(image3d)
         slices = pick_slices(image3d, self.views, self.num_slices_per_view)
         for ax_index, (dim_index, slice_index) in enumerate(slices):
             slice_data = get_axis(image3d, dim_index, slice_index)
