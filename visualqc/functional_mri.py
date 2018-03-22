@@ -296,6 +296,15 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         #
         carpet = make_carpet(func_img, mask)
+        self.carpet_handle.set_data(carpet)
+
+        # overlay stats on top
+        self.stats_handles[0].set_data(time_points, mean_signal_spatial)
+        self.stats_handles[1].set_data(time_points, stdev_signal_spatial)
+        # not displaying DVARS for t=0, as its always 0
+        self.stats_handles[2].set_data(time_points[1:], dvars[1:])
+        # updating axes limits
+        [(a.relim(), a.autoscale_view()) for a in list(self.stats_axes)+[self.ax_carpet, ]]
 
         # adding slices
         slices = pick_slices(sd_img, self.views, self.num_slices_per_view)
