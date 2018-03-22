@@ -19,12 +19,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import CheckButtons
 from mrivis.utils import crop_image
-
+import nibabel as nib
 from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
-from visualqc.utils import check_id_list, check_input_dir_T1, check_views, \
-    check_finite_int, check_out_dir, check_outlier_params, get_path_for_subject, \
-    read_image, scale_0to1, pick_slices, get_axis, get_ratings_path_info, load_ratings_csv
+from visualqc.utils import check_image_is_4d,  scale_0to1, pick_slices, get_axis
 from visualqc.workflows import BaseWorkflowVisualQC
 from visualqc.readers import traverse_bids
 from visualqc.image_utils import mask_image
@@ -132,6 +130,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def __init__(self,
                  in_dir,
                  out_dir,
+                 drop_start=1,
+                 drop_end=None,
                  id_list=None,
                  issue_list=cfg.func_mri_default_issue_list,
                  in_dir_type='BIDS',
@@ -152,6 +152,9 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         in_dir : path
             must be a path to BIDS directory
 
+        drop_start : int
+            Number of frames to drop at the beginning of the time series.
+
 
         """
 
@@ -161,6 +164,14 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         super().__init__(id_list, in_dir, out_dir,
                          outlier_method, outlier_fraction,
                          outlier_feat_types, disable_outlier_detection)
+
+        # proper checks
+        self.drop_start = drop_start
+        self.drop_end = drop_end
+        if self.drop_start is None:
+            self.drop_start = 0
+        if self.drop_end is None:
+            self.drop_end = 0
 
         self.vis_type = vis_type
         self.issue_list = issue_list
@@ -353,7 +364,18 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Loads the image data for display."""
 
         img_path = self.unit_by_id[unit_id]
-        func_img = read_image(img_path, num_dims=4, error_msg='functional mri')
+        try:
+            hdr = nib.load(img_path)
+            hdr = nib.as_closest_canonical(hdr)
+            func_img_raw = hdr.get_data()
+        except:
+            raise IOError('Unable to read image at \n\t{}'.format(img_path))
+
+        check_image_is_4d(func_img_raw)
+        self.TR_current_scan = hdr.header.get_zooms()[-1]
+
+        # if frames are to be dropped
+        func_img = func_img_raw[:, :, :, self.drop_start:func_img_raw.shape[3] - self.drop_end]
 
         skip_subject = False
         if np.count_nonzero(func_img)==0:
