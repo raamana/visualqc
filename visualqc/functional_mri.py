@@ -385,6 +385,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         num_time_points = func_img.shape[3]
         time_points = list(range(num_time_points))
 
+        # 1. compute necessary stats/composites
+        carpet, mean_signal_spatial, stdev_signal_spatial, dvars = self.compute_stats()
         #
         carpet = make_carpet(func_img, mask)
         self.carpet_handle.set_data(carpet)
@@ -410,6 +412,23 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             slice_data = get_axis(image3d, dim_index, slice_index)
             self.images_fg[ax_index].set_data(slice_data)
 
+    def compute_stats(self):
+        """Computes the necessary stats to be displayed."""
+
+        mean_img_temporal, stdev_img_temporal = temporal_stats(self.current_func_img)
+        mean_signal_spatial, stdev_signal_spatial = spatial_stats(self.current_func_img)
+        dvars = compute_DVARS(self.current_func_img)
+        for stat, sname in zip((mean_signal_spatial, stdev_signal_spatial, dvars),
+                               ('mean_signal_spatial', 'stdev_signal_spatial', 'dvars')):
+            if len(stat) != self.current_func_img.shape[3]:
+                raise ValueError('ERROR: lengths of different stats do not match!')
+            if any(np.isnan(stat)):
+                raise ValueError('ERROR: invalid values in stat : {}'.format(sname))
+        mask = mask_image(mean_img_temporal, update_factor=0.9, init_percentile=5)
+        carpet = make_carpet(self.current_func_img, mask)
+
+        return carpet, mean_signal_spatial, stdev_signal_spatial, dvars
+
     def update_axes_limits(self, num_time_points, num_voxels_shown):
         """Synchronizes the x-axis limits and updates the carpet image extents"""
 
@@ -419,6 +438,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             a.relim()
             a.autoscale_view()
         self.carpet_handle.set_extent((-0.5, num_time_points-0.5, -0.5, num_voxels_shown-0.5))
+
     def refresh_layer_order(self):
         """Ensures the expected order for layers"""
 
@@ -520,7 +540,7 @@ def spatial_stats(func_img):
     """Computes volume-wise spatial average of functional data --> single vector over time."""
 
     num_time_points = func_img.shape[3]
-    mean_signal  = [ np.nanmean(func_img[:,:,:,t]) for t in range(num_time_points) ]
-    stdev_signal = [ np.nanstd( func_img[:,:,:,t]) for t in range(num_time_points) ]
+    mean_signal  = np.array([ np.nanmean(func_img[:,:,:,t]) for t in range(num_time_points) ])
+    stdev_signal = np.array([ np.nanstd( func_img[:,:,:,t]) for t in range(num_time_points) ])
 
     return mean_signal, stdev_signal
