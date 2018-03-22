@@ -349,3 +349,34 @@ def compute_DVARS(func_img, mean_img=None, mask=None, apply_mask=False):
     DVARS[1:] = DVARS_1_to_N
 
     return DVARS
+def make_carpet(func_img, mask, row_order=None):
+    """
+    Makes the carpet image
+
+
+    Parameters
+    ----------
+    func_img
+
+    Returns
+    -------
+
+    """
+
+    num_voxels = np.prod(func_img.shape[0:3])
+    num_time_points = func_img.shape[3]
+
+    carpet = np.reshape(func_img, (num_voxels, num_time_points))
+    # Removes voxels with low variance
+    cropped_carpet = np.delete(carpet, np.where(mask.flatten() == 0), axis=0)
+
+    min_colwise = cropped_carpet.min(axis=0)
+    range_colwise = cropped_carpet.ptp(axis=0) # ptp : peak to peak, max-min
+    normed_carpet = (cropped_carpet - min_colwise)/range_colwise
+
+    del carpet, cropped_carpet
+
+    # TODO blurring within tissue segmentations and other deeper subcortical areas
+
+    return normed_carpet
+
