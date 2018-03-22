@@ -43,7 +43,6 @@ def mask_image(input_img, update_factor=0.5, init_percentile=2):
     while True:
         mask_img = input_img >= prev_clip_level
         cur_clip_level = update_factor*np.median(input_img[mask_img])
-        print((cur_clip_level, prev_clip_level))
         if np.isclose(cur_clip_level, prev_clip_level, rtol=0.05):
             break
         else:

@@ -43,7 +43,6 @@ class T1MriInterface(BaseReviewInterface):
         super().__init__(fig, axes, next_button_callback, quit_button_callback)
 
         self.issue_list = issue_list
-        self.user_rated_issues = set()
 
         self.prev_axis = None
         self.prev_ax_pos = None
