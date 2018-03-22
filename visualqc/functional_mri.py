@@ -407,17 +407,18 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.images_fg[ax_index].set_data(slice_data)
 
 
-    def identify_unit(self, unit_id):
+    def identify_unit(self, unit_id, counter):
         """
         Method to inform the user which unit (subject or scan) they are reviewing.
         """
 
         str_list = _unbidsify(unit_id)
-        if len(str_list) < 1:
+        id_with_counter = '{}\n({}/{})'.format(str_list, counter + 1, self.num_units_to_review)
+        if len(id_with_counter) < 1:
             return
         self.UI.annot_text = self.fig.text(cfg.position_annot_text[0],
-                                        cfg.position_annot_text[1],
-                                        str_list, **cfg.annot_text_props)
+                                           cfg.position_annot_text[1],
+                                           id_with_counter, **cfg.annot_text_props)
 
     def cleanup(self):
         """Preparing for exit."""
@@ -452,6 +453,8 @@ def compute_DVARS(func_img, mean_img=None, mask=None, apply_mask=False):
     DVARS[1:] = DVARS_1_to_N
 
     return DVARS
+
+
 def make_carpet(func_img, mask, row_order=None):
     """
     Makes the carpet image

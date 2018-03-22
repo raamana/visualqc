@@ -57,6 +57,8 @@ class BaseWorkflowVisualQC(ABC):
         self.loop_through_units()
         self.cleanup()
 
+        print('Done.\nResults are available in:\n\t{}'.format(self.out_dir))
+
     @abstractmethod
     def preprocess(self):
         """
@@ -107,7 +109,8 @@ class BaseWorkflowVisualQC(ABC):
             print('No subjects to review/rate - exiting.')
             sys.exit(0)
         else:
-            print('To be reviewed : {}\n'.format(len(self.incomplete_list)))
+            self.num_units_to_review = len(self.incomplete_list)
+            print('To be reviewed : {}\n'.format(self.num_units_to_review))
 
     def save_ratings(self):
         """Saves ratings to disk """
@@ -140,11 +143,11 @@ class BaseWorkflowVisualQC(ABC):
     def loop_through_units(self):
         """Method to loop through the units (subject, session or run) to make it all work."""
 
-        for unit_id in self.incomplete_list:
+        for counter, unit_id in enumerate(self.incomplete_list):
 
             print('\nReviewing {}'.format(unit_id))
             self.current_unit_id = unit_id
-            self.identify_unit(unit_id)
+            self.identify_unit(unit_id, counter)
             self.add_alerts()
 
             unit_data, skip_subject = self.load_unit(unit_id)
@@ -161,7 +164,7 @@ class BaseWorkflowVisualQC(ABC):
                 print('\nUser chosen to quit..')
                 break
 
-    def identify_unit(self, unit_id):
+    def identify_unit(self, unit_id, counter):
         """
         Method to inform the user which unit (subject or scan) they are reviewing.
 
@@ -171,7 +174,7 @@ class BaseWorkflowVisualQC(ABC):
 
         """
 
-        self.UI.add_annot(unit_id)
+        self.UI.add_annot('{}\n({}/{})'.format(unit_id, counter+1, self.num_units_to_review))
 
 
     def show_fig_and_wait(self):
