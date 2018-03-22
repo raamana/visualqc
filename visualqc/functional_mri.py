@@ -380,3 +380,21 @@ def make_carpet(func_img, mask, row_order=None):
 
     return normed_carpet
 
+
+def temporal_stats(func_img):
+    """Computes voxel-wise temporal average of functional data --> single volume over space."""
+
+    mean_img = np.mean(func_img, axis=3)
+    sd_img = np.std(func_img, axis=3)
+
+    return mean_img, sd_img
+
+
+def spatial_stats(func_img):
+    """Computes volume-wise spatial average of functional data --> single vector over time."""
+
+    num_time_points = func_img.shape[3]
+    mean_signal  = [ np.nanmean(func_img[:,:,:,t]) for t in range(num_time_points) ]
+    stdev_signal = [ np.nanstd( func_img[:,:,:,t]) for t in range(num_time_points) ]
+
+    return mean_signal, stdev_signal
