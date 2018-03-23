@@ -165,6 +165,11 @@ scale_factor_BOLD = 1000
 alpha_stats_overlay = 0.5
 linewidth_stats_fmri = 2
 linestyle_stats_fmri = '-'
+
+default_views_fmri = (0, )
+default_num_slices_fmri = 30
+default_num_rows_fmri = 5
+
 ## ----------------------------------------------------------------------------
 
 features_outlier_detection = freesurfer_features_outlier_detection + t1_mri_features_OLD

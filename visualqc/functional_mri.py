@@ -167,9 +167,9 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  disable_outlier_detection=True,
                  prepare_first=False,
                  vis_type=None,
-                 views=cfg.default_views,
-                 num_slices_per_view=cfg.default_num_slices,
-                 num_rows_per_view=cfg.default_num_rows):
+                 views=cfg.default_views_fmri,
+                 num_slices_per_view=cfg.default_num_slices_fmri,
+                 num_rows_per_view=cfg.default_num_rows_fmri):
         """
         Constructor.
 
@@ -319,6 +319,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.stats_axes[0].autoscale()
 
         # 3. axes to show slices in foreground when a time point is selected
+        matrix_handles = self.fig.subplots(self.num_rows, self.num_cols, gridspec_kw=dict(wspace=0.0, hspace=0.0))
         matrix_handles = self.fig.subplots(self.num_rows, self.num_cols)
         self.fg_axes = matrix_handles.flatten()
 
