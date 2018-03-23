@@ -4,34 +4,29 @@ Module to define interface, workflow and CLI for the review of functional MRI da
 
 """
 
-
-from visualqc.t1_mri import T1MriInterface
-import argparse
-import sys
-import textwrap
-import warnings
-from os import makedirs
-from os.path import join as pjoin, exists as pexists, splitext, realpath, basename
-from shutil import copyfile
 from abc import ABC
-import matplotlib
+from os.path import join as pjoin, splitext, realpath, basename
+
+import nibabel as nib
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import CheckButtons
 from mrivis.utils import crop_image
-import nibabel as nib
-from visualqc import config as cfg
-from visualqc.interfaces import BaseReviewInterface
-from visualqc.utils import check_image_is_4d,  scale_0to1, pick_slices, get_axis
-from visualqc.workflows import BaseWorkflowVisualQC
-from visualqc.readers import traverse_bids
-from visualqc.image_utils import mask_image
 
-_unbidsify = lambda string : '\n'.join([ s.replace('-',' ') for s in string.split('_') ])
+from visualqc import config as cfg
+from visualqc.image_utils import mask_image
+from visualqc.readers import traverse_bids
+from visualqc.t1_mri import T1MriInterface
+from visualqc.utils import check_image_is_4d, scale_0to1, pick_slices, get_axis
+from visualqc.workflows import BaseWorkflowVisualQC
+
+_unbidsify = lambda string: '\n'.join([s.replace('-', ' ') for s in string.split('_')])
 _z_score = lambda x: (x - np.mean(x)) / np.std(x)
+
 
 class FunctionalMRIInterface(T1MriInterface):
     """Interface for the review of fMRI images."""
+
 
     def __init__(self,
                  fig,
@@ -47,7 +42,8 @@ class FunctionalMRIInterface(T1MriInterface):
                  total_num_layers=2):
         """Constructor"""
 
-        super().__init__(fig, axes, issue_list, next_button_callback, quit_button_callback)
+        super().__init__(fig, axes, issue_list, next_button_callback,
+                         quit_button_callback)
         self.issue_list = issue_list
 
         self.prev_axis = None
@@ -96,7 +92,9 @@ class FunctionalMRIInterface(T1MriInterface):
             x_line1.set_color(cfg.checkbox_cross_color)
             x_line2.set_color(cfg.checkbox_cross_color)
 
-        self._index_pass = cfg.func_mri_default_issue_list.index(cfg.func_mri_pass_indicator)
+        self._index_pass = cfg.func_mri_default_issue_list.index(
+            cfg.func_mri_pass_indicator)
+
 
     def on_mouse(self, event):
         """Callback for mouse events."""
@@ -122,6 +120,7 @@ class FunctionalMRIInterface(T1MriInterface):
 
         self.fig.canvas.draw_idle()
 
+
     def on_keyboard(self, key_in):
         """Callback to handle keyboard shortcuts to rate and advance."""
 
@@ -142,11 +141,13 @@ class FunctionalMRIInterface(T1MriInterface):
         else:
             if key_pressed in cfg.abbreviation_func_mri_default_issue_list:
                 checked_label = cfg.abbreviation_func_mri_default_issue_list[key_pressed]
-                self.checkbox.set_active(cfg.func_mri_default_issue_list.index(checked_label))
+                self.checkbox.set_active(
+                    cfg.func_mri_default_issue_list.index(checked_label))
             else:
                 pass
 
         self.fig.canvas.draw_idle()
+
 
 class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     """
@@ -186,7 +187,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         """
 
-        if id_list is None and in_dir_type=='BIDS':
+        if id_list is None and in_dir_type == 'BIDS':
             id_list = pjoin(in_dir, 'participants.tsv')
 
         super().__init__(id_list, in_dir, out_dir,
@@ -219,6 +220,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
 
+
     def preprocess(self):
         """
         Preprocess the input data
@@ -234,6 +236,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # no complex vis to generate - skipping
 
+
     def prepare_UI(self):
         """Main method to run the entire workflow"""
 
@@ -241,15 +244,17 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.add_UI()
         self.add_histogram_panel()
 
+
     def init_layout(self, views, num_rows_per_view,
                     num_slices_per_view, padding=cfg.default_padding):
 
         self.views = views
         self.num_slices_per_view = num_slices_per_view
         self.num_rows_per_view = num_rows_per_view
-        self.num_rows = len(self.views)*self.num_rows_per_view
+        self.num_rows = len(self.views) * self.num_rows_per_view
         self.num_cols = int((len(self.views) * self.num_slices_per_view) / self.num_rows)
         self.padding = padding
+
 
     def init_getters(self):
         """Initializes the getters methods for input paths and feature readers."""
@@ -260,13 +265,17 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         from bids.grabbids import BIDSLayout
         if self.in_dir_type.upper() == 'BIDS':
             self.bids_layout = BIDSLayout(self.in_dir)
-            self.field_names, self.units = traverse_bids(self.bids_layout, **cfg.func_mri_BIDS_filters)
+            self.field_names, self.units = traverse_bids(self.bids_layout,
+                                                         **cfg.func_mri_BIDS_filters)
 
             # file name of each BOLD scan is the unique identifier, as it essentially contains all the key info.
-            self.unit_by_id = { splitext(basename(fpath))[0] : realpath(fpath) for _, fpath in self.units}
+            self.unit_by_id = {splitext(basename(fpath))[0]: realpath(fpath) for _, fpath
+                               in self.units}
             self.id_list = list(self.unit_by_id.keys())
         else:
-            raise NotImplementedError('Only BIDS format is supported for input directory at the moment!')
+            raise NotImplementedError(
+                'Only BIDS format is supported for input directory at the moment!')
+
 
     def open_figure(self):
         """Creates the master figure to show everything in."""
@@ -276,13 +285,13 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.figsize = cfg.default_review_figsize
 
         # empty/dummy data for placeholding
-        empty_image = np.full((200,200), 0.0)
+        empty_image = np.full((200, 200), 0.0)
         empty_vec = np.full((200, 1), 0.0)
         time_points = list(range(200))
 
         # overlay order -- larger appears on top of smaller
-        self.layer_order_carpet   = 1
-        self.layer_order_stats    = 2
+        self.layer_order_carpet = 1
+        self.layer_order_stats = 2
         self.layer_order_zoomedin = 3
 
         plt.style.use('dark_background')
@@ -292,11 +301,12 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.ax_carpet.set_zorder(self.layer_order_carpet)
         #   vmin/vmax are controlled, because we rescale all to [0, 1]
         self.imshow_params_carpet = dict(interpolation='none', aspect='auto',
-                              origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
+                                         origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
 
         self.ax_carpet.yaxis.set_visible(False)
         self.ax_carpet.set_xlabel('time point')
-        self.carpet_handle = self.ax_carpet.imshow(empty_image, **self.imshow_params_carpet)
+        self.carpet_handle = self.ax_carpet.imshow(empty_image,
+                                                   **self.imshow_params_carpet)
         self.ax_carpet.set_frame_on(False)
         self.ax_carpet.set_ylim(auto=True)
 
@@ -306,10 +316,10 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.stats_handles = [None] * len(self.stats_axes)
 
         stats = [(empty_vec, 'mean BOLD', 'cyan'),
-                 (empty_vec, 'SD BOLD'  , 'xkcd:orange red'),
-                 (empty_vec, 'DVARS'    , 'xkcd:mustard')]
+                 (empty_vec, 'SD BOLD', 'xkcd:orange red'),
+                 (empty_vec, 'DVARS', 'xkcd:mustard')]
         for ix, (ax, (stat, label, color)) in enumerate(zip(self.stats_axes, stats)):
-            (vh, ) = ax.plot(time_points, stat, color=color)
+            (vh,) = ax.plot(time_points, stat, color=color)
             self.stats_handles[ix] = vh
             vh.set_linewidth(cfg.linewidth_stats_fmri)
             vh.set_linestyle(cfg.linestyle_stats_fmri)
@@ -324,16 +334,18 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             ax.spines['left'].set_position(('outward', 1))
 
         # sharing the time point axis
-        self.stats_axes[0].get_shared_x_axes().join(self.ax_carpet.xaxis, self.stats_axes[0].xaxis)
+        self.stats_axes[0].get_shared_x_axes().join(self.ax_carpet.xaxis,
+                                                    self.stats_axes[0].xaxis)
         self.stats_axes[0].autoscale()
 
         # 3. axes to show slices in foreground when a time point is selected
-        matrix_handles = self.fig.subplots(self.num_rows, self.num_cols, gridspec_kw=dict(wspace=0.0, hspace=0.0))
+        matrix_handles = self.fig.subplots(self.num_rows, self.num_cols,
+                                           gridspec_kw=dict(wspace=0.0, hspace=0.0))
         self.fg_axes = matrix_handles.flatten()
 
         # vmin/vmax are controlled, because we rescale all to [0, 1]
         self.imshow_params_zoomed = dict(interpolation='none', aspect='equal',
-                              origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
+                                         origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
 
         # images to be shown in the forground
         self.images_fg = [None] * len(self.fg_axes)
@@ -352,6 +364,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.subplots_adjust(**cfg.review_area)
         plt.show(block=False)
 
+
     def add_UI(self):
         """Adds the review UI with defaults"""
 
@@ -365,15 +378,19 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                          zoom_out_callback=self.zoom_out_callback)
 
         # connecting callbacks
-        self.con_id_click = self.fig.canvas.mpl_connect('button_press_event', self.UI.on_mouse)
-        self.con_id_keybd = self.fig.canvas.mpl_connect('key_press_event', self.UI.on_keyboard)
+        self.con_id_click = self.fig.canvas.mpl_connect('button_press_event',
+                                                        self.UI.on_mouse)
+        self.con_id_keybd = self.fig.canvas.mpl_connect('key_press_event',
+                                                        self.UI.on_keyboard)
         # con_id_scroll = self.fig.canvas.mpl_connect('scroll_event', self.UI.on_scroll)
 
         self.fig.set_size_inches(self.figsize)
 
+
     def add_histogram_panel(self):
         """Extra axis for histogram"""
         pass
+
 
     def update_histogram(self, img):
         """
@@ -383,28 +400,34 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """
         pass
 
+
     def update_alerts(self):
         """Keeps a box, initially invisible."""
 
         if self.current_alert_msg is not None:
-            h_alert_text= self.fig.text(cfg.position_outlier_alert[0], cfg.position_outlier_alert[1],
+            h_alert_text = self.fig.text(cfg.position_outlier_alert[0],
+                                         cfg.position_outlier_alert[1],
                                          self.current_alert_msg, **cfg.alert_text_props)
             # adding it to list of elements to cleared when advancing to next subject
             self.UI.data_handles.append(h_alert_text)
+
 
     def add_alerts(self):
         """Brings up an alert if subject id is detected to be an outlier."""
 
         flagged_as_outlier = self.current_unit_id in self.by_sample
         if flagged_as_outlier:
-            alerts_list = self.by_sample.get(self.current_unit_id, None)  # None, if id not in dict
-            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'.format('\t'.join(alerts_list)))
+            alerts_list = self.by_sample.get(self.current_unit_id,
+                                             None)  # None, if id not in dict
+            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'.format(
+                '\t'.join(alerts_list)))
 
             strings_to_show = ['Flagged as an outlier:', ] + alerts_list
             self.current_alert_msg = '\n'.join(strings_to_show)
             self.update_alerts()
         else:
             self.current_alert_msg = None
+
 
     def load_unit(self, unit_id):
         """Loads the image data for display."""
@@ -421,31 +444,27 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.TR_this_unit = self.hdr_this_unit.header.get_zooms()[-1]
 
         skip_subject = False
-        if np.count_nonzero(self.img_this_unit_raw)==0:
+        if np.count_nonzero(self.img_this_unit_raw) == 0:
             skip_subject = True
             print('Functional image is empty!')
 
-        # # where to save the visualization to
-        # out_vis_path = pjoin(self.out_dir, 'visual_qc_{}_{}'.format(self.vis_type, unit_id))
-
-        del func_img_raw
-
         return skip_subject
+
 
     def display_unit(self):
         """Adds multi-layered composite."""
-
 
         from nilearn.image import clean_img
         cleaned_image = clean_img(self.hdr_this_unit, t_r=self.TR_this_unit).get_data()
 
         # if frames are to be dropped
-        self.img_this_unit = cleaned_image[:, :, :, self.drop_start:cleaned_image.shape[3] - self.drop_end]
+        self.img_this_unit = cleaned_image[:, :, :,
+                             self.drop_start:cleaned_image.shape[3] - self.drop_end]
 
         # TODO should we perform head motion correction before any display at all?
 
-        num_voxels = np.prod(func_img.shape[0:3])
-        num_time_points = func_img.shape[3]
+        num_voxels = np.prod(self.img_this_unit.shape[0:3])
+        num_time_points = self.img_this_unit.shape[3]
         time_points = list(range(num_time_points))
 
         # 1. compute necessary stats/composites
@@ -463,7 +482,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.refresh_layer_order()
 
         # clean up
-        del func_img, carpet, mean_signal_spatial, stdev_signal_spatial, dvars
+        del carpet, mean_signal_spatial, stdev_signal_spatial, dvars
 
         print()
 
@@ -500,9 +519,10 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # dropping alternating voxels if it gets too big
         # to save on memory and avoid losing signal
         if normed_carpet.shape[1] > 600:
-            normed_carpet = normed_carpet[:,::2]
+            normed_carpet = normed_carpet[:, ::2]
 
         return normed_carpet
+
 
     def zoom_in_on_time_point(self, event):
         """Brings up selected time point"""
@@ -514,26 +534,31 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         click_location = int(event.ydata)  # imshow
         self.current_time_point = max(0, min(self.img_this_unit.shape[3], click_location))
 
-        if self.current_time_point < 0 or self.current_time_point > self.img_this_unit.shape[3]-1:
-            return # do nothing
+        if self.current_time_point < 0 or self.current_time_point > \
+            self.img_this_unit.shape[3] - 1:
+            return  # do nothing
 
         self.show_timepoint(self.current_time_point)
+
 
     def show_next_time_point(self):
 
-        if self.current_time_point == self.img_this_unit.shape[3]-1:
-            return # do nothing
+        if self.current_time_point == self.img_this_unit.shape[3] - 1:
+            return  # do nothing
 
-        self.current_time_point = min(self.img_this_unit.shape[3] - 1, self.current_time_point + 1)
+        self.current_time_point = min(self.img_this_unit.shape[3] - 1,
+                                      self.current_time_point + 1)
         self.show_timepoint(self.current_time_point)
+
 
     def show_prev_time_point(self):
 
         if self.current_time_point == 0:
-            return # do nothing
+            return  # do nothing
 
-        self.current_time_point = max(self.current_time_point-1, 0)
+        self.current_time_point = max(self.current_time_point - 1, 0)
         self.show_timepoint(self.current_time_point)
+
 
     def zoom_out_callback(self, event):
         """Hides the zoomed-in axes (showing frame)."""
@@ -542,6 +567,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             ax.set_visible(False)
         self.time_pt_h.set_visible(False)
         self.UI.zoomed_in = False
+
 
     def show_timepoint(self, time_pt):
         """Exhibits a selected timepoint on top of stats/carpet"""
@@ -560,6 +586,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             ax.set_visible(True)
         self._identify_time_point(time_pt)
         self.UI.zoomed_in = True
+
 
     def _identify_time_point(self, time_pt):
         """show the time point"""
@@ -585,15 +612,18 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         return carpet, mean_signal_spatial, stdev_signal_spatial, dvars
 
+
     def update_axes_limits(self, num_time_points, num_voxels_shown):
         """Synchronizes the x-axis limits and updates the carpet image extents"""
 
-        for a in list(self.stats_axes)+[self.ax_carpet, ]:
-            a.set_xlim(-0.5, num_time_points-0.5)
+        for a in list(self.stats_axes) + [self.ax_carpet, ]:
+            a.set_xlim(-0.5, num_time_points - 0.5)
             a.set_ylim(auto=True)
             a.relim()
             a.autoscale_view()
-        self.carpet_handle.set_extent((-0.5, num_time_points-0.5, -0.5, num_voxels_shown-0.5))
+        self.carpet_handle.set_extent(
+            (-0.5, num_time_points - 0.5, -0.5, num_voxels_shown - 0.5))
+
 
     def refresh_layer_order(self):
         """Ensures the expected order for layers"""
@@ -609,12 +639,14 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """
 
         str_list = _unbidsify(unit_id)
-        id_with_counter = '{}\n({}/{})'.format(str_list, counter + 1, self.num_units_to_review)
+        id_with_counter = '{}\n({}/{})'.format(str_list, counter + 1,
+                                               self.num_units_to_review)
         if len(id_with_counter) < 1:
             return
         self.UI.annot_text = self.fig.text(cfg.position_annot_text[0],
                                            cfg.position_annot_text[1],
                                            id_with_counter, **cfg.annot_text_props)
+
 
     def cleanup(self):
         """Preparing for exit."""
@@ -640,8 +672,9 @@ def compute_DVARS(func_img, mean_img=None, mask=None, apply_mask=False):
 
     num_time_points = func_img.shape[3]
 
-    RMS_diff = lambda img2, img1 : np.sqrt(np.mean(np.square(img2-img1)))
-    DVARS_1_to_N = [ RMS_diff(func_img[:,:,:,t], func_img[:,:,:,t-1]) for t in range(1, num_time_points)]
+    RMS_diff = lambda img2, img1: np.sqrt(np.mean(np.square(img2 - img1)))
+    DVARS_1_to_N = [RMS_diff(func_img[:, :, :, t], func_img[:, :, :, t - 1]) for t in
+                    range(1, num_time_points)]
 
     DVARS = np.full(num_time_points, np.nan)
     # dvars value at time point 0 is set to 0
@@ -664,8 +697,10 @@ def spatial_stats(func_img):
     """Computes volume-wise spatial average of functional data --> single vector over time."""
 
     num_time_points = func_img.shape[3]
-    mean_signal  = np.array([ np.nanmean(func_img[:,:,:,t]) for t in range(num_time_points) ])
-    stdev_signal = np.array([ np.nanstd( func_img[:,:,:,t]) for t in range(num_time_points) ])
+    mean_signal = np.array(
+        [np.nanmean(func_img[:, :, :, t]) for t in range(num_time_points)])
+    stdev_signal = np.array(
+        [np.nanstd(func_img[:, :, :, t]) for t in range(num_time_points)])
 
     return mean_signal, stdev_signal
 

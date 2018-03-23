@@ -7,14 +7,16 @@ Module to define base classes.
 import sys
 import traceback
 from abc import ABC, abstractmethod
-from os.path import join as pjoin, exists as pexists
+from os.path import exists as pexists, join as pjoin
 from shutil import copyfile
 
 from visualqc import config as cfg
-from visualqc.utils import load_ratings_csv, get_ratings_path_info
+from visualqc.utils import get_ratings_path_info, load_ratings_csv
+
 
 class DummyCallable(object):
     """Class to define placeholder callable. """
+
 
     def __call__(self, *args, **kwargs):
         raise NotImplementedError('This callable must be overridden before being used!')
@@ -24,6 +26,7 @@ class BaseWorkflowVisualQC(ABC):
     """
     Class defining the base workflow for visualqc.
     """
+
 
     def __init__(self,
                  id_list,
@@ -54,6 +57,7 @@ class BaseWorkflowVisualQC(ABC):
 
         self.quit_now = False
 
+
     def run(self):
         """Entry point after init."""
 
@@ -65,6 +69,7 @@ class BaseWorkflowVisualQC(ABC):
 
         print('Done.\nResults are available in:\n\t{}'.format(self.out_dir))
 
+
     @abstractmethod
     def preprocess(self):
         """
@@ -72,6 +77,7 @@ class BaseWorkflowVisualQC(ABC):
          to get ready to start the review interface.
 
          """
+
 
     @abstractmethod
     def prepare_UI(self):
@@ -86,6 +92,7 @@ class BaseWorkflowVisualQC(ABC):
 
 
         """
+
 
     def restore_ratings(self):
         """Method to restore ratings from previous sessions, if any."""
@@ -118,6 +125,7 @@ class BaseWorkflowVisualQC(ABC):
             self.num_units_to_review = len(self.incomplete_list)
             print('To be reviewed : {}\n'.format(self.num_units_to_review))
 
+
     def save_ratings(self):
         """Saves ratings to disk """
 
@@ -129,7 +137,9 @@ class BaseWorkflowVisualQC(ABC):
 
         # add column names: subject_id,issue1:issue2:issue3,...,notes etc
         # TODO add path(s) to data (images etc) that produced the review
-        lines = '\n'.join(['{},{},{}'.format(sid, self._join_ratings(rating_set), self.notes[sid]) for sid, rating_set in self.ratings.items()])
+        lines = '\n'.join(['{},{},{}'.format(sid, self._join_ratings(rating_set),
+                                             self.notes[sid])
+                           for sid, rating_set in self.ratings.items()])
         try:
             with open(ratings_file, 'w') as cf:
                 cf.write(lines)
@@ -138,6 +148,7 @@ class BaseWorkflowVisualQC(ABC):
                 'Error in saving ratings to file!!\n'
                 'Backup might be helpful at:\n\t{}'.format(prev_ratings_backup))
 
+
     @staticmethod
     def _join_ratings(str_list):
 
@@ -145,6 +156,7 @@ class BaseWorkflowVisualQC(ABC):
             return cfg.rating_joiner.join(str_list)
         else:
             return str_list
+
 
     def loop_through_units(self):
         """Method to loop through the units (subject, session or run) to make it all work."""
@@ -170,6 +182,7 @@ class BaseWorkflowVisualQC(ABC):
                 print('\nUser chosen to quit..')
                 break
 
+
     def identify_unit(self, unit_id, counter):
         """
         Method to inform the user which unit (subject or scan) they are reviewing.
@@ -180,7 +193,8 @@ class BaseWorkflowVisualQC(ABC):
 
         """
 
-        self.UI.add_annot('{}\n({}/{})'.format(unit_id, counter+1, self.num_units_to_review))
+        self.UI.add_annot(
+            '{}\n({}/{})'.format(unit_id, counter + 1, self.num_units_to_review))
 
 
     def show_fig_and_wait(self):
@@ -191,6 +205,7 @@ class BaseWorkflowVisualQC(ABC):
         self.fig.canvas.draw_idle()
         # starting a 'blocking' loop to let the user interact
         self.fig.canvas.start_event_loop(timeout=-1)
+
 
     @abstractmethod
     def load_unit(self, unit_id):
@@ -213,13 +228,16 @@ class BaseWorkflowVisualQC(ABC):
 
         """
 
+
     @abstractmethod
     def display_unit(self, subject_data):
         """Display routine."""
 
+
     @abstractmethod
     def add_alerts(self):
         """Method to appropriately alert the reviewer e.g. when subject was flagged as an outlier"""
+
 
     def quit(self, input_event_to_ignore=None):
         "terminator"
@@ -232,6 +250,7 @@ class BaseWorkflowVisualQC(ABC):
                   'Please rate it before you can advance '
                   'to next subject, or to quit..')
 
+
     def next(self, input_event_to_ignore=None):
         "advancer"
 
@@ -243,6 +262,7 @@ class BaseWorkflowVisualQC(ABC):
                   'Please rate it before you can advance '
                   'to next subject, or to quit..')
 
+
     def prepare_to_advance(self):
         """Work needed before moving to next subject"""
 
@@ -251,11 +271,13 @@ class BaseWorkflowVisualQC(ABC):
         # stopping the blocking event loop
         self.fig.canvas.stop_event_loop()
 
+
     def capture_user_input(self):
         """Updates all user input to class"""
 
         self.ratings[self.current_unit_id] = self.UI.get_ratings()
         self.notes[self.current_unit_id] = self.UI.user_notes
+
 
     def print_rating(self, subject_id):
         """Method to print the rating recorded for the current subject."""
@@ -267,6 +289,7 @@ class BaseWorkflowVisualQC(ABC):
         else:
             # extra check to ensure subject was properly rate.
             self.ratings.pop(subject_id)
+
 
     @abstractmethod
     def cleanup(self):
@@ -287,6 +310,7 @@ class BaseWorkflowVisualQC(ABC):
 
         return
 
+
     def save(self):
         """
         Saves the state of the QC workflow for restoring later on,
@@ -296,10 +320,12 @@ class BaseWorkflowVisualQC(ABC):
 
         pass
 
+
     def reload(self):
         """Method to reload the saved state."""
 
         pass
+
 
     def extract_features(self):
         """
@@ -319,6 +345,7 @@ class BaseWorkflowVisualQC(ABC):
                 traceback.print_exc()
                 print('Unable to extract {} features - skipping them.'.format(feat_type))
 
+
     def detect_outliers(self):
         """Runs outlier detection and reports the ids flagged as outliers."""
 
@@ -330,22 +357,25 @@ class BaseWorkflowVisualQC(ABC):
             print('outlier detection: disabled, as requested.')
             return
 
-        if len(self.feature_paths)<1:
-            print('Features required for outlier detection are not available - skipping it.')
+        if len(self.feature_paths) < 1:
+            print(
+                'Features required for outlier detection are not available - skipping it.')
             return
 
         from visualqc.outliers import detect_outliers
         from visualqc.readers import gather_data
         for feature_type in self.outlier_feat_types:
             features = gather_data(self.feature_paths[feature_type], self.id_list)
-            if features.shape[0] > self.outlier_fraction*len(self.id_list):
-                print('\nRunning outlier detection based on {} measures:'.format(feature_type))
-                out_file = pjoin(self.out_dir, '{}_{}_{}.txt'.format(cfg.outlier_list_prefix,
-                                                                     self.outlier_method, feature_type))
+            if features.shape[0] > self.outlier_fraction * len(self.id_list):
+                print('\nRunning outlier detection based on {} measures:'.format(
+                    feature_type))
+                out_file = pjoin(self.out_dir,
+                                 '{}_{}_{}.txt'.format(cfg.outlier_list_prefix,
+                                                       self.outlier_method, feature_type))
                 self.by_feature[feature_type] = detect_outliers(features, self.id_list,
-                                                           method=self.outlier_method,
-                                                           out_file=out_file,
-                                                           fraction_of_outliers=self.outlier_fraction)
+                                                                method=self.outlier_method,
+                                                                out_file=out_file,
+                                                                fraction_of_outliers=self.outlier_fraction)
             else:
                 print('Insufficient number of samples (with features: {}) \n'
                       ' \t to run outlier detection - skipping it.'.format(feature_type))
@@ -353,12 +383,12 @@ class BaseWorkflowVisualQC(ABC):
         # re-organizing the identified outliers by sample
         for sid in self.id_list:
             # each id contains a list of all feature types that flagged it as an outlier
-            self.by_sample[sid] = [feat for feat in self.outlier_feat_types if sid in self.by_feature[feat]]
+            self.by_sample[sid] = [feat for feat in self.outlier_feat_types if
+                                   sid in self.by_feature[feat]]
 
         # dropping the IDs that were not flagged by any feature
         # so a imple ID in dict would reveal whether it was ever suspected as an outlier
-        self.by_sample = {id: flag_list for id, flag_list in self.by_sample.items() if flag_list}
+        self.by_sample = {id: flag_list for id, flag_list in self.by_sample.items() if
+                          flag_list}
 
         return
-
-

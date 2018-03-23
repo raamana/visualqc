@@ -4,9 +4,11 @@ Module defining various interfaces, base and derived.
 """
 
 from abc import ABC, abstractmethod
-from visualqc import config as cfg
-from matplotlib.widgets import RadioButtons, Button, TextBox
+
 from matplotlib import pyplot as plt
+from matplotlib.widgets import Button, RadioButtons, TextBox
+
+from visualqc import config as cfg
 
 
 class BaseReviewInterface(ABC):
@@ -84,7 +86,8 @@ class BaseReviewInterface(ABC):
     def save_user_notes(self, text_entered):
         """Saves user free-form notes from textbox."""
 
-        self.user_notes = str(text_entered).replace(cfg.delimiter, cfg.delimiter_replacement)
+        self.user_notes = str(text_entered).replace(cfg.delimiter,
+                                                    cfg.delimiter_replacement)
 
 
     @abstractmethod

@@ -28,6 +28,7 @@ from visualqc.workflows import BaseWorkflowVisualQC
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
 
+
 class T1MriInterface(BaseReviewInterface):
     """Custom interface for rating the quality of T1 MRI scan."""
 
@@ -83,6 +84,7 @@ class T1MriInterface(BaseReviewInterface):
 
         self._index_pass = cfg.t1_mri_default_issue_list.index(cfg.t1_mri_pass_indicator)
 
+
     def save_issues(self, label):
         """
         Update the rating
@@ -96,6 +98,7 @@ class T1MriInterface(BaseReviewInterface):
         else:
             self.clear_pass_only_if_on()
 
+
     def clear_checkboxes(self, except_pass=False):
         """Clears all checkboxes.
 
@@ -105,12 +108,13 @@ class T1MriInterface(BaseReviewInterface):
 
         cbox_statuses = self.checkbox.get_status()
         for index, this_cbox_active in enumerate(cbox_statuses):
-            if except_pass and index==self._index_pass:
+            if except_pass and index == self._index_pass:
                 continue
             # if it was selected already, toggle it.
             if this_cbox_active:
                 # not calling checkbox.set_active() as it calls the callback self.save_issues() each time, if eventson is True
                 self._toggle_visibility_checkbox(index)
+
 
     def clear_pass_only_if_on(self):
         """Clear pass checkbox only"""
@@ -119,6 +123,7 @@ class T1MriInterface(BaseReviewInterface):
         if cbox_statuses[self._index_pass]:
             self._toggle_visibility_checkbox(self._index_pass)
 
+
     def _toggle_visibility_checkbox(self, index):
         """toggles the visibility of a given checkbox"""
 
@@ -126,13 +131,16 @@ class T1MriInterface(BaseReviewInterface):
         l1.set_visible(not l1.get_visible())
         l2.set_visible(not l2.get_visible())
 
+
     def get_ratings(self):
         """Returns the final set of checked ratings"""
 
         cbox_statuses = self.checkbox.get_status()
-        user_ratings = [ cfg.t1_mri_default_issue_list[idx] for idx, this_cbox_active in enumerate(cbox_statuses) if this_cbox_active]
+        user_ratings = [cfg.t1_mri_default_issue_list[idx] for idx, this_cbox_active in
+                        enumerate(cbox_statuses) if this_cbox_active]
 
         return user_ratings
+
 
     def allowed_to_advance(self):
         """
@@ -150,12 +158,14 @@ class T1MriInterface(BaseReviewInterface):
 
         return allowed
 
+
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
 
         self.clear_data()
         self.clear_checkboxes()
         self.clear_notes_annot()
+
 
     def clear_data(self):
         """clearing all data/image handles"""
@@ -166,12 +176,14 @@ class T1MriInterface(BaseReviewInterface):
             # resetting it
             self.data_handles = list()
 
+
     def clear_notes_annot(self):
         """clearing notes and annotations"""
 
         self.text_box.set_val(cfg.textbox_initial_text)
         # text is matplotlib artist
         self.annot_text.remove()
+
 
     def on_mouse(self, event):
         """Callback for mouse events."""
@@ -195,8 +207,8 @@ class T1MriInterface(BaseReviewInterface):
             # zoom axes full-screen
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(cfg.zoomed_position)
-            event.inaxes.set_zorder(1) # bring forth
-            event.inaxes.set_facecolor('black') # black
+            event.inaxes.set_zorder(1)  # bring forth
+            event.inaxes.set_facecolor('black')  # black
             event.inaxes.patch.set_alpha(1.0)  # opaque
             self.zoomed_in = True
             self.prev_axis = event.inaxes
@@ -205,6 +217,7 @@ class T1MriInterface(BaseReviewInterface):
             pass
 
         plt.draw()
+
 
     def on_keyboard(self, key_in):
         """Callback to handle keyboard shortcuts to rate and advance."""
@@ -222,7 +235,8 @@ class T1MriInterface(BaseReviewInterface):
         else:
             if key_pressed in cfg.abbreviation_t1_mri_default_issue_list:
                 checked_label = cfg.abbreviation_t1_mri_default_issue_list[key_pressed]
-                self.checkbox.set_active(cfg.t1_mri_default_issue_list.index(checked_label))
+                self.checkbox.set_active(
+                    cfg.t1_mri_default_issue_list.index(checked_label))
             else:
                 pass
 
@@ -262,6 +276,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
 
+
     def preprocess(self):
         """
         Preprocess the input data
@@ -277,6 +292,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
 
         # no complex vis to generate - skipping
 
+
     def prepare_UI(self):
         """Main method to run the entire workflow"""
 
@@ -284,15 +300,17 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.add_UI()
         self.add_histogram_panel()
 
+
     def init_layout(self, views, num_rows_per_view,
                     num_slices_per_view, padding=cfg.default_padding):
 
         self.views = views
         self.num_slices_per_view = num_slices_per_view
         self.num_rows_per_view = num_rows_per_view
-        self.num_rows = len(self.views)*self.num_rows_per_view
+        self.num_rows = len(self.views) * self.num_rows_per_view
         self.num_cols = int((len(self.views) * self.num_slices_per_view) / self.num_rows)
         self.padding = padding
+
 
     def init_getters(self):
         """Initializes the getters methods for input paths and feature readers."""
@@ -300,26 +318,32 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         from visualqc.features import extract_T1_features
         self.feature_extractor = extract_T1_features
 
-        if self.vis_type is not None and (self.vis_type in cfg.freesurfer_vis_types or self.in_dir_type in ['freesurfer', ]):
-            self.path_getter_inputs = lambda sub_id: realpath(pjoin(self.in_dir, sub_id, 'mri', self.mri_name))
+        if self.vis_type is not None and (
+            self.vis_type in cfg.freesurfer_vis_types or self.in_dir_type in [
+            'freesurfer', ]):
+            self.path_getter_inputs = lambda sub_id: realpath(
+                pjoin(self.in_dir, sub_id, 'mri', self.mri_name))
         else:
-            self.path_getter_inputs = lambda sub_id: realpath(pjoin(self.in_dir, sub_id, self.mri_name))
+            self.path_getter_inputs = lambda sub_id: realpath(
+                pjoin(self.in_dir, sub_id, self.mri_name))
+
 
     def open_figure(self):
         """Creates the master figure to show everything in."""
 
         self.figsize = cfg.default_review_figsize
         plt.style.use('dark_background')
-        self.fig, self.axes = plt.subplots(self.num_rows, self.num_cols, figsize=self.figsize)
+        self.fig, self.axes = plt.subplots(self.num_rows, self.num_cols,
+                                           figsize=self.figsize)
         self.axes = self.axes.flatten()
 
         # vmin/vmax are controlled, because we rescale all to [0, 1]
         self.display_params = dict(interpolation='none', aspect='equal',
-                              origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
+                                   origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
 
         # turning off axes, creating image objects
         self.images = [None] * len(self.axes)
-        empty_image = np.full((10,10), 0.0)
+        empty_image = np.full((10, 10), 0.0)
         for ix, ax in enumerate(self.axes):
             ax.axis('off')
             self.images[ix] = ax.imshow(empty_image, **self.display_params)
@@ -328,17 +352,22 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         plt.subplots_adjust(**cfg.review_area)
         plt.show(block=False)
 
+
     def add_UI(self):
         """Adds the review UI with defaults"""
 
-        self.UI = T1MriInterface(self.fig, self.axes, self.issue_list, self.next, self.quit)
+        self.UI = T1MriInterface(self.fig, self.axes, self.issue_list, self.next,
+                                 self.quit)
 
         # connecting callbacks
-        self.con_id_click = self.fig.canvas.mpl_connect('button_press_event', self.UI.on_mouse)
-        self.con_id_keybd = self.fig.canvas.mpl_connect('key_press_event', self.UI.on_keyboard)
+        self.con_id_click = self.fig.canvas.mpl_connect('button_press_event',
+                                                        self.UI.on_mouse)
+        self.con_id_keybd = self.fig.canvas.mpl_connect('key_press_event',
+                                                        self.UI.on_keyboard)
         # con_id_scroll = self.fig.canvas.mpl_connect('scroll_event', self.UI.on_scroll)
 
         self.fig.set_size_inches(self.figsize)
+
 
     def add_histogram_panel(self):
         """Extra axis for histogram"""
@@ -350,37 +379,45 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.ax_hist.set_prop_cycle('color', cfg.color_histogram_t1_mri)
         self.ax_hist.set_title(cfg.title_histogram_t1_mri, fontsize='small')
 
+
     def update_histogram(self, img):
         """Updates histogram with current image data"""
 
         nonzero_values = img.ravel()[np.flatnonzero(img)]
-        _, _, patches_hist = self.ax_hist.hist(nonzero_values, density=True, bins=cfg.num_bins_histogram_display)
+        _, _, patches_hist = self.ax_hist.hist(nonzero_values, density=True,
+                                               bins=cfg.num_bins_histogram_display)
         self.ax_hist.relim(visible_only=True)
-        self.ax_hist.autoscale_view(scalex=False) # xlim fixed to [0, 1]
+        self.ax_hist.autoscale_view(scalex=False)  # xlim fixed to [0, 1]
         self.UI.data_handles.extend(patches_hist)
+
 
     def update_alerts(self):
         """Keeps a box, initially invisible."""
 
         if self.current_alert_msg is not None:
-            h_alert_text= self.fig.text(cfg.position_outlier_alert[0], cfg.position_outlier_alert[1],
+            h_alert_text = self.fig.text(cfg.position_outlier_alert[0],
+                                         cfg.position_outlier_alert[1],
                                          self.current_alert_msg, **cfg.alert_text_props)
             # adding it to list of elements to cleared when advancing to next subject
             self.UI.data_handles.append(h_alert_text)
+
 
     def add_alerts(self):
         """Brings up an alert if subject id is detected to be an outlier."""
 
         flagged_as_outlier = self.current_unit_id in self.by_sample
         if flagged_as_outlier:
-            alerts_list = self.by_sample.get(self.current_unit_id, None)  # None, if id not in dict
-            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'.format('\t'.join(alerts_list)))
+            alerts_list = self.by_sample.get(self.current_unit_id,
+                                             None)  # None, if id not in dict
+            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'.format(
+                '\t'.join(alerts_list)))
 
             strings_to_show = ['Flagged as an outlier:', ] + alerts_list
             self.current_alert_msg = '\n'.join(strings_to_show)
             self.update_alerts()
         else:
             self.current_alert_msg = None
+
 
     def load_unit(self, unit_id):
         """Loads the image data for display."""
@@ -389,7 +426,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.current_img = read_image(t1_mri_path, error_msg='T1 mri')
 
         skip_subject = False
-        if np.count_nonzero(self.current_img)==0:
+        if np.count_nonzero(self.current_img) == 0:
             skip_subject = True
             print('MR image is empty!')
 
@@ -397,6 +434,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         # out_vis_path = pjoin(self.out_dir, 'visual_qc_{}_{}'.format(self.vis_type, unit_id))
 
         return skip_subject
+
 
     def display_unit(self):
         """Adds slice collage to the given axes"""
@@ -413,6 +451,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
 
         # updating histogram
         self.update_histogram(img)
+
 
     def cleanup(self):
         """Preparating for exit."""
@@ -540,8 +579,8 @@ def get_parser():
                         required=False, help=help_text_user_dir)
 
     in_out.add_argument("-m", "--mri_name", action="store", dest="mri_name",
-                             default=cfg.default_mri_name, required=False,
-                             help=help_text_mri_name)
+                        default=cfg.default_mri_name, required=False,
+                        help=help_text_mri_name)
 
     in_out.add_argument("-o", "--out_dir", action="store", dest="out_dir",
                         required=False, help=help_text_out_dir,
@@ -552,15 +591,18 @@ def get_parser():
                         required=False, help=help_text_fs_dir)
     outliers = parser.add_argument_group('Outlier detection',
                                          'options related to automatically detecting possible outliers')
-    outliers.add_argument("-olm", "--outlier_method", action="store", dest="outlier_method",
+    outliers.add_argument("-olm", "--outlier_method", action="store",
+                          dest="outlier_method",
                           default=cfg.default_outlier_detection_method, required=False,
                           help=help_text_outlier_detection_method)
 
-    outliers.add_argument("-olf", "--outlier_fraction", action="store", dest="outlier_fraction",
+    outliers.add_argument("-olf", "--outlier_fraction", action="store",
+                          dest="outlier_fraction",
                           default=cfg.default_outlier_fraction, required=False,
                           help=help_text_outlier_fraction)
 
-    outliers.add_argument("-olt", "--outlier_feat_types", action="store", dest="outlier_feat_types",
+    outliers.add_argument("-olt", "--outlier_feat_types", action="store",
+                          dest="outlier_feat_types",
                           default=cfg.t1_mri_features_OLD, required=False,
                           help=help_text_outlier_feat_types)
 
@@ -584,7 +626,8 @@ def get_parser():
     wf_args = parser.add_argument_group('Workflow', 'Options related to workflow '
                                                     'e.g. to pre-compute resource-intensive features, '
                                                     'and pre-generate all the visualizations required')
-    wf_args.add_argument("-p", "--prepare_first", action="store_true", dest="prepare_first",
+    wf_args.add_argument("-p", "--prepare_first", action="store_true",
+                         dest="prepare_first",
                          help=help_text_prepare)
 
     return parser
@@ -618,14 +661,16 @@ def make_workflow_from_user_options():
     out_dir = check_out_dir(user_args.out_dir, in_dir)
     views = check_views(user_args.views)
 
-    num_slices_per_view, num_rows_per_view = check_finite_int(user_args.num_slices, user_args.num_rows)
+    num_slices_per_view, num_rows_per_view = check_finite_int(user_args.num_slices,
+                                                              user_args.num_rows)
 
     outlier_method, outlier_fraction, \
-    outlier_feat_types, disable_outlier_detection = check_outlier_params(user_args.outlier_method,
-                                                                         user_args.outlier_fraction,
-                                                                         user_args.outlier_feat_types,
-                                                                         user_args.disable_outlier_detection,
-                                                                         id_list, vis_type, type_of_features)
+    outlier_feat_types, disable_outlier_detection = check_outlier_params(
+        user_args.outlier_method,
+        user_args.outlier_fraction,
+        user_args.outlier_feat_types,
+        user_args.disable_outlier_detection,
+        id_list, vis_type, type_of_features)
 
     wf = RatingWorkflowT1(id_list, in_dir, out_dir,
                           cfg.t1_mri_default_issue_list,

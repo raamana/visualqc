@@ -3,13 +3,17 @@ Module with algorithms to extract various features of interest for outlier detec
 
 """
 
+from os import makedirs
+from os.path import exists as pexists, join as pjoin, splitext
+
+import numpy as np
+
 from visualqc import config as cfg
 from visualqc.utils import read_image, scale_0to1
-import numpy as np
-from os.path import join as pjoin, splitext, exists as pexists
-from os import makedirs
 
-def t1_histogram_whole_scan(in_mri_path, num_bins=cfg.num_bins_histogram_intensity_distribution):
+
+def t1_histogram_whole_scan(in_mri_path,
+                            num_bins=cfg.num_bins_histogram_intensity_distribution):
     """
     Computes histogram over the intensity distribution over the entire scan, including brain, skull and background.
 
@@ -62,12 +66,13 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
         extract_method = t1_histogram_whole_scan
     else:
         raise NotImplementedError('Requested feature type {} not implemented!\n'
-                                  '\tAllowed options : {} '.format(feature_type, cfg.t1_mri_features_OLD))
+                                  '\tAllowed options : {} '.format(feature_type,
+                                                                   cfg.t1_mri_features_OLD))
 
     feature_paths = dict()
     num_subjects = len(wf.id_list)
     for counter, sid in enumerate(wf.id_list):
-        print('{} : {}/{}'.format(sid, counter+1, num_subjects))
+        print('{} : {}/{}'.format(sid, counter + 1, num_subjects))
         makedirs(pjoin(wf.out_dir, sid), exist_ok=True)
         feat_file = path_to_csv(sid)
         if not pexists(feat_file):

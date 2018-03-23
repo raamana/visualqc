@@ -7,7 +7,7 @@ import numpy as np
 # default values
 default_out_dir_name = 'visualqc'
 annot_vis_dir_name = 'annot_visualizations'
-default_mri_name = 'orig.mgz' # brainmask would not help check expansion of surfaces into skull
+default_mri_name = 'orig.mgz'  # brainmask would not help check expansion of surfaces into skull
 default_seg_name = 'aparc+aseg.mgz'
 required_files = (default_mri_name, default_seg_name)
 
@@ -94,10 +94,10 @@ position_next_button = [0.905, 0.13, 0.07, 0.04]
 position_quit_button = [0.905, 0.07, 0.07, 0.04]
 position_navig_options = [0.905, 0.21, 0.07, 0.12]
 
-position_zoomed_time_point = [0.7, 0.025]
+position_zoomed_time_point = [0.7, 0.02]
 annot_time_point = dict(fontsize='medium', color='xkcd:pale orange')
 
-review_area = dict(left  =0.06, right=0.88,
+review_area = dict(left=0.06, right=0.88,
                    bottom=0.06, top=0.98,
                    wspace=0.0, hspace=0.0)
 no_blank_area = dict(left=0.01, right=0.99,
@@ -120,21 +120,24 @@ line_break = [np.NaN, np.NaN]
 # T1 mri specific
 ## ----------------------------------------------------------------------------
 
-t1_mri_pass_indicator = 'Pass' # TODO Tired and Review Later must also be handled separately??
+t1_mri_pass_indicator = 'Pass'  # TODO Tired and Review Later must also be handled separately??
 t1_mri_default_issue_list = (t1_mri_pass_indicator, 'Motion', 'Ringing', 'Ghosting',
                              'Contrast', 'blurrY', 'Bright', 'Dark', 'Orient/FOV',
                              'Weird', 'Other', "i'm Tired", 'reView later')
-abbreviation_t1_mri_default_issue_list = {'p': t1_mri_pass_indicator, 'm': 'Motion', 'r': 'Ringing', 'g': 'Ghosting',
-                                          'c': 'Contrast', 'y': 'blurrY', 'b': 'Bright', 'd': 'Dark', 'o' : 'Orient/FOV',
-                                          'w': 'Weird', 's': 'Something else', 't': "i'm Tired", 'v': 'reView later'}
+abbreviation_t1_mri_default_issue_list = {'p': t1_mri_pass_indicator, 'm': 'Motion',
+                                          'r': 'Ringing', 'g': 'Ghosting',
+                                          'c': 'Contrast', 'y': 'blurrY', 'b': 'Bright',
+                                          'd': 'Dark', 'o': 'Orient/FOV',
+                                          'w': 'Weird', 's': 'Something else',
+                                          't': "i'm Tired", 'v': 'reView later'}
 
 t1_mri_default_rating_list_shortform = abbreviation_t1_mri_default_issue_list.keys()
 
 num_bins_histogram_intensity_distribution = 100
 
 # outlier detection (OLD)
-t1_mri_features_OLD = ('histogram_whole_scan', )
-checkbox_rect_width  = 0.05
+t1_mri_features_OLD = ('histogram_whole_scan',)
+checkbox_rect_width = 0.05
 checkbox_rect_height = 0.05
 checkbox_cross_color = 'xkcd:goldenrod'
 
@@ -142,19 +145,23 @@ position_histogram_t1_mri = [0.905, 0.7, 0.09, 0.1]
 title_histogram_t1_mri = 'nonzero intensities'
 num_bins_histogram_display = 30
 xticks_histogram_t1_mri = np.arange(0.1, 1.01, 0.2)
-color_histogram_t1_mri = ('#c9ae74') #sandstone
+color_histogram_t1_mri = ('#c9ae74')  # sandstone
 
 ## ----------------------------------------------------------------------------
 # Functional mri specific
 ## ----------------------------------------------------------------------------
 
-func_mri_pass_indicator = 'Pass' # TODO Tired and Review Later must also be handled separately??
+func_mri_pass_indicator = 'Pass'  # TODO Tired and Review Later must also be handled separately??
 func_mri_default_issue_list = (func_mri_pass_indicator, 'Motion', 'Ringing', 'Ghosting',
-                               'Orient/FOV', 'Weird', 'Other', "i'm Tired", 'reView later')
+                               'Orient/FOV', 'Weird', 'Other', "i'm Tired",
+                               'reView later')
 
-abbreviation_func_mri_default_issue_list = {'p': func_mri_pass_indicator, 'm': 'Motion', 'r': 'Ringing',
-                                            'g': 'Ghosting', 'o' : 'Orient/FOV', 'w': 'Weird',
-                                            's': 'Something else', 't': "i'm Tired", 'v': 'reView later'}
+abbreviation_func_mri_default_issue_list = {'p': func_mri_pass_indicator, 'm': 'Motion',
+                                            'r': 'Ringing',
+                                            'g': 'Ghosting', 'o': 'Orient/FOV',
+                                            'w': 'Weird',
+                                            's': 'Something else', 't': "i'm Tired",
+                                            'v': 'reView later'}
 
 func_mri_default_rating_list_shortform = abbreviation_func_mri_default_issue_list.keys()
 
@@ -169,7 +176,7 @@ alpha_stats_overlay = 0.5
 linewidth_stats_fmri = 2
 linestyle_stats_fmri = '-'
 
-default_views_fmri = (0, )
+default_views_fmri = (0,)
 default_num_slices_fmri = 30
 default_num_rows_fmri = 5
 

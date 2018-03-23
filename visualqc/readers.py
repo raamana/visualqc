@@ -3,9 +3,11 @@
 Data reader module.
 
 """
-from os.path import join as pjoin, exists as pexists, realpath
-from visualqc import config as cfg
+from os.path import exists as pexists, join as pjoin, realpath
+
 import numpy as np
+
+from visualqc import config as cfg
 
 
 def read_aseg_stats(fs_dir, subject_id, include_global_areas=False):
@@ -89,11 +91,14 @@ def read_aparc_stats_in_hemi(stats_file, include_whole_brain_stats=False):
         raise IOError('given path does not exist : {}'.format(stats_file))
 
     # ColHeaders StructName NumVert SurfArea GrayVol ThickAvg ThickStd MeanCurv GausCurv FoldInd CurvInd
-    aparc_roi_dtype = [('StructName', 'S50'), ('NumVert', '<i4'), ('SurfArea', '<i4'), ('GrayVol', '<i4'),
-                       ('ThickAvg', '<f4'), ('ThickStd', '<f4'), ('MeanCurv', '<f4'), ('GausCurv', '<f4'),
+    aparc_roi_dtype = [('StructName', 'S50'), ('NumVert', '<i4'), ('SurfArea', '<i4'),
+                       ('GrayVol', '<i4'),
+                       ('ThickAvg', '<f4'), ('ThickStd', '<f4'), ('MeanCurv', '<f4'),
+                       ('GausCurv', '<f4'),
                        ('FoldInd', '<f4'), ('CurvInd', '<f4')]
     roi_stats = np.genfromtxt(stats_file, dtype=aparc_roi_dtype, filling_values=np.NaN)
-    subset = ['SurfArea', 'GrayVol', 'ThickAvg', 'ThickStd', 'MeanCurv', 'GausCurv', 'FoldInd', 'CurvInd']
+    subset = ['SurfArea', 'GrayVol', 'ThickAvg', 'ThickStd', 'MeanCurv', 'GausCurv',
+              'FoldInd', 'CurvInd']
     roi_stats_values = np.full((len(roi_stats), len(subset)), np.NaN)
     for idx, stat in enumerate(roi_stats):
         roi_stats_values[idx, :] = [stat[feat] for feat in subset]
@@ -135,15 +140,18 @@ def gather_freesurfer_data(qcw,
 
     if qcw.source_of_features not in cfg.avail_OLD_source_of_features:
         raise NotImplementedError('Reader for the given source of features ({}) '
-                                  'is currently not implemented.'.format(qcw.source_of_features))
+                                  'is currently not implemented.'.format(
+            qcw.source_of_features))
 
     feature_type = feature_type.lower()
     if feature_type in ['cortical', ]:
-        features = np.vstack([read_aparc_stats_wholebrain(qcw.in_dir, id) for id in qcw.id_list])
+        features = np.vstack(
+            [read_aparc_stats_wholebrain(qcw.in_dir, id) for id in qcw.id_list])
     elif feature_type in ['subcortical', ]:
         features = np.vstack([read_aseg_stats(qcw.fs_dir, id) for id in qcw.id_list])
     elif feature_type in ['whole_brain', 'wholebrain']:
-        cortical = np.vstack([read_aparc_stats_wholebrain(qcw.in_dir, id) for id in qcw.id_list])
+        cortical = np.vstack(
+            [read_aparc_stats_wholebrain(qcw.in_dir, id) for id in qcw.id_list])
         sub_ctx = np.vstack([read_aseg_stats(qcw.fs_dir, id) for id in qcw.id_list])
         features = np.hstack((cortical, sub_ctx))
     else:
@@ -176,11 +184,14 @@ def gather_T1_features(wf, feature_type='histogram_whole_scan'):
 
     feature_type = feature_type.lower()
     if feature_type in ['histogram_whole_scan', ]:
-        path_to_mri = lambda sid: get_path_for_subject(wf.in_dir, sid, wf.mri_name, wf.vis_type)
-        features = np.vstack([t1_histogram_whole_scan(path_to_mri(sid)) for sid in wf.id_list])
+        path_to_mri = lambda sid: get_path_for_subject(wf.in_dir, sid, wf.mri_name,
+                                                       wf.vis_type)
+        features = np.vstack(
+            [t1_histogram_whole_scan(path_to_mri(sid)) for sid in wf.id_list])
     else:
         raise NotImplementedError('Requested feature type {} not implemented!\n'
-                                  '\tAllowed options : {} '.format(feature_type, cfg.t1_mri_features_OLD))
+                                  '\tAllowed options : {} '.format(feature_type,
+                                                                   cfg.t1_mri_features_OLD))
 
     return features
 
@@ -193,15 +204,15 @@ def gather_data(path_list, id_list):
 
     """
 
-    features = np.vstack([ np.genfromtxt(path_list[sid]) for sid in id_list])
+    features = np.vstack([np.genfromtxt(path_list[sid]) for sid in id_list])
 
     return features
 
 
 def traverse_bids(bids_layout, modalities='func', types='bold',
-             subjects=None, sessions=None, runs=None,
-             tasks=None, events=None, extensions=('nii', 'nii.gz'),
-             **kwargs):
+                  subjects=None, sessions=None, runs=None,
+                  tasks=None, events=None, extensions=('nii', 'nii.gz'),
+                  **kwargs):
     """
     Dataset traverser.
 
@@ -244,14 +255,15 @@ def traverse_bids(bids_layout, modalities='func', types='bold',
             _field_set = _unique_in_order(res._fields)
             common_field_set = [ff for ff in common_field_set if ff in _field_set]
 
-    final_fields = [ unit for unit in common_field_set if unit not in __FIELDS_TO_IGNORE__ ]
+    final_fields = [unit for unit in common_field_set if unit not in __FIELDS_TO_IGNORE__]
     # TODO final_fields can still have duplicates like: ( 'acquisition', 'acq'); handle it.
 
     if len(final_fields) < 1:
         return None, None
 
     # print('Dataset will be traversed for different values of:\n {}'.format(final_fields))
-    unit_paths = [[[file.__getattribute__(unit) for unit in final_fields], file.filename] for file in results]
+    unit_paths = [[[file.__getattribute__(unit) for unit in final_fields], file.filename]
+                  for file in results]
 
     return final_fields, unit_paths
 
