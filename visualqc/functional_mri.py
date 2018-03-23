@@ -39,7 +39,8 @@ class FunctionalMRIInterface(T1MriInterface):
                  zoom_in_callback=None,
                  zoom_out_callback=None,
                  right_click_callback=None,
-                 total_num_layers=2):
+                 axes_to_zoom=None,
+                 total_num_layers=5):
         """Constructor"""
 
         super().__init__(fig, axes, issue_list, next_button_callback,
@@ -51,7 +52,9 @@ class FunctionalMRIInterface(T1MriInterface):
         self.prev_ax_zorder = None
         self.prev_visible = False
         self.zoomed_in = False
+        self.nested_zoomed_in = False
         self.total_num_layers = total_num_layers
+        self.axes_to_zoom = axes_to_zoom
 
         self.next_button_callback = next_button_callback
         self.quit_button_callback = quit_button_callback
@@ -95,29 +98,58 @@ class FunctionalMRIInterface(T1MriInterface):
         self._index_pass = cfg.func_mri_default_issue_list.index(
             cfg.func_mri_pass_indicator)
 
+    def maximize_axis(self, ax):
+        """zooms a given axes"""
+
+        if not self.nested_zoomed_in:
+            self.prev_ax_pos = ax.get_position()
+            self.prev_ax_zorder = ax.get_zorder()
+            self.prev_ax_alpha = ax.get_alpha()
+            ax.set_position(cfg.zoomed_position_level2)
+            ax.set_zorder(self.total_num_layers+1)  # bring forth
+            ax.patch.set_alpha(1.0)  # opaque
+            self.nested_zoomed_in = True
+            self.prev_axis = ax
+
+    def restore_axis(self):
+
+        if self.nested_zoomed_in:
+            self.prev_axis.set(position=self.prev_ax_pos,
+                               zorder=self.prev_ax_zorder,
+                               alpha=self.prev_ax_alpha)
+            self.nested_zoomed_in = False
 
     def on_mouse(self, event):
         """Callback for mouse events."""
-
-        if self.zoomed_in:
-            # include all the non-data axes here (so they wont be zoomed-in)
-            if event.inaxes not in [self.checkbox.ax, self.text_box.ax,
-                                    self.bt_next.ax, self.bt_quit.ax]:
-                self.zoom_out_callback(event)
-                return
 
         # if event occurs in non-data areas, do nothing
         if event.inaxes in [self.checkbox.ax, self.text_box.ax,
                             self.bt_next.ax, self.bt_quit.ax]:
             return
 
-        if event.button in [3]:
+        if self.zoomed_in:
+            # include all the non-data axes here (so they wont be zoomed-in)
+            if event.inaxes not in [self.checkbox.ax, self.text_box.ax,
+                                    self.bt_next.ax, self.bt_quit.ax]:
+                if event.dblclick or event.button in [3]:
+                    if event.inaxes in self.axes_to_zoom:
+                        self.maximize_axis(event.inaxes)
+                    else:
+                        self.zoom_out_callback(event)
+                else:
+                    if self.nested_zoomed_in:
+                        self.restore_axis()
+                    else:
+                        self.zoom_out_callback(event)
+
+        elif event.button in [3]:
             self.right_click_callback(event)
         elif event.dblclick and event.inaxes is not None:
             self.zoom_in_callback(event)
         else:
             pass
 
+        # redraw the figure - important
         self.fig.canvas.draw_idle()
 
 
@@ -293,6 +325,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.layer_order_carpet = 1
         self.layer_order_stats = 2
         self.layer_order_zoomedin = 3
+        self.total_num_layers = 3
 
         plt.style.use('dark_background')
 
@@ -375,7 +408,9 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                          right_arrow_callback=self.show_next_time_point,
                                          left_arrow_callback=self.show_prev_time_point,
                                          zoom_in_callback=self.zoom_in_on_time_point,
-                                         zoom_out_callback=self.zoom_out_callback)
+                                         zoom_out_callback=self.zoom_out_callback,
+                                         axes_to_zoom=self.fg_axes,
+                                         total_num_layers=self.total_num_layers)
 
         # connecting callbacks
         self.con_id_click = self.fig.canvas.mpl_connect('button_press_event',
@@ -532,12 +567,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # TODO BUG: need to find the x loc in carpet axes!
         click_location = int(event.ydata)  # imshow
+        # clipping it to [0, T]
         self.current_time_point = max(0, min(self.img_this_unit.shape[3], click_location))
-
-        if self.current_time_point < 0 or self.current_time_point > \
-            self.img_this_unit.shape[3] - 1:
-            return  # do nothing
-
         self.show_timepoint(self.current_time_point)
 
 
@@ -585,6 +616,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         for ax in self.fg_axes:
             ax.set_visible(True)
         self._identify_time_point(time_pt)
+        # this state flag in important
         self.UI.zoomed_in = True
 
 
