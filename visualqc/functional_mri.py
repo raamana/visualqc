@@ -101,22 +101,26 @@ class FunctionalMRIInterface(T1MriInterface):
     def on_mouse(self, event):
         """Callback for mouse events."""
 
-        if self.prev_axis is not None:
+        if self.zoomed_in:
             # include all the non-data axes here (so they wont be zoomed-in)
             if event.inaxes not in [self.checkbox.ax, self.text_box.ax,
                                     self.bt_next.ax, self.bt_quit.ax]:
                 self.zoom_out_callback(event)
+                return
 
-        # right click ignored
+        # if event occurs in non-data areas, do nothing
+        if event.inaxes in [self.checkbox.ax, self.text_box.ax,
+                            self.bt_next.ax, self.bt_quit.ax]:
+            return
+
         if event.button in [3]:
             self.right_click_callback(event)
-        # double click to zoom in to any axis
-        elif event.dblclick and event.inaxes is not None and \
-            event.inaxes not in [self.checkbox.ax, self.text_box.ax,
-                                 self.bt_next.ax, self.bt_quit.ax]:
+        elif event.dblclick and event.inaxes is not None:
             self.zoom_in_callback(event)
         else:
             pass
+
+        self.fig.canvas.draw_idle()
 
     def on_keyboard(self, key_in):
         """Callback to handle keyboard shortcuts to rate and advance."""
@@ -141,6 +145,8 @@ class FunctionalMRIInterface(T1MriInterface):
                 self.checkbox.set_active(cfg.func_mri_default_issue_list.index(checked_label))
             else:
                 pass
+
+        self.fig.canvas.draw_idle()
 
 class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     """
@@ -345,7 +351,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                          right_click_callback=self.zoom_in_on_time_point,
                                          right_arrow_callback=self.show_next_time_point,
                                          left_arrow_callback=self.show_prev_time_point,
-                                         zoom_in_callback=self.zoom_in_on_time_point)
+                                         zoom_in_callback=self.zoom_in_on_time_point,
+                                         zoom_out_callback=self.zoom_out_callback)
 
         # connecting callbacks
         self.con_id_click = self.fig.canvas.mpl_connect('button_press_event', self.UI.on_mouse)
