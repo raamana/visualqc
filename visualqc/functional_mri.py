@@ -59,12 +59,38 @@ class FunctionalMRIInterface(T1MriInterface):
         self.zoom_in_callback = zoom_in_callback
         self.right_click_callback = right_click_callback
 
-        super().add_checkboxes()
+        self.add_checkboxes()
 
         # this list of artists to be populated later
         # makes to handy to clean them all
         self.data_handles = list()
 
+
+    def add_checkboxes(self):
+        """
+        Checkboxes offer the ability to select multiple tags such as Motion, Ghosting Aliasing etc,
+            instead of one from a list of mutual exclusive rating options (such as Good, Bad, Error etc).
+
+        """
+
+        ax_checkbox = plt.axes(cfg.position_checkbox, facecolor=cfg.color_rating_axis)
+        # initially de-activating all
+        actives = [False] * len(self.issue_list)
+        self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list, actives=actives)
+        self.checkbox.on_clicked(self.save_issues)
+        for txt_lbl in self.checkbox.labels:
+            txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
+
+        for rect in self.checkbox.rectangles:
+            rect.set_width(cfg.checkbox_rect_width)
+            rect.set_height(cfg.checkbox_rect_height)
+
+        # lines is a list of n crosses, each cross (x) defined by a tuple of lines
+        for x_line1, x_line2 in self.checkbox.lines:
+            x_line1.set_color(cfg.checkbox_cross_color)
+            x_line2.set_color(cfg.checkbox_cross_color)
+
+        self._index_pass = cfg.func_mri_default_issue_list.index(cfg.func_mri_pass_indicator)
     def on_mouse(self, event):
         """Callback for mouse events."""
 
