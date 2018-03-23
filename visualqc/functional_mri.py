@@ -418,10 +418,9 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             raise IOError('Unable to read image at \n\t{}'.format(img_path))
 
         check_image_is_4d(func_img_raw)
+        self.current_func_img_raw = func_img_raw
+        self.current_func_hdr = hdr
         self.TR_current_run = hdr.header.get_zooms()[-1]
-
-        # if frames are to be dropped
-        func_img = func_img_raw[:, :, :, self.drop_start:func_img_raw.shape[3] - self.drop_end]
 
         skip_subject = False
         if np.count_nonzero(func_img)==0:
@@ -431,13 +430,15 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # # where to save the visualization to
         # out_vis_path = pjoin(self.out_dir, 'visual_qc_{}_{}'.format(self.vis_type, unit_id))
 
-        return func_img, skip_subject
+        del func_img_raw
 
-    def display_unit(self, func_img):
-        """Adds slice collage to the given axes"""
+        return skip_subject
 
-        # to help with any callbacks who do not get image data as an argument.
-        self.current_func_img = func_img
+    def display_unit(self):
+        """Adds multi-layered composite."""
+
+        # if frames are to be dropped
+        self.current_func_img = self.current_func_img[:, :, :, self.drop_start:cleaned_image.shape[3] - self.drop_end]
 
         # TODO should we perform head motion correction before any display at all?
 

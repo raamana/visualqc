@@ -386,23 +386,23 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         """Loads the image data for display."""
 
         t1_mri_path = self.path_getter_inputs(unit_id)
-        t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
+        self.current_img = read_image(t1_mri_path, error_msg='T1 mri')
 
         skip_subject = False
-        if np.count_nonzero(t1_mri)==0:
+        if np.count_nonzero(self.current_img)==0:
             skip_subject = True
             print('MR image is empty!')
 
         # # where to save the visualization to
         # out_vis_path = pjoin(self.out_dir, 'visual_qc_{}_{}'.format(self.vis_type, unit_id))
 
-        return t1_mri, skip_subject
+        return skip_subject
 
-    def display_unit(self, img):
+    def display_unit(self):
         """Adds slice collage to the given axes"""
 
         # crop and rescale
-        img = crop_image(img, self.padding)
+        img = crop_image(self.current_img, self.padding)
         img = scale_0to1(img)
 
         # adding slices
@@ -647,7 +647,6 @@ def cli_run():
     if wf.vis_type is not None:
         # matplotlib.interactive(True)
         wf.run()
-        print('Results are available in:\n\t{}'.format(wf.out_dir))
     else:
         raise ValueError('Invalid state for visualQC!\n'
                          '\t Ensure proper combination of arguments is used.')

@@ -150,13 +150,13 @@ class BaseWorkflowVisualQC(ABC):
             self.identify_unit(unit_id, counter)
             self.add_alerts()
 
-            unit_data, skip_subject = self.load_unit(unit_id)
+            skip_subject = self.load_unit(unit_id)
 
             if skip_subject:
                 print('Skipping current subject ..')
                 continue
 
-            self.display_unit(unit_data)
+            self.display_unit()
             self.show_fig_and_wait()
             self.print_rating(unit_id)
 
