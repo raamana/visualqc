@@ -343,6 +343,11 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             ax.set_visible(False)
             ax.set_zorder(self.layer_order_zoomedin)
 
+        self.time_pt_h = self.fig.text(cfg.position_zoomed_time_point[0],
+                                       cfg.position_zoomed_time_point[1],
+                                       ' ', **cfg.annot_time_point)
+        self.time_pt_h.set_visible(False)
+
         # leaving some space on the right for review elements
         plt.subplots_adjust(**cfg.review_area)
         plt.show(block=False)
@@ -499,6 +504,10 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def zoom_in_on_time_point(self, event):
         """Brings up selected time point"""
 
+        if event.ydata is None:
+            return
+
+        # TODO BUG: need to find the x loc in carpet axes!
         click_location = int(event.ydata)  # imshow
         self.current_time_point = max(0, min(self.current_func_img.shape[3], click_location))
 
@@ -528,6 +537,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         for ax in self.fg_axes:
             ax.set_visible(False)
+        self.time_pt_h.set_visible(False)
         self.UI.zoomed_in = False
 
     def show_timepoint(self, time_pt):
@@ -545,8 +555,15 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         for ax in self.fg_axes:
             ax.set_visible(True)
-
+        self._identify_time_point(time_pt)
         self.UI.zoomed_in = True
+
+    def _identify_time_point(self, time_pt):
+        """show the time point"""
+
+        self.time_pt_h.set_text('zoomed-in time point {}'.format(time_pt))
+        self.time_pt_h.set_visible(True)
+
 
     def compute_stats(self):
         """Computes the necessary stats to be displayed."""
