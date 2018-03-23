@@ -39,7 +39,10 @@ class FunctionalMRIInterface(T1MriInterface):
                  issue_list=cfg.func_mri_default_issue_list,
                  next_button_callback=None,
                  quit_button_callback=None,
+                 right_arrow_callback=None,
+                 left_arrow_callback=None,
                  zoom_in_callback=None,
+                 zoom_out_callback=None,
                  right_click_callback=None,
                  total_num_layers=2):
         """Constructor"""
@@ -57,6 +60,9 @@ class FunctionalMRIInterface(T1MriInterface):
         self.next_button_callback = next_button_callback
         self.quit_button_callback = quit_button_callback
         self.zoom_in_callback = zoom_in_callback
+        self.zoom_out_callback = zoom_out_callback
+        self.right_arrow_callback = right_arrow_callback
+        self.left_arrow_callback = left_arrow_callback
         self.right_click_callback = right_click_callback
 
         self.add_checkboxes()
@@ -91,6 +97,7 @@ class FunctionalMRIInterface(T1MriInterface):
             x_line2.set_color(cfg.checkbox_cross_color)
 
         self._index_pass = cfg.func_mri_default_issue_list.index(cfg.func_mri_pass_indicator)
+
     def on_mouse(self, event):
         """Callback for mouse events."""
 
@@ -98,34 +105,18 @@ class FunctionalMRIInterface(T1MriInterface):
             # include all the non-data axes here (so they wont be zoomed-in)
             if event.inaxes not in [self.checkbox.ax, self.text_box.ax,
                                     self.bt_next.ax, self.bt_quit.ax]:
-                self.prev_axis.set_position(self.prev_ax_pos)
-                self.prev_axis.set_zorder(self.prev_ax_zorder)
-                self.prev_axis.set_visible(self.prev_visible)
-                self.prev_axis.patch.set_alpha(0.5)
-                self.zoomed_in = False
+                self.zoom_out_callback(event)
 
         # right click ignored
         if event.button in [3]:
-            self.right_click_callback()
+            self.right_click_callback(event)
         # double click to zoom in to any axis
         elif event.dblclick and event.inaxes is not None and \
             event.inaxes not in [self.checkbox.ax, self.text_box.ax,
                                  self.bt_next.ax, self.bt_quit.ax]:
-            # zoom axes full-screen
-            self.prev_ax_pos = event.inaxes.get_position()
-            self.prev_ax_zorder = event.inaxes.get_zorder()
-            self.prev_visible = event.inaxes.get_visible()
-            event.inaxes.set_position(cfg.zoomed_position)
-            event.inaxes.set_zorder(self.total_num_layers) # bring forth
-            # event.inaxes.set_facecolor('black') # black
-            event.inaxes.patch.set_alpha(1.0)  # opaque
-            self.zoomed_in = True
-            self.prev_axis = event.inaxes
-
+            self.zoom_in_callback(event)
         else:
             pass
-
-        plt.draw()
 
     def on_keyboard(self, key_in):
         """Callback to handle keyboard shortcuts to rate and advance."""
@@ -136,12 +127,16 @@ class FunctionalMRIInterface(T1MriInterface):
 
         key_pressed = key_in.key.lower()
         # print(key_pressed)
-        if key_pressed in ['right', ' ', 'space']:
+        if key_pressed in ['right', ]:
+            self.right_arrow_callback()
+        elif key_pressed in ['left', ]:
+            self.left_arrow_callback()
+        elif key_pressed in [' ', 'space']:
             self.next_button_callback()
-        if key_pressed in ['ctrl+q', 'q+ctrl']:
+        elif key_pressed in ['ctrl+q', 'q+ctrl']:
             self.quit_button_callback()
         else:
-            if key_pressed in cfg.func_mri_default_rating_list_shortform:
+            if key_pressed in cfg.abbreviation_func_mri_default_issue_list:
                 checked_label = cfg.abbreviation_func_mri_default_issue_list[key_pressed]
                 self.checkbox.set_active(cfg.func_mri_default_issue_list.index(checked_label))
             else:
@@ -206,6 +201,9 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.suffix = self.expt_id
         self.current_alert_msg = None
         self.prepare_first = prepare_first
+
+        #
+        self.current_time_point = 0
 
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
@@ -320,7 +318,6 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # 3. axes to show slices in foreground when a time point is selected
         matrix_handles = self.fig.subplots(self.num_rows, self.num_cols, gridspec_kw=dict(wspace=0.0, hspace=0.0))
-        matrix_handles = self.fig.subplots(self.num_rows, self.num_cols)
         self.fg_axes = matrix_handles.flatten()
 
         # vmin/vmax are controlled, because we rescale all to [0, 1]
@@ -342,8 +339,13 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def add_UI(self):
         """Adds the review UI with defaults"""
 
-        self.UI = FunctionalMRIInterface(self.fig, self.ax_carpet,
-                                         self.issue_list, self.next, self.quit)
+        self.UI = FunctionalMRIInterface(self.fig, self.ax_carpet, self.issue_list,
+                                         next_button_callback=self.next,
+                                         quit_button_callback=self.quit,
+                                         right_click_callback=self.zoom_in_on_time_point,
+                                         right_arrow_callback=self.show_next_time_point,
+                                         left_arrow_callback=self.show_prev_time_point,
+                                         zoom_in_callback=self.zoom_in_on_time_point)
 
         # connecting callbacks
         self.con_id_click = self.fig.canvas.mpl_connect('button_press_event', self.UI.on_mouse)
@@ -446,9 +448,44 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         print()
 
 
-    def show_timepoint(self, func_img, time_pt):
+    def zoom_in_on_time_point(self, event):
+        """Brings up selected time point"""
+
+        click_location = int(event.ydata)  # imshow
+        self.current_time_point = max(0, min(self.current_func_img.shape[3], click_location))
+
+        if self.current_time_point < 0 or self.current_time_point > self.current_func_img.shape[3]-1:
+            return # do nothing
+
+        self.show_timepoint(self.current_time_point)
+
+    def show_next_time_point(self):
+
+        if self.current_time_point == self.current_func_img.shape[3]-1:
+            return # do nothing
+
+        self.current_time_point = min(self.current_func_img.shape[3]-1, self.current_time_point+1)
+        self.show_timepoint(self.current_time_point)
+
+    def show_prev_time_point(self):
+
+        if self.current_time_point == 0:
+            return # do nothing
+
+        self.current_time_point = max(self.current_time_point-1, 0)
+        self.show_timepoint(self.current_time_point)
+
+    def zoom_out_callback(self, event):
+        """Hides the zoomed-in axes (showing frame)."""
+
+        for ax in self.fg_axes:
+            ax.set_visible(False)
+        self.UI.zoomed_in = False
+
+    def show_timepoint(self, time_pt):
         """Exhibits a selected timepoint on top of stats/carpet"""
 
+        print('Time point zoomed-in {}'.format(time_pt))
         image3d = np.squeeze(self.current_func_img[:,:,:,time_pt])
         image3d = crop_image(image3d, self.padding)
         image3d = scale_0to1(image3d)
@@ -456,6 +493,12 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         for ax_index, (dim_index, slice_index) in enumerate(slices):
             slice_data = get_axis(image3d, dim_index, slice_index)
             self.images_fg[ax_index].set_data(slice_data)
+            self.images_fg[ax_index].set_zorder(self.layer_order_zoomedin)
+
+        for ax in self.fg_axes:
+            ax.set_visible(True)
+
+        self.UI.zoomed_in = True
 
     def compute_stats(self):
         """Computes the necessary stats to be displayed."""
