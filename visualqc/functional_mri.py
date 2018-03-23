@@ -412,18 +412,16 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         img_path = self.unit_by_id[unit_id]
         try:
             hdr = nib.load(img_path)
-            hdr = nib.as_closest_canonical(hdr)
-            func_img_raw = hdr.get_data()
+            self.hdr_this_unit = nib.as_closest_canonical(hdr)
+            self.img_this_unit_raw = self.hdr_this_unit.get_data()
         except:
             raise IOError('Unable to read image at \n\t{}'.format(img_path))
 
-        check_image_is_4d(func_img_raw)
-        self.current_func_img_raw = func_img_raw
-        self.current_func_hdr = hdr
-        self.TR_current_run = hdr.header.get_zooms()[-1]
+        check_image_is_4d(self.img_this_unit_raw)
+        self.TR_this_unit = self.hdr_this_unit.header.get_zooms()[-1]
 
         skip_subject = False
-        if np.count_nonzero(func_img)==0:
+        if np.count_nonzero(self.img_this_unit_raw)==0:
             skip_subject = True
             print('Functional image is empty!')
 
@@ -437,8 +435,12 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def display_unit(self):
         """Adds multi-layered composite."""
 
+
+        from nilearn.image import clean_img
+        cleaned_image = clean_img(self.hdr_this_unit, t_r=self.TR_this_unit).get_data()
+
         # if frames are to be dropped
-        self.current_func_img = self.current_func_img[:, :, :, self.drop_start:cleaned_image.shape[3] - self.drop_end]
+        self.img_this_unit = cleaned_image[:, :, :, self.drop_start:cleaned_image.shape[3] - self.drop_end]
 
         # TODO should we perform head motion correction before any display at all?
 
@@ -480,11 +482,11 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         """
 
-        carpet = self.current_func_img.reshape(-1, self.current_func_img.shape[3])
+        carpet = self.img_this_unit.reshape(-1, self.img_this_unit.shape[3])
         if self.clean_before_carpet:
             from nilearn.signal import clean
             # notice the transpose before clean and after
-            carpet = clean(carpet.T, t_r=self.TR_current_run, standardize=False).T
+            carpet = clean(carpet.T, t_r=self.TR_this_unit, standardize=False).T
 
         # Removes voxels with low variance
         cropped_carpet = np.delete(carpet, np.where(mask.flatten() == 0), axis=0)
@@ -510,19 +512,19 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # TODO BUG: need to find the x loc in carpet axes!
         click_location = int(event.ydata)  # imshow
-        self.current_time_point = max(0, min(self.current_func_img.shape[3], click_location))
+        self.current_time_point = max(0, min(self.img_this_unit.shape[3], click_location))
 
-        if self.current_time_point < 0 or self.current_time_point > self.current_func_img.shape[3]-1:
+        if self.current_time_point < 0 or self.current_time_point > self.img_this_unit.shape[3]-1:
             return # do nothing
 
         self.show_timepoint(self.current_time_point)
 
     def show_next_time_point(self):
 
-        if self.current_time_point == self.current_func_img.shape[3]-1:
+        if self.current_time_point == self.img_this_unit.shape[3]-1:
             return # do nothing
 
-        self.current_time_point = min(self.current_func_img.shape[3]-1, self.current_time_point+1)
+        self.current_time_point = min(self.img_this_unit.shape[3] - 1, self.current_time_point + 1)
         self.show_timepoint(self.current_time_point)
 
     def show_prev_time_point(self):
@@ -545,7 +547,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Exhibits a selected timepoint on top of stats/carpet"""
 
         print('Time point zoomed-in {}'.format(time_pt))
-        image3d = np.squeeze(self.current_func_img[:,:,:,time_pt])
+        image3d = np.squeeze(self.img_this_unit[:, :, :, time_pt])
         image3d = crop_image(image3d, self.padding)
         image3d = scale_0to1(image3d)
         slices = pick_slices(image3d, self.views, self.num_slices_per_view)
@@ -569,12 +571,12 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def compute_stats(self):
         """Computes the necessary stats to be displayed."""
 
-        mean_img_temporal, stdev_img_temporal = temporal_stats(self.current_func_img)
-        mean_signal_spatial, stdev_signal_spatial = spatial_stats(self.current_func_img)
-        dvars = compute_DVARS(self.current_func_img)
+        mean_img_temporal, stdev_img_temporal = temporal_stats(self.img_this_unit)
+        mean_signal_spatial, stdev_signal_spatial = spatial_stats(self.img_this_unit)
+        dvars = compute_DVARS(self.img_this_unit)
         for stat, sname in zip((mean_signal_spatial, stdev_signal_spatial, dvars),
                                ('mean_signal_spatial', 'stdev_signal_spatial', 'dvars')):
-            if len(stat) != self.current_func_img.shape[3]:
+            if len(stat) != self.img_this_unit.shape[3]:
                 raise ValueError('ERROR: lengths of different stats do not match!')
             if any(np.isnan(stat)):
                 raise ValueError('ERROR: invalid values in stat : {}'.format(sname))
