@@ -159,6 +159,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  out_dir,
                  drop_start=1,
                  drop_end=None,
+                 clean_before_carpet=True,
                  id_list=None,
                  issue_list=cfg.func_mri_default_issue_list,
                  in_dir_type='BIDS',
@@ -199,6 +200,10 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.drop_start = 0
         if self.drop_end is None:
             self.drop_end = 0
+
+        # basic cleaning before display
+        # whether to remove and detrend before making carpet plot
+        self.clean_before_carpet = clean_before_carpet
 
         self.vis_type = vis_type
         self.issue_list = issue_list
@@ -408,7 +413,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             raise IOError('Unable to read image at \n\t{}'.format(img_path))
 
         check_image_is_4d(func_img_raw)
-        self.TR_current_scan = hdr.header.get_zooms()[-1]
+        self.TR_current_run = hdr.header.get_zooms()[-1]
 
         # if frames are to be dropped
         func_img = func_img_raw[:, :, :, self.drop_start:func_img_raw.shape[3] - self.drop_end]
@@ -454,6 +459,42 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         print()
 
+
+    def make_carpet(self, mask, row_order=None):
+        """
+        Makes the carpet image
+
+
+        Parameters
+        ----------
+        func_img
+
+        Returns
+        -------
+
+        """
+
+        carpet = self.current_func_img.reshape(-1, self.current_func_img.shape[3])
+        if self.clean_before_carpet:
+            from nilearn.signal import clean
+            # notice the transpose before clean and after
+            carpet = clean(carpet.T, t_r=self.TR_current_run, standardize=False).T
+
+        # Removes voxels with low variance
+        cropped_carpet = np.delete(carpet, np.where(mask.flatten() == 0), axis=0)
+        normed_carpet = _rescale_over_time(cropped_carpet)
+
+        del carpet, cropped_carpet
+
+        # TODO blurring within tissue segmentations and other deeper subcortical areas
+        # TODO reorder rows either using anatomical seg, or using clustering
+
+        # dropping alternating voxels if it gets too big
+        # to save on memory and avoid losing signal
+        if normed_carpet.shape[1] > 600:
+            normed_carpet = normed_carpet[:,::2]
+
+        return normed_carpet
 
     def zoom_in_on_time_point(self, event):
         """Brings up selected time point"""
@@ -520,7 +561,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             if any(np.isnan(stat)):
                 raise ValueError('ERROR: invalid values in stat : {}'.format(sname))
         mask = mask_image(mean_img_temporal, update_factor=0.9, init_percentile=5)
-        carpet = make_carpet(self.current_func_img, mask)
+        carpet = self.make_carpet(mask)
 
         return carpet, mean_signal_spatial, stdev_signal_spatial, dvars
 
@@ -590,38 +631,6 @@ def compute_DVARS(func_img, mean_img=None, mask=None, apply_mask=False):
     return DVARS
 
 
-def make_carpet(func_img, mask, row_order=None):
-    """
-    Makes the carpet image
-
-
-    Parameters
-    ----------
-    func_img
-
-    Returns
-    -------
-
-    """
-
-    num_voxels = np.prod(func_img.shape[0:3])
-    num_time_points = func_img.shape[3]
-
-    carpet = np.reshape(func_img, (num_voxels, num_time_points))
-    # Removes voxels with low variance
-    cropped_carpet = np.delete(carpet, np.where(mask.flatten() == 0), axis=0)
-
-    min_colwise = cropped_carpet.min(axis=0)
-    range_colwise = cropped_carpet.ptp(axis=0) # ptp : peak to peak, max-min
-    normed_carpet = (cropped_carpet - min_colwise)/range_colwise
-
-    del carpet, cropped_carpet
-
-    # TODO blurring within tissue segmentations and other deeper subcortical areas
-
-    return normed_carpet
-
-
 def temporal_stats(func_img):
     """Computes voxel-wise temporal average of functional data --> single volume over space."""
 
@@ -639,3 +648,32 @@ def spatial_stats(func_img):
     stdev_signal = np.array([ np.nanstd( func_img[:,:,:,t]) for t in range(num_time_points) ])
 
     return mean_signal, stdev_signal
+
+
+def _rescale_over_time(matrix):
+    """
+    Voxel-wise normalization over time.
+
+    Input: num_voxels x num_time_points
+    """
+
+    min = matrix.min(axis=1)
+    range = matrix.ptp(axis=1)  # ptp : peak to peak, max-min
+    min_tile = np.tile(min, (matrix.shape[1], 1)).T
+    range_tile = np.tile(range, (matrix.shape[1], 1)).T
+    # avoiding any numerical difficulties
+    range_tile[range_tile < np.finfo(np.float).eps] = 1.0
+
+    normed = (matrix - min_tile) / range_tile
+
+    return normed
+
+
+def _within_frame_rescale(matrix):
+    """Rescaling within a given grame"""
+
+    min_colwise = matrix.min(axis=0)
+    range_colwise = matrix.ptp(axis=0)  # ptp : peak to peak, max-min
+    normed_matrix = (matrix - min_colwise) / range_colwise
+
+    return normed_matrix
