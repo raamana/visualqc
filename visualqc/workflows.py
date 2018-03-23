@@ -13,6 +13,12 @@ from shutil import copyfile
 from visualqc import config as cfg
 from visualqc.utils import load_ratings_csv, get_ratings_path_info
 
+class DummyCallable(object):
+    """Class to define placeholder callable. """
+
+    def __call__(self, *args, **kwargs):
+        raise NotImplementedError('This callable must be overridden before being used!')
+
 
 class BaseWorkflowVisualQC(ABC):
     """
@@ -42,7 +48,7 @@ class BaseWorkflowVisualQC(ABC):
         self.disable_outlier_detection = disable_outlier_detection
 
         # following properties must be instantiated
-        self.feature_extractor = None
+        self.feature_extractor = DummyCallable()
         self.fig = None
         self.UI = None
 
