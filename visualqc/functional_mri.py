@@ -203,7 +203,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  out_dir,
                  drop_start=1,
                  drop_end=None,
-                 clean_before_carpet=True,
+                 no_preproc=False,
                  id_list=None,
                  name_pattern=None,
                  images_for_id=None,
@@ -229,6 +229,12 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         drop_start : int
             Number of frames to drop at the beginning of the time series.
 
+        no_preproc : bool
+            Whether to apply basic preprocessing steps (detrend, slice timing correction etc)
+                before building the carpet image.
+                If the images are already preprocessed elsewhere, disable this with no_preproc=True
+            Default : True , apply to basic preprocessing before display for review.
+
 
         """
 
@@ -249,7 +255,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # basic cleaning before display
         # whether to remove and detrend before making carpet plot
-        self.clean_before_carpet = clean_before_carpet
+        self.no_preproc = no_preproc
 
         self.vis_type = vis_type
         self.issue_list = issue_list
@@ -556,7 +562,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """
 
         carpet = self.img_this_unit.reshape(-1, self.img_this_unit.shape[3])
-        if self.clean_before_carpet:
+        if not self.no_preproc:
             from nilearn.signal import clean
             # notice the transpose before clean and after
             carpet = clean(carpet.T, t_r=self.TR_this_unit,
