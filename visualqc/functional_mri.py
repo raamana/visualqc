@@ -350,6 +350,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.layer_order_carpet = 1
         self.layer_order_stats = 2
         self.layer_order_zoomedin = 3
+        self.layer_order_to_hide = -1
         self.total_num_layers = 3
 
         plt.style.use('dark_background')
@@ -383,18 +384,18 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             vh.set_linestyle(cfg.linestyle_stats_fmri)
             ax.xaxis.set_visible(False)
             ax.set_frame_on(False)
-            ax.spines['left'].set_color(color)
             ax.set_ylim(auto=True)
             ax.set_ylabel(label, color=color)
             ax.set_zorder(self.layer_order_stats)
             ax.set_alpha(cfg.alpha_stats_overlay)
             ax.tick_params(color=color, labelcolor=color)
+            ax.spines['left'].set_color(color)
             ax.spines['left'].set_position(('outward', 1))
 
         # sharing the time point axis
         self.stats_axes[0].get_shared_x_axes().join(self.ax_carpet.xaxis,
                                                     self.stats_axes[0].xaxis)
-        self.stats_axes[0].autoscale()
+        # self.stats_axes[0].autoscale()
 
         # 3. axes to show slices in foreground when a time point is selected
         matrix_handles = self.fig.subplots(self.num_rows, self.num_cols,
@@ -621,7 +622,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Hides the zoomed-in axes (showing frame)."""
 
         for ax in self.fg_axes:
-            ax.set_visible(False)
+            ax.set(visible=False, zorder=self.layer_order_to_hide)
         self.foreground_h.set_visible(False)
         self.UI.zoomed_in = False
 
@@ -669,7 +670,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.images_fg[ax_index].set_zorder(self.layer_order_zoomedin)
 
         for ax in self.fg_axes:
-            ax.set_visible(True)
+            ax.set(visible=True, zorder=self.layer_order_zoomedin)
 
 
     def compute_stats(self):
@@ -708,6 +709,9 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         for a in self.stats_axes:
             a.set_zorder(self.layer_order_stats)
         self.ax_carpet.set_zorder(self.layer_order_carpet)
+        if not self.UI.zoomed_in:
+            for a in self.fg_axes:
+                a.set_zorder(self.layer_order_to_hide)
 
 
     def identify_unit(self, unit_id, counter):
