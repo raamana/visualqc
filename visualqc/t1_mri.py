@@ -467,9 +467,9 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
 def get_parser():
     """Parser to specify arguments and their defaults."""
 
-    parser = argparse.ArgumentParser(prog="T1_mri_visualqc",
+    parser = argparse.ArgumentParser(prog="visualqc_t1_mri",
                                      formatter_class=argparse.RawTextHelpFormatter,
-                                     description='T1_mri_visualqc: rate quality of anatomical MR scan.')
+                                     description='visualqc_t1_mri: rate quality of anatomical MR scan.')
 
     help_text_fs_dir = textwrap.dedent("""
     Absolute path to ``SUBJECTS_DIR`` containing the finished runs of Freesurfer parcellation

@@ -27,7 +27,7 @@ default_outlier_detection_method = 'isolation_forest'
 default_outlier_fraction = 0.2
 avail_outlier_detection_methods = ('isolation_forest',)
 # OLD -> OutLier Detection
-avail_OLD_source_of_features = ('freesurfer', 't1_mri')
+avail_OLD_source_of_features = ('freesurfer', 't1_mri', 'func_mri')
 
 default_freesurfer_dir = None
 cortical_types = ('cortical_volumetric', 'cortical_contour')
@@ -45,6 +45,7 @@ freesurfer_vis_cmd = 'tksurfer'
 
 default_label_set = None
 
+default_bids_dir = None
 default_user_dir = None
 
 default_alpha_mri = 1.0
@@ -181,6 +182,10 @@ default_views_fmri = (2,)
 default_num_slices_fmri = 30
 default_num_rows_fmri = 5
 
+default_name_pattern = '*.nii'
+
+func_mri_features_OLD = ('dvars',)
+
 ## ----------------------------------------------------------------------------
 
-features_outlier_detection = freesurfer_features_outlier_detection + t1_mri_features_OLD
+features_outlier_detection = freesurfer_features_outlier_detection + t1_mri_features_OLD + func_mri_features_OLD

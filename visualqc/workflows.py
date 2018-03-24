@@ -283,8 +283,9 @@ class BaseWorkflowVisualQC(ABC):
         """Method to print the rating recorded for the current subject."""
 
         if self.ratings[subject_id] not in cfg.ratings_not_to_be_recorded:
-            print('id {} rating: {} '
-                  'notes {}'.format(subject_id, self.ratings[subject_id],
+            print('    id: {}\n'
+                  'rating: {}\n'
+                  ' notes: {}'.format(subject_id, self.ratings[subject_id],
                                     self.notes[subject_id]))
         else:
             # extra check to ensure subject was properly rate.

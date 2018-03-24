@@ -113,10 +113,11 @@ class FunctionalMRIInterface(T1MriInterface):
             self.prev_ax_zorder = ax.get_zorder()
             self.prev_ax_alpha = ax.get_alpha()
             ax.set_position(cfg.zoomed_position_level2)
-            ax.set_zorder(self.total_num_layers+1)  # bring forth
+            ax.set_zorder(self.total_num_layers + 1)  # bring forth
             ax.patch.set_alpha(1.0)  # opaque
             self.nested_zoomed_in = True
             self.prev_axis = ax
+
 
     def restore_axis(self):
 
