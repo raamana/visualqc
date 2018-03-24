@@ -544,7 +544,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if self.clean_before_carpet:
             from nilearn.signal import clean
             # notice the transpose before clean and after
-            carpet = clean(carpet.T, t_r=self.TR_this_unit, standardize=False).T
+            carpet = clean(carpet.T, t_r=self.TR_this_unit,
+                           detrend=True, standardize=False).T
 
         # Removes voxels with low variance
         cropped_carpet = np.delete(carpet, np.where(mask.flatten() == 0), axis=0)
