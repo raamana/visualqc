@@ -3,21 +3,25 @@
 Module to define interface, workflow and CLI for the review of functional MRI data.
 
 """
-
+import argparse
+import sys
+import textwrap
+import warnings
 from abc import ABC
-from os.path import join as pjoin, splitext, realpath, basename
+from os.path import basename, join as pjoin, realpath, splitext
 
 import nibabel as nib
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import CheckButtons
 from mrivis.utils import crop_image
-
 from visualqc import config as cfg
 from visualqc.image_utils import mask_image
 from visualqc.readers import traverse_bids
 from visualqc.t1_mri import T1MriInterface
-from visualqc.utils import check_image_is_4d, scale_0to1, pick_slices, get_axis
+from visualqc.utils import check_bids_dir, check_id_list, check_finite_int, \
+    check_image_is_4d, check_out_dir, check_id_list_with_regex, \
+    check_outlier_params, check_views, get_axis, pick_slices, scale_0to1
 from visualqc.workflows import BaseWorkflowVisualQC
 
 _unbidsify = lambda string: '\n'.join([s.replace('-', ' ') for s in string.split('_')])
@@ -100,6 +104,7 @@ class FunctionalMRIInterface(T1MriInterface):
         self._index_pass = cfg.func_mri_default_issue_list.index(
             cfg.func_mri_pass_indicator)
 
+
     def maximize_axis(self, ax):
         """zooms a given axes"""
 
@@ -120,6 +125,7 @@ class FunctionalMRIInterface(T1MriInterface):
                                zorder=self.prev_ax_zorder,
                                alpha=self.prev_ax_alpha)
             self.nested_zoomed_in = False
+
 
     def on_mouse(self, event):
         """Callback for mouse events."""
@@ -394,7 +400,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         self.foreground_h = self.fig.text(cfg.position_zoomed_time_point[0],
                                           cfg.position_zoomed_time_point[1],
-                                       ' ', **cfg.annot_time_point)
+                                          ' ', **cfg.annot_time_point)
         self.foreground_h.set_visible(False)
 
         # leaving some space on the right for review elements
@@ -627,12 +633,14 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.foreground_h.set_text(text)
         self.foreground_h.set_visible(True)
 
+
     def show_stdev(self):
         """Shows the image of temporal std. dev"""
 
         self.attach_image_to_foreground_axes(self.stdev_this_unit)
         self._identify_foreground('Std. dev over time')
         self.UI.zoomed_in = True
+
 
     def attach_image_to_foreground_axes(self, image3d):
         """Attaches a given image to the foreground axes and bring it forth"""
@@ -786,3 +794,279 @@ def _within_frame_rescale(matrix):
     normed_matrix = (matrix - min_colwise) / range_colwise
 
     return normed_matrix
+
+
+def get_parser():
+    """Parser to specify arguments and their defaults."""
+
+    parser = argparse.ArgumentParser(prog="visualqc_func_mri",
+                                     formatter_class=argparse.RawTextHelpFormatter,
+                                     description='visualqc_func_mri: rate quality of functional MR scan.')
+
+    help_text_bids_dir = textwrap.dedent("""
+    Absolute path to the root folder of the dataset formatted with the BIDS spec.
+    See bids.neuroimaging.io for more info.
+    
+    E.g. ``--bids_dir /project/new_big_idea/ds042``
+    \n""")
+
+    help_text_user_dir = textwrap.dedent("""
+    Absolute path to an input folder containing the MRI scan. 
+    Each subject will be queried after its ID in the metadata file, 
+    and is expected to have a file, uniquely specified ``--name_pattern``), 
+    in its own folder under this path ``--user_dir``.
+
+    E.g. ``--user_dir /project/images_to_QC``
+    \n""")
+
+    help_text_id_list = textwrap.dedent("""
+    Abs path to file containing list of subject IDs to be processed.
+    If not provided, all the subjects with required files will be processed.
+
+    E.g.
+
+    .. parsed-literal::
+
+        sub001
+        sub002
+        cn_003
+        cn_004
+
+    \n""")
+
+    help_text_name_pattern = textwrap.dedent("""
+    Specifies the regex to be used to search for the image to be reviewed.
+    Typical options include: 
+        'bold.nii', when name is common across subjects
+        '*_preproc_*.nii', when filenames have additional info encoded (such as redundant subject ID as in BIDS format)
+        'func/sub*_bold_*space-MNI152*_preproc.nii.gz' when you need to additional levels deeper (with a / in regex) 
+            or control different versions (atlas space) of the same type of file. 
+    
+    Ensure the regex is tight enough to result in only one file for each ID in the id_list.
+        You can do this by giving it a try in the shell and count the number of results against the number of IDs in id_list. 
+            If you have more results than the IDs, then there are duplicates.
+            You can use https://regex101.com to construct your pattern to tightly match your requirements.
+        If multiple matches are found, the first one will be used.
+        
+    Make sure to use single quotes to avoid the shell globbing before visualqc receives it.
+
+    Default: '{}'
+    \n""".format(cfg.default_name_pattern))
+
+    help_text_out_dir = textwrap.dedent("""
+    Output folder to store the visualizations & ratings.
+    Default: a new folder called ``{}`` will be created inside the ``fs_dir``
+    \n""".format(cfg.default_out_dir_name))
+
+    help_text_no_preproc = textwrap.dedent("""
+    Whether to apply basic preprocessing steps (detrend, slice timing correction etc)
+       before building the carpet image. 
+    If the images are already preprocessed elsewhere, use this flag --no_preproc 
+    Default is to preprocess images before showing them for review.
+    \n""")
+
+    help_text_views = textwrap.dedent("""
+    Specifies the set of views to display - could be just 1 view, or 2 or all 3.
+    Example: --views 0 (typically sagittal) or --views 1 2 (axial and coronal)
+    Default: {} {} {} (show all the views in the selected segmentation)
+    \n""".format(cfg.default_views[0], cfg.default_views[1], cfg.default_views[2]))
+
+    help_text_num_slices = textwrap.dedent("""
+    Specifies the number of slices to display per each view. 
+    This must be even to facilitate better division.
+    Default: {}.
+    \n""".format(cfg.default_num_slices))
+
+    help_text_num_rows = textwrap.dedent("""
+    Specifies the number of rows to display per each axis. 
+    Default: {}.
+    \n""".format(cfg.default_num_rows))
+
+    help_text_prepare = textwrap.dedent("""
+    This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations. 
+    This makes the switch from one subject to the next, even more seamless (saving few seconds :) ).
+
+    Default: False (required visualizations are generated only on demand, which can take 5-10 seconds for each subject).
+    \n""")
+
+    help_text_outlier_detection_method = textwrap.dedent("""
+    Method used to detect the outliers.
+
+    For more info, read http://scikit-learn.org/stable/modules/outlier_detection.html
+
+    Default: {}.
+    \n""".format(cfg.default_outlier_detection_method))
+
+    help_text_outlier_fraction = textwrap.dedent("""
+    Fraction of outliers expected in the given sample. Must be >= 1/n and <= (n-1)/n,
+    where n is the number of samples in the current sample.
+
+    For more info, read http://scikit-learn.org/stable/modules/outlier_detection.html
+
+    Default: {}.
+    \n""".format(cfg.default_outlier_fraction))
+
+    help_text_outlier_feat_types = textwrap.dedent("""
+    Type of features to be employed in training the outlier detection method.  It could be one of
+    'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label),
+    'subcortical' (aseg.stats: volumes of several subcortical structures),
+    or 'both' (using both aseg and aparc stats).
+
+    Default: {}.
+    \n""".format(cfg.t1_mri_features_OLD))
+
+    help_text_disable_outlier_detection = textwrap.dedent("""
+    This flag disables outlier detection and alerts altogether.
+    \n""")
+
+    in_out = parser.add_argument_group('Input and output', ' ')
+
+    in_out.add_argument("-b", "--bids_dir", action="store", dest="bids_dir",
+                        default=cfg.default_user_dir,
+                        required=False, help=help_text_bids_dir)
+
+    in_out.add_argument("-u", "--user_dir", action="store", dest="user_dir",
+                        default=cfg.default_user_dir,
+                        required=False, help=help_text_user_dir)
+
+    in_out.add_argument("-o", "--out_dir", action="store", dest="out_dir",
+                        required=False, help=help_text_out_dir,
+                        default=None)
+
+    in_out.add_argument("-i", "--id_list", action="store", dest="id_list",
+                        default=None, required=False, help=help_text_id_list)
+
+    in_out.add_argument("-n", "--name_pattern", action="store", dest="name_pattern",
+                        default=cfg.default_name_pattern, required=False,
+                        help=help_text_name_pattern)
+
+    preproc = parser.add_argument_group('Preprocessing',
+                                         'options related to preprocessing before review')
+
+    preproc.add_argument("-np", "--no_preproc", action="store_true", dest="no_preproc",
+                          required=False, help=help_text_no_preproc)
+
+    outliers = parser.add_argument_group('Outlier detection',
+                                         'options related to automatically detecting possible outliers')
+    outliers.add_argument("-olm", "--outlier_method", action="store",
+                          dest="outlier_method",
+                          default=cfg.default_outlier_detection_method, required=False,
+                          help=help_text_outlier_detection_method)
+
+    outliers.add_argument("-olf", "--outlier_fraction", action="store",
+                          dest="outlier_fraction",
+                          default=cfg.default_outlier_fraction, required=False,
+                          help=help_text_outlier_fraction)
+
+    outliers.add_argument("-olt", "--outlier_feat_types", action="store",
+                          dest="outlier_feat_types",
+                          default=cfg.func_mri_features_OLD, required=False,
+                          help=help_text_outlier_feat_types)
+
+    outliers.add_argument("-old", "--disable_outlier_detection", action="store_true",
+                          dest="disable_outlier_detection",
+                          required=False, help=help_text_disable_outlier_detection)
+
+    layout = parser.add_argument_group('Layout options',
+                                       'Slice layout arragement when zooming in on a time point,\n'
+                                       ' or show to the std. dev plot.')
+    layout.add_argument("-w", "--views", action="store", dest="views",
+                        default=cfg.default_views, required=False, nargs='+',
+                        help=help_text_views)
+
+    layout.add_argument("-s", "--num_slices", action="store", dest="num_slices",
+                        default=cfg.default_num_slices, required=False,
+                        help=help_text_num_slices)
+
+    layout.add_argument("-r", "--num_rows", action="store", dest="num_rows",
+                        default=cfg.default_num_rows, required=False,
+                        help=help_text_num_rows)
+
+    wf_args = parser.add_argument_group('Workflow', 'Options related to workflow '
+                                                    'e.g. to pre-compute resource-intensive features, '
+                                                    'and pre-generate all the visualizations required '
+                                                    'before bringin up the review interface.')
+    wf_args.add_argument("-p", "--prepare_first", action="store_true",
+                         dest="prepare_first",
+                         help=help_text_prepare)
+
+    return parser
+
+
+def make_workflow_from_user_options():
+    """Parser/validator for the cmd line args."""
+
+    parser = get_parser()
+
+    if len(sys.argv) < 2:
+        print('Too few arguments!')
+        parser.print_help()
+        parser.exit(1)
+
+    # parsing
+    try:
+        user_args = parser.parse_args()
+    except:
+        parser.exit(1)
+
+    vis_type = 'func_mri'
+    type_of_features = 'func_mri'
+
+    if user_args.bids_dir is not None and user_args.user_dir is None:
+        in_dir, in_dir_type = check_bids_dir(user_args.bids_dir)
+        id_list = None
+        name_pattern = None
+        images_for_id = None
+    elif user_args.bids_dir is None and user_args.user_dir is not None:
+        name_pattern = user_args.name_pattern
+        in_dir = realpath(user_args.user_dir)
+        in_dir_type = 'generic'
+        id_list, images_for_id = check_id_list_with_regex(user_args.id_list, in_dir, name_pattern)
+    else:
+        raise ValueError('Invalid args: specify only one of bids_dir or user_dir, not both.')
+
+    out_dir = check_out_dir(user_args.out_dir, in_dir)
+    no_preproc = user_args.no_preproc
+
+    views = check_views(user_args.views)
+    num_slices_per_view, num_rows_per_view = check_finite_int(user_args.num_slices,
+                                                              user_args.num_rows)
+
+    outlier_method, outlier_fraction, \
+    outlier_feat_types, disable_outlier_detection = check_outlier_params(
+        user_args.outlier_method, user_args.outlier_fraction,
+        user_args.outlier_feat_types, user_args.disable_outlier_detection,
+        id_list, vis_type, type_of_features)
+
+    wf = FmriRatingWorkflow(in_dir, out_dir,
+                            id_list=id_list,
+                            images_for_id=images_for_id,
+                            issue_list=cfg.t1_mri_default_issue_list,
+                            name_pattern=name_pattern, in_dir_type=in_dir_type,
+                            no_preproc=no_preproc,
+                            outlier_method=outlier_method, outlier_fraction=outlier_fraction,
+                            outlier_feat_types=outlier_feat_types,
+                            disable_outlier_detection=disable_outlier_detection,
+                            prepare_first=user_args.prepare_first, vis_type=vis_type,
+                            views=views, num_slices_per_view=num_slices_per_view,
+                            num_rows_per_view=num_rows_per_view)
+
+    return wf
+
+
+def cli_run():
+    """Main entry point."""
+
+    wf = make_workflow_from_user_options()
+    wf.run()
+
+    return
+
+
+if __name__ == '__main__':
+    # disabling all not severe warnings
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        warnings.filterwarnings("ignore", category=FutureWarning)
+
+        cli_run()
