@@ -39,6 +39,7 @@ class FunctionalMRIInterface(T1MriInterface):
                  zoom_in_callback=None,
                  zoom_out_callback=None,
                  right_click_callback=None,
+                 show_stdev_callback=None,
                  axes_to_zoom=None,
                  total_num_layers=5):
         """Constructor"""
@@ -63,6 +64,7 @@ class FunctionalMRIInterface(T1MriInterface):
         self.right_arrow_callback = right_arrow_callback
         self.left_arrow_callback = left_arrow_callback
         self.right_click_callback = right_click_callback
+        self.show_stdev_callback = show_stdev_callback
 
         self.add_checkboxes()
 
@@ -170,6 +172,8 @@ class FunctionalMRIInterface(T1MriInterface):
             self.next_button_callback()
         elif key_pressed in ['ctrl+q', 'q+ctrl']:
             self.quit_button_callback()
+        elif key_pressed in ['alt+s', 's+alt']:
+            self.show_stdev_callback()
         else:
             if key_pressed in cfg.abbreviation_func_mri_default_issue_list:
                 checked_label = cfg.abbreviation_func_mri_default_issue_list[key_pressed]
@@ -409,6 +413,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                          left_arrow_callback=self.show_prev_time_point,
                                          zoom_in_callback=self.zoom_in_on_time_point,
                                          zoom_out_callback=self.zoom_out_callback,
+                                         show_stdev_callback=self.show_stdev,
                                          axes_to_zoom=self.fg_axes,
                                          total_num_layers=self.total_num_layers)
 
@@ -489,14 +494,13 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def display_unit(self):
         """Adds multi-layered composite."""
 
-        from nilearn.image import clean_img
-        cleaned_image = clean_img(self.hdr_this_unit, t_r=self.TR_this_unit).get_data()
-
         # if frames are to be dropped
-        self.img_this_unit = cleaned_image[:, :, :,
-                             self.drop_start:cleaned_image.shape[3] - self.drop_end]
+        end_frame = self.img_this_unit_raw.shape[3] - self.drop_end
+        self.img_this_unit = self.img_this_unit_raw[:, :, :, self.drop_start:end_frame]
+        self.stdev_this_unit, self.mean_this_unit = temporal_stats(self.img_this_unit)
 
         # TODO should we perform head motion correction before any display at all?
+        # TODO what about slice timing correction?
 
         num_voxels = np.prod(self.img_this_unit.shape[0:3])
         num_time_points = self.img_this_unit.shape[3]
@@ -621,6 +625,13 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         self.foreground_h.set_text(text)
         self.foreground_h.set_visible(True)
+
+    def show_stdev(self):
+        """Shows the image of temporal std. dev"""
+
+        self.attach_image_to_foreground_axes(self.stdev_this_unit)
+        self._identify_foreground('Std. dev over time')
+        self.UI.zoomed_in = True
 
     def attach_image_to_foreground_axes(self, image3d):
         """Attaches a given image to the foreground axes and bring it forth"""
