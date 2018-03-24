@@ -114,7 +114,7 @@ def pick_slices(img, view_set, num_slices):
         # trying to 5% slices at the tails (bottom clipping at 0)
         skip_count = max(0, np.around(num_non_empty * 0.05).astype('int16'))
         # only when possible
-        if skip_count > 0 and (num_non_empty - 2 * skip_count >= num_slices):
+        if skip_count > 0 and (num_non_empty - 2 * skip_count > num_slices):
             non_empty_slices = non_empty_slices[skip_count: -skip_count]
             num_non_empty = len(non_empty_slices)
 
