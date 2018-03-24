@@ -577,6 +577,8 @@ def check_id_list_with_regex(id_list_in, in_dir, name_pattern):
                 invalid_list.append(dp)
             else:
                 new_id = splitext(basename(dp))[0]
+                if subject_id not in new_id:
+                    new_id = '{}_{}'.format(subject_id, new_id)
                 id_list_out.append(new_id)
                 images_for_id[new_id] = dp
 
