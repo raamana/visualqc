@@ -596,15 +596,35 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         for ax in self.fg_axes:
             ax.set_visible(False)
-        self.time_pt_h.set_visible(False)
+        self.foreground_h.set_visible(False)
         self.UI.zoomed_in = False
 
 
     def show_timepoint(self, time_pt):
         """Exhibits a selected timepoint on top of stats/carpet"""
 
+        if time_pt < 0 or time_pt >= self.img_this_unit.shape[3]:
+            print('Requested time point outside '
+                  'range [0, {}]'.format(self.img_this_unit.shape[3]))
+            return
+
         print('Time point zoomed-in {}'.format(time_pt))
         image3d = np.squeeze(self.img_this_unit[:, :, :, time_pt])
+        self.attach_image_to_foreground_axes(image3d)
+        self._identify_foreground('zoomed-in time point {}'.format(time_pt))
+        # this state flag in important
+        self.UI.zoomed_in = True
+
+
+    def _identify_foreground(self, text):
+        """show the time point"""
+
+        self.foreground_h.set_text(text)
+        self.foreground_h.set_visible(True)
+
+    def attach_image_to_foreground_axes(self, image3d):
+        """Attaches a given image to the foreground axes and bring it forth"""
+
         image3d = crop_image(image3d, self.padding)
         image3d = scale_0to1(image3d)
         slices = pick_slices(image3d, self.views, self.num_slices_per_view)
@@ -615,16 +635,6 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         for ax in self.fg_axes:
             ax.set_visible(True)
-        self._identify_time_point(time_pt)
-        # this state flag in important
-        self.UI.zoomed_in = True
-
-
-    def _identify_time_point(self, time_pt):
-        """show the time point"""
-
-        self.time_pt_h.set_text('zoomed-in time point {}'.format(time_pt))
-        self.time_pt_h.set_visible(True)
 
 
     def compute_stats(self):
