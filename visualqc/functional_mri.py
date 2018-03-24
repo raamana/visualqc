@@ -204,6 +204,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  drop_end=None,
                  clean_before_carpet=True,
                  id_list=None,
+                 name_pattern=None,
+                 images_for_id=None,
                  issue_list=cfg.func_mri_default_issue_list,
                  in_dir_type='BIDS',
                  outlier_method=cfg.default_outlier_detection_method,
@@ -229,7 +231,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         """
 
-        if id_list is None and in_dir_type == 'BIDS':
+        if id_list is None and 'BIDS' in in_dir_type:
             id_list = pjoin(in_dir, 'participants.tsv')
 
         super().__init__(id_list, in_dir, out_dir,
@@ -251,6 +253,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.vis_type = vis_type
         self.issue_list = issue_list
         self.in_dir_type = in_dir_type
+        self.name_pattern = name_pattern
+        self.images_for_id = images_for_id
         self.expt_id = 'rate_fmri'
         self.suffix = self.expt_id
         self.current_alert_msg = None
@@ -304,8 +308,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         from visualqc.features import functional_mri_features
         self.feature_extractor = functional_mri_features
 
-        from bids.grabbids import BIDSLayout
-        if self.in_dir_type.upper() == 'BIDS':
+        if 'BIDS' in self.in_dir_type.upper():
+            from bids.grabbids import BIDSLayout
             self.bids_layout = BIDSLayout(self.in_dir)
             self.field_names, self.units = traverse_bids(self.bids_layout,
                                                          **cfg.func_mri_BIDS_filters)
@@ -314,6 +318,10 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.unit_by_id = {splitext(basename(fpath))[0]: realpath(fpath) for _, fpath
                                in self.units}
             self.id_list = list(self.unit_by_id.keys())
+        elif 'GENERIC' in self.in_dir_type.upper():
+            if self.id_list is None or self.images_for_id is None:
+                raise ValueError('id_list or images_for_id can not be None for generic in_dir')
+            self.unit_by_id = self.images_for_id.copy()
         else:
             raise NotImplementedError(
                 'Only BIDS format is supported for input directory at the moment!')

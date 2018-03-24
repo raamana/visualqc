@@ -1,11 +1,11 @@
-__all__ = ['read_image', 'check_image_is_3d']
+__all__ = ['read_image', 'check_image_is_3d', 'check_bids_dir']
 
 import os
 import sys
 import warnings
 from genericpath import exists as pexists
 from os import makedirs
-from os.path import join as pjoin, realpath
+from os.path import join as pjoin, realpath, basename, splitext
 from shutil import copyfile, which
 
 import nibabel as nib
@@ -433,6 +433,32 @@ def check_input_dir_T1(fs_dir, user_dir):
     return in_dir, type_of_features
 
 
+def check_bids_dir(dir_path):
+    """Checks if its a BIDS folder or not"""
+
+    descr_file_name = 'dataset_description.json'
+    descr_path = pjoin(dir_path, descr_file_name)
+    if not pexists(descr_path):
+        raise ValueError('There is no {} file at the root\n '
+                         'Ensure folder is formatted according to BIDS spec.'.format(descr_file_name))
+
+    try:
+        import json
+        with open(descr_path) as df:
+            descr = json.load(df)
+    except:
+        raise IOError('{} could not be read'.format(descr_path))
+
+    ver_tag = 'BIDSVersion'
+    if 'BIDSVersion' not in descr:
+        raise IOError('There is no field {} in \n\t {}'.format(ver_tag, descr_path))
+
+    in_dir = realpath(dir_path)
+    dir_type = 'BIDSVersion:'+descr['BIDSVersion']
+
+    return in_dir, dir_type
+
+
 def freesurfer_installed():
     """Checks whether Freesurfer is installed."""
 
@@ -488,9 +514,9 @@ def check_id_list(id_list_in, in_dir, vis_type,
     images_for_id = dict()
 
     for subject_id in id_list:
-        path_list = {
-        img: get_path_for_subject(in_dir, subject_id, name, vis_type, in_dir_type) for
-        img, name in required_files.items()}
+        path_list = { img: get_path_for_subject(in_dir, subject_id, name, vis_type, in_dir_type)
+                        for img, name in required_files.items()
+                    }
         invalid = [pfile for pfile in path_list.values() if
                    not pexists(pfile) or os.path.getsize(pfile) <= 0]
         if len(invalid) > 0:
@@ -516,12 +542,84 @@ def check_id_list(id_list_in, in_dir, vis_type,
     return np.array(id_list_out), images_for_id
 
 
+def check_id_list_with_regex(id_list_in, in_dir, name_pattern):
+    """Checks to ensure each subject listed has the required files and returns only those that can be processed."""
+
+    if id_list_in is not None:
+        if not pexists(id_list_in):
+            raise IOError('Given ID list does not exist!')
+
+        try:
+            id_list = read_id_list(id_list_in)
+        except:
+            raise IOError('unable to read the ID list.')
+    else:
+        # get all IDs in the given folder
+        id_list = [folder for folder in os.listdir(in_dir) if
+                   os.path.isdir(pjoin(in_dir, folder))]
+
+    id_list_out = list()
+    id_list_err = list()
+    invalid_list = list()
+
+    # this dict contains existing files for each ID
+    # useful to open external programs like tkmedit
+    images_for_id = dict()
+
+    for subject_id in id_list:
+        results = expand_regex_paths(in_dir, subject_id, name_pattern)
+        if len(results) < 1:
+            print('No results for {} - skipping it.'.format(subject_id))
+            continue
+        for dp in results:
+            if not pexists(dp) or os.path.getsize(dp) <= 0:
+                id_list_err.append(subject_id)
+                invalid_list.append(dp)
+            else:
+                new_id = splitext(basename(dp))[0]
+                id_list_out.append(new_id)
+                images_for_id[new_id] = dp
+
+    if len(id_list_err) > 0:
+        warnings.warn('The following subjects do NOT have all the required files '
+                      'or some are empty - skipping them!')
+        print('\n'.join(id_list_err))
+        print('\n\nThe following files do not exist or empty: \n {} \n\n'.format(
+            '\n'.join(invalid_list)))
+
+    if len(id_list_out) < 1:
+        raise ValueError(
+            'All the subject IDs do not have the required files - unable to proceed.')
+
+    print('{} subjects/sessions/units are usable for review.'.format(len(id_list_out)))
+
+    return np.array(id_list_out), images_for_id
+
+
 def read_id_list(id_list_file):
     """Read all lines and strip them of newlines/spaces."""
 
     id_list = np.array([line.strip('\n ') for line in open(id_list_file)])
 
     return id_list
+
+
+def expand_regex_paths(in_dir, subject_id, req_file):
+    """Simple file finder with regex in name."""
+
+    from glob import glob
+
+    path_to_glob = pjoin(in_dir, subject_id, req_file)
+    results = glob(path_to_glob, recursive=False)
+
+    # file_path = results[0]
+    # if len(results) > 1:
+    #     print('Duplicate results found for {}\n'
+    #           'Using {} \n'
+    #           'igoring the follwing:\n'
+    #           '{}'.format(subject_id, file_path, '\n'.join(results[1:])))
+
+    return results
 
 
 def get_path_for_subject(in_dir, subject_id, req_file, vis_type, in_dir_type=None):
