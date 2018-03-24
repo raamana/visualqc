@@ -110,6 +110,7 @@ prefix_backup = 'backup'
 
 # visualization layout
 zoomed_position = [0.15, 0.15, 0.7, 0.7]
+zoomed_position_level2 = [0.2, 0.2, 0.65, 0.65]
 default_contour_face_color = 'yellow'  # '#cccc00' # 'yellow'
 contour_line_width = 1
 binary_pixel_value = 1
@@ -176,7 +177,7 @@ alpha_stats_overlay = 0.5
 linewidth_stats_fmri = 2
 linestyle_stats_fmri = '-'
 
-default_views_fmri = (0,)
+default_views_fmri = (2,)
 default_num_slices_fmri = 30
 default_num_rows_fmri = 5
 

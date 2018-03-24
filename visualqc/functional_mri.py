@@ -388,10 +388,10 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             ax.set_visible(False)
             ax.set_zorder(self.layer_order_zoomedin)
 
-        self.time_pt_h = self.fig.text(cfg.position_zoomed_time_point[0],
-                                       cfg.position_zoomed_time_point[1],
+        self.foreground_h = self.fig.text(cfg.position_zoomed_time_point[0],
+                                          cfg.position_zoomed_time_point[1],
                                        ' ', **cfg.annot_time_point)
-        self.time_pt_h.set_visible(False)
+        self.foreground_h.set_visible(False)
 
         # leaving some space on the right for review elements
         plt.subplots_adjust(**cfg.review_area)
