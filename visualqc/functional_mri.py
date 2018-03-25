@@ -48,7 +48,8 @@ class FunctionalMRIInterface(T1MriInterface):
                  total_num_layers=5):
         """Constructor"""
 
-        super().__init__(fig, axes, issue_list, next_button_callback,
+        super().__init__(fig, axes, issue_list,
+                         next_button_callback,
                          quit_button_callback)
         self.issue_list = issue_list
 
@@ -90,7 +91,7 @@ class FunctionalMRIInterface(T1MriInterface):
         self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list, actives=actives)
         self.checkbox.on_clicked(self.save_issues)
         for txt_lbl in self.checkbox.labels:
-            txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
+            txt_lbl.set(**cfg.checkbox_font_properties)
 
         for rect in self.checkbox.rectangles:
             rect.set_width(cfg.checkbox_rect_width)
@@ -101,8 +102,7 @@ class FunctionalMRIInterface(T1MriInterface):
             x_line1.set_color(cfg.checkbox_cross_color)
             x_line2.set_color(cfg.checkbox_cross_color)
 
-        self._index_pass = cfg.func_mri_default_issue_list.index(
-            cfg.func_mri_pass_indicator)
+        self._index_pass = self.issue_list.index(cfg.func_mri_pass_indicator)
 
 
     def maximize_axis(self, ax):
@@ -184,8 +184,8 @@ class FunctionalMRIInterface(T1MriInterface):
         else:
             if key_pressed in cfg.abbreviation_func_mri_default_issue_list:
                 checked_label = cfg.abbreviation_func_mri_default_issue_list[key_pressed]
-                self.checkbox.set_active(
-                    cfg.func_mri_default_issue_list.index(checked_label))
+                # TODO if user chooses a different set of names, keyboard shortcuts might not work
+                self.checkbox.set_active(self.issue_list.index(checked_label))
             else:
                 pass
 
@@ -1071,7 +1071,7 @@ def make_workflow_from_user_options():
     wf = FmriRatingWorkflow(in_dir, out_dir,
                             id_list=id_list,
                             images_for_id=images_for_id,
-                            issue_list=cfg.t1_mri_default_issue_list,
+                            issue_list=cfg.func_mri_default_issue_list,
                             name_pattern=name_pattern, in_dir_type=in_dir_type,
                             no_preproc=no_preproc,
                             outlier_method=outlier_method, outlier_fraction=outlier_fraction,

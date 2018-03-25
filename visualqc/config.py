@@ -2,6 +2,8 @@
 Central place to store the config info
 
 """
+from collections import OrderedDict
+
 import numpy as np
 
 # default values
@@ -142,6 +144,7 @@ t1_mri_features_OLD = ('histogram_whole_scan',)
 checkbox_rect_width = 0.05
 checkbox_rect_height = 0.05
 checkbox_cross_color = 'xkcd:goldenrod'
+checkbox_font_properties = dict(color=text_option_color, fontweight='normal') # , fontname='Arial Narrow')
 
 position_histogram_t1_mri = [0.905, 0.7, 0.09, 0.1]
 title_histogram_t1_mri = 'nonzero intensities'
@@ -153,18 +156,15 @@ color_histogram_t1_mri = ('#c9ae74')  # sandstone
 # Functional mri specific
 ## ----------------------------------------------------------------------------
 
-func_mri_pass_indicator = 'Pass'  # TODO Tired and Review Later must also be handled separately??
-func_mri_default_issue_list = (func_mri_pass_indicator, 'Motion', 'Ringing', 'Ghosting',
-                               'Orient/FOV', 'Weird', 'Other', "i'm Tired",
-                               'reView later')
-
-abbreviation_func_mri_default_issue_list = {'p': func_mri_pass_indicator, 'm': 'Motion',
-                                            'r': 'Ringing',
-                                            'g': 'Ghosting', 'o': 'Orient/FOV',
-                                            'w': 'Weird',
-                                            's': 'Something else', 't': "i'm Tired",
-                                            'v': 'reView later'}
-
+func_mri_pass_indicator = 'Pass'
+# TODO Tired and Review Later must also be handled separately??
+abbreviation_func_mri_default_issue_list = OrderedDict(p=func_mri_pass_indicator,
+                                                       m='Motion', r='Ringing',
+                                                       i='spIkes', g='Ghosting',
+                                                       o='Orient/FOV', w='Weird',
+                                                       e='othEr', t="i'm Tired",
+                                                       v='reView later')
+func_mri_default_issue_list = list(abbreviation_func_mri_default_issue_list.values())
 func_mri_default_rating_list_shortform = abbreviation_func_mri_default_issue_list.keys()
 
 func_outlier_features = None
