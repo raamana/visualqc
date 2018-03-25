@@ -17,6 +17,8 @@ from visualqc.utils import get_ratings_path_info, load_ratings_csv
 class DummyCallable(object):
     """Class to define placeholder callable. """
 
+    def __init__(self, *args, **kwargs):
+        pass
 
     def __call__(self, *args, **kwargs):
         raise NotImplementedError('This callable must be overridden before being used!')

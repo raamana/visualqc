@@ -13,6 +13,7 @@ from os.path import basename, join as pjoin, realpath, splitext
 import nibabel as nib
 import numpy as np
 from matplotlib import pyplot as plt
+import matplotlib as mpl
 from matplotlib.widgets import CheckButtons
 from mrivis.utils import crop_image
 from visualqc import config as cfg
@@ -331,7 +332,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.unit_by_id = self.images_for_id.copy()
         else:
             raise NotImplementedError(
-                'Only BIDS format is supported for input directory at the moment!')
+                'Only two formats are supported: BIDS and GENERIC with regex spec for filenames')
 
 
     def open_figure(self):
@@ -645,7 +646,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                   'range [0, {}]'.format(self.img_this_unit.shape[3]))
             return
 
-        print('Time point zoomed-in {}'.format(time_pt))
+        # print('Time point zoomed-in {}'.format(time_pt))
         image3d = np.squeeze(self.img_this_unit[:, :, :, time_pt])
         self.attach_image_to_foreground_axes(image3d)
         self._identify_foreground('zoomed-in time point {}'.format(time_pt))
@@ -943,7 +944,7 @@ def get_parser():
     or 'both' (using both aseg and aparc stats).
 
     Default: {}.
-    \n""".format(cfg.t1_mri_features_OLD))
+    \n""".format(cfg.func_mri_features_OLD))
 
     help_text_disable_outlier_detection = textwrap.dedent("""
     This flag disables outlier detection and alerts altogether.
