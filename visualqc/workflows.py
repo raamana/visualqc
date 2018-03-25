@@ -230,7 +230,7 @@ class BaseWorkflowVisualQC(ABC):
 
 
     @abstractmethod
-    def display_unit(self, subject_data):
+    def display_unit(self):
         """Display routine."""
 
 
