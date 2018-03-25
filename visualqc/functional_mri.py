@@ -24,8 +24,22 @@ from visualqc.utils import check_bids_dir, check_id_list, check_finite_int, \
     check_image_is_4d, check_out_dir, check_id_list_with_regex, \
     check_outlier_params, check_views, get_axis, pick_slices, scale_0to1
 from visualqc.workflows import BaseWorkflowVisualQC
+from textwrap import wrap
 
-_unbidsify = lambda string: '\n'.join([s.replace('-', ' ') for s in string.split('_')])
+def _unbidsify(filename, max_width = 18):
+    """Returns a easily displayable and readable multiline string"""
+
+    parts = [s.replace('-', ' ') for s in filename.split('_')]
+    fixed_width = list()
+    for p in parts:
+        if len(p) > max_width:
+            # indenting by two spaace
+            fixed_width.extend([' -'+s for s in wrap(p,max_width-2)])
+        else:
+            fixed_width.append(p)
+
+    return  '\n'.join(fixed_width)
+
 _z_score = lambda x: (x - np.mean(x)) / np.std(x)
 
 

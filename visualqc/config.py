@@ -59,7 +59,7 @@ default_num_slices = 12
 default_num_rows = 2
 default_padding = 5  # pixels/voxels
 
-default_review_figsize = [13, 9]
+default_review_figsize = [15, 11]
 
 default_navigation_options = ("Next", "Quit")
 # shortcuts L, F, S have actions on matplotlib interface, so choosing other words
