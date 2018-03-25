@@ -589,13 +589,13 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def zoom_in_on_time_point(self, event):
         """Brings up selected time point"""
 
-        if event.ydata is None:
+        if event.x is None:
             return
-
-        # TODO BUG: need to find the x loc in carpet axes!
-        click_location = int(event.ydata)  # imshow
+        # computing x in axes data coordinates myself, to avoid overlaps with other axes
+        # retrieving the latest transform after to ensure its accurate at click time
+        x_in_carpet, _y = self._event_location_in_axis(event, self.ax_carpet)
         # clipping it to [0, T]
-        self.current_time_point = max(0, min(self.img_this_unit.shape[3], click_location))
+        self.current_time_point = max(0, min(self.img_this_unit.shape[3], int(round(x_in_carpet))))
         self.show_timepoint(self.current_time_point)
 
 
@@ -625,6 +625,13 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             ax.set(visible=False, zorder=self.layer_order_to_hide)
         self.foreground_h.set_visible(False)
         self.UI.zoomed_in = False
+
+    @staticmethod
+    def _event_location_in_axis(event, axis):
+        """returns (x_in_axis, y_in_axis)"""
+
+        # display pixels to axis coords
+        return axis.transData.inverted().transform_point((event.x, event.y))
 
 
     def show_timepoint(self, time_pt):
@@ -679,12 +686,14 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         mean_img_temporal, stdev_img_temporal = temporal_stats(self.img_this_unit)
         mean_signal_spatial, stdev_signal_spatial = spatial_stats(self.img_this_unit)
         dvars = compute_DVARS(self.img_this_unit)
+
         for stat, sname in zip((mean_signal_spatial, stdev_signal_spatial, dvars),
                                ('mean_signal_spatial', 'stdev_signal_spatial', 'dvars')):
             if len(stat) != self.img_this_unit.shape[3]:
                 raise ValueError('ERROR: lengths of different stats do not match!')
             if any(np.isnan(stat)):
                 raise ValueError('ERROR: invalid values in stat : {}'.format(sname))
+
         mask = mask_image(mean_img_temporal, update_factor=0.9, init_percentile=5)
         carpet = self.make_carpet(mask)
 
