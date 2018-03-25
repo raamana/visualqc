@@ -192,6 +192,15 @@ class FunctionalMRIInterface(T1MriInterface):
 
         self.fig.canvas.draw_idle()
 
+    def reset_figure(self):
+        "Resets the figure to prepare it for display of next subject."
+
+        self.zoom_out_callback(None)
+        self.restore_axis()
+        self.clear_data()
+        self.clear_checkboxes()
+        self.clear_notes_annot()
+
 
 class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     """
