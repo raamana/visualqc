@@ -49,9 +49,9 @@ class BaseReviewInterface(ABC):
                        user_quit_callback=None):
         """Navigation elements"""
 
-        ax_bt_quit = plt.axes(cfg.position_quit_button,
+        ax_bt_quit = self.fig.add_axes(cfg.position_quit_button,
                               facecolor=cfg.color_quit_axis, aspect='equal')
-        ax_bt_next = plt.axes(cfg.position_next_button,
+        ax_bt_next = self.fig.add_axes(cfg.position_next_button,
                               facecolor=cfg.color_quit_axis, aspect='equal')
         self.bt_quit = Button(ax_bt_quit, 'Quit', hovercolor='red')
         self.bt_next = Button(ax_bt_next, 'Next', hovercolor='xkcd:greenish')
@@ -71,7 +71,7 @@ class BaseReviewInterface(ABC):
     def add_notes_input(self):
         """Notes"""
 
-        ax_text = plt.axes(cfg.position_text_input)
+        ax_text = self.fig.add_axes(cfg.position_text_input)
         self.text_box = TextBox(ax_text, color=cfg.text_box_color,
                                 hovercolor=cfg.text_box_color,
                                 label=cfg.textbox_title,
@@ -152,7 +152,7 @@ class PialWhiteSurfReviewInterface(BaseReviewInterface):
     def add_rating_UI(self):
         """Rating"""
 
-        ax_radio = plt.axes(cfg.position_rating_axis,
+        ax_radio = self.fig.add_axes(cfg.position_rating_axis,
                             facecolor=cfg.color_rating_axis,
                             aspect='equal')
         self.radio_bt_rating = RadioButtons(ax_radio,
