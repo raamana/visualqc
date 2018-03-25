@@ -113,7 +113,7 @@ prefix_backup = 'backup'
 
 # visualization layout
 zoomed_position = [0.15, 0.15, 0.7, 0.7]
-zoomed_position_level2 = [0.2, 0.2, 0.65, 0.65]
+zoomed_position_level2 = [0.22, 0.22, 0.50, 0.50]
 default_contour_face_color = 'yellow'  # '#cccc00' # 'yellow'
 contour_line_width = 1
 binary_pixel_value = 1
