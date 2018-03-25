@@ -710,6 +710,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             a.autoscale_view()
         self.carpet_handle.set_extent(
             (-0.5, num_time_points - 0.5, -0.5, num_voxels_shown - 0.5))
+        self.ax_carpet.set_xticks(np.arange(0, num_time_points, 20))
 
 
     def refresh_layer_order(self):
