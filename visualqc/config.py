@@ -185,6 +185,7 @@ default_num_rows_fmri = 5
 default_name_pattern = '*.nii'
 
 func_mri_features_OLD = ('dvars',)
+colormap_stdev_fmri = 'seismic'
 
 ## ----------------------------------------------------------------------------
 

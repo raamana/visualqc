@@ -660,12 +660,12 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def show_stdev(self):
         """Shows the image of temporal std. dev"""
 
-        self.attach_image_to_foreground_axes(self.stdev_this_unit)
+        self.attach_image_to_foreground_axes(self.stdev_this_unit, cfg.colormap_stdev_fmri)
         self._identify_foreground('Std. dev over time')
         self.UI.zoomed_in = True
 
 
-    def attach_image_to_foreground_axes(self, image3d):
+    def attach_image_to_foreground_axes(self, image3d, cmap='gray'):
         """Attaches a given image to the foreground axes and bring it forth"""
 
         image3d = crop_image(image3d, self.padding)
@@ -673,9 +673,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         slices = pick_slices(image3d, self.views, self.num_slices_per_view)
         for ax_index, (dim_index, slice_index) in enumerate(slices):
             slice_data = get_axis(image3d, dim_index, slice_index)
-            self.images_fg[ax_index].set_data(slice_data)
-            self.images_fg[ax_index].set_zorder(self.layer_order_zoomedin)
-
+            self.images_fg[ax_index].set(data=slice_data, cmap=cmap)
         for ax in self.fg_axes:
             ax.set(visible=True, zorder=self.layer_order_zoomedin)
 
