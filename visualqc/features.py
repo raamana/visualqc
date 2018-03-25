@@ -87,5 +87,7 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
     return feature_paths
 
 
-def functional_mri_features():
+def functional_mri_features(*args):
     """Extractor from functional MRI scan"""
+
+    pass
