@@ -15,7 +15,7 @@ import numpy as np
 from matplotlib.colors import is_color_like
 from matplotlib import pyplot as plt, colors, cm
 from matplotlib.widgets import CheckButtons
-from mrivis.utils import crop_image
+from mrivis.utils import crop_image, crop_to_seg_extents
 from mrivis.color_maps import get_freesurfer_cmap
 from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
@@ -471,34 +471,36 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         fs_seg_path = get_freesurfer_mri_path(self.in_dir, unit_id, self.seg_name)
 
         temp_t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
-        # T1 mri must be rescaled - to avoid strange distributions skewing plots
-        self.current_t1_mri = scale_0to1(temp_t1_mri, cfg.max_cmap_range_t1_mri)
-        self.current_fs_seg = read_image(fs_seg_path, error_msg='segmentation')
+        temp_fs_seg = read_image(fs_seg_path, error_msg='segmentation')
 
-        if self.current_t1_mri.shape != self.current_fs_seg.shape:
+        if self.current_t1_mri.shape != temp_fs_seg.shape:
             raise ValueError('size mismatch! MRI: {} Seg: {}\n'
                              'Size must match in all dimensions.'.format(
                 self.current_t1_mri.shape,
-                self.current_fs_seg.shape))
+                temp_fs_seg.shape))
 
         skip_subject = False
         if self.label_set is not None:
-            self.current_fs_seg, roi_set_empty = get_label_set(self.current_fs_seg,
+            temp_fs_seg_uncropped, roi_set_is_empty = get_label_set(temp_fs_seg,
                                                                self.label_set)
-            if roi_set_empty:
+            if roi_set_is_empty:
                 skip_subject = True
                 print('segmentation image for {} '
                       'does not contain requested label set!'.format(unit_id))
 
         if self.vis_type in ('cortical_volumetric', 'cortical_contour'):
-            self.current_seg = void_subcortical_symmetrize_cortical(self.current_fs_seg)
+            temp_fs_seg_uncropped = void_subcortical_symmetrize_cortical(temp_fs_seg)
         elif self.vis_type in ('labels_volumetric', 'labels_contour'):
             # TODO in addition to checking file exists, we need to check
             #   requested labels exist, for label vis_type
-            self.current_seg = self.current_fs_seg
+            temp_fs_seg_uncropped = temp_fs_seg
         else:
             raise NotImplementedError('Invalid visualization type - '
                                       'choose from: {}'.format(cfg.visualization_combination_choices))
+
+        # T1 mri must be rescaled - to avoid strange distributions skewing plots
+        rescaled_t1_mri = scale_0to1(temp_t1_mri, cfg.max_cmap_range_t1_mri)
+        self.current_t1_mri, self.current_seg = crop_to_seg_extents(rescaled_t1_mri, temp_fs_seg_uncropped, self.padding)
 
         out_vis_path = pjoin(self.out_dir,
                              'visual_qc_{}_{}_{}'.format(self.vis_type, self.suffix,
@@ -513,7 +515,7 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         slices = pick_slices(self.current_t1_mri, self.views, self.num_slices_per_view)
         for ax_index, (dim_index, slice_index) in enumerate(slices):
             slice_mri = get_axis(self.current_t1_mri, dim_index, slice_index)
-            slice_seg = get_axis(self.current_fs_seg, dim_index, slice_index)
+            slice_seg = get_axis(self.current_seg, dim_index, slice_index)
             mri_rgb = self.mri_mapper.to_rgba(slice_mri)
             self.h_images_mri[ax_index].set_data(mri_rgb)
             self.plot_contours_in_slice(slice_seg, self.axes[ax_index])
@@ -552,7 +554,7 @@ def get_parser():
 
     parser = argparse.ArgumentParser(prog="visualqc_t1_mri",
                                      formatter_class=argparse.RawTextHelpFormatter,
-                                     description='visualqc_t1_mri: rate quality of anatomical MR scan.')
+                                     description='visualqc_freesurfer: rate quality of Freesurfer reconstruction.')
 
     help_text_fs_dir = textwrap.dedent("""
     Absolute path to ``SUBJECTS_DIR`` containing the finished runs of Freesurfer parcellation
