@@ -13,6 +13,13 @@ default_mri_name = 'orig.mgz'  # brainmask would not help check expansion of sur
 default_seg_name = 'aparc+aseg.mgz'
 required_files = (default_mri_name, default_seg_name)
 
+num_cortical_surface_vis = 6
+position_histogram_freesurfer = [0.905, 0.7, 0.09, 0.1]
+title_histogram_freesurfer = 'cortical thickness'
+num_bins_histogram_display = 30
+xticks_histogram_freesurfer = np.arange(0.1, 6.01, 0.2)
+color_histogram_freesurfer = ('#c9ae74')  # sandstone
+
 freesurfer_features_outlier_detection = ('cortical', 'subcortical')
 outlier_list_prefix = 'possible_outliers'
 alert_background_color = 'xkcd:coral'
@@ -53,6 +60,9 @@ default_user_dir = None
 default_alpha_mri = 1.0
 default_alpha_seg = 0.7
 default_alpha_set = (default_alpha_mri, default_alpha_seg)
+
+min_cmap_range_t1_mri = 0
+max_cmap_range_t1_mri = 255
 
 default_views = (0, 1, 2)
 default_num_slices = 12
