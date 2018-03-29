@@ -593,10 +593,42 @@ def get_parser():
     Default: {} (within the mri folder of Freesurfer format).
     \n""".format(cfg.default_mri_name))
 
+    help_text_seg_name = textwrap.dedent("""
+    Specifies the name of segmentation image (volumetric) to be overlaid on the MRI.
+    Typical options include aparc+aseg.mgz, aseg.mgz, wmparc.mgz. 
+    Make sure to choose the right vis_type. 
+
+    Default: {} (within the mri folder of Freesurfer format).
+    \n""".format(cfg.default_seg_name))
+
     help_text_out_dir = textwrap.dedent("""
     Output folder to store the visualizations & ratings.
     Default: a new folder called ``{}`` will be created inside the ``fs_dir``
     \n""".format(cfg.default_out_dir_name))
+
+    help_text_vis_type = textwrap.dedent("""
+    Specifies the type of visualizations/overlay requested.
+    Default: {} (volumetric overlay of cortical segmentation on T1 mri).
+    \n""".format(cfg.default_vis_type))
+
+    help_text_label = textwrap.dedent("""
+    Specifies the set of labels to include for overlay.
+
+    Default: None (show all the labels in the selected segmentation)
+    \n""")
+
+    help_text_contour_color = textwrap.dedent("""
+    Specifies the color to use for the contours overlaid on MRI (when vis_type requested prescribes contours). 
+    Color can be specified in many ways as documented in https://matplotlib.org/users/colors.html
+    Default: {}.
+    \n""".format(cfg.default_contour_face_color))
+
+    help_text_alphas = textwrap.dedent("""
+    Alpha values to control the transparency of MRI and aseg. 
+    This must be a set of two values (between 0 and 1.0) separated by a space e.g. --alphas 0.7 0.5. 
+
+    Default: {} {}.  Play with these values to find something that works for you and the dataset.
+    \n""".format(cfg.default_alpha_mri, cfg.default_alpha_seg))
 
     help_text_views = textwrap.dedent("""
     Specifies the set of views to display - could be just 1 view, or 2 or all 3.
@@ -657,21 +689,43 @@ def get_parser():
     in_out.add_argument("-i", "--id_list", action="store", dest="id_list",
                         default=None, required=False, help=help_text_id_list)
 
-    in_out.add_argument("-u", "--user_dir", action="store", dest="user_dir",
-                        default=cfg.default_user_dir,
-                        required=False, help=help_text_user_dir)
-
-    in_out.add_argument("-m", "--mri_name", action="store", dest="mri_name",
-                        default=cfg.default_mri_name, required=False,
-                        help=help_text_mri_name)
+    in_out.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
+                        default=cfg.default_freesurfer_dir,
+                        required=False, help=help_text_fs_dir)
 
     in_out.add_argument("-o", "--out_dir", action="store", dest="out_dir",
                         required=False, help=help_text_out_dir,
                         default=None)
 
-    in_out.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
-                        default=cfg.default_freesurfer_dir,
-                        required=False, help=help_text_fs_dir)
+    in_out.add_argument("-m", "--mri_name", action="store", dest="mri_name",
+                        default=cfg.default_mri_name, required=False,
+                        help=help_text_mri_name)
+
+    in_out.add_argument("-g", "--seg_name", action="store", dest="seg_name",
+                             default=cfg.default_seg_name, required=False,
+                             help=help_text_seg_name)
+
+    in_out.add_argument("-l", "--labels", action="store", dest="label_set",
+                             default=cfg.default_label_set,
+                             nargs='+', metavar='label',
+                             required=False, help=help_text_label)
+
+    vis_args = parser.add_argument_group('Overlay options', ' ')
+    vis_args.add_argument("-v", "--vis_type", action="store", dest="vis_type",
+                          choices=cfg.visualization_combination_choices,
+                          default=cfg.default_vis_type, required=False,
+                          help=help_text_vis_type)
+
+    vis_args.add_argument("-c", "--contour_color", action="store", dest="contour_color",
+                          default=cfg.default_contour_face_color, required=False,
+                          help=help_text_contour_color)
+
+    vis_args.add_argument("-a", "--alpha_set", action="store", dest="alpha_set",
+                          metavar='alpha', nargs=2,
+                          default=cfg.default_alpha_set,
+                          required=False, help=help_text_alphas)
+
+
     outliers = parser.add_argument_group('Outlier detection',
                                          'options related to automatically detecting possible outliers')
     outliers.add_argument("-olm", "--outlier_method", action="store",
@@ -686,8 +740,8 @@ def get_parser():
 
     outliers.add_argument("-olt", "--outlier_feat_types", action="store",
                           dest="outlier_feat_types",
-                          default=cfg.t1_mri_features_OLD, required=False,
-                          help=help_text_outlier_feat_types)
+                          default=cfg.freesurfer_features_outlier_detection,
+                          required=False, help=help_text_outlier_feat_types)
 
     outliers.add_argument("-old", "--disable_outlier_detection", action="store_true",
                           dest="disable_outlier_detection",
@@ -732,9 +786,10 @@ def make_workflow_from_user_options():
     except:
         parser.exit(1)
 
-    vis_type, label_set = check_labels(user_args.vis_type, user_args.labels)
-    in_dir, source_of_features = check_input_dir(user_args.fs_dir, user_args.user_dir,
-                                                 vis_type)
+    vis_type, label_set = check_labels(user_args.vis_type, user_args.label_set)
+    in_dir, source_of_features = check_input_dir(user_args.fs_dir, None, vis_type,
+                                                 freesurfer_install_required=False)
+
     mri_name = user_args.mri_name
     seg_name = user_args.seg_name
     id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type, mri_name,
