@@ -359,23 +359,28 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.display_params_seg = dict(interpolation='none', aspect='equal', origin='lower',
                                   alpha=self.alpha_seg)
 
-        normalize_labels = colors.Normalize(vmin=np.min(self.label_set),
-                                            vmax=np.max(self.label_set), clip=True)
-        fs_cmap = get_freesurfer_cmap(self.vis_type)
-        self.seg_mapper = cm.ScalarMappable(norm=normalize_labels, cmap=fs_cmap)
-
         normalize_mri = colors.Normalize(vmin=cfg.min_cmap_range_t1_mri,
                                          vmax=cfg.max_cmap_range_t1_mri, clip=True)
         self.mri_mapper = cm.ScalarMappable(norm=normalize_mri, cmap='gray')
 
+        fs_cmap = get_freesurfer_cmap(self.vis_type)
         # deciding colors for the whole image
-        unique_labels = np.unique(self.label_set)
+        if self.label_set is not None and self.vis_type in cfg.label_types:
+            unique_labels = np.unique(self.label_set)
+        elif self.vis_type in cfg.cortical_types:
+            num_cortical_labels = len(fs_cmap.colors)
+            unique_labels = np.arange(num_cortical_labels, dtype='int8')
+
+        normalize_labels = colors.Normalize(vmin=np.min(unique_labels),
+                                            vmax=np.max(unique_labels), clip=True)
+        self.seg_mapper = cm.ScalarMappable(norm=normalize_labels, cmap=fs_cmap)
+
         # removing background - 0 stays 0
-        unique_labels = np.delete(unique_labels, 0)
-        if len(unique_labels) == 1:
+        self.unique_labels_display = np.delete(unique_labels, 0)
+        if len(self.unique_labels_display) == 1:
             self.color_for_label = [self.contour_color]
         else:
-            self.color_for_label = self.seg_mapper.to_rgba(unique_labels)
+            self.color_for_label = self.seg_mapper.to_rgba(self.unique_labels_display)
 
         # turning off axes, creating image objects
         self.h_images_mri = [None] * len(self.axes)
@@ -393,8 +398,7 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Adds the review UI with defaults"""
 
         self.UI = FreesurferReviewInterface(self.fig, self.axes, self.issue_list,
-                                            self.next,
-                                            self.quit)
+                                            self.next, self.quit)
 
         # connecting callbacks
         self.con_id_click = self.fig.canvas.mpl_connect('button_press_event',
@@ -473,7 +477,7 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         temp_t1_mri = read_image(t1_mri_path, error_msg='T1 mri')
         temp_fs_seg = read_image(fs_seg_path, error_msg='segmentation')
 
-        if self.current_t1_mri.shape != temp_fs_seg.shape:
+        if temp_t1_mri.shape != temp_fs_seg.shape:
             raise ValueError('size mismatch! MRI: {} Seg: {}\n'
                              'Size must match in all dimensions.'.format(
                 self.current_t1_mri.shape,
@@ -522,13 +526,13 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         self.update_histogram()
 
-        del slice_seg, slice_mri, mri_rgb, slices, mean_thk
+        del slice_seg, slice_mri, mri_rgb, slices
 
 
     def plot_contours_in_slice(self, slice_seg, target_axis):
         """Plots contour around the data in slice (after binarization)"""
 
-        for index, label in enumerate(self.label_set):
+        for index, label in enumerate(self.unique_labels_display):
             binary_slice_seg = slice_seg == label
             if not binary_slice_seg.any():
                 continue
