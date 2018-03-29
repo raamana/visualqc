@@ -79,7 +79,9 @@ def read_aparc_stats_wholebrain(fs_dir, subject_id):
     return np.hstack(aparc_stats)
 
 
-def read_aparc_stats_in_hemi(stats_file, include_whole_brain_stats=False):
+def read_aparc_stats_in_hemi(stats_file,
+                             subset=None,
+                             include_whole_brain_stats=False):
     """Read statistics on cortical features (such as thickness, curvature etc) produced by Freesurfer.
 
     file_path would contain whether it is from the right or left hemisphere.
@@ -91,15 +93,31 @@ def read_aparc_stats_in_hemi(stats_file, include_whole_brain_stats=False):
         raise IOError('given path does not exist : {}'.format(stats_file))
 
     # ColHeaders StructName NumVert SurfArea GrayVol ThickAvg ThickStd MeanCurv GausCurv FoldInd CurvInd
-    aparc_roi_dtype = [('StructName', 'S50'), ('NumVert', '<i4'), ('SurfArea', '<i4'),
+    aparc_roi_dtype = [('StructName', 'S50'),
+                       ('NumVert', '<i4'),
+                       ('SurfArea', '<i4'),
                        ('GrayVol', '<i4'),
-                       ('ThickAvg', '<f4'), ('ThickStd', '<f4'), ('MeanCurv', '<f4'),
+                       ('ThickAvg', '<f4'),
+                       ('ThickStd', '<f4'),
+                       ('MeanCurv', '<f4'),
                        ('GausCurv', '<f4'),
-                       ('FoldInd', '<f4'), ('CurvInd', '<f4')]
+                       ('FoldInd', '<f4'),
+                       ('CurvInd', '<f4')]
+
+    subset_all = ['SurfArea', 'GrayVol',
+                  'ThickAvg', 'ThickStd',
+                  'MeanCurv', 'GausCurv',
+                  'FoldInd', 'CurvInd']
+    if subset is None or not isinstance(subset, list):
+        subset_return = subset_all
+    else:
+        subset_return = [ st for st in subset if st in subset_all]
+        if len(subset_return) <1:
+            raise ValueError('Atleast 1 valid stat must be chosen! '
+                             'From: \n{}'.format(subset_all))
+
     roi_stats = np.genfromtxt(stats_file, dtype=aparc_roi_dtype, filling_values=np.NaN)
-    subset = ['SurfArea', 'GrayVol', 'ThickAvg', 'ThickStd', 'MeanCurv', 'GausCurv',
-              'FoldInd', 'CurvInd']
-    roi_stats_values = np.full((len(roi_stats), len(subset)), np.NaN)
+    roi_stats_values = np.full((len(roi_stats), len(subset_return)), np.NaN)
     for idx, stat in enumerate(roi_stats):
         roi_stats_values[idx, :] = [stat[feat] for feat in subset]
 
