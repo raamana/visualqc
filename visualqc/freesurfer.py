@@ -326,11 +326,11 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.views = views
         self.num_slices_per_view = num_slices_per_view
         self.num_rows_per_view   = num_rows_per_view
+        num_cols_volumetric = num_slices_per_view/num_rows_per_view
         num_rows_volumetric = len(self.views) * self.num_rows_per_view
-        num_cols_volumetric = int((len(self.views) * self.num_slices_per_view) / self.num_rows_per_view)
+        total_num_panels_vol = int(num_cols_volumetric*num_rows_volumetric)
 
-        # surf vis generation happens at the beginning - no option
-        total_num_panels_vol = num_rows_volumetric*num_cols_volumetric
+        # surf vis generation happens at the beginning - no option for user
         total_num_panels = total_num_panels_vol + cfg.num_cortical_surface_vis
         self.num_rows_total = num_rows_volumetric + 1 # extra 1 for surf
         self.num_cols_final = int(np.ceil(total_num_panels / self.num_rows_total))
