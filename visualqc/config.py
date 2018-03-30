@@ -73,8 +73,15 @@ default_review_figsize = [15, 11]
 
 default_navigation_options = ("Next", "Quit")
 # shortcuts L, F, S have actions on matplotlib interface, so choosing other words
-default_rating_list = ('Good', 'Doubtful', 'Bad', 'Error', 'Review later')
-map_short_rating = dict(g='Good', d='Doubtful', b='Bad', e='Error', r='Review later')
+freesurfer_default_rating = 'Review later'
+map_short_rating = OrderedDict(g='Good',
+                               d='Doubtful',
+                               b='Bad',
+                               e='Error',
+                               i="i'm Tired",
+                               r=freesurfer_default_rating)
+default_rating_list = list(map_short_rating.values())
+index_freesurfer_default_rating = default_rating_list.index(freesurfer_default_rating)
 default_rating_list_shortform = map_short_rating.keys()
 ratings_not_to_be_recorded = [None, '']
 
@@ -100,6 +107,7 @@ color_navig_text = 'black'
 position_outlier_alert = (0.950, 0.92)
 position_outlier_alert_box = [0.902, 0.87, 0.097, 0.07]
 position_rating_axis = [0.905, 0.65, 0.09, 0.2]
+position_radio_buttons = [0.905, 0.45, 0.09, 0.23]
 position_checkbox = [0.905, 0.42, 0.09, 0.25]
 position_text_input = [0.900, 0.20, 0.095, 0.2]
 position_slider_seg_alpha = [0.905, 0.35, 0.07, 0.02]

@@ -36,20 +36,21 @@ class FreesurferReviewInterface(BaseReviewInterface):
 
     def __init__(self,
                  fig,
-                 axes,
-                 issue_list=cfg.t1_mri_default_issue_list,
+                 axes_seg,
+                 rating_list=cfg.default_rating_list,
                  next_button_callback=None,
                  quit_button_callback=None):
         """Constructor"""
 
-        super().__init__(fig, axes, next_button_callback, quit_button_callback)
+        super().__init__(fig, axes_seg, next_button_callback, quit_button_callback)
 
-        self.issue_list = issue_list
+        self.rating_list = rating_list
 
+        self.axes_seg = axes_seg
         self.prev_axis = None
         self.prev_ax_pos = None
         self.zoomed_in = False
-        self.add_checkboxes()
+        self.add_radio_buttons()
 
         self.next_button_callback = next_button_callback
         self.quit_button_callback = quit_button_callback
@@ -58,89 +59,33 @@ class FreesurferReviewInterface(BaseReviewInterface):
         # makes to handy to clean them all
         self.data_handles = list()
 
+        self.unzoomable_axes = [self.radio_bt_rating.ax, self.text_box.ax,
+                                 self.bt_next.ax, self.bt_quit.ax]
 
-    def add_checkboxes(self):
-        """
-        Checkboxes offer the ability to select multiple tags such as Motion, Ghosting Aliasing etc,
-            instead of one from a list of mutual exclusive rating options (such as Good, Bad, Error etc).
 
-        """
+    def add_radio_buttons(self):
 
-        ax_checkbox = plt.axes(cfg.position_checkbox, facecolor=cfg.color_rating_axis)
-        # initially de-activating all
-        actives = [False] * len(self.issue_list)
-        self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list, actives=actives)
-        self.checkbox.on_clicked(self.save_issues)
-        for txt_lbl in self.checkbox.labels:
+        ax_radio = plt.axes(cfg.position_radio_buttons,
+                            facecolor=cfg.color_rating_axis, aspect='equal')
+        self.radio_bt_rating = RadioButtons(ax_radio, self.rating_list,
+                                            active=None, activecolor='orange')
+        self.radio_bt_rating.on_clicked(self.save_rating)
+        for txt_lbl in self.radio_bt_rating.labels:
             txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
 
-        for rect in self.checkbox.rectangles:
-            rect.set_width(cfg.checkbox_rect_width)
-            rect.set_height(cfg.checkbox_rect_height)
+        for circ in self.radio_bt_rating.circles:
+            circ.set(radius=0.06)
 
-        # lines is a list of n crosses, each cross (x) defined by a tuple of lines
-        for x_line1, x_line2 in self.checkbox.lines:
-            x_line1.set_color(cfg.checkbox_cross_color)
-            x_line2.set_color(cfg.checkbox_cross_color)
+    def save_rating(self, label):
+        """Update the rating"""
 
-        self._index_pass = cfg.t1_mri_default_issue_list.index(cfg.t1_mri_pass_indicator)
-
-
-    def save_issues(self, label):
-        """
-        Update the rating
-
-        This function is called whenever set_active() happens on any label, if checkbox.eventson is True.
-
-        """
-
-        if label == cfg.t1_mri_pass_indicator:
-            self.clear_checkboxes(except_pass=True)
-        else:
-            self.clear_pass_only_if_on()
-
-
-    def clear_checkboxes(self, except_pass=False):
-        """Clears all checkboxes.
-
-        if except_pass=True,
-            does not clear checkbox corresponding to cfg.t1_mri_pass_indicator
-        """
-
-        cbox_statuses = self.checkbox.get_status()
-        for index, this_cbox_active in enumerate(cbox_statuses):
-            if except_pass and index == self._index_pass:
-                continue
-            # if it was selected already, toggle it.
-            if this_cbox_active:
-                # not calling checkbox.set_active() as it calls the callback self.save_issues() each time, if eventson is True
-                self._toggle_visibility_checkbox(index)
-
-
-    def clear_pass_only_if_on(self):
-        """Clear pass checkbox only"""
-
-        cbox_statuses = self.checkbox.get_status()
-        if cbox_statuses[self._index_pass]:
-            self._toggle_visibility_checkbox(self._index_pass)
-
-
-    def _toggle_visibility_checkbox(self, index):
-        """toggles the visibility of a given checkbox"""
-
-        l1, l2 = self.checkbox.lines[index]
-        l1.set_visible(not l1.get_visible())
-        l2.set_visible(not l2.get_visible())
-
+        # print('  rating {}'.format(label))
+        self.user_rating = label
 
     def get_ratings(self):
         """Returns the final set of checked ratings"""
 
-        cbox_statuses = self.checkbox.get_status()
-        user_ratings = [cfg.t1_mri_default_issue_list[idx] for idx, this_cbox_active in
-                        enumerate(cbox_statuses) if this_cbox_active]
-
-        return user_ratings
+        return self.user_rating
 
 
     def allowed_to_advance(self):
@@ -177,6 +122,19 @@ class FreesurferReviewInterface(BaseReviewInterface):
             # resetting it
             self.data_handles = list()
 
+        # this is populated for each unit during display
+        self.axes_seg.clear()
+
+    def clear_radio_buttons(self):
+        """Clears the radio button"""
+
+        # enabling default rating encourages lazy advancing without review
+        # self.radio_bt_rating.set_active(cfg.index_freesurfer_default_rating)
+        for index, label in enumerate(self.radio_bt_rating.labels):
+            if label.get_text() == self.radio_bt_rating.value_selected:
+                self.radio_bt_rating.circles[index].set_facecolor(cfg.color_rating_axis)
+                break
+        self.radio_bt_rating.value_selected = None
 
     def clear_notes_annot(self):
         """clearing notes and annotations"""
@@ -234,10 +192,12 @@ class FreesurferReviewInterface(BaseReviewInterface):
         if key_pressed in ['ctrl+q', 'q+ctrl']:
             self.quit_button_callback()
         else:
-            if key_pressed in cfg.abbreviation_t1_mri_default_issue_list:
-                checked_label = cfg.abbreviation_t1_mri_default_issue_list[key_pressed]
-                self.checkbox.set_active(
-                    cfg.t1_mri_default_issue_list.index(checked_label))
+            if key_pressed in cfg.default_rating_list_shortform:
+                self.user_rating = cfg.map_short_rating[key_pressed]
+                index_to_set = cfg.default_rating_list.index(self.user_rating)
+                self.radio_bt_rating.set_active(index_to_set)
+            elif key_pressed in ['t']:
+                self.toggle_overlay()
             else:
                 pass
 
@@ -824,7 +784,7 @@ def make_workflow_from_user_options():
                                   out_dir,
                                   vis_type=vis_type,
                                   label_set=label_set,
-                                  issue_list=cfg.t1_mri_default_issue_list,
+                                  issue_list=cfg.default_rating_list,
                                   mri_name=mri_name,
                                   seg_name=seg_name,
                                   alpha_set=alpha_set,
