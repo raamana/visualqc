@@ -263,6 +263,7 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  outlier_method=cfg.default_outlier_detection_method,
                  outlier_fraction=cfg.default_outlier_fraction,
                  outlier_feat_types=cfg.freesurfer_features_outlier_detection,
+                 source_of_features=cfg.default_source_of_features_freesurfer,
                  disable_outlier_detection=False,
                  prepare_first=True,
                  views=cfg.default_views,
@@ -293,6 +294,8 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.contour_color = 'yellow'
 
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
+
+        self.source_of_features = source_of_features
         self.init_getters()
 
 
@@ -438,14 +441,14 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # to update thickness histogram, you need access to full FS output or aparc.stats
         try:
-            mean_thk = read_aparc_stats_wholebrain(self.in_dir, self.current_unit_id,
-                                                   subset=('ThickAvg',))
+            distribution_to_show = read_aparc_stats_wholebrain(self.in_dir, self.current_unit_id,
+                                                   subset=(cfg.statistic_in_histogram_freesurfer,))
         except:
             # do nothing
             return
 
         # number of vertices is too high - so presenting mean ROI thickness is smarter!
-        _, _, patches_hist = self.ax_hist.hist(mean_thk, density=True,
+        _, _, patches_hist = self.ax_hist.hist(distribution_to_show, density=True,
                                                bins=cfg.num_bins_histogram_display)
         self.ax_hist.relim(visible_only=True)
         self.ax_hist.autoscale_view(scalex=False)  # xlim fixed to [0, 1]
@@ -559,10 +562,9 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
                     # for clearing upon review
                     self.UI.data_handles.extend(contours.collections)
 
+            del slice_seg, slice_mri, mri_rgba
 
         self.update_histogram()
-
-        del slice_seg, slice_mri, mri_rgba, slices
 
 
     def plot_contours_in_slice(self, slice_seg, target_axis):
@@ -875,6 +877,7 @@ def make_workflow_from_user_options():
                                   outlier_fraction=outlier_fraction,
                                   outlier_feat_types=outlier_feat_types,
                                   disable_outlier_detection=disable_outlier_detection,
+                                  source_of_features=source_of_features,
                                   prepare_first=user_args.prepare_first,
                                   views=views,
                                   num_slices_per_view=num_slices,

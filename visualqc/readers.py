@@ -67,13 +67,13 @@ def read_volumes_global_areas(seg_stats_file):
     return wb_data.flatten()
 
 
-def read_aparc_stats_wholebrain(fs_dir, subject_id):
+def read_aparc_stats_wholebrain(fs_dir, subject_id, subset=None):
     """Convenient routine to obtain the whole brain cortical ROI stats."""
 
     aparc_stats = list()
     for hm in ('lh', 'rh'):
         stats_path = pjoin(fs_dir, subject_id, 'stats', '{}.aparc.stats'.format(hm))
-        hm_data = read_aparc_stats_in_hemi(stats_path)
+        hm_data = read_aparc_stats_in_hemi(stats_path, subset)
         aparc_stats.append(hm_data)
 
     return np.hstack(aparc_stats)

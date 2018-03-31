@@ -12,10 +12,12 @@ annot_vis_dir_name = 'annot_visualizations'
 default_mri_name = 'orig.mgz'  # brainmask would not help check expansion of surfaces into skull
 default_seg_name = 'aparc+aseg.mgz'
 required_files = (default_mri_name, default_seg_name)
+default_source_of_features_freesurfer = 'whole_brain'
 
 num_cortical_surface_vis = 6
 position_histogram_freesurfer = [0.905, 0.7, 0.09, 0.1]
-title_histogram_freesurfer = 'cortical thickness'
+statistic_in_histogram_freesurfer = 'ThickAvg'
+title_histogram_freesurfer = 'mean thickness (label-wise)'
 num_bins_histogram_display = 30
 xticks_histogram_freesurfer = np.arange(1.5, 6.01, 0.5)
 color_histogram_freesurfer = ('#c9ae74')  # sandstone
