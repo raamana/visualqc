@@ -13,6 +13,13 @@ default_mri_name = 'orig.mgz'  # brainmask would not help check expansion of sur
 default_seg_name = 'aparc+aseg.mgz'
 required_files = (default_mri_name, default_seg_name)
 
+num_cortical_surface_vis = 6
+position_histogram_freesurfer = [0.905, 0.7, 0.09, 0.1]
+title_histogram_freesurfer = 'cortical thickness'
+num_bins_histogram_display = 30
+xticks_histogram_freesurfer = np.arange(1.5, 6.01, 0.5)
+color_histogram_freesurfer = ('#c9ae74')  # sandstone
+
 freesurfer_features_outlier_detection = ('cortical', 'subcortical')
 outlier_list_prefix = 'possible_outliers'
 alert_background_color = 'xkcd:coral'
@@ -54,6 +61,12 @@ default_alpha_mri = 1.0
 default_alpha_seg = 0.7
 default_alpha_set = (default_alpha_mri, default_alpha_seg)
 
+min_cmap_range_t1_mri = 0
+max_cmap_range_t1_mri = 1
+
+mri_zorder_freesurfer = 0
+seg_zorder_freesurfer = 1
+
 default_views = (0, 1, 2)
 default_num_slices = 12
 default_num_rows = 2
@@ -63,8 +76,15 @@ default_review_figsize = [15, 11]
 
 default_navigation_options = ("Next", "Quit")
 # shortcuts L, F, S have actions on matplotlib interface, so choosing other words
-default_rating_list = ('Good', 'Doubtful', 'Bad', 'Error', 'Review later')
-map_short_rating = dict(g='Good', d='Doubtful', b='Bad', e='Error', r='Review later')
+freesurfer_default_rating = 'Review later'
+map_short_rating = OrderedDict(g='Good',
+                               d='Doubtful',
+                               b='Bad',
+                               e='Error',
+                               m="i'M tired",
+                               r=freesurfer_default_rating)
+default_rating_list = list(map_short_rating.values())
+index_freesurfer_default_rating = default_rating_list.index(freesurfer_default_rating)
 default_rating_list_shortform = map_short_rating.keys()
 ratings_not_to_be_recorded = [None, '']
 
@@ -90,9 +110,10 @@ color_navig_text = 'black'
 position_outlier_alert = (0.950, 0.92)
 position_outlier_alert_box = [0.902, 0.87, 0.097, 0.07]
 position_rating_axis = [0.905, 0.65, 0.09, 0.2]
+position_radio_buttons = [0.905, 0.45, 0.09, 0.23]
 position_checkbox = [0.905, 0.42, 0.09, 0.25]
-position_text_input = [0.900, 0.20, 0.095, 0.2]
-position_slider_seg_alpha = [0.905, 0.35, 0.07, 0.02]
+position_slider_seg_alpha = [0.905, 0.4, 0.07, 0.03]
+position_text_input = [0.900, 0.20, 0.095, 0.15]
 position_next_button = [0.905, 0.13, 0.07, 0.04]
 position_quit_button = [0.905, 0.07, 0.07, 0.04]
 position_navig_options = [0.905, 0.21, 0.07, 0.12]
@@ -144,7 +165,8 @@ t1_mri_features_OLD = ('histogram_whole_scan',)
 checkbox_rect_width = 0.05
 checkbox_rect_height = 0.05
 checkbox_cross_color = 'xkcd:goldenrod'
-checkbox_font_properties = dict(color=text_option_color, fontweight='normal') # , fontname='Arial Narrow')
+checkbox_font_properties = dict(color=text_option_color,
+                                fontweight='normal')  # , fontname='Arial Narrow')
 
 position_histogram_t1_mri = [0.905, 0.7, 0.09, 0.1]
 title_histogram_t1_mri = 'nonzero intensities'

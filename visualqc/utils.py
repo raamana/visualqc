@@ -48,14 +48,20 @@ def read_image(img_spec, error_msg='image',
     return img
 
 
-def scale_0to1(image):
+def scale_0to1(image, multiply_factor=1):
     """Scale the two images to [0, 1] based on min/max."""
 
     min_value = image.min()
     max_value = image.max()
-    image = (image - min_value) / (max_value - min_value)
+    out_image = (image - min_value) / (max_value - min_value)
 
-    return image
+    if not np.isclose(multiply_factor, 1.0):
+        # makes it go from [0, 1] to [0, multiply_factor]
+        # this may be unnecessary for plt.imshow commands,
+        #   as everything gets normalized from 0 to 1 again.
+        out_image = out_image * multiply_factor
+
+    return out_image
 
 
 def get_label_set(seg, label_set, background=0):
@@ -629,11 +635,16 @@ def get_path_for_subject(in_dir, subject_id, req_file, vis_type, in_dir_type=Non
 
     if vis_type is not None and (
         vis_type in freesurfer_vis_types or in_dir_type in ['freesurfer', ]):
-        out_path = realpath(pjoin(in_dir, subject_id, 'mri', req_file))
+        out_path = get_freesurfer_mri_path(in_dir, subject_id, req_file)
     else:
         out_path = realpath(pjoin(in_dir, subject_id, req_file))
 
     return out_path
+
+
+def get_freesurfer_mri_path(in_dir, subject_id, req_file):
+
+    return realpath(pjoin(in_dir, subject_id, 'mri', req_file))
 
 
 def check_outlier_params(method, fraction, feat_types, disable_outlier_detection,

@@ -235,7 +235,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  in_dir_type='BIDS',
                  outlier_method=cfg.default_outlier_detection_method,
                  outlier_fraction=cfg.default_outlier_fraction,
-                 outlier_feat_types=cfg.func_outlier_features,
+                 outlier_feat_types=cfg.func_mri_features_OLD,
                  disable_outlier_detection=True,
                  prepare_first=False,
                  vis_type=None,
