@@ -5,14 +5,19 @@ Module to present a base neuroimaging scan, currently T1 mri, without any overla
 """
 
 import argparse
+import subprocess
+from subprocess import check_output
 import sys
 import textwrap
 import warnings
 from abc import ABC
-from os.path import join as pjoin
+from os.path import join as pjoin, exists as pexists
+from os import makedirs
+import traceback
 
 import numpy as np
 from matplotlib import cm, colors, pyplot as plt
+import matplotlib.image as mpimg
 from matplotlib.colors import is_color_like
 from matplotlib.widgets import RadioButtons, Slider
 from mrivis.color_maps import get_freesurfer_cmap
@@ -24,7 +29,7 @@ from visualqc.readers import read_aparc_stats_wholebrain
 from visualqc.utils import check_alpha_set, check_finite_int, check_id_list, \
     check_input_dir, check_labels, check_out_dir, check_outlier_params, check_views, \
     get_axis, get_freesurfer_mri_path, get_label_set, pick_slices, read_image, scale_0to1, \
-    void_subcortical_symmetrize_cortical
+    void_subcortical_symmetrize_cortical, freesurfer_installed
 from visualqc.workflows import BaseWorkflowVisualQC
 
 # each rating is a set of labels, join them with a plus delimiter
@@ -263,8 +268,9 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  outlier_method=cfg.default_outlier_detection_method,
                  outlier_fraction=cfg.default_outlier_fraction,
                  outlier_feat_types=cfg.freesurfer_features_outlier_detection,
+                 source_of_features=cfg.default_source_of_features_freesurfer,
                  disable_outlier_detection=False,
-                 prepare_first=True,
+                 no_surface_vis=False,
                  views=cfg.default_views,
                  num_slices_per_view=cfg.default_num_slices,
                  num_rows_per_view=cfg.default_num_rows):
@@ -286,13 +292,15 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.expt_id = 'rate_freesurfer_{}'.format(self.mri_name)
         self.suffix = self.expt_id
         self.current_alert_msg = None
-        self.prepare_first = prepare_first
+        self.no_surface_vis = no_surface_vis
 
         self.alpha_mri = alpha_set[0]
         self.alpha_seg = alpha_set[1]
         self.contour_color = 'yellow'
 
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
+
+        self.source_of_features = source_of_features
         self.init_getters()
 
 
@@ -309,7 +317,21 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.extract_features()
         self.detect_outliers()
 
-        # no complex vis to generate - skipping
+        if not self.no_surface_vis:
+            self.generate_surface_vis()
+
+
+    def generate_surface_vis(self):
+        """Generates surface visualizations."""
+
+        print('Attempting to generate the surface visualizations of parcellation ...')
+        if not self.fs_is_installed:  # needs tksurfer
+            print('Freesurfer does not seem to be installed - skipping surface visualizations.')
+            self.surface_vis_paths = dict()
+            return
+
+        self.surface_vis_paths = {sid: make_vis_pial_surface(self.in_dir, sid, self.out_dir) for
+                                      sid in self.id_list}
 
 
     def prepare_UI(self):
@@ -331,9 +353,13 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         num_rows_volumetric = len(self.views) * self.num_rows_per_view
         total_num_panels_vol = int(num_cols_volumetric * num_rows_volumetric)
 
-        # surf vis generation happens at the beginning - no option for user
-        total_num_panels = total_num_panels_vol + cfg.num_cortical_surface_vis
-        self.num_rows_total = num_rows_volumetric + 1  # extra 1 for surf
+        # surf vis generation happens at the beginning - no option to defer for user
+        self.fs_is_installed = freesurfer_installed()
+        extra_panels_surface_vis = cfg.num_cortical_surface_vis if self.fs_is_installed else 0
+        extra_rows_surface_vis = 1 if self.fs_is_installed else 0
+
+        total_num_panels = total_num_panels_vol + extra_panels_surface_vis
+        self.num_rows_total = num_rows_volumetric + extra_rows_surface_vis
         self.num_cols_final = int(np.ceil(total_num_panels / self.num_rows_total))
 
 
@@ -385,14 +411,22 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         else:
             self.color_for_label = self.seg_mapper.to_rgba(self.unique_labels_display)
 
-        # turning off axes, creating image objects
-        self.h_images_mri = [None] * len(self.axes)
-        if 'volumetric' in self.vis_type:
-            self.h_images_seg = [None] * len(self.axes)
-
+        # doing all the one-time operations, to improve speed later on
         # specifying 3rd dim for empty_image to avoid any color mapping
         empty_image = np.full((10, 10, 3), 0.0)
-        for ix, ax in enumerate(self.axes):
+
+        self.h_surfaces = [None]*cfg.num_cortical_surface_vis
+
+        num_volumetric_panels = len(self.axes) - cfg.num_cortical_surface_vis
+        for ix, ax in enumerate(self.axes[:cfg.num_cortical_surface_vis]):
+            ax.axis('off')
+            self.h_surfaces[ix] = ax.imshow(empty_image)
+
+        self.h_images_mri = [None] * num_volumetric_panels
+        if 'volumetric' in self.vis_type:
+            self.h_images_seg = [None] * num_volumetric_panels
+
+        for ix, ax in enumerate(self.axes[cfg.num_cortical_surface_vis:]):
             ax.axis('off')
             self.h_images_mri[ix] = ax.imshow(empty_image, **self.display_params_mri)
             if 'volumetric' in self.vis_type:
@@ -437,16 +471,19 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Updates histogram with current image data"""
 
         # to update thickness histogram, you need access to full FS output or aparc.stats
-        if self.histogram_data is not None:
-            self.ax_hist.set_visible(True)
-            # number of vertices is too high - so presenting mean ROI thickness is smarter!
-            _, _, patches_hist = self.ax_hist.hist(self.histogram_data, density=True,
-                                                   bins=cfg.num_bins_histogram_display)
-            self.ax_hist.relim(visible_only=True)
-            self.ax_hist.autoscale_view(scalex=False)  # xlim fixed to [0, 1]
-            self.UI.data_handles.extend(patches_hist)
-        else:
-            self.ax_hist.set_visible(False)
+        try:
+            distribution_to_show = read_aparc_stats_wholebrain(self.in_dir, self.current_unit_id,
+                                                   subset=(cfg.statistic_in_histogram_freesurfer,))
+        except:
+            # do nothing
+            return
+
+        # number of vertices is too high - so presenting mean ROI thickness is smarter!
+        _, _, patches_hist = self.ax_hist.hist(distribution_to_show, density=True,
+                                               bins=cfg.num_bins_histogram_display)
+        self.ax_hist.relim(visible_only=True)
+        self.ax_hist.autoscale_view(scalex=False)  # xlim fixed to [0, 1]
+        self.UI.data_handles.extend(patches_hist)
 
 
     def update_alerts(self):
@@ -493,15 +530,8 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
                 temp_fs_seg.shape))
 
         skip_subject = False
-        self.histogram_data = None
         if self.vis_type in ('cortical_volumetric', 'cortical_contour'):
             temp_seg_uncropped = void_subcortical_symmetrize_cortical(temp_fs_seg)
-            try:
-                self.histogram_data = read_aparc_stats_wholebrain(self.in_dir,
-                                                                  unit_id, subset=['ThickAvg', ])
-            except:
-                print('Unable to read thickness features - skipping display of histogram..')
-
         elif self.vis_type in ('labels_volumetric', 'labels_contour'):
             # TODO in addition to checking file exists, we need to check
             #   requested labels exist, for label vis_type
@@ -537,9 +567,23 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def display_unit(self):
         """Adds slice collage, with seg overlays on MRI in each panel."""
 
+        if not self.no_surface_vis and self.current_unit_id in self.surface_vis_paths:
+            surf_paths = self.surface_vis_paths[self.current_unit_id] # is a dict of paths
+            for sf_ax_index, ((hemi, view), spath) in enumerate(surf_paths.items()):
+                plt.sca(self.axes[sf_ax_index])
+                img = mpimg.imread(spath)
+                # img = crop_image(img)
+                plt.imshow(img)
+                self.axes[sf_ax_index].text(0, 0, '{} {}'.format(hemi, view))
+        else:
+            msg = 'no surface visualizations\navailable or disabled'
+            print('{} for {}'.format(msg, self.current_unit_id))
+            self.axes[1].text(0.5, 0.5, msg)
+
         slices = pick_slices(self.current_t1_mri, self.views, self.num_slices_per_view)
-        for ax_index, (dim_index, slice_index) in enumerate(slices):
-            plt.sca(self.axes[ax_index])
+        for vol_ax_index, (dim_index, slice_index) in enumerate(slices):
+            panel_index = cfg.num_cortical_surface_vis + vol_ax_index
+            plt.sca(self.axes[panel_index])
             slice_mri = get_axis(self.current_t1_mri, dim_index, slice_index)
             slice_seg = get_axis(self.current_seg, dim_index, slice_index)
 
@@ -557,19 +601,15 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
                 self.togglable_handles.append(h_seg)
                 # self.UI.data_handles.append(h_seg)
             elif 'contour' in self.vis_type:
-                h_seg = self.plot_contours_in_slice(slice_seg, self.axes[ax_index])
+                h_seg = self.plot_contours_in_slice(slice_seg, self.axes[panel_index])
                 for contours in h_seg:
                     self.togglable_handles.extend(contours.collections)
                     # for clearing upon review
                     self.UI.data_handles.extend(contours.collections)
 
-            # refreshing limits/view
-            self.axes[ax_index].relim()
-            self.axes[ax_index].autoscale_view()
+            del slice_seg, slice_mri, mri_rgba
 
         self.update_histogram()
-
-        del slice_seg, slice_mri, mri_rgba, slices
 
 
     def plot_contours_in_slice(self, slice_seg, target_axis):
@@ -603,10 +643,96 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.close('all')
 
 
+def make_vis_pial_surface(in_dir, subject_id, out_dir, annot_file='aparc.annot'):
+    """Generate screenshot for the pial surface in different views"""
+
+    out_vis_dir = pjoin(out_dir, cfg.annot_vis_dir_name)
+    makedirs(out_vis_dir, exist_ok=True)
+    hemis = ('lh', 'rh')
+    hemis_long = ('left', 'right')
+    vis_list = dict()
+
+    print('Processing {}'.format(subject_id))
+    for hemi, hemi_l in zip(hemis, hemis_long):
+        vis_list[hemi_l] = dict()
+        script_file, vis_files = make_tcl_script_vis_annot(subject_id, hemi_l, out_vis_dir, annot_file)
+        try:
+            # run the script only if all the visualizations were not generated before
+            all_vis_exist = all([pexists(vis_path) for vis_path in vis_files.values()])
+            if not all_vis_exist:
+                _, _ = run_tksurfer_script(in_dir, subject_id, hemi, script_file)
+
+            vis_list[hemi_l].update(vis_files)
+        except:
+            traceback.print_exc()
+            print('unable to generate tksurfer visualizations for {} hemi - skipping'.format(hemi))
+
+    # flattening it for easier use later on
+    out_vis_list = dict()
+    pref_order = [ ('right', 'lateral'), ('left', 'lateral'),
+                   ('right', 'medial'), ('left', 'medial'),
+                   ('right', 'transverse'), ('left', 'transverse')]
+    for hemi_l, view in pref_order:
+        if pexists(vis_list[hemi_l][view]):
+            out_vis_list[(hemi_l, view)] = vis_list[hemi_l][view]
+
+    return out_vis_list
+
+
+def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir, annot_file='aparc.annot'):
+    """Generates a tksurfer script to make visualizations"""
+
+    script_file = pjoin(out_vis_dir, 'vis_annot_{}.tcl'.format(hemi))
+    vis = dict()
+    for view in cfg.surface_view_angles:
+        vis[view] = pjoin(out_vis_dir, '{}_{}_{}.tif'.format(subject_id, hemi, view))
+
+    img_format = 'tiff'  # rgb does not work
+
+    cmds = list()
+    # cmds.append("resize_window 1000")
+    cmds.append("labl_import_annotation {}".format(annot_file))
+    cmds.append("scale_brain 1.37")
+    cmds.append("redraw")
+    cmds.append("save_{} {}".format(img_format, vis['lateral']))
+    cmds.append("rotate_brain_y 180.0")
+    cmds.append("redraw")
+    cmds.append("save_{} {}".format(img_format, vis['medial']))
+    cmds.append("rotate_brain_z -90.0")
+    cmds.append("rotate_brain_y 135.0")
+    cmds.append("redraw")
+    cmds.append("save_{} {}".format(img_format, vis['transverse']))
+    cmds.append("exit 0")
+
+    try:
+        with open(script_file, 'w') as sf:
+            sf.write('\n'.join(cmds))
+    except:
+        raise IOError('Unable to write the script file to\n {}'.format(script_file))
+
+    return script_file, vis
+
+
+def run_tksurfer_script(in_dir, subject_id, hemi, script_file):
+    """Runs a given TCL script to generate visualizations"""
+
+    try:
+        cmd_args = ['tksurfer', '-sdir', in_dir, subject_id, hemi, 'pial', '-tcl', script_file]
+        txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
+    except subprocess.CalledProcessError as tksurfer_exc:
+        print('Error running tksurfer to generate 3d surface visualizations - skipping them.')
+        exit_code = tksurfer_exc.returncode
+        txt_out = tksurfer_exc.output
+    else:
+        exit_code = 0
+
+    return txt_out, exit_code
+
+
 def get_parser():
     """Parser to specify arguments and their defaults."""
 
-    parser = argparse.ArgumentParser(prog="visualqc_t1_mri",
+    parser = argparse.ArgumentParser(prog="visualqc_freesurfer",
                                      formatter_class=argparse.RawTextHelpFormatter,
                                      description='visualqc_freesurfer: rate quality '
                                                  'of Freesurfer reconstruction.')
@@ -704,11 +830,10 @@ def get_parser():
     Default: {}.
     \n""".format(cfg.default_num_rows))
 
-    help_text_prepare = textwrap.dedent("""
-    This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations. 
-    This makes the switch from one subject to the next, even more seamless (saving few seconds :) ).
+    help_text_no_surface_vis = textwrap.dedent("""
+    This flag disables batch-generation of 3d surface visualizations, which are shown along with cross-sectional overlays. This is not recommended, but could be used in situations where you do not have Freesurfer installed or want to focus solely on cross-sectional views.
 
-    Default: False (required visualizations are generated only on demand, which can take 5-10 seconds for each subject).
+    Default: False (required visualizations are generated at the beginning, which can take 5-10 seconds for each subject).
     \n""")
 
     help_text_outlier_detection_method = textwrap.dedent("""
@@ -819,9 +944,9 @@ def get_parser():
     wf_args = parser.add_argument_group('Workflow', 'Options related to workflow '
                                                     'e.g. to pre-compute resource-intensive features, '
                                                     'and pre-generate all the visualizations required')
-    wf_args.add_argument("-p", "--prepare_first", action="store_true",
-                         dest="prepare_first",
-                         help=help_text_prepare)
+
+    wf_args.add_argument("-ns", "--no_surface_vis", action="store_true",
+                         dest="no_surface_vis", help=help_text_no_surface_vis)
 
     return parser
 
@@ -882,7 +1007,8 @@ def make_workflow_from_user_options():
                                   outlier_fraction=outlier_fraction,
                                   outlier_feat_types=outlier_feat_types,
                                   disable_outlier_detection=disable_outlier_detection,
-                                  prepare_first=user_args.prepare_first,
+                                  source_of_features=source_of_features,
+                                  no_surface_vis=user_args.no_surface_vis,
                                   views=views,
                                   num_slices_per_view=num_slices,
                                   num_rows_per_view=num_rows)

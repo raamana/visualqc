@@ -608,6 +608,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # dropping alternating voxels if it gets too big
         # to save on memory and avoid losing signal
         if normed_carpet.shape[1] > 600:
+            print('Too many frames (n={}) to display: dropping alternating frames'.format(normed_carpet.shape[1]))
             normed_carpet = normed_carpet[:, ::2]
 
         return normed_carpet
@@ -828,6 +829,10 @@ def _rescale_over_time(matrix):
     Input: num_voxels x num_time_points
     """
 
+    if matrix.shape[0] <= matrix.shape[1]:
+        raise ValueError('Number of voxels is less than the number of time points!! '
+                      'Are you sure the your reshaping is right?')
+
     min = matrix.min(axis=1)
     range = matrix.ptp(axis=1)  # ptp : peak to peak, max-min
     min_tile = np.tile(min, (matrix.shape[1], 1)).T
@@ -836,6 +841,8 @@ def _rescale_over_time(matrix):
     range_tile[range_tile < np.finfo(np.float).eps] = 1.0
 
     normed = (matrix - min_tile) / range_tile
+
+    del min, range, min_tile, range_tile
 
     return normed
 
