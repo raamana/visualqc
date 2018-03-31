@@ -53,9 +53,15 @@ def scale_0to1(image, multiply_factor=1):
 
     min_value = image.min()
     max_value = image.max()
-    image = (image - min_value) / (max_value - min_value)
+    out_image = (image - min_value) / (max_value - min_value)
 
-    return image*multiply_factor # makes it go from [0, 1] to [0, multiply_factor]
+    if not np.isclose(multiply_factor, 1.0):
+        # makes it go from [0, 1] to [0, multiply_factor]
+        # this may be unnecessary for plt.imshow commands,
+        #   as everything gets normalized from 0 to 1 again.
+        out_image = out_image * multiply_factor
+
+    return out_image
 
 
 def get_label_set(seg, label_set, background=0):

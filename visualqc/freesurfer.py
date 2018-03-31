@@ -9,22 +9,23 @@ import sys
 import textwrap
 import warnings
 from abc import ABC
-from os.path import join as pjoin, realpath
+from os.path import join as pjoin
 
 import numpy as np
+from matplotlib import cm, colors, pyplot as plt
 from matplotlib.colors import is_color_like
-from matplotlib import pyplot as plt, colors, cm
-from matplotlib.widgets import CheckButtons
-from mrivis.utils import crop_image, crop_to_seg_extents
+from matplotlib.widgets import RadioButtons, Slider
 from mrivis.color_maps import get_freesurfer_cmap
+from mrivis.utils import crop_to_seg_extents
+
 from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
-from visualqc.utils import check_finite_int, check_id_list, check_alpha_set, \
-    check_input_dir, check_labels, check_out_dir, check_outlier_params, check_views, \
-    get_axis, get_label_set, pick_slices, read_image, scale_0to1, \
-    void_subcortical_symmetrize_cortical, get_freesurfer_mri_path
-from visualqc.workflows import BaseWorkflowVisualQC
 from visualqc.readers import read_aparc_stats_wholebrain
+from visualqc.utils import check_alpha_set, check_finite_int, check_id_list, \
+    check_input_dir, check_labels, check_out_dir, check_outlier_params, check_views, \
+    get_axis, get_freesurfer_mri_path, get_label_set, pick_slices, read_image, scale_0to1, \
+    void_subcortical_symmetrize_cortical
+from visualqc.workflows import BaseWorkflowVisualQC
 
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
@@ -39,18 +40,21 @@ class FreesurferReviewInterface(BaseReviewInterface):
                  axes_seg,
                  rating_list=cfg.default_rating_list,
                  next_button_callback=None,
-                 quit_button_callback=None):
+                 quit_button_callback=None,
+                 alpha_seg=cfg.default_alpha_seg):
         """Constructor"""
 
         super().__init__(fig, axes_seg, next_button_callback, quit_button_callback)
 
         self.rating_list = rating_list
 
-        self.axes_seg = axes_seg
+        self.overlaid_artists = axes_seg
+        self.latest_alpha_seg = alpha_seg
         self.prev_axis = None
         self.prev_ax_pos = None
         self.zoomed_in = False
         self.add_radio_buttons()
+        self.add_alpha_slider()
 
         self.next_button_callback = next_button_callback
         self.quit_button_callback = quit_button_callback
@@ -60,7 +64,7 @@ class FreesurferReviewInterface(BaseReviewInterface):
         self.data_handles = list()
 
         self.unzoomable_axes = [self.radio_bt_rating.ax, self.text_box.ax,
-                                 self.bt_next.ax, self.bt_quit.ax]
+                                self.bt_next.ax, self.bt_quit.ax]
 
 
     def add_radio_buttons(self):
@@ -76,11 +80,25 @@ class FreesurferReviewInterface(BaseReviewInterface):
         for circ in self.radio_bt_rating.circles:
             circ.set(radius=0.06)
 
+
+    def add_alpha_slider(self):
+        """Controls the transparency level of overlay"""
+
+        # alpha slider
+        ax_slider = plt.axes(cfg.position_slider_seg_alpha,
+                             facecolor=cfg.color_slider_axis)
+        self.slider = Slider(ax_slider, label='transparency',
+                             valmin=0.0, valmax=1.0, valinit=0.7, valfmt='%1.2f')
+        self.slider.label.set_position((0.99, 1.5))
+        self.slider.on_changed(self.set_alpha_value)
+
+
     def save_rating(self, label):
         """Update the rating"""
 
         # print('  rating {}'.format(label))
         self.user_rating = label
+
 
     def get_ratings(self):
         """Returns the final set of checked ratings"""
@@ -97,19 +115,14 @@ class FreesurferReviewInterface(BaseReviewInterface):
             Atleast Checkbox is checked
         """
 
-        if any(self.checkbox.get_status()):
-            allowed = True
-        else:
-            allowed = False
-
-        return allowed
+        return self.radio_bt_rating.value_selected is not None
 
 
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
 
         self.clear_data()
-        self.clear_checkboxes()
+        self.clear_radio_buttons()
         self.clear_notes_annot()
 
 
@@ -123,7 +136,8 @@ class FreesurferReviewInterface(BaseReviewInterface):
             self.data_handles = list()
 
         # this is populated for each unit during display
-        self.axes_seg.clear()
+        self.overlaid_artists.clear()
+
 
     def clear_radio_buttons(self):
         """Clears the radio button"""
@@ -135,6 +149,7 @@ class FreesurferReviewInterface(BaseReviewInterface):
                 self.radio_bt_rating.circles[index].set_facecolor(cfg.color_rating_axis)
                 break
         self.radio_bt_rating.value_selected = None
+
 
     def clear_notes_annot(self):
         """clearing notes and annotations"""
@@ -149,20 +164,18 @@ class FreesurferReviewInterface(BaseReviewInterface):
 
         if self.prev_axis is not None:
             # include all the non-data axes here (so they wont be zoomed-in)
-            if event.inaxes not in [self.checkbox.ax, self.text_box.ax,
-                                    self.bt_next.ax, self.bt_quit.ax]:
+            if event.inaxes not in self.unzoomable_axes:
                 self.prev_axis.set_position(self.prev_ax_pos)
                 self.prev_axis.set_zorder(0)
                 self.prev_axis.patch.set_alpha(0.5)
                 self.zoomed_in = False
 
-        # right click ignored
+        # right click toggles overlay
         if event.button in [3]:
-            pass
+            self.toggle_overlay()
         # double click to zoom in to any axis
         elif event.dblclick and event.inaxes is not None and \
-            event.inaxes not in [self.checkbox.ax, self.text_box.ax,
-                                 self.bt_next.ax, self.bt_quit.ax]:
+            event.inaxes not in self.unzoomable_axes:
             # zoom axes full-screen
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(cfg.zoomed_position)
@@ -200,6 +213,34 @@ class FreesurferReviewInterface(BaseReviewInterface):
                 self.toggle_overlay()
             else:
                 pass
+
+
+    def toggle_overlay(self):
+        """Toggles the overlay by setting alpha to 0 and back."""
+
+        if self.latest_alpha_seg != 0.0:
+            self.prev_alpha_seg = self.latest_alpha_seg
+            self.latest_alpha_seg = 0.0
+        else:
+            self.latest_alpha_seg = self.prev_alpha_seg
+        self.update()
+
+
+    def set_alpha_value(self, latest_value):
+        """" Use the slider to set alpha."""
+
+        self.latest_alpha_seg = latest_value
+        self.update()
+
+
+    def update(self):
+        """updating seg alpha for all axes"""
+
+        for art in self.overlaid_artists:
+            art.set_alpha(self.latest_alpha_seg)
+
+        # update figure
+        plt.draw()
 
 
 class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
@@ -285,14 +326,14 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.padding = padding
         self.views = views
         self.num_slices_per_view = num_slices_per_view
-        self.num_rows_per_view   = num_rows_per_view
-        num_cols_volumetric = num_slices_per_view/num_rows_per_view
+        self.num_rows_per_view = num_rows_per_view
+        num_cols_volumetric = num_slices_per_view / num_rows_per_view
         num_rows_volumetric = len(self.views) * self.num_rows_per_view
-        total_num_panels_vol = int(num_cols_volumetric*num_rows_volumetric)
+        total_num_panels_vol = int(num_cols_volumetric * num_rows_volumetric)
 
         # surf vis generation happens at the beginning - no option for user
         total_num_panels = total_num_panels_vol + cfg.num_cortical_surface_vis
-        self.num_rows_total = num_rows_volumetric + 1 # extra 1 for surf
+        self.num_rows_total = num_rows_volumetric + 1  # extra 1 for surf
         self.num_cols_final = int(np.ceil(total_num_panels / self.num_rows_total))
 
 
@@ -314,10 +355,12 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.axes = self.axes.flatten()
         # TODO add 6 axes for surface vis
 
-        self.display_params_mri = dict(interpolation='none', aspect='equal', origin='lower',
-                                  alpha=self.alpha_mri)
-        self.display_params_seg = dict(interpolation='none', aspect='equal', origin='lower',
-                                  alpha=self.alpha_seg)
+        self.display_params_mri = dict(interpolation='none', aspect='equal',
+                                       origin='lower',
+                                       alpha=self.alpha_mri)
+        self.display_params_seg = dict(interpolation='none', aspect='equal',
+                                       origin='lower',
+                                       alpha=self.alpha_seg)
 
         normalize_mri = colors.Normalize(vmin=cfg.min_cmap_range_t1_mri,
                                          vmax=cfg.max_cmap_range_t1_mri, clip=True)
@@ -344,10 +387,18 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # turning off axes, creating image objects
         self.h_images_mri = [None] * len(self.axes)
-        empty_image = np.full((10, 10), 0.0)
+        if 'volumetric' in self.vis_type:
+            self.h_images_seg = [None] * len(self.axes)
+
+        # specifying 3rd dim for empty_image to avoid any color mapping
+        empty_image = np.full((10, 10, 3), 0.0)
         for ix, ax in enumerate(self.axes):
             ax.axis('off')
             self.h_images_mri[ix] = ax.imshow(empty_image, **self.display_params_mri)
+            if 'volumetric' in self.vis_type:
+                self.h_images_seg[ix] = ax.imshow(empty_image, **self.display_params_seg)
+
+        self.togglable_handles = list()
 
         # leaving some space on the right for review elements
         plt.subplots_adjust(**cfg.review_area)
@@ -357,8 +408,9 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def add_UI(self):
         """Adds the review UI with defaults"""
 
-        self.UI = FreesurferReviewInterface(self.fig, self.axes, self.issue_list,
-                                            self.next, self.quit)
+        # TODO h_images_seg may not be defined for contour vistype
+        self.UI = FreesurferReviewInterface(self.fig, self.togglable_handles,
+                                            self.issue_list, self.next, self.quit)
 
         # connecting callbacks
         self.con_id_click = self.fig.canvas.mpl_connect('button_press_event',
@@ -387,7 +439,7 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # to update thickness histogram, you need access to full FS output or aparc.stats
         try:
             mean_thk = read_aparc_stats_wholebrain(self.in_dir, self.current_unit_id,
-                                                   subset=('ThickAvg', ))
+                                                   subset=('ThickAvg',))
         except:
             # do nothing
             return
@@ -444,27 +496,32 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
                 temp_fs_seg.shape))
 
         skip_subject = False
-        if self.label_set is not None:
-            temp_fs_seg_uncropped, roi_set_is_empty = get_label_set(temp_fs_seg,
-                                                               self.label_set)
-            if roi_set_is_empty:
-                skip_subject = True
-                print('segmentation image for {} '
-                      'does not contain requested label set!'.format(unit_id))
-
         if self.vis_type in ('cortical_volumetric', 'cortical_contour'):
-            temp_fs_seg_uncropped = void_subcortical_symmetrize_cortical(temp_fs_seg)
+            temp_seg_uncropped = void_subcortical_symmetrize_cortical(temp_fs_seg)
         elif self.vis_type in ('labels_volumetric', 'labels_contour'):
             # TODO in addition to checking file exists, we need to check
             #   requested labels exist, for label vis_type
-            temp_fs_seg_uncropped = temp_fs_seg
+            if self.label_set is not None:
+                temp_seg_uncropped, roi_set_is_empty = get_label_set(temp_fs_seg,
+                                                                     self.label_set)
+                if roi_set_is_empty:
+                    skip_subject = True
+                    print('segmentation image for {} '
+                          'does not contain requested label set!'.format(unit_id))
+                    return skip_subject
+            else:
+                raise ValueError('--label_set must be specified for visualization types: '
+                                 ' labels_volumetric and labels_contour')
         else:
             raise NotImplementedError('Invalid visualization type - '
-                                      'choose from: {}'.format(cfg.visualization_combination_choices))
+                                      'choose from: {}'.format(
+                cfg.visualization_combination_choices))
 
         # T1 mri must be rescaled - to avoid strange distributions skewing plots
         rescaled_t1_mri = scale_0to1(temp_t1_mri, cfg.max_cmap_range_t1_mri)
-        self.current_t1_mri, self.current_seg = crop_to_seg_extents(rescaled_t1_mri, temp_fs_seg_uncropped, self.padding)
+        self.current_t1_mri, self.current_seg = crop_to_seg_extents(rescaled_t1_mri,
+                                                                    temp_seg_uncropped,
+                                                                    self.padding)
 
         out_vis_path = pjoin(self.out_dir,
                              'visual_qc_{}_{}_{}'.format(self.vis_type, self.suffix,
@@ -478,28 +535,57 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         slices = pick_slices(self.current_t1_mri, self.views, self.num_slices_per_view)
         for ax_index, (dim_index, slice_index) in enumerate(slices):
+            plt.sca(self.axes[ax_index])
             slice_mri = get_axis(self.current_t1_mri, dim_index, slice_index)
             slice_seg = get_axis(self.current_seg, dim_index, slice_index)
-            mri_rgb = self.mri_mapper.to_rgba(slice_mri)
-            self.h_images_mri[ax_index].set_data(mri_rgb)
-            self.plot_contours_in_slice(slice_seg, self.axes[ax_index])
+
+            mri_rgba = self.mri_mapper.to_rgba(slice_mri, alpha=self.alpha_mri)
+            # self.h_images_mri[ax_index].set_data(mri_rgb)
+            h_m = plt.imshow(mri_rgba, interpolation='none',
+                             aspect='equal', origin='lower')
+            self.UI.data_handles.append(h_m)
+
+            if 'volumetric' in self.vis_type:
+                seg_rgba = self.seg_mapper.to_rgba(slice_seg, alpha=self.alpha_seg)
+                # self.h_images_seg[ax_index].set_data(seg_rgb)
+                h_seg = plt.imshow(seg_rgba, interpolation='none',
+                                   aspect='equal', origin='lower')
+                self.togglable_handles.append(h_seg)
+                # self.UI.data_handles.append(h_seg)
+            elif 'contour' in self.vis_type:
+                h_seg = self.plot_contours_in_slice(slice_seg, self.axes[ax_index])
+                for contours in h_seg:
+                    self.togglable_handles.extend(contours.collections)
+                    # for clearing upon review
+                    self.UI.data_handles.extend(contours.collections)
+
+            # refreshing limits/view
+            self.axes[ax_index].relim()
+            self.axes[ax_index].autoscale_view()
 
         self.update_histogram()
 
-        del slice_seg, slice_mri, mri_rgb, slices
+        del slice_seg, slice_mri, mri_rgba, slices
 
 
     def plot_contours_in_slice(self, slice_seg, target_axis):
         """Plots contour around the data in slice (after binarization)"""
 
+        plt.sca(target_axis)
+        contour_handles = list()
         for index, label in enumerate(self.unique_labels_display):
             binary_slice_seg = slice_seg == label
             if not binary_slice_seg.any():
                 continue
-            ctr_h = target_axis.contour(binary_slice_seg, levels=[cfg.contour_level, ],
+            ctr_h = plt.contour(binary_slice_seg,
+                                levels=[cfg.contour_level, ],
                                 colors=(self.color_for_label[index],),
-                                linewidths=cfg.contour_line_width)
-            self.UI.data_handles.append(ctr_h)
+                                linewidths=cfg.contour_line_width,
+                                alpha=self.alpha_seg,
+                                zorder=cfg.seg_zorder_freesurfer)
+            contour_handles.append(ctr_h)
+
+        return contour_handles
 
 
     def cleanup(self):
@@ -518,7 +604,8 @@ def get_parser():
 
     parser = argparse.ArgumentParser(prog="visualqc_t1_mri",
                                      formatter_class=argparse.RawTextHelpFormatter,
-                                     description='visualqc_freesurfer: rate quality of Freesurfer reconstruction.')
+                                     description='visualqc_freesurfer: rate quality '
+                                                 'of Freesurfer reconstruction.')
 
     help_text_fs_dir = textwrap.dedent("""
     Absolute path to ``SUBJECTS_DIR`` containing the finished runs of Freesurfer parcellation
@@ -668,13 +755,13 @@ def get_parser():
                         help=help_text_mri_name)
 
     in_out.add_argument("-g", "--seg_name", action="store", dest="seg_name",
-                             default=cfg.default_seg_name, required=False,
-                             help=help_text_seg_name)
+                        default=cfg.default_seg_name, required=False,
+                        help=help_text_seg_name)
 
     in_out.add_argument("-l", "--labels", action="store", dest="label_set",
-                             default=cfg.default_label_set,
-                             nargs='+', metavar='label',
-                             required=False, help=help_text_label)
+                        default=cfg.default_label_set,
+                        nargs='+', metavar='label',
+                        required=False, help=help_text_label)
 
     vis_args = parser.add_argument_group('Overlay options', ' ')
     vis_args.add_argument("-v", "--vis_type", action="store", dest="vis_type",
@@ -690,7 +777,6 @@ def get_parser():
                           metavar='alpha', nargs=2,
                           default=cfg.default_alpha_set,
                           required=False, help=help_text_alphas)
-
 
     outliers = parser.add_argument_group('Outlier detection',
                                          'options related to automatically detecting possible outliers')
