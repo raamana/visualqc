@@ -5,11 +5,11 @@ import sys
 import warnings
 from genericpath import exists as pexists
 from os import makedirs
-from os.path import join as pjoin, realpath, basename, splitext
 from shutil import copyfile, which
 
 import nibabel as nib
 import numpy as np
+from os.path import basename, join as pjoin, realpath, splitext
 
 import visualqc.config as cfg
 from visualqc.config import default_out_dir_name, freesurfer_vis_cmd, \

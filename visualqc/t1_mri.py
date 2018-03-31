@@ -8,21 +8,19 @@ import argparse
 import sys
 import textwrap
 import warnings
-from os import makedirs
-from os.path import join as pjoin, exists as pexists, realpath
-from shutil import copyfile
 from abc import ABC
-import matplotlib
+
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import CheckButtons
 from mrivis.utils import crop_image
+from os.path import join as pjoin, realpath
 
 from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
-from visualqc.utils import check_id_list, check_input_dir_T1, check_views, \
-    check_finite_int, check_out_dir, check_outlier_params, get_path_for_subject, \
-    read_image, scale_0to1, pick_slices, get_axis, get_ratings_path_info
+from visualqc.utils import check_finite_int, check_id_list, check_input_dir_T1, \
+    check_out_dir, check_outlier_params, check_views, get_axis, pick_slices, read_image, \
+    scale_0to1
 from visualqc.workflows import BaseWorkflowVisualQC
 
 # each rating is a set of labels, join them with a plus delimiter

@@ -3,9 +3,8 @@
 Data reader module.
 
 """
-from os.path import exists as pexists, join as pjoin, realpath
-
 import numpy as np
+from os.path import exists as pexists, join as pjoin, realpath
 
 from visualqc import config as cfg
 

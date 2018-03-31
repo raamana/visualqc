@@ -8,23 +8,24 @@ import sys
 import textwrap
 import warnings
 from abc import ABC
-from os.path import basename, join as pjoin, realpath, splitext
+from textwrap import wrap
 
 import nibabel as nib
 import numpy as np
 from matplotlib import pyplot as plt
-import matplotlib as mpl
 from matplotlib.widgets import CheckButtons
 from mrivis.utils import crop_image
+from os.path import basename, join as pjoin, realpath, splitext
+
 from visualqc import config as cfg
 from visualqc.image_utils import mask_image
 from visualqc.readers import traverse_bids
 from visualqc.t1_mri import T1MriInterface
-from visualqc.utils import check_bids_dir, check_id_list, check_finite_int, \
-    check_image_is_4d, check_out_dir, check_id_list_with_regex, \
-    check_outlier_params, check_views, get_axis, pick_slices, scale_0to1
+from visualqc.utils import check_bids_dir, check_finite_int, check_id_list_with_regex, \
+    check_image_is_4d, check_out_dir, check_outlier_params, check_views, get_axis, \
+    pick_slices, scale_0to1
 from visualqc.workflows import BaseWorkflowVisualQC
-from textwrap import wrap
+
 
 def _unbidsify(filename, max_width = 18):
     """Returns a easily displayable and readable multiline string"""
@@ -833,16 +834,16 @@ def _rescale_over_time(matrix):
         raise ValueError('Number of voxels is less than the number of time points!! '
                       'Are you sure the your reshaping is right?')
 
-    min = matrix.min(axis=1)
-    range = matrix.ptp(axis=1)  # ptp : peak to peak, max-min
-    min_tile = np.tile(min, (matrix.shape[1], 1)).T
-    range_tile = np.tile(range, (matrix.shape[1], 1)).T
+    min_ = matrix.min(axis=1)
+    range_ = matrix.ptp(axis=1)  # ptp : peak to peak, max-min
+    min_tile = np.tile(min_, (matrix.shape[1], 1)).T
+    range_tile = np.tile(range_, (matrix.shape[1], 1)).T
     # avoiding any numerical difficulties
     range_tile[range_tile < np.finfo(np.float).eps] = 1.0
 
     normed = (matrix - min_tile) / range_tile
 
-    del min, range, min_tile, range_tile
+    del min_, range_, min_tile, range_tile
 
     return normed
 

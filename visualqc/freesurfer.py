@@ -6,30 +6,30 @@ Module to present a base neuroimaging scan, currently T1 mri, without any overla
 
 import argparse
 import subprocess
-from subprocess import check_output
 import sys
 import textwrap
+import traceback
 import warnings
 from abc import ABC
-from os.path import join as pjoin, exists as pexists
 from os import makedirs
-import traceback
+from subprocess import check_output
 
+import matplotlib.image as mpimg
 import numpy as np
 from matplotlib import cm, colors, pyplot as plt
-import matplotlib.image as mpimg
 from matplotlib.colors import is_color_like
 from matplotlib.widgets import RadioButtons, Slider
 from mrivis.color_maps import get_freesurfer_cmap
 from mrivis.utils import crop_to_seg_extents
+from os.path import exists as pexists, join as pjoin
 
 from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.readers import read_aparc_stats_wholebrain
 from visualqc.utils import check_alpha_set, check_finite_int, check_id_list, \
     check_input_dir, check_labels, check_out_dir, check_outlier_params, check_views, \
-    get_axis, get_freesurfer_mri_path, get_label_set, pick_slices, read_image, scale_0to1, \
-    void_subcortical_symmetrize_cortical, freesurfer_installed
+    freesurfer_installed, get_axis, get_freesurfer_mri_path, get_label_set, pick_slices, \
+    read_image, scale_0to1, void_subcortical_symmetrize_cortical
 from visualqc.workflows import BaseWorkflowVisualQC
 
 # each rating is a set of labels, join them with a plus delimiter
