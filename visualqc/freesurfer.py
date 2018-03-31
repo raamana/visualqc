@@ -437,19 +437,16 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Updates histogram with current image data"""
 
         # to update thickness histogram, you need access to full FS output or aparc.stats
-        try:
-            mean_thk = read_aparc_stats_wholebrain(self.in_dir, self.current_unit_id,
-                                                   subset=('ThickAvg',))
-        except:
-            # do nothing
-            return
-
-        # number of vertices is too high - so presenting mean ROI thickness is smarter!
-        _, _, patches_hist = self.ax_hist.hist(mean_thk, density=True,
-                                               bins=cfg.num_bins_histogram_display)
-        self.ax_hist.relim(visible_only=True)
-        self.ax_hist.autoscale_view(scalex=False)  # xlim fixed to [0, 1]
-        self.UI.data_handles.extend(patches_hist)
+        if self.histogram_data is not None:
+            self.ax_hist.set_visible(True)
+            # number of vertices is too high - so presenting mean ROI thickness is smarter!
+            _, _, patches_hist = self.ax_hist.hist(self.histogram_data, density=True,
+                                                   bins=cfg.num_bins_histogram_display)
+            self.ax_hist.relim(visible_only=True)
+            self.ax_hist.autoscale_view(scalex=False)  # xlim fixed to [0, 1]
+            self.UI.data_handles.extend(patches_hist)
+        else:
+            self.ax_hist.set_visible(False)
 
 
     def update_alerts(self):
@@ -496,8 +493,15 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
                 temp_fs_seg.shape))
 
         skip_subject = False
+        self.histogram_data = None
         if self.vis_type in ('cortical_volumetric', 'cortical_contour'):
             temp_seg_uncropped = void_subcortical_symmetrize_cortical(temp_fs_seg)
+            try:
+                self.histogram_data = read_aparc_stats_wholebrain(self.in_dir,
+                                                                  unit_id, subset=['ThickAvg', ])
+            except:
+                print('Unable to read thickness features - skipping display of histogram..')
+
         elif self.vis_type in ('labels_volumetric', 'labels_contour'):
             # TODO in addition to checking file exists, we need to check
             #   requested labels exist, for label vis_type
