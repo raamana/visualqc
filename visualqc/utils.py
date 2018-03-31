@@ -82,7 +82,7 @@ def get_label_set(seg, label_set, background=0):
     # helps to facilitate distinguishable colors
     unique_labels = np.unique(out_seg.flatten())
     # removing background - 0 stays 0
-    unique_labels = np.delete(unique_labels, background)
+    unique_labels = np.setdiff1d(unique_labels, background)
     for index, label in enumerate(unique_labels):
         out_seg[out_seg == label] = index + 1  # index=0 would make it background
 
