@@ -325,8 +325,9 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Generates surface visualizations."""
 
         print('Attempting to generate the surface visualizations of parcellation ...')
-        if not self.fs_is_installed:  # needs tksurfer
-            print('Freesurfer does not seem to be installed - skipping surface visualizations.')
+        if not freesurfer_installed():  # needs tksurfer
+            print('Freesurfer does not seem to be installed '
+                  '- skipping surface visualizations.')
             self.surface_vis_paths = dict()
             return
 
@@ -354,9 +355,14 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         total_num_panels_vol = int(num_cols_volumetric * num_rows_volumetric)
 
         # surf vis generation happens at the beginning - no option to defer for user
-        self.fs_is_installed = freesurfer_installed()
-        extra_panels_surface_vis = cfg.num_cortical_surface_vis if self.fs_is_installed else 0
-        extra_rows_surface_vis = 1 if self.fs_is_installed else 0
+        if not self.no_surface_vis and 'cortical' in self.vis_type:
+            extra_panels_surface_vis = cfg.num_cortical_surface_vis
+            extra_rows_surface_vis = 1
+            self.volumetric_start_index = extra_panels_surface_vis
+        else:
+            extra_panels_surface_vis = 0
+            extra_rows_surface_vis = 0
+            self.volumetric_start_index = 0
 
         total_num_panels = total_num_panels_vol + extra_panels_surface_vis
         self.num_rows_total = num_rows_volumetric + extra_rows_surface_vis
@@ -379,7 +385,6 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.fig, self.axes = plt.subplots(self.num_rows_total, self.num_cols_final,
                                            figsize=self.figsize)
         self.axes = self.axes.flatten()
-        # TODO add 6 axes for surface vis
 
         self.display_params_mri = dict(interpolation='none', aspect='equal',
                                        origin='lower',
@@ -397,6 +402,7 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if self.label_set is not None and self.vis_type in cfg.label_types:
             unique_labels = np.unique(self.label_set)
         elif self.vis_type in cfg.cortical_types:
+            # TODO this might become a bug, if the number of cortical labels become more than 34
             num_cortical_labels = len(fs_cmap.colors)
             unique_labels = np.arange(num_cortical_labels, dtype='int8')
 
@@ -442,7 +448,6 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def add_UI(self):
         """Adds the review UI with defaults"""
 
-        # TODO h_images_seg may not be defined for contour vistype
         self.UI = FreesurferReviewInterface(self.fig, self.togglable_handles,
                                             self.issue_list, self.next, self.quit)
 
@@ -533,8 +538,6 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if self.vis_type in ('cortical_volumetric', 'cortical_contour'):
             temp_seg_uncropped = void_subcortical_symmetrize_cortical(temp_fs_seg)
         elif self.vis_type in ('labels_volumetric', 'labels_contour'):
-            # TODO in addition to checking file exists, we need to check
-            #   requested labels exist, for label vis_type
             if self.label_set is not None:
                 temp_seg_uncropped, roi_set_is_empty = get_label_set(temp_fs_seg,
                                                                      self.label_set)
@@ -567,22 +570,24 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def display_unit(self):
         """Adds slice collage, with seg overlays on MRI in each panel."""
 
-        if not self.no_surface_vis and self.current_unit_id in self.surface_vis_paths:
-            surf_paths = self.surface_vis_paths[self.current_unit_id] # is a dict of paths
-            for sf_ax_index, ((hemi, view), spath) in enumerate(surf_paths.items()):
-                plt.sca(self.axes[sf_ax_index])
-                img = mpimg.imread(spath)
-                # img = crop_image(img)
-                plt.imshow(img)
-                self.axes[sf_ax_index].text(0, 0, '{} {}'.format(hemi, view))
-        else:
-            msg = 'no surface visualizations\navailable or disabled'
-            print('{} for {}'.format(msg, self.current_unit_id))
-            self.axes[1].text(0.5, 0.5, msg)
+        if 'cortical' in self.vis_type:
+            if not self.no_surface_vis and self.current_unit_id in self.surface_vis_paths:
+                surf_paths = self.surface_vis_paths[self.current_unit_id] # is a dict of paths
+                for sf_ax_index, ((hemi, view), spath) in enumerate(surf_paths.items()):
+                    plt.sca(self.axes[sf_ax_index])
+                    img = mpimg.imread(spath)
+                    # img = crop_image(img)
+                    h_surf = plt.imshow(img)
+                    self.axes[sf_ax_index].text(0, 0, '{} {}'.format(hemi, view))
+                    self.UI.data_handles.append(h_surf)
+            else:
+                msg = 'no surface visualizations\navailable or disabled'
+                print('{} for {}'.format(msg, self.current_unit_id))
+                self.axes[1].text(0.5, 0.5, msg)
 
-        slices = pick_slices(self.current_t1_mri, self.views, self.num_slices_per_view)
+        slices = pick_slices(self.current_seg, self.views, self.num_slices_per_view)
         for vol_ax_index, (dim_index, slice_index) in enumerate(slices):
-            panel_index = cfg.num_cortical_surface_vis + vol_ax_index
+            panel_index = self.volumetric_start_index + vol_ax_index
             plt.sca(self.axes[panel_index])
             slice_mri = get_axis(self.current_t1_mri, dim_index, slice_index)
             slice_seg = get_axis(self.current_seg, dim_index, slice_index)
@@ -600,6 +605,7 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                    aspect='equal', origin='lower')
                 self.togglable_handles.append(h_seg)
                 # self.UI.data_handles.append(h_seg)
+                del seg_rgba
             elif 'contour' in self.vis_type:
                 h_seg = self.plot_contours_in_slice(slice_seg, self.axes[panel_index])
                 for contours in h_seg:
@@ -618,7 +624,7 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.sca(target_axis)
         contour_handles = list()
         for index, label in enumerate(self.unique_labels_display):
-            binary_slice_seg = slice_seg == label
+            binary_slice_seg = slice_seg == index
             if not binary_slice_seg.any():
                 continue
             ctr_h = plt.contour(binary_slice_seg,
