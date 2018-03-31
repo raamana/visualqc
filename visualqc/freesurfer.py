@@ -559,9 +559,6 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
                     # for clearing upon review
                     self.UI.data_handles.extend(contours.collections)
 
-            # refreshing limits/view
-            self.axes[ax_index].relim()
-            self.axes[ax_index].autoscale_view()
 
         self.update_histogram()
 
