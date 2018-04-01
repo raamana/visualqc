@@ -580,8 +580,7 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
             mixed = _mix_color(slice_one, slice_two, self.color_mix_alphas)
         elif self.vis_type in ['Checkerboard', 'checkerboard', 'checker', 'cb',
                                'checker_board']:
-            checkers = _get_checkers(slice_one.shape, self.checker_size)
-            mixed = _mix_slices_in_checkers(slice_one, slice_two, checkers)
+            mixed = _mix_slices_in_checkers(slice_one, slice_two, self.checker_size)
         elif self.vis_type in ['Voxelwise_diff', 'voxelwise_diff', 'vdiff']:
             mixed = _diff_image(slice_one, slice_two)
         elif self.vis_type in ['Edges', 'Edge overlay']:
@@ -702,9 +701,10 @@ def _mix_color(slice1, slice2, alpha_channels, color_space='rgb'):
     return mixed
 
 
-def _mix_slices_in_checkers(slice1, slice2, checkers):
+def _mix_slices_in_checkers(slice1, slice2, checker_size):
     """Mixes the two slices in alternating areas specified by checkers"""
 
+    checkers = _get_checkers(slice1.shape, checker_size)
     if slice1.shape != slice2.shape or slice2.shape != checkers.shape:
         raise ValueError('size mismatch between cropped slices and checkers!!!')
 
