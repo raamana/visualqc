@@ -115,9 +115,9 @@ position_rating_axis = [0.905, 0.65, 0.09, 0.2]
 position_radio_buttons = [0.905, 0.45, 0.09, 0.23]
 position_checkbox = [0.905, 0.42, 0.09, 0.25]
 position_slider_seg_alpha = [0.905, 0.4, 0.07, 0.03]
-position_text_input = [0.900, 0.20, 0.095, 0.15]
-position_next_button = [0.905, 0.13, 0.07, 0.04]
-position_quit_button = [0.905, 0.07, 0.07, 0.04]
+position_text_input = [0.900, 0.18, 0.095, 0.10]
+position_next_button = [0.905, 0.11, 0.07, 0.04]
+position_quit_button = [0.905, 0.05, 0.07, 0.04]
 position_navig_options = [0.905, 0.21, 0.07, 0.12]
 
 position_zoomed_time_point = [0.7, 0.02]
@@ -144,7 +144,7 @@ contour_level = 0.5
 line_break = [np.NaN, np.NaN]
 
 ## ----------------------------------------------------------------------------
-# T1 mri specific
+#       T1 mri specific
 ## ----------------------------------------------------------------------------
 
 t1_mri_pass_indicator = 'Pass'  # TODO Tired and Review Later must also be handled separately??
@@ -177,7 +177,7 @@ xticks_histogram_t1_mri = np.arange(0.1, 1.01, 0.2)
 color_histogram_t1_mri = ('#c9ae74')  # sandstone
 
 ## ----------------------------------------------------------------------------
-# Functional mri specific
+#           Functional mri specific
 ## ----------------------------------------------------------------------------
 
 func_mri_pass_indicator = 'Pass'
@@ -210,6 +210,39 @@ default_name_pattern = '*.nii'
 
 func_mri_features_OLD = ('dvars',)
 colormap_stdev_fmri = 'seismic'
+
+## ----------------------------------------------------------------------------
+#           Registration and alignment specific
+## ----------------------------------------------------------------------------
+
+alignment_features_OLD = ('MSE', )
+alignment_cmap = OrderedDict(Animate=None,
+                             Checkerboard='gray',
+                             Voxelwise_diff='gray',
+                             Color_mix=None)
+choices_alignment_comparison = alignment_cmap.keys()
+alignment_default_vis_type = 'Checkerboard' # 'Animate'
+
+default_checkerboard_size = None # 25
+default_color_mix_alphas = (1, 1)
+
+position_alignment_radio_button_method = [0.905, 0.45, 0.09, 0.19]
+position_alignment_radio_button_rating = [0.905, 0.25, 0.09, 0.25]
+position_text_input_alignment  = [0.900, 0.20, 0.09, 0.1]
+position_next_button_alignment = [0.905, 0.10, 0.07, 0.03]
+position_quit_button_alignment = [0.905, 0.03, 0.07, 0.03]
+position_toggle_animation = [0.905, 0.61, 0.07, 0.03]
+
+position_annotate_foreground = [0.7, 0.02]
+annotate_foreground_properties = dict(fontsize='medium', color='xkcd:pale orange')
+
+position_histogram_alignment = [0.905, 0.7, 0.09, 0.1]
+title_histogram_alignment  = 'voxel-wise diff'
+num_bins_histogram_alignment = 20
+xticks_histogram_alignment = np.arange(0.1, 1.01, 0.2)
+color_histogram_alignment  = ('#c9ae74')  # sandstone
+
+delay_in_animation = 0.2
 
 ## ----------------------------------------------------------------------------
 

@@ -48,7 +48,7 @@ def read_image(img_spec, error_msg='image',
     return img
 
 
-def scale_0to1(image, multiply_factor=1):
+def scale_0to1(image, multiply_factor=1.0):
     """Scale the two images to [0, 1] based on min/max."""
 
     min_value = image.min()
@@ -435,6 +435,17 @@ def check_input_dir_T1(fs_dir, user_dir):
     if not pexists(in_dir):
         raise IOError(
             'Invalid specification - check proper combination of --fs_dir and --user_dir')
+
+    return in_dir, type_of_features
+
+
+def check_input_dir_alignment(in_dir):
+    """Ensures proper input is specified."""
+
+    if in_dir is None or not pexists(in_dir):
+        raise IOError('Invalid dir is None or does not exist!')
+
+    type_of_features = 'generic'
 
     return in_dir, type_of_features
 

@@ -37,7 +37,7 @@ _plus_join = lambda label_set: '+'.join(label_set)
 
 
 class FreesurferReviewInterface(BaseReviewInterface):
-    """Custom interface for rating the quality of T1 MRI scan."""
+    """Custom interface for rating the quality of Freesurfer parcellation."""
 
 
     def __init__(self,
