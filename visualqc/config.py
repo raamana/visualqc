@@ -244,7 +244,8 @@ num_bins_histogram_alignment = 20
 xticks_histogram_alignment = np.arange(0.1, 1.01, 0.2)
 color_histogram_alignment  = ('#c9ae74')  # sandstone
 
-delay_in_animation = 0.2
+delay_in_animation = 0.5
+num_times_to_animate = 10
 
 ## ----------------------------------------------------------------------------
 

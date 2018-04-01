@@ -12,6 +12,11 @@ import warnings
 from abc import ABC
 from scipy.ndimage import sobel, grey_erosion
 import numpy as np
+import asyncio
+
+import matplotlib
+matplotlib.interactive(True)
+
 from matplotlib import pyplot as plt
 from matplotlib.cm import get_cmap
 from matplotlib.widgets import Button, RadioButtons
@@ -65,7 +70,6 @@ class AlignmentInterface(BaseReviewInterface):
 
         self.add_radio_buttons_rating()
         self.add_radio_buttons_comparison_method()
-        self.add_animation_toggle()
 
         # this list of artists to be populated later
         # makes to handy to clean them all
@@ -101,17 +105,6 @@ class AlignmentInterface(BaseReviewInterface):
 
         for circ in self.radio_bt_rating.circles:
             circ.set(radius=0.06)
-
-
-    def add_animation_toggle(self):
-        """Navigation elements"""
-
-        ax_bt_toggle = self.fig.add_axes(cfg.position_toggle_animation,
-                                         facecolor=cfg.color_quit_axis, aspect='equal')
-        self.bt_toggle = Button(ax_bt_toggle, 'Play/\npause', hovercolor='orange')
-        self.bt_toggle.label.set_color(cfg.color_navig_text)
-        self.bt_toggle.on_clicked(self.toggle_animation_callback)
-
 
     def save_rating(self, label):
         """Update the rating"""
@@ -386,6 +379,9 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.subplots_adjust(**cfg.review_area)
         plt.show(block=False)
 
+        # animation setup
+        self.anim_loop = asyncio.get_event_loop()
+
 
     def add_UI(self):
         """Adds the review UI with defaults"""
@@ -518,16 +514,20 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.vis_type = user_choice_vis_type
         self.display_unit()
 
-
     def animate(self):
         """Displays the two images alternatively, until paused by external callbacks"""
 
-        # TODO put an upper limit of 10 animations?
-        while self.continue_animation:
-            for img in (self.image_one, self.image_two):
-                self.show_image(img, self.slices)
-                time.sleep(self.delay_in_animation)
+        self.anim_loop.run_until_complete(self.alternate_images_with_delay_nTimes())
 
+    @asyncio.coroutine
+    def alternate_images_with_delay_nTimes(self):
+        """Show image 1, wait, show image 2"""
+
+        for _ in range(cfg.num_times_to_animate):
+            for img in (self.image_one, self.image_two):
+                self.show_image(img)
+                plt.pause(0.05)
+                time.sleep(self.delay_in_animation)
 
     def mix_and_display(self):
         """Static mix and display."""
@@ -542,17 +542,16 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.h_images[ax_index].set_data(mixed_slice)
 
 
-    def show_image(self, img, slices, annot=None):
+    def show_image(self, img, annot=None):
         """Display the requested slices of an image on the existing axes."""
 
-        for ax_index, (dim_index, slice_index) in enumerate(slices):
+        for ax_index, (dim_index, slice_index) in enumerate(self.slices):
             self.h_images[ax_index].set_data(get_axis(img, dim_index, slice_index))
 
         if annot is not None:
             self._identify_foreground(annot)
         else:
             self.fg_annot_h.set_visible(False)
-
 
     def show_first_image(self):
         """Callback to show first image"""
@@ -591,13 +590,14 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         return mixed
 
 
-    def toggle_animation(self):
+    def toggle_animation(self, input_event_to_ignore=None):
         """Callback to start or stop animation."""
 
-        self.continue_animation = not self.continue_animation
-        if self.continue_animation and self.vis_type in ['GIF', 'Animate']:
+        if self.anim_loop.is_running():
+            self.anim_loop.stop()
+        elif self.vis_type in ['GIF', 'Animate']:
+            # run only when the vis_type selected in animatable.
             self.animate()
-
 
     def cleanup(self):
         """Preparating for exit."""
@@ -608,6 +608,9 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.fig.canvas.mpl_disconnect(self.con_id_click)
         self.fig.canvas.mpl_disconnect(self.con_id_keybd)
         plt.close('all')
+
+        self.anim_loop.run_until_complete(self.anim_loop.shutdown_asyncgens())
+        self.anim_loop.close()
 
 
 def _overlay_edges(slice_one, slice_two):
