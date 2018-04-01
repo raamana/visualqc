@@ -10,9 +10,10 @@ import textwrap
 import time
 import warnings
 from abc import ABC
-
+from scipy.ndimage import sobel, grey_erosion
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.cm import get_cmap
 from matplotlib.widgets import Button, RadioButtons
 from mrivis.utils import crop_to_seg_extents
 from os.path import join as pjoin, realpath
@@ -25,7 +26,8 @@ from visualqc.workflows import BaseWorkflowVisualQC
 
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
-
+gray_cmap = get_cmap('gray')
+hot_cmap = get_cmap('hot')
 
 class AlignmentInterface(BaseReviewInterface):
     """Custom interface for rating the quality of alignment between two 3d MR images"""
@@ -530,6 +532,7 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def mix_and_display(self):
         """Static mix and display."""
 
+        # TODO maintain a dict mixed[vis_type] to do computation only once
         for ax_index, (dim_index, slice_index) in enumerate(self.slices):
             slice_one = get_axis(self.image_one, dim_index, slice_index)
             slice_two = get_axis(self.image_two, dim_index, slice_index)
@@ -581,6 +584,8 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
             mixed = _mix_slices_in_checkers(slice_one, slice_two, checkers)
         elif self.vis_type in ['Voxelwise_diff', 'voxelwise_diff', 'vdiff']:
             mixed = _diff_image(slice_one, slice_two)
+        elif self.vis_type in ['Edges', 'Edge overlay']:
+            mixed = _overlay_edges(slice_one, slice_two)
         else:
             raise ValueError('Invalid mixer name chosen.')
 
@@ -604,6 +609,28 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.fig.canvas.mpl_disconnect(self.con_id_click)
         self.fig.canvas.mpl_disconnect(self.con_id_keybd)
         plt.close('all')
+
+
+def _overlay_edges(slice_one, slice_two):
+    """Makes a composite image with edges from second image overlaid on first.
+
+    It will be in colormapped (RGB format) already.
+    """
+
+    edges_s2 = np.hypot(sobel(slice_two, axis=0), sobel(slice_two, axis=1))
+    # removing weak edges
+    weak_mask = edges_s2 <= np.percentile(edges_s2, 60)
+    edges_s2[weak_mask] = 0.0
+    sharp_edges = grey_erosion(edges_s2, 2)
+    edges_color_mapped = hot_cmap(sharp_edges)
+
+    composite = gray_cmap(slice_one)
+    mask_rgba = np.dstack([np.logical_not(weak_mask)]*4)
+    composite[mask_rgba>0] = edges_color_mapped[mask_rgba>0]
+
+    del edges_s2, weak_mask, sharp_edges, mask_rgba, edges_color_mapped
+
+    return composite
 
 
 def _get_checkers(slice_shape, patch_size):

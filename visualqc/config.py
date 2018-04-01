@@ -218,12 +218,14 @@ colormap_stdev_fmri = 'seismic'
 alignment_features_OLD = ('MSE', )
 alignment_cmap = OrderedDict(Animate=None,
                              Checkerboard='gray',
-                             Voxelwise_diff='gray',
+                             Voxelwise_diff='seismic',
+                             Edges=None,
                              Color_mix=None)
 choices_alignment_comparison = alignment_cmap.keys()
 alignment_default_vis_type = 'Checkerboard' # 'Animate'
 
 default_checkerboard_size = None # 25
+edge_threshold_alignment = 0.4
 default_color_mix_alphas = (1, 1)
 
 position_alignment_radio_button_method = [0.905, 0.45, 0.09, 0.19]
@@ -231,7 +233,7 @@ position_alignment_radio_button_rating = [0.905, 0.25, 0.09, 0.25]
 position_text_input_alignment  = [0.900, 0.20, 0.09, 0.1]
 position_next_button_alignment = [0.905, 0.10, 0.07, 0.03]
 position_quit_button_alignment = [0.905, 0.03, 0.07, 0.03]
-position_toggle_animation = [0.905, 0.61, 0.07, 0.03]
+position_toggle_animation = [0.925, 0.63, 0.07, 0.05]
 
 position_annotate_foreground = [0.7, 0.02]
 annotate_foreground_properties = dict(fontsize='medium', color='xkcd:pale orange')
