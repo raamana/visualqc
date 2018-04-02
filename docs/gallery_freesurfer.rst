@@ -34,7 +34,4 @@ Let's just focus on axial view to get more detail:
 .. image:: vis/fs_contour/visual_qc_labels_contour_2015_Pitt_0050039_v2_ns27_3x9.png
 
 
-Gallery - Freesurfer Parcellation (filled)
-------------------------------------------------
-
 Fore more visualizations e.g. those with filled labels instead of contours, refer to :doc:`gallery_freesurfer_filled`.

@@ -5,7 +5,7 @@ Credits
 Development Lead
 ----------------
 
-* Pradeep Reddy Raamana <raamana@gmail.com>
+* `Pradeep Reddy Raamana <https://www.crossinvalidation.com>`_
 
 Contributors
 ------------

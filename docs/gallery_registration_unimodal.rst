@@ -1,3 +1,3 @@
-Registration - comparison of spatial alignment
+Gallery - Registration : comparison of spatial alignment
 --------------------------------------------------------------------
 

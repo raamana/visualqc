@@ -1,5 +1,5 @@
 Data formats and requirements
------------------------------
+===============================
 
 ``visualqc`` relies on `nibabel <http://nipy.org/nibabel/>`_ to read the input image data, and supports all the formats that nibabel can read.
 
@@ -7,12 +7,12 @@ Data formats and requirements
 
 And, for a given subject ID, these two images must be in the same folder (although this might be relaxed in the future with a more generic input mechanism).
 
-Following formats are strongly encouraged:
+Following imaging formats are strongly encouraged:
 
  - Nifti
  - MGH/Freesurfer
 
-while the following formats are theoretically supported (but are not tested regularly):
+while the following formats are supported, as they can be ready via ``nibabel``, but they are not routinely tested:
 
  - MINC (1/2)
  - gifti

@@ -1,5 +1,5 @@
-Examples (Freesurfer)
-----------------------
+Example usage - Freesurfer
+----------------------------
 
 A rough example of usage can be:
 

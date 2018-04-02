@@ -1,3 +1,3 @@
-Functional MRI scan - artefact detection and rating
-------------------------------------------------------
+Gallery - Functional MRI scan - artefact detection and rating
+--------------------------------------------------------------
 

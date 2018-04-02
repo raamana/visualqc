@@ -1,3 +1,3 @@
-Segmentation/ROI - anatomical accuracy evaluation
+Gallery - Segmentation/ROI - anatomical accuracy evaluation
 --------------------------------------------------------------------
 
