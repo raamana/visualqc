@@ -465,9 +465,9 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Extra axis for histogram of cortical thickness!"""
 
         self.ax_hist = plt.axes(cfg.position_histogram_freesurfer)
-        self.ax_hist.set_xticks(cfg.xticks_histogram_freesurfer)
-        self.ax_hist.set_yticks([])
-        self.ax_hist.set_autoscaley_on(True)
+        self.ax_hist.set(xticks=cfg.xticks_histogram_freesurfer,
+                         xticklabels=cfg.xticks_histogram_freesurfer,
+                         yticks=[], autoscaley_on=True)
         self.ax_hist.set_prop_cycle('color', cfg.color_histogram_freesurfer)
         self.ax_hist.set_title(cfg.title_histogram_freesurfer, fontsize='small')
 
@@ -486,8 +486,9 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # number of vertices is too high - so presenting mean ROI thickness is smarter!
         _, _, patches_hist = self.ax_hist.hist(distribution_to_show, density=True,
                                                bins=cfg.num_bins_histogram_display)
+        self.ax_hist.set_xlim(cfg.xlim_histogram_freesurfer)
         self.ax_hist.relim(visible_only=True)
-        self.ax_hist.autoscale_view(scalex=False)  # xlim fixed to [0, 1]
+        self.ax_hist.autoscale_view(scalex=False)
         self.UI.data_handles.extend(patches_hist)
 
 

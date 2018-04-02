@@ -19,7 +19,9 @@ position_histogram_freesurfer = [0.905, 0.7, 0.09, 0.1]
 statistic_in_histogram_freesurfer = 'ThickAvg'
 title_histogram_freesurfer = 'mean thickness (label-wise)'
 num_bins_histogram_display = 30
-xticks_histogram_freesurfer = np.arange(1.5, 6.01, 0.5)
+xlim_histogram_freesurfer_all = { 'ThickAvg' : [1.0, 6.0], }
+xlim_histogram_freesurfer = xlim_histogram_freesurfer_all[statistic_in_histogram_freesurfer]
+xticks_histogram_freesurfer = np.arange(1.5, 6.01, 1.0)
 color_histogram_freesurfer = ('#c9ae74')  # sandstone
 
 freesurfer_features_outlier_detection = ('cortical', 'subcortical')
