@@ -1,3 +1,5 @@
+Citation
+-----------
 
 If you used ``VisualQC`` in your analyses or projects (whether or not it was reported in the main paper), please cite it:
 
