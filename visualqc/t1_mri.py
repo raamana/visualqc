@@ -335,6 +335,9 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
                                            figsize=self.figsize)
         self.axes = self.axes.flatten()
 
+        self.fig.canvas.set_window_title('VisualQC T1 MRI : {} {} '
+                                         ''.format(self.in_dir, self.mri_name))
+
         # vmin/vmax are controlled, because we rescale all to [0, 1]
         self.display_params = dict(interpolation='none', aspect='equal',
                                    origin='lower', cmap='gray', vmin=0.0, vmax=1.0)

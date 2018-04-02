@@ -382,6 +382,9 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # 1. main carpet, in the background
         self.fig, self.ax_carpet = plt.subplots(1, 1, figsize=self.figsize)
+        self.fig.canvas.set_window_title('VisualQC Functional MRI :'
+                                         ' {}'.format(self.in_dir))
+
         self.ax_carpet.set_zorder(self.layer_order_carpet)
         #   vmin/vmax are controlled, because we rescale all to [0, 1]
         self.imshow_params_carpet = dict(interpolation='none', aspect='auto',

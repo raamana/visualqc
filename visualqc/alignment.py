@@ -359,6 +359,9 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                            figsize=self.figsize)
         self.axes = self.axes.flatten()
 
+        self.fig.canvas.set_window_title('VisualQC Alignment : {} {} {} '
+                                         ''.format(self.in_dir, self.image1_name, self.image2_name))
+
         # vmin/vmax are controlled, because we rescale all to [0, 1]
         self.display_params = dict(interpolation='none', aspect='equal', origin='lower',
                                    cmap=self.current_cmap, vmin=0.0, vmax=1.0)

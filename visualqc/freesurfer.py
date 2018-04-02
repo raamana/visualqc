@@ -385,6 +385,8 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.fig, self.axes = plt.subplots(self.num_rows_total, self.num_cols_final,
                                            figsize=self.figsize)
         self.axes = self.axes.flatten()
+        self.fig.canvas.set_window_title('VisualQC {} {} : {}'
+                                         ' '.format(self.vis_type, self.seg_name, self.in_dir))
 
         self.display_params_mri = dict(interpolation='none', aspect='equal',
                                        origin='lower',
