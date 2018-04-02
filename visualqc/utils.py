@@ -68,23 +68,24 @@ def get_label_set(seg, label_set, background=0):
     """Extracts only the required labels"""
 
     if label_set is None:
-        return seg
+        out_seg = seg
+    else:
+        # get the mask picking up all labels
+        mask = np.full_like(seg, False)
+        for label in label_set:
+            mask = np.logical_or(mask, seg == label)
 
-    # get the mask picking up all labels
-    mask = np.full_like(seg, False)
-    for label in label_set:
-        mask = np.logical_or(mask, seg == label)
+        out_seg = np.full_like(seg, background)
+        out_seg[mask] = seg[mask]
 
-    out_seg = np.full_like(seg, background)
-    out_seg[mask] = seg[mask]
-
-    # remap labels from arbitrary range to 1:N
-    # helps to facilitate distinguishable colors
-    unique_labels = np.unique(out_seg.flatten())
-    # removing background - 0 stays 0
-    unique_labels = np.setdiff1d(unique_labels, background)
-    for index, label in enumerate(unique_labels):
-        out_seg[out_seg == label] = index + 1  # index=0 would make it background
+        # remap labels from arbitrary range to 1:N
+        # helps to facilitate distinguishable colors
+        unique_labels = np.unique(out_seg.flatten())
+        # removing background - 0 stays 0
+        unique_labels = np.setdiff1d(unique_labels, background)
+        for index, label in enumerate(unique_labels):
+            # index=0 would make it background, so using index+1
+            out_seg[out_seg == label] = index + 1
 
     roi_set_empty = False
     if np.count_nonzero(out_seg) < 1:
@@ -229,7 +230,11 @@ def void_subcortical_symmetrize_cortical(aseg, null_label=0):
     symmetric_aseg[left_ctx] = aseg[left_ctx] - left_baseline
     symmetric_aseg[right_ctx] = aseg[right_ctx] - right_baseline
 
-    return symmetric_aseg
+    roi_set_empty = False
+    if np.count_nonzero(symmetric_aseg) < 1:
+        roi_set_empty = True
+
+    return symmetric_aseg, roi_set_empty
 
 
 def get_freesurfer_color_LUT():

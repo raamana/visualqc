@@ -537,16 +537,11 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         skip_subject = False
         if self.vis_type in ('cortical_volumetric', 'cortical_contour'):
-            temp_seg_uncropped = void_subcortical_symmetrize_cortical(temp_fs_seg)
+            temp_seg_uncropped, roi_set_is_empty = void_subcortical_symmetrize_cortical(temp_fs_seg)
         elif self.vis_type in ('labels_volumetric', 'labels_contour'):
             if self.label_set is not None:
                 temp_seg_uncropped, roi_set_is_empty = get_label_set(temp_fs_seg,
-                                                                     self.label_set)
-                if roi_set_is_empty:
-                    skip_subject = True
-                    print('segmentation image for {} '
-                          'does not contain requested label set!'.format(unit_id))
-                    return skip_subject
+                                                                     self.unique_labels_display)
             else:
                 raise ValueError('--label_set must be specified for visualization types: '
                                  ' labels_volumetric and labels_contour')
@@ -554,6 +549,12 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
             raise NotImplementedError('Invalid visualization type - '
                                       'choose from: {}'.format(
                 cfg.visualization_combination_choices))
+
+        if roi_set_is_empty:
+            skip_subject = True
+            print('segmentation image for {} '
+                  'does not contain requested label set!'.format(unit_id))
+            return skip_subject
 
         # T1 mri must be rescaled - to avoid strange distributions skewing plots
         rescaled_t1_mri = scale_0to1(temp_t1_mri, cfg.max_cmap_range_t1_mri)
