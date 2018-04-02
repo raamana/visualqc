@@ -42,11 +42,14 @@ setup(
     packages=find_packages(include=['visualqc']),
     entry_points={
         'console_scripts': [
-            'visualqc=visualqc.__main__:main',
             'visualqc_t1_mri=visualqc.__t1_mri__:main',
             'visualqc_func_mri=visualqc.__func_mri__:main',
             'visualqc_freesurfer=visualqc.__freesurfer__:main',
-            'visualqc_alignment=visualqc.__alignment__:main'
+            'visualqc_alignment=visualqc.__alignment__:main',
+            'vqct1=visualqc.__t1_mri__:main', # shortcuts
+            'vqcfunc=visualqc.__func_mri__:main',
+            'vqcfs=visualqc.__freesurfer__:main',
+            'vqcalign=visualqc.__alignment__:main'
         ]
     },
     include_package_data=True,
