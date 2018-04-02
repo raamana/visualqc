@@ -23,7 +23,7 @@ This manual process, in its simplest form, is quite cumbersome and time-consumin
 ``VisualQC``, purpose-built for rigorous quality control, aims to reduce this laborious process to a single command to seamlessly present relevant composite visualizations while alerting user of any outliers, offer an easy way to record the ratings, and quickly navigate through 100s of subjects with ease. All you need to do is sit back, focus your expert eye on data and ``VisualQC`` takes care of the flow and bookkeeping.
 
 * Free software: Apache license
-* Documentation: https://visualqc.readthedocs.io.
+* Documentation: https://raamana.github.io/visualqc
 
 
 Use-cases supported
@@ -36,7 +36,7 @@ VisualQC supports the following use cases:
  * Structural T1w MRI scans (artefact rating)
  * Volumetric segmenation accuracy (on T1w MRI)
  * Registration quality (spatial alignment) within a single modality (multimodal support coming)
- * For your own important use case, feel free to `contact me <crossinvalidation.com>`_
+ * For your own important use case, feel free to `contact me <https://www.crossinvalidation.com>`_
  * Some others are being discussed - might be coming soon.
 
 
@@ -55,11 +55,11 @@ Each use case aims to offer the following features:
 Galleries
 ----------
 
- * :doc:`doc/gallery_freesurfer`
- * :doc:`doc/gallery_functional_mri`
- * :doc:`doc/gallery_t1_mri`
- * :doc:`doc/gallery_registration_unimodal`
- * :doc:`doc/gallery_segmentation_volumetric`
+ * :doc:`docs/gallery_freesurfer`
+ * :doc:`docs/gallery_functional_mri`
+ * :doc:`docs/gallery_t1_mri`
+ * :doc:`docs/gallery_registration_unimodal`
+ * :doc:`docs/gallery_segmentation_volumetric`
 
 
 
