@@ -12,7 +12,7 @@ VisualQC
         :target: https://www.codacy.com/app/raamana/visualqc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=raamana/visualqc&amp;utm_campaign=Badge_Grade
 
 
-VisualQC : assistive tool to improve the quality control workflow of neuroimaging data.
+VisualQC : assistive tool to ease the quality control workflow of neuroimaging data.
 
 .. image:: docs/vqc_logo_small.png
 
@@ -45,21 +45,20 @@ Features
 
 Each use case aims to offer the following features:
 
-* Ability to zoom-in slices displayed to to ensure you won't miss any detail (down to the voxel-level), so you can rate its quality with confidence.
-* Automatically detect and flag outliers during review (multivariate high-dimensional outlier detection)
-* Display multiple slices in multiple views, and easily navigate all subjects in a dataset
-* Keyboard shortcuts to speed up the process, no need to lift your fingers!
-* Allows to make arbitrary notes on the current review session
-* Allows you to customize the visualizations to your expert preference (such as removing certain overlays, control the transparency, change how two images blended together).
+ * Ability to zoom-in slices displayed to to ensure you won't miss any detail (down to the voxel-level), so you can rate its quality with confidence.
+ * Automatically detect and flag outliers during review (multivariate high-dimensional outlier detection)
+ * Display multiple slices in multiple views, and easily navigate all subjects in a dataset
+ * Keyboard shortcuts to speed up the process, no need to lift your fingers!
+ * Allows to make arbitrary notes on the current review session
+ * Allows you to customize the visualizations to your expert preference (such as removing certain overlays, control the transparency, change how two images blended together).
 
 Galleries
 ----------
 
- * `docs/gallery_freesurfer.rst`_
- * `docs/gallery_functional_mri`_
- * `docs/gallery_t1_mri`_
- * `docs/gallery_registration_unimodal`_
- * `docs/gallery_segmentation_volumetric`_
-
+ * `Freesurfer <https://raamana.github.io/visualqc/gallery_freesurfer.html>`_
+ * `Freesurfer <https://raamana.github.io/visualqc/gallery_functional_mri.html>`_
+ * `Freesurfer <https://raamana.github.io/visualqc/gallery_registration_unimodal.html>`_
+ * `Freesurfer <https://raamana.github.io/visualqc/gallery_t1_mri.html>`_
+ * `Freesurfer <https://raamana.github.io/visualqc/gallery_segmentation_volumetric.html>`_
 
 
