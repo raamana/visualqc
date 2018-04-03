@@ -40,7 +40,6 @@ class AlignmentInterface(BaseReviewInterface):
 
     def __init__(self,
                  fig,
-                 image2_slices,
                  rating_list=cfg.default_rating_list,
                  next_button_callback=None,
                  quit_button_callback=None,
@@ -51,11 +50,10 @@ class AlignmentInterface(BaseReviewInterface):
                  alpha_seg=cfg.default_alpha_seg):
         """Constructor"""
 
-        super().__init__(fig, image2_slices, next_button_callback, quit_button_callback)
+        super().__init__(fig, None, next_button_callback, quit_button_callback)
 
         self.rating_list = rating_list
 
-        self.overlaid_artists = image2_slices
         self.latest_alpha_seg = alpha_seg
         self.prev_axis = None
         self.prev_ax_pos = None
@@ -148,9 +146,6 @@ class AlignmentInterface(BaseReviewInterface):
             # resetting it
             self.data_handles = list()
 
-        # this is populated for each unit during display
-        self.overlaid_artists.clear()
-
 
     def clear_radio_buttons(self):
         """Clears the radio button"""
@@ -231,23 +226,6 @@ class AlignmentInterface(BaseReviewInterface):
             else:
                 pass
 
-        plt.draw()
-
-
-    def set_alpha_value(self, latest_value):
-        """" Use the slider to set alpha."""
-
-        self.latest_alpha_seg = latest_value
-        self.update()
-
-
-    def update(self):
-        """updating seg alpha for all axes"""
-
-        for art in self.overlaid_artists:
-            art.set_alpha(self.latest_alpha_seg)
-
-        # update figure
         plt.draw()
 
 
@@ -389,7 +367,7 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def add_UI(self):
         """Adds the review UI with defaults"""
 
-        self.UI = AlignmentInterface(self.fig, self.h_images, self.issue_list,
+        self.UI = AlignmentInterface(self.fig, self.issue_list,
                                      next_button_callback=self.next,
                                      quit_button_callback=self.quit,
                                      change_vis_type_callback=self.callback_display_update,
