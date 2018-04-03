@@ -481,6 +481,8 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if self.vis_type in ['GIF', 'Animate']:
             self.animate()
         else:
+            # the following isnt immediately effective
+            self.anim_loop.stop()
             self.mix_and_display()
 
         self.fg_annot_h.set_visible(False)
