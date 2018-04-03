@@ -56,9 +56,9 @@ Galleries
 ----------
 
  * `Freesurfer <https://raamana.github.io/visualqc/gallery_freesurfer.html>`_
- * `Freesurfer <https://raamana.github.io/visualqc/gallery_functional_mri.html>`_
- * `Freesurfer <https://raamana.github.io/visualqc/gallery_registration_unimodal.html>`_
- * `Freesurfer <https://raamana.github.io/visualqc/gallery_t1_mri.html>`_
- * `Freesurfer <https://raamana.github.io/visualqc/gallery_segmentation_volumetric.html>`_
+ * `Functional MRI <https://raamana.github.io/visualqc/gallery_functional_mri.html>`_
+ * `Registration/Alignment quality <https://raamana.github.io/visualqc/gallery_registration_unimodal.html>`_
+ * `Structural T1w MRI <https://raamana.github.io/visualqc/gallery_t1_mri.html>`_
+ * `Volumetric Segmentation <https://raamana.github.io/visualqc/gallery_segmentation_volumetric.html>`_
 
 
