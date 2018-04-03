@@ -4,3 +4,4 @@ mrivis
 scipy
 numpy
 scikit-learn
+nilearn

@@ -14,7 +14,7 @@ from visualqc.config import default_out_dir_name, default_mri_name, default_seg_
     default_num_rows, default_vis_type, default_freesurfer_dir, default_user_dir, \
     default_alpha_mri, default_alpha_seg
 from visualqc.utils import read_image, void_subcortical_symmetrize_cortical, check_alpha_set, get_label_set, \
-    check_finite_int, get_ratings, save_ratings, check_id_list, check_labels, check_views, check_input_dir, \
+    check_finite_int, restore_previous_ratings, save_ratings_to_disk, check_id_list, check_labels, check_views, check_input_dir, \
     check_out_dir, get_path_for_subject, check_outlier_params
 from visualqc.viz import review_and_rate, generate_required_visualizations
 from visualqc.outliers import outlier_advisory
@@ -26,8 +26,7 @@ class QCWorkflow():
     """
 
     def __init__(self, in_dir, id_list, images_for_id, out_dir,
-                 prepare_first,
-                 vis_type, label_set, alpha_set,
+                 prepare_first, vis_type, source_of_features, label_set, alpha_set,
                  outlier_method, outlier_fraction, outlier_feat_types, disable_outlier_detection,
                  views, num_slices, num_rows,
                  mri_name, seg_name, contour_color,
@@ -40,6 +39,7 @@ class QCWorkflow():
 
         self.vis_type = vis_type
         self.label_set = label_set
+        self.source_of_features = source_of_features
 
         self.alpha_set = alpha_set
         self.alpha_mri = self.alpha_set[0]
@@ -71,6 +71,15 @@ class QCWorkflow():
             if self.label_set is not None:
                 self.suffix = '_'.join([str(lbl) for lbl in list(self.label_set)])
 
+    def save_cmd(self):
+        """Saves the command issued by the user for debugging purposes"""
+
+        cmd_file = pjoin(self.out_dir, 'cmd_issued.visualqc')
+        with open(cmd_file, 'w') as cf:
+            cf.write('{}\n'.format(' '.join(sys.argv)))
+
+        return
+
     def save(self):
         """
         Saves the state of the QC workflow for restoring later on,
@@ -95,7 +104,7 @@ def run_workflow(qcw):
 
     outliers_by_sample, outliers_by_feature = outlier_advisory(qcw)
 
-    ratings, notes, ratings_dir, incomplete_list, prev_done = get_ratings(qcw)
+    ratings, notes, incomplete_list = restore_previous_ratings(qcw)
     for subject_id in incomplete_list:
         flagged_as_outlier = subject_id in outliers_by_sample
         alerts_outlier = outliers_by_sample.get(subject_id, None) # None, if id not in dict
@@ -125,7 +134,7 @@ def run_workflow(qcw):
             break
 
     print('Saving ratings .. \n')
-    save_ratings(ratings, notes, qcw)
+    save_ratings_to_disk(ratings, notes, qcw)
     #TODO save QCW
 
     return
@@ -387,7 +396,7 @@ def get_parser():
     return parser
 
 
-def parse_args():
+def parse_user_args():
     """Parser/validator for the cmd line args."""
 
     parser = get_parser()
@@ -407,7 +416,7 @@ def parse_args():
 
     vis_type, label_set = check_labels(user_args.vis_type, user_args.labels)
 
-    in_dir = check_input_dir(user_args.fs_dir, user_args.user_dir, vis_type)
+    in_dir, source_of_features = check_input_dir(user_args.fs_dir, user_args.user_dir, vis_type)
 
     mri_name = user_args.mri_name
     seg_name = user_args.seg_name
@@ -430,14 +439,17 @@ def parse_args():
                                                                                 user_args.outlier_fraction,
                                                                                 user_args.outlier_feat_types,
                                                                                 user_args.disable_outlier_detection,
-                                                                                id_list)
+                                                                                id_list, vis_type, source_of_features)
 
     qcw = QCWorkflow(in_dir, id_list, images_for_id, out_dir,
                      user_args.prepare_first,
-                     vis_type, label_set, alpha_set,
+                     vis_type, source_of_features, label_set, alpha_set,
                      outlier_method, outlier_fraction, outlier_feat_types, no_outlier_detection,
                      views, num_slices, num_rows,
                      mri_name, seg_name, contour_color)
+
+    # if the workflow could be instantiated, it means things are in order!
+    qcw.save_cmd()
 
     return qcw
 
@@ -445,7 +457,7 @@ def parse_args():
 def cli_run():
     """Main entry point."""
 
-    qcw = parse_args()
+    qcw = parse_user_args()
 
     if qcw.vis_type is not None:
         # matplotlib.interactive(True)

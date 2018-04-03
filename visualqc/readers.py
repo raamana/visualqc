@@ -4,10 +4,12 @@ Data reader module.
 
 """
 import numpy as np
-from os.path import join as pjoin, exists as pexists, realpath
-from visualqc.utils import read_id_list
+from os.path import exists as pexists, join as pjoin, realpath
 
-def read_aseg_stats(fs_dir, id, include_global_areas=False):
+from visualqc import config as cfg
+
+
+def read_aseg_stats(fs_dir, subject_id, include_global_areas=False):
     """
     Returns the volumes of both the subcortical and whole brain segmentations, found in Freesurfer output: subid/stats/aseg.stats
 
@@ -16,12 +18,12 @@ def read_aseg_stats(fs_dir, id, include_global_areas=False):
     fs_dir : str
         Abs path to Freesurfer's SUBJECTS_DIR
 
-    id : str
+    subject_id : str
         String identifying a given subject
 
     """
 
-    seg_stats_file = realpath(pjoin(fs_dir, id, 'stats', 'aseg.stats'))
+    seg_stats_file = realpath(pjoin(fs_dir, subject_id, 'stats', 'aseg.stats'))
     if not pexists(seg_stats_file):
         raise IOError('given path does not exist : {}'.format(seg_stats_file))
 
@@ -64,19 +66,21 @@ def read_volumes_global_areas(seg_stats_file):
     return wb_data.flatten()
 
 
-def read_aparc_stats_wholebrain(fs_dir, id):
+def read_aparc_stats_wholebrain(fs_dir, subject_id, subset=None):
     """Convenient routine to obtain the whole brain cortical ROI stats."""
 
     aparc_stats = list()
     for hm in ('lh', 'rh'):
-        stats_path = pjoin(fs_dir, id, 'stats', '{}.aparc.stats'.format(hm))
-        hm_data = read_aparc_stats_in_hemi(stats_path)
+        stats_path = pjoin(fs_dir, subject_id, 'stats', '{}.aparc.stats'.format(hm))
+        hm_data = read_aparc_stats_in_hemi(stats_path, subset)
         aparc_stats.append(hm_data)
 
     return np.hstack(aparc_stats)
 
 
-def read_aparc_stats_in_hemi(stats_file, include_whole_brain_stats=False):
+def read_aparc_stats_in_hemi(stats_file,
+                             subset=None,
+                             include_whole_brain_stats=False):
     """Read statistics on cortical features (such as thickness, curvature etc) produced by Freesurfer.
 
     file_path would contain whether it is from the right or left hemisphere.
@@ -88,12 +92,31 @@ def read_aparc_stats_in_hemi(stats_file, include_whole_brain_stats=False):
         raise IOError('given path does not exist : {}'.format(stats_file))
 
     # ColHeaders StructName NumVert SurfArea GrayVol ThickAvg ThickStd MeanCurv GausCurv FoldInd CurvInd
-    aparc_roi_dtype = [('StructName', 'S50'), ('NumVert', '<i4'), ('SurfArea', '<i4'), ('GrayVol', '<i4'),
-                       ('ThickAvg', '<f4'), ('ThickStd', '<f4'), ('MeanCurv', '<f4'), ('GausCurv', '<f4'),
-                       ('FoldInd', '<f4'), ('CurvInd', '<f4')]
+    aparc_roi_dtype = [('StructName', 'S50'),
+                       ('NumVert', '<i4'),
+                       ('SurfArea', '<i4'),
+                       ('GrayVol', '<i4'),
+                       ('ThickAvg', '<f4'),
+                       ('ThickStd', '<f4'),
+                       ('MeanCurv', '<f4'),
+                       ('GausCurv', '<f4'),
+                       ('FoldInd', '<f4'),
+                       ('CurvInd', '<f4')]
+
+    subset_all = ['SurfArea', 'GrayVol',
+                  'ThickAvg', 'ThickStd',
+                  'MeanCurv', 'GausCurv',
+                  'FoldInd', 'CurvInd']
+    if subset is None or not isinstance(subset, list):
+        subset_return = subset_all
+    else:
+        subset_return = [ st for st in subset if st in subset_all]
+        if len(subset_return) <1:
+            raise ValueError('Atleast 1 valid stat must be chosen! '
+                             'From: \n{}'.format(subset_all))
+
     roi_stats = np.genfromtxt(stats_file, dtype=aparc_roi_dtype, filling_values=np.NaN)
-    subset = ['SurfArea', 'GrayVol', 'ThickAvg', 'ThickStd', 'MeanCurv', 'GausCurv', 'FoldInd', 'CurvInd']
-    roi_stats_values = np.full((len(roi_stats), len(subset)), np.NaN)
+    roi_stats_values = np.full((len(roi_stats), len(subset_return)), np.NaN)
     for idx, stat in enumerate(roi_stats):
         roi_stats_values[idx, :] = [stat[feat] for feat in subset]
 
@@ -123,8 +146,7 @@ def read_global_mean_surf_area_thickness(stats_file):
     return stats
 
 
-def gather_freesurfer_data(fs_dir,
-                           id_list,
+def gather_freesurfer_data(qcw,
                            feature_type='whole_brain'):
     """
     Reads all the relevant features to perform outlier detection on.
@@ -133,16 +155,150 @@ def gather_freesurfer_data(fs_dir,
 
     """
 
+    if qcw.source_of_features not in cfg.avail_OLD_source_of_features:
+        raise NotImplementedError('Reader for the given source of features ({}) '
+                                  'is currently not implemented.'.format(
+            qcw.source_of_features))
+
     feature_type = feature_type.lower()
     if feature_type in ['cortical', ]:
-        features = np.vstack([read_aparc_stats_wholebrain(fs_dir, id) for id in id_list])
+        features = np.vstack(
+            [read_aparc_stats_wholebrain(qcw.in_dir, id) for id in qcw.id_list])
     elif feature_type in ['subcortical', ]:
-        features = np.vstack([read_aseg_stats(fs_dir, id) for id in id_list])
+        features = np.vstack([read_aseg_stats(qcw.fs_dir, id) for id in qcw.id_list])
     elif feature_type in ['whole_brain', 'wholebrain']:
-        cortical = np.vstack([read_aparc_stats_wholebrain(fs_dir, id) for id in id_list])
-        sub_ctx = np.vstack([read_aseg_stats(fs_dir, id) for id in id_list])
+        cortical = np.vstack(
+            [read_aparc_stats_wholebrain(qcw.in_dir, id) for id in qcw.id_list])
+        sub_ctx = np.vstack([read_aseg_stats(qcw.fs_dir, id) for id in qcw.id_list])
         features = np.hstack((cortical, sub_ctx))
     else:
         raise ValueError('Invalid type of features requested.')
 
     return features
+
+
+def gather_T1_features(wf, feature_type='histogram_whole_scan'):
+    """
+    Returns a set of features from T1 sMRI scan from each subject.
+
+    Parameters
+    ----------
+    wf : QCWorkFlow
+        Self-contained object describing the details of a particular QC operation.
+
+    feature_type : str
+        String the identifying the type of features to read.
+
+    Returns
+    -------
+    features : ndarray
+        An array of size N x p (N=number of input samples, p=dimensionality)
+
+    """
+
+    from visualqc.features import t1_histogram_whole_scan
+    from visualqc.utils import get_path_for_subject
+
+    feature_type = feature_type.lower()
+    if feature_type in ['histogram_whole_scan', ]:
+        path_to_mri = lambda sid: get_path_for_subject(wf.in_dir, sid, wf.mri_name,
+                                                       wf.vis_type)
+        features = np.vstack(
+            [t1_histogram_whole_scan(path_to_mri(sid)) for sid in wf.id_list])
+    else:
+        raise NotImplementedError('Requested feature type {} not implemented!\n'
+                                  '\tAllowed options : {} '.format(feature_type,
+                                                                   cfg.t1_mri_features_OLD))
+
+    return features
+
+
+def gather_data(path_list, id_list):
+    """
+    Takes in a list of CSVs, and return a table of features.
+
+    id_list is to ensure the row order in the matrix.
+
+    """
+
+    features = np.vstack([np.genfromtxt(path_list[sid]) for sid in id_list])
+
+    return features
+
+
+def traverse_bids(bids_layout, modalities='func', types='bold',
+                  subjects=None, sessions=None, runs=None,
+                  tasks=None, events=None, extensions=('nii', 'nii.gz'),
+                  **kwargs):
+    """
+    Dataset traverser.
+
+    Args:
+        subjects: list of subjects
+        sessions: list of sessions
+        runs: list of runs
+        ...
+        kwargs : values for the particular type chosen.
+
+    Returns:
+        tuple of existing combinations
+            first item: list of type names identifying the file
+            second item: path to the file identified by the above types.
+
+    """
+
+    meta_types = {'modality'  : modalities,
+                  'type'      : types,
+                  'extensions': extensions,
+                  'subjects'  : subjects,
+                  'sessions'  : sessions,
+                  'runs'      : runs,
+                  'tasks'     : tasks,
+                  'events'    : events}
+    meta_types.update(kwargs)
+    non_empty_types = {type_: values for type_, values in meta_types.items() if values}
+
+    __FIELDS_TO_IGNORE__ = ('filename', 'modality', 'type')
+    __TYPES__ = ['subjects', 'sessions', 'tasks', 'runs', 'events']
+
+    results = bids_layout.get(**non_empty_types)
+    if len(results) < 1:
+        print('No results found!')
+        return None, None
+
+    common_field_set = _unique_in_order(results[0]._fields)
+    if len(results) > 1:
+        for res in results[1:]:
+            _field_set = _unique_in_order(res._fields)
+            common_field_set = [ff for ff in common_field_set if ff in _field_set]
+
+    final_fields = [unit for unit in common_field_set if unit not in __FIELDS_TO_IGNORE__]
+    # TODO final_fields can still have duplicates like: ( 'acquisition', 'acq'); handle it.
+
+    if len(final_fields) < 1:
+        return None, None
+
+    # print('Dataset will be traversed for different values of:\n {}'.format(final_fields))
+    unit_paths = [[[file.__getattribute__(unit) for unit in final_fields], file.filename]
+                  for file in results]
+
+    return final_fields, unit_paths
+
+
+def _unique_in_order(seq):
+    """
+    Utility to preserver order while making a set of unique elements.
+
+    Copied from Markus Jarderot's answer at
+     https://stackoverflow.com/questions/480214/how-do-you-remove-duplicates-from-a-list-in-whilst-preserving-order
+
+    Args:
+        seq : sequence
+    Returns:
+        unique_list : list
+            List of unique elements in their original order
+
+    """
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
