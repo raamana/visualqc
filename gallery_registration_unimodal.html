@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Gallery - Registration : comparison of spatial alignment &mdash; visualqc 0.3+5.g22bff96 documentation</title>
+  <title>Gallery - Registration : comparison of spatial alignment &mdash; visualqc 0.3+37.ga3df14f.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.3+5.g22bff96 documentation" href="index.html"/>
+    <link rel="top" title="visualqc 0.3+37.ga3df14f.dirty documentation" href="index.html"/>
         <link rel="next" title="Gallery - Segmentation/ROI - anatomical accuracy evaluation" href="gallery_segmentation_volumetric.html"/>
         <link rel="prev" title="Gallery - Functional MRI scan - artefact detection and rating" href="gallery_functional_mri.html"/> 
 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.3+5.g22bff96
+                0.3+37.ga3df14f.dirty
               </div>
             
           
@@ -182,6 +182,22 @@
             
   <div class="section" id="gallery-registration-comparison-of-spatial-alignment">
 <h1>Gallery - Registration : comparison of spatial alignment<a class="headerlink" href="#gallery-registration-comparison-of-spatial-alignment" title="Permalink to this headline">¶</a></h1>
+<p>The alignment module of VisualQC provides many options to visualize the accuracy of registration. For example, using a checkerboard pattern:</p>
+<img alt="_images/alignment_mismatched_checkers.png" src="_images/alignment_mismatched_checkers.png" />
+<p>Once displayed, you can zoom in on any slice:</p>
+<img alt="_images/alignment_mismatched_checkers_zoomed.png" src="_images/alignment_mismatched_checkers_zoomed.png" />
+<p>You can change the type of blending on the fly with a single click:</p>
+<img alt="_images/alignment_mismatched_colormix.png" src="_images/alignment_mismatched_colormix.png" />
+<p>A simple voxel-wise  difference map can reveal mismatch in an intuitive way:</p>
+<img alt="_images/alignment_mismatched_diff.png" src="_images/alignment_mismatched_diff.png" />
+<p>Some people find the edge overlay especially useful to highlight any gross mismatch in the affine parameters:</p>
+<img alt="_images/alignment_mismatched_edge_overlay.png" src="_images/alignment_mismatched_edge_overlay.png" />
+<img alt="_images/alignment_mismatched_edge_overlay_zoomed.png" src="_images/alignment_mismatched_edge_overlay_zoomed.png" />
+<p>In the four screenshots below, you can see more examples of the interface when the images being compared are highly matched - in this particular instance, I am overlaying the smoothed version on the original:</p>
+<img alt="_images/alignment_similar_checkers.png" src="_images/alignment_similar_checkers.png" />
+<img alt="_images/alignment_similar_checkers_zoomed.png" src="_images/alignment_similar_checkers_zoomed.png" />
+<img alt="_images/alignment_similar_diff.png" src="_images/alignment_similar_diff.png" />
+<img alt="_images/alignment_similar_edge_overlay.png" src="_images/alignment_similar_edge_overlay.png" />
 </div>
 
 
@@ -228,7 +244,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3+5.g22bff96',
+            VERSION:'0.3+37.ga3df14f.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Gallery - Segmentation/ROI - anatomical accuracy evaluation &mdash; visualqc 0.3+5.g22bff96 documentation</title>
+  <title>Gallery - Segmentation/ROI - anatomical accuracy evaluation &mdash; visualqc 0.3+37.ga3df14f.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.3+5.g22bff96 documentation" href="index.html"/>
+    <link rel="top" title="visualqc 0.3+37.ga3df14f.dirty documentation" href="index.html"/>
         <link rel="next" title="Gallery - Structural T1w MRI - artefact detection and rating" href="gallery_t1_mri.html"/>
         <link rel="prev" title="Gallery - Registration : comparison of spatial alignment" href="gallery_registration_unimodal.html"/> 
 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.3+5.g22bff96
+                0.3+37.ga3df14f.dirty
               </div>
             
           
@@ -182,6 +182,18 @@
             
   <div class="section" id="gallery-segmentation-roi-anatomical-accuracy-evaluation">
 <h1>Gallery - Segmentation/ROI - anatomical accuracy evaluation<a class="headerlink" href="#gallery-segmentation-roi-anatomical-accuracy-evaluation" title="Permalink to this headline">¶</a></h1>
+<p>VisualQC’s Freesufer module can be used to visualize the full cortical parcellation against the original MRI.  Here, we show the use case for a single label (subcortical segmentation, tissue class or cortical ROI) - shown here is hippocampus:</p>
+<img alt="_images/hippocampus_not_zoomed_in.png" src="_images/hippocampus_not_zoomed_in.png" />
+<p>Focusing on multiple subcortical structures:</p>
+<img alt="_images/subcortical_multiple.png" src="_images/subcortical_multiple.png" />
+<p>And you can add as many ROIs as you like:</p>
+<img alt="_images/subcortical_even_more.png" src="_images/subcortical_even_more.png" />
+<p>ROIs could be from anywhere in the MRI (including big cortical labels too!). For example, let’s look at posterior cingulate (label 1023 in Freesurfer ColorLUT) in the left hemi-sphere :</p>
+<img alt="_images/lh-posteriorcingulate_1023.png" src="_images/lh-posteriorcingulate_1023.png" />
+<p>And, how about insula?</p>
+<img alt="_images/insula_1035.png" src="_images/insula_1035.png" />
+<p>You can also combine as many cortical ROIs as you wish and zoom in on them to get every detail you need to judge their accuracy:</p>
+<img alt="_images/single_label_cortical_zoomed_in.png" src="_images/single_label_cortical_zoomed_in.png" />
 </div>
 
 
@@ -228,7 +240,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3+5.g22bff96',
+            VERSION:'0.3+37.ga3df14f.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
