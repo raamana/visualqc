@@ -2,6 +2,9 @@
 VisualQC
 ==========
 
+VisualQC : assistive tool to ease the quality control workflow of neuroimaging data.
+
+
 .. image:: https://zenodo.org/badge/105958496.svg
    :target: https://zenodo.org/badge/latestdoi/105958496
 
@@ -10,9 +13,6 @@ VisualQC
 
 .. image:: https://api.codacy.com/project/badge/Grade/2da8c2b4dbcd433eb4943eb52f0b00d6
         :target: https://www.codacy.com/app/raamana/visualqc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=raamana/visualqc&amp;utm_campaign=Badge_Grade
-
-
-VisualQC : assistive tool to ease the quality control workflow of neuroimaging data.
 
 .. image:: docs/vqc_logo_small.png
 
@@ -26,8 +26,8 @@ This manual process, in its simplest form, is quite cumbersome and time-consumin
 * Documentation: https://raamana.github.io/visualqc
 
 
-Use-cases supported
-------------------------
+Use-cases
+----------
 
 VisualQC supports the following use cases:
 
@@ -62,3 +62,6 @@ Galleries
  * `Volumetric Segmentation <https://raamana.github.io/visualqc/gallery_segmentation_volumetric.html>`_
 
 
+:doc:`contributing`
+
+:doc:`citation`
