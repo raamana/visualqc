@@ -178,6 +178,7 @@ class BaseWorkflowVisualQC(ABC):
 
             self.display_unit()
             self.show_fig_and_wait()
+            # TODO save each rating to disk right away to avoid loss of work due to crach etc
             self.print_rating(unit_id)
 
             if self.quit_now:
