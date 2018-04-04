@@ -7,8 +7,9 @@ Module to define base classes.
 import sys
 import traceback
 from abc import ABC, abstractmethod
-from os.path import exists as pexists, join as pjoin
 from shutil import copyfile
+
+from os.path import exists as pexists, join as pjoin
 
 from visualqc import config as cfg
 from visualqc.utils import get_ratings_path_info, load_ratings_csv
@@ -221,9 +222,6 @@ class BaseWorkflowVisualQC(ABC):
 
         Returns
         -------
-        subject_data : object
-            All the data necessary for the self.display_unit() method to display it.
-
         skip_subject : bool
             Flag to indicate whether to skip the display and review of subject e.g.
             when necessary data was not available or usable.
