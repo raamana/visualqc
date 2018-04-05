@@ -62,6 +62,6 @@ Galleries
  * `Volumetric Segmentation <https://raamana.github.io/visualqc/gallery_segmentation_volumetric.html>`_
 
 
-`Contributions are welcome.<docs/contributing>`_
+`Contributions are welcome. <CONTRIBUTING.rst>`_
 
-`Citation details <docs/citation>`_
+`Citation details <docs/citation.rst>`_
