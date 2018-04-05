@@ -62,4 +62,7 @@ Galleries
  * :doc:`gallery_segmentation_volumetric`
 
 
+:doc:`contributing`
+
+:doc:`citation`
 
