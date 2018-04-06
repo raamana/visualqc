@@ -34,7 +34,7 @@ VisualQC supports the following use cases:
  * Functional MRI scans (focused visual review, with rich and custom-built visualizations)
  * Freesurfer cortical parcellations (accuracy of pial/white surfaces on T1w mri)
  * Structural T1w MRI scans (artefact rating)
- * Volumetric segmenation accuracy (on T1w MRI)
+ * Accuracy of volumetric segmentation (ROI) against their anatomical/structural scan (T1w, T2w MRI)
  * Registration quality (spatial alignment) within a single modality or across multiple modalities
  * For your own important use case, feel free to `contact me <https://www.crossinvalidation.com>`_
  * Some others are being discussed - might be coming soon.
