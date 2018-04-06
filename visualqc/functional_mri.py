@@ -531,15 +531,16 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
             self.img_this_unit_raw = self.hdr_this_unit.get_data()
         except:
-            raise IOError('Unable to read image at \n\t{}'.format(img_path))
-
-        check_image_is_4d(self.img_this_unit_raw)
-        self.TR_this_unit = self.hdr_this_unit.header.get_zooms()[-1]
-
-        skip_subject = False
-        if np.count_nonzero(self.img_this_unit_raw) == 0:
+            print('Unable to read image at \n\t{}'.format(img_path))
             skip_subject = True
-            print('Functional image is empty!')
+        else:
+            check_image_is_4d(self.img_this_unit_raw)
+            self.TR_this_unit = self.hdr_this_unit.header.get_zooms()[-1]
+
+            skip_subject = False
+            if np.count_nonzero(self.img_this_unit_raw) == 0:
+                skip_subject = True
+                print('Functional image is empty!')
 
         return skip_subject
 
