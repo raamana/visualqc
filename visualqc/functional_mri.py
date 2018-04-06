@@ -187,9 +187,9 @@ class FunctionalMRIInterface(T1MriInterface):
 
         key_pressed = key_in.key.lower()
         # print(key_pressed)
-        if key_pressed in ['right', ]:
+        if key_pressed in ['right', 'up']:
             self.right_arrow_callback()
-        elif key_pressed in ['left', ]:
+        elif key_pressed in ['left', 'down' ]:
             self.left_arrow_callback()
         elif key_pressed in [' ', 'space']:
             self.next_button_callback()
