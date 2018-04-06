@@ -91,3 +91,9 @@ def functional_mri_features(*args):
     """Extractor from functional MRI scan"""
 
     pass
+
+def diffusion_mri_features(*args):
+    """Extractor from functional MRI scan"""
+
+    raise NotImplementedError
+

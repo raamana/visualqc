@@ -215,6 +215,50 @@ func_mri_features_OLD = ('dvars',)
 colormap_stdev_fmri = 'seismic'
 
 ## ----------------------------------------------------------------------------
+#           Diffusion mri specific
+## ----------------------------------------------------------------------------
+
+func_mri_pass_indicator = 'Pass'
+# TODO Tired and Review Later must also be handled separately??
+abbreviation_diffusion_mri_default_issue_list = OrderedDict(p=func_mri_pass_indicator,
+                                                            m='Motion',
+                                                            d='Dropout',
+                                                            v='Vibration',
+                                                            r='Ringing',
+                                                            s='Spikes',
+                                                            f='driFt (scanner)',
+                                                            g='Geometric',
+                                                            h='Ghosting',
+                                                            o='Orient/FOV', w='Weird',
+                                                            e='othEr', t="i'm Tired",
+                                                            i='reView later')
+diffusion_mri_default_issue_list = list(abbreviation_func_mri_default_issue_list.values())
+diffusion_mri_default_rating_list_shortform = abbreviation_func_mri_default_issue_list.keys()
+
+diffusion_outlier_features = None
+
+diffusion_mri_BIDS_filters = dict(modalities='dwi', types='dwi')
+# usually done in analyses to try keep the numbers in numerical calculations away from small values
+# not important here, just for display, doing it anyways.
+scale_factor_diffusion = 1000
+
+alpha_stats_overlay_diffusion = 0.5
+linewidth_stats_diffusion = 2
+linestyle_stats_diffusion = '-'
+
+default_views_diffusion = (0, 1, 2,)
+default_num_slices_diffusion = 30
+default_num_rows_diffusion = 5
+
+default_name_pattern_diffusion = '*.nii'
+
+diffusion_mri_features_OLD = ('dvars',)
+colormap_stdev_diffusion = 'seismic'
+
+## ----------------------------------------------------------------------------
+
+
+## ----------------------------------------------------------------------------
 #           Registration and alignment specific
 ## ----------------------------------------------------------------------------
 
