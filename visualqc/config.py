@@ -90,7 +90,8 @@ map_short_rating = OrderedDict(g='Good',
 default_rating_list = tuple(map_short_rating.values())
 index_freesurfer_default_rating = default_rating_list.index(freesurfer_default_rating)
 default_rating_list_shortform = map_short_rating.keys()
-ratings_not_to_be_recorded = [None, '']
+ratings_not_to_be_recorded = [None, '', 'something else',
+                              "i'm tired", 'review later']
 
 # for serialization
 delimiter = ','

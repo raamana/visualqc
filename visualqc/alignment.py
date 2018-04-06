@@ -5,21 +5,22 @@ Module to inspect the accuracy of spatial alignment (registration).
 """
 
 import argparse
+import asyncio
 import sys
 import textwrap
 import time
 import warnings
 from abc import ABC
-from scipy.ndimage import sobel, grey_erosion
-import numpy as np
-import asyncio
 
 import matplotlib
+import numpy as np
+from scipy.ndimage import grey_erosion, sobel
+
 matplotlib.interactive(True)
 
 from matplotlib import pyplot as plt
 from matplotlib.cm import get_cmap
-from matplotlib.widgets import Button, RadioButtons
+from matplotlib.widgets import RadioButtons
 from mrivis.utils import crop_to_seg_extents
 from os.path import join as pjoin, realpath
 from visualqc import config as cfg

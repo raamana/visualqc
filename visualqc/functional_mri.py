@@ -187,9 +187,9 @@ class FunctionalMRIInterface(T1MriInterface):
 
         key_pressed = key_in.key.lower()
         # print(key_pressed)
-        if key_pressed in ['right', ]:
+        if key_pressed in ['right', 'up']:
             self.right_arrow_callback()
-        elif key_pressed in ['left', ]:
+        elif key_pressed in ['left', 'down' ]:
             self.left_arrow_callback()
         elif key_pressed in [' ', 'space']:
             self.next_button_callback()
@@ -531,15 +531,16 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
             self.img_this_unit_raw = self.hdr_this_unit.get_data()
         except:
-            raise IOError('Unable to read image at \n\t{}'.format(img_path))
-
-        check_image_is_4d(self.img_this_unit_raw)
-        self.TR_this_unit = self.hdr_this_unit.header.get_zooms()[-1]
-
-        skip_subject = False
-        if np.count_nonzero(self.img_this_unit_raw) == 0:
+            print('Unable to read image at \n\t{}'.format(img_path))
             skip_subject = True
-            print('Functional image is empty!')
+        else:
+            check_image_is_4d(self.img_this_unit_raw)
+            self.TR_this_unit = self.hdr_this_unit.header.get_zooms()[-1]
+
+            skip_subject = False
+            if np.count_nonzero(self.img_this_unit_raw) == 0:
+                skip_subject = True
+                print('Functional image is empty!')
 
         return skip_subject
 
@@ -550,6 +551,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # if frames are to be dropped
         end_frame = self.img_this_unit_raw.shape[3] - self.drop_end
         self.img_this_unit = self.img_this_unit_raw[:, :, :, self.drop_start:end_frame]
+        # TODO show median signal instead of mean - or option for both?
         self.stdev_this_unit, self.mean_this_unit = temporal_stats(self.img_this_unit)
 
         # TODO should we perform head motion correction before any display at all?
@@ -835,7 +837,7 @@ def _rescale_over_time(matrix):
 
     if matrix.shape[0] <= matrix.shape[1]:
         raise ValueError('Number of voxels is less than the number of time points!! '
-                      'Are you sure the your reshaping is right?')
+                      'Are you sure data is reshaped correctly?')
 
     min_ = matrix.min(axis=1)
     range_ = matrix.ptp(axis=1)  # ptp : peak to peak, max-min
@@ -902,16 +904,13 @@ def get_parser():
     help_text_name_pattern = textwrap.dedent("""
     Specifies the regex to be used to search for the image to be reviewed.
     Typical options include: 
-        'bold.nii', when name is common across subjects
-        '*_preproc_*.nii', when filenames have additional info encoded (such as redundant subject ID as in BIDS format)
-        'func/sub*_bold_*space-MNI152*_preproc.nii.gz' when you need to additional levels deeper (with a / in regex) 
+    
+        - ``'bold.nii'``, when name is common across subjects
+        - ``'*_preproc_*.nii'``, when filenames have additional info encoded (such as redundant subject ID as in BIDS format)
+         - ``'func/sub*_bold_*space-MNI152*_preproc.nii.gz'`` when you need to additional levels deeper (with a / in regex) 
             or control different versions (atlas space) of the same type of file. 
     
-    Ensure the regex is tight enough to result in only one file for each ID in the id_list.
-        You can do this by giving it a try in the shell and count the number of results against the number of IDs in id_list. 
-            If you have more results than the IDs, then there are duplicates.
-            You can use https://regex101.com to construct your pattern to tightly match your requirements.
-        If multiple matches are found, the first one will be used.
+    Ensure the regex is *tight* enough to result in only one file for each ID in the id_list. You can do this by giving it a try in the shell and counting the number of results against the number of IDs in id_list. If you have more results than the IDs, then there are duplicates. You can use https://regex101.com to construct your pattern to tightly match your requirements. If multiple matches are found, the first one will be used.
         
     Make sure to use single quotes to avoid the shell globbing before visualqc receives it.
 
@@ -924,10 +923,11 @@ def get_parser():
     \n""".format(cfg.default_out_dir_name))
 
     help_text_no_preproc = textwrap.dedent("""
-    Whether to apply basic preprocessing steps (detrend, slice timing correction etc)
-       before building the carpet image. 
-    If the images are already preprocessed elsewhere, use this flag --no_preproc 
-    Default is to preprocess images before showing them for review.
+    Whether to apply basic preprocessing steps (detrend, slice timing correction etc), before building the carpet image. 
+       
+    If the images are already preprocessed elsewhere, use this flag ``--no_preproc``
+     
+    Default is to apply minimal preprocessing (detrending etc) before showing images for review.
     \n""")
 
     help_text_views = textwrap.dedent("""
@@ -948,7 +948,8 @@ def get_parser():
     \n""".format(cfg.default_num_rows))
 
     help_text_prepare = textwrap.dedent("""
-    This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations. 
+    This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations.
+     
     This makes the switch from one subject to the next, even more seamless (saving few seconds :) ).
 
     Default: False (required visualizations are generated only on demand, which can take 5-10 seconds for each subject).

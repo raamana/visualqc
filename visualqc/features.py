@@ -4,9 +4,9 @@ Module with algorithms to extract various features of interest for outlier detec
 """
 
 from os import makedirs
-from os.path import exists as pexists, join as pjoin, splitext
 
 import numpy as np
+from os.path import exists as pexists, join as pjoin, splitext
 
 from visualqc import config as cfg
 from visualqc.utils import read_image, scale_0to1
