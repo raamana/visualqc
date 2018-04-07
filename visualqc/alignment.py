@@ -621,10 +621,9 @@ def get_parser():
     help_text_in_dir = textwrap.dedent("""
     Absolute path to an input folder containing the MRI scan. 
     Each subject will be queried after its ID in the metadata file, 
-    and is expected to have the MRI (specified ``--mri_name``), 
-    in its own folder under --user_dir.
+    and is expected to have two  images (as specified ``--image1`` and ``--image2``), in its own folder under --in_dir.
 
-    E.g. ``--user_dir /project/images_to_QC``
+    E.g. ``--in_dir /project/images_to_QC``
     \n""")
 
     help_text_id_list = textwrap.dedent("""
@@ -733,7 +732,8 @@ def get_parser():
     in_out.add_argument("-o", "--out_dir", action="store", dest="out_dir",
                         default=None, required=False, help=help_text_out_dir)
 
-    vis = parser.add_argument_group('Visualization', 'Customize behaviour of comparisons')
+    vis = parser.add_argument_group('Visualization',
+                                    'Customize behaviour of comparisons')
 
     vis.add_argument("-dl", "--delay_in_animation", action="store",
                      dest="delay_in_animation",

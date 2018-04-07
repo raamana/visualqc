@@ -511,7 +511,8 @@ def check_id_list(id_list_in, in_dir, vis_type,
 
     if id_list_in is not None:
         if not pexists(id_list_in):
-            raise IOError('Given ID list does not exist!')
+            raise IOError('Given ID list does not exist!'
+                          '\n\t {}'.format(id_list_in))
 
         try:
             id_list = read_id_list(id_list_in)
