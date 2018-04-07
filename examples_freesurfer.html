@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Example usage - Freesurfer &mdash; visualqc 0.3+37.ga3df14f.dirty documentation</title>
+  <title>Example usage - Freesurfer &mdash; visualqc 0.3+65.gd2ac66a documentation</title>
   
 
   
@@ -30,12 +30,14 @@
   
 
   
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  
 
   
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.3+37.ga3df14f.dirty documentation" href="index.html"/>
+    <link rel="top" title="visualqc 0.3+65.gd2ac66a documentation" href="index.html"/>
         <link rel="next" title="Example usage - Segmentation" href="examples_freesurfer_generic.html"/>
         <link rel="prev" title="Command line usage - T1w MRI" href="cli_t1_mri.html"/> 
 
@@ -66,7 +68,7 @@
             
             
               <div class="version">
-                0.3+37.ga3df14f.dirty
+                0.3+65.gd2ac66a
               </div>
             
           
@@ -183,7 +185,7 @@
   <div class="section" id="example-usage-freesurfer">
 <h1>Example usage - Freesurfer<a class="headerlink" href="#example-usage-freesurfer" title="Permalink to this headline">¶</a></h1>
 <p>A rough example of usage can be:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>visualqc --fs_dir /project/freesurfer
+<div class="highlight-bash"><div class="highlight"><pre><span></span>visualqc_freesurfer --fs_dir /project/freesurfer
 </pre></div>
 </div>
 <p>which searches the specified directory for all subjects with successfully completed runs of Freesurfer and presents with cortical parcellation in all the three views, along with surface rendering (annotated with cortical ROIs). You can then review these visualizations for one subject at a time, rate their accuracy and move on to the next subject.</p>
@@ -192,28 +194,28 @@
 <dd><ul class="first last simple">
 <li>right click toggles the overlay</li>
 <li>slider changes the transparency of the overlay in all slices</li>
-<li>double click in a given slice zooms it full-screen</li>
+<li>double click in a given slice zooms it full-window</li>
 </ul>
 </dd>
 </dl>
 <p>You can choose to work on pre-selected list of subjects, as you choose:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>visualqc --fs_dir /project/freesurfer --id_list list_complete.txt
+<div class="highlight-bash"><div class="highlight"><pre><span></span>visualqc_freesurfer --fs_dir /project/freesurfer --id_list list_complete.txt
 </pre></div>
 </div>
-<p>Note the default visualization type is <code class="docutils literal"><span class="pre">cortical_contour</span></code> and you can change it to QC a particular ROI e.g. left hippocampus (label 17 in <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT">Freesurfer color lookup table</a>:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>visualqc -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour --labels <span class="m">17</span>
+<p>Note the default visualization type is <code class="docutils literal"><span class="pre">cortical_contour</span></code> and you can change it to QC a particular ROI e.g. left hippocampus (label 17 in <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT">Freesurfer color lookup table</a> (We can also use the shortcut <code class="docutils literal"><span class="pre">vqcfs</span></code> to invoke the same program. ):</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>vqcfs -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour --labels <span class="m">17</span>
 </pre></div>
 </div>
 <p>You can add as many ROIs as you wish</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>visualqc -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour --labels <span class="m">10</span> <span class="m">11</span> <span class="m">12</span> <span class="m">13</span>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>vqcfs -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour --labels <span class="m">10</span> <span class="m">11</span> <span class="m">12</span> <span class="m">13</span>
 </pre></div>
 </div>
 <p>However, be sure your layout is providing you with enough detail and convenience to get a quick glance of whole structure(s). If you don’t need all the 3 views, or you’d like to focus on one particular view that is ideal for a given ROI, you can specify that with –views. It accepts a list of dimensions (max 3), from 0 to 2, inclusive.</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>visualqc -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour -l <span class="m">10</span> <span class="m">11</span> <span class="m">12</span> <span class="m">13</span> --views <span class="m">0</span>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>vqcfs -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour -l <span class="m">10</span> <span class="m">11</span> <span class="m">12</span> <span class="m">13</span> --views <span class="m">0</span>
 </pre></div>
 </div>
 <p>If you would like many more slices or rows (or fewer), you can control that with –num_rows and –num_slices. These parameters are applied separately for each view (not the entire layout). So if you choose -r 3 and -s 10 for -w 0 2, then <cite>visualqc</cite> displays 10 slices in 3 rows for each of dimensions 0 and 2 (20 panels in total).</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>visualqc -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour -l <span class="m">10</span> <span class="m">11</span> <span class="m">12</span> <span class="m">13</span> --views <span class="m">0</span> -w <span class="m">0</span> <span class="m">2</span> -r <span class="m">3</span> -s <span class="m">10</span>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>vqcfs -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour -l <span class="m">10</span> <span class="m">11</span> <span class="m">12</span> <span class="m">13</span> --views <span class="m">0</span> -w <span class="m">0</span> <span class="m">2</span> -r <span class="m">3</span> -s <span class="m">10</span>
 </pre></div>
 </div>
 </div>
@@ -262,7 +264,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3+37.ga3df14f.dirty',
+            VERSION:'0.3+65.gd2ac66a',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

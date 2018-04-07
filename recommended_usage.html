@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Recommended Usage &mdash; visualqc 0.3+37.ga3df14f.dirty documentation</title>
+  <title>Recommended Usage &mdash; visualqc 0.3+65.gd2ac66a documentation</title>
   
 
   
@@ -30,12 +30,14 @@
   
 
   
+    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  
 
   
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.3+37.ga3df14f.dirty documentation" href="index.html"/>
+    <link rel="top" title="visualqc 0.3+65.gd2ac66a documentation" href="index.html"/>
         <link rel="next" title="Command line usage" href="usage_all.html"/>
         <link rel="prev" title="Use-cases supported" href="use_cases.html"/> 
 
@@ -66,7 +68,7 @@
             
             
               <div class="version">
-                0.3+37.ga3df14f.dirty
+                0.3+65.gd2ac66a
               </div>
             
           
@@ -94,7 +96,12 @@
 <li class="toctree-l1"><a class="reference internal" href="readme.html">VisualQC</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="use_cases.html">Use-cases supported</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Recommended Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Recommended Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#general-suggestions">General suggestions:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#for-freesurfer-outputs">For Freesurfer outputs:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#alignment-checks-registration-quality">Alignment checks (Registration quality)</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="usage_all.html">Command line usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="file_formats.html">Data formats and requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interface.html">Review interface</a></li>
@@ -182,7 +189,9 @@
             
   <div class="section" id="recommended-usage">
 <h1>Recommended Usage<a class="headerlink" href="#recommended-usage" title="Permalink to this headline">¶</a></h1>
-<p>General suggestions:</p>
+<p><strong>Guidelines are provisional, as they are evolving, but the following are unlikely to change</strong></p>
+<div class="section" id="general-suggestions">
+<h2>General suggestions:<a class="headerlink" href="#general-suggestions" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>For the best results from outlier detection process, it is recommended to divide list of IDs into known groups (healthy, disease1, disease2, young, old etc) based on non-imaging parameters (such as clinical diagnosis, age etc), to perform the QC process independently on each group.</li>
@@ -190,7 +199,9 @@
 <li>Routinely toggle overlays to ensure composite overlays are not affecting your perception of GM/WB boundaries in scans with unusual intensity distributions (low or high contrast, dark or too bright etc).</li>
 </ul>
 </div></blockquote>
-<p>For Freesurfer outputs:</p>
+</div>
+<div class="section" id="for-freesurfer-outputs">
+<h2>For Freesurfer outputs:<a class="headerlink" href="#for-freesurfer-outputs" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li>Inspect the quality of raw T1 MRI scans first, using visualqc, for presence of any artefacts, such as motion, ringing, ghosting, and anything else.</li>
@@ -203,6 +214,16 @@
 </li>
 </ul>
 </div></blockquote>
+</div>
+<div class="section" id="alignment-checks-registration-quality">
+<h2>Alignment checks (Registration quality)<a class="headerlink" href="#alignment-checks-registration-quality" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>When comparing across modalities (e.g. EPI to T1, or PET to T1), big dissimilarities in intensity distributions might (if PET distribtuion too narrow, while T1w has a broad distribution) produce useless composites. In such cases, edge overlay or animation could work.</li>
+<li>You could even attempt to rescale them beforehand as well, whichever is suitable for your application.</li>
+</ul>
+</div></blockquote>
+</div>
 </div>
 
 
@@ -249,7 +270,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3+37.ga3df14f.dirty',
+            VERSION:'0.3+65.gd2ac66a',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
