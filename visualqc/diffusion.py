@@ -4,8 +4,10 @@ Module to define interface, workflow and CLI for the review of diffusion MRI dat
 
 """
 import argparse
+import asyncio
 import sys
 import textwrap
+import time
 import warnings
 from abc import ABC
 from textwrap import wrap
@@ -13,7 +15,7 @@ from textwrap import wrap
 import nibabel as nib
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.widgets import CheckButtons
+from matplotlib.widgets import CheckButtons, RadioButtons
 from mrivis.utils import crop_image
 from os.path import basename, join as pjoin
 
@@ -21,8 +23,8 @@ from visualqc import config as cfg
 from visualqc.readers import diffusion_traverse_bids
 from visualqc.t1_mri import T1MriInterface
 from visualqc.utils import check_bids_dir, check_finite_int, check_image_is_4d, \
-    check_out_dir, check_outlier_params, check_views, get_axis, \
-    pick_slices, scale_0to1
+    check_out_dir, check_outlier_params, check_time, check_views, get_axis, pick_slices, \
+    scale_0to1
 from visualqc.workflows import BaseWorkflowVisualQC
 
 _z_score = lambda x: (x - np.mean(x)) / np.std(x)
@@ -59,6 +61,10 @@ class DiffusionMRIInterface(T1MriInterface):
                  zoom_out_callback=None,
                  right_click_callback=None,
                  show_stdev_callback=None,
+                 alignment_callback=None,
+                 show_b0_vol_callback=None,
+                 flip_first_last_callback=None,
+                 stop_animation_callback=None,
                  axes_to_zoom=None,
                  total_num_layers=5):
         """Constructor"""
@@ -85,12 +91,21 @@ class DiffusionMRIInterface(T1MriInterface):
         self.left_arrow_callback = left_arrow_callback
         self.right_click_callback = right_click_callback
         self.show_stdev_callback = show_stdev_callback
+        self.alignment_callback = alignment_callback
+        self.flip_first_last_callback = flip_first_last_callback
+        self.show_b0_vol_callback = show_b0_vol_callback
+        self.stop_animation_callback = stop_animation_callback
 
         self.add_checkboxes()
+        self.add_radio_buttons_comparison_method()
 
         # this list of artists to be populated later
         # makes to handy to clean them all
         self.data_handles = list()
+
+        self.unzoomable_axes = [self.checkbox.ax, self.radio_bt_vis_type.ax,
+                                self.text_box.ax, self.bt_next.ax, self.bt_quit.ax,
+                                None]
 
 
     def add_checkboxes(self):
@@ -100,7 +115,8 @@ class DiffusionMRIInterface(T1MriInterface):
 
         """
 
-        ax_checkbox = plt.axes(cfg.position_checkbox, facecolor=cfg.color_rating_axis)
+        ax_checkbox = plt.axes(cfg.position_rating_checkbox_diffusion,
+                               facecolor=cfg.color_rating_axis)
         # initially de-activating all
         actives = [False] * len(self.issue_list)
         self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list, actives=actives)
@@ -108,9 +124,9 @@ class DiffusionMRIInterface(T1MriInterface):
         for txt_lbl in self.checkbox.labels:
             txt_lbl.set(**cfg.checkbox_font_properties)
 
-        for rect in self.checkbox.rectangles:
-            rect.set_width(cfg.checkbox_rect_width)
-            rect.set_height(cfg.checkbox_rect_height)
+        # for rect in self.checkbox.rectangles:
+        #     rect.set_width(cfg.checkbox_rect_width_diffusion)
+        #     rect.set_height(cfg.checkbox_rect_height_diffusion)
 
         # lines is a list of n crosses, each cross (x) defined by a tuple of lines
         for x_line1, x_line2 in self.checkbox.lines:
@@ -118,6 +134,21 @@ class DiffusionMRIInterface(T1MriInterface):
             x_line2.set_color(cfg.checkbox_cross_color)
 
         self._index_pass = self.issue_list.index(cfg.diffusion_mri_pass_indicator)
+
+
+    def add_radio_buttons_comparison_method(self):
+
+        ax_radio = plt.axes(cfg.position_alignment_method_diffusion,
+                            facecolor=cfg.color_rating_axis)
+        self.radio_bt_vis_type = RadioButtons(ax_radio,
+                                              cfg.choices_alignment_comparison_diffusion,
+                                              active=None, activecolor='orange')
+        self.radio_bt_vis_type.on_clicked(self.alignment_callback)
+        for txt_lbl in self.radio_bt_vis_type.labels:
+            txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
+
+        for circ in self.radio_bt_vis_type.circles:
+            circ.set(radius=0.06)
 
 
     def maximize_axis(self, ax):
@@ -146,15 +177,16 @@ class DiffusionMRIInterface(T1MriInterface):
     def on_mouse(self, event):
         """Callback for mouse events."""
 
-        # if event occurs in non-data areas, do nothing
-        if event.inaxes in [self.checkbox.ax, self.text_box.ax,
-                            self.bt_next.ax, self.bt_quit.ax]:
+        # if event occurs in non-data areas (or axis is None), do nothing
+        if event.inaxes in self.unzoomable_axes:
             return
+
+        # any mouse event in data-area stops the current animation
+        self.stop_animation_callback()
 
         if self.zoomed_in:
             # include all the non-data axes here (so they wont be zoomed-in)
-            if event.inaxes not in [self.checkbox.ax, self.text_box.ax,
-                                    self.bt_next.ax, self.bt_quit.ax]:
+            if event.inaxes not in self.unzoomable_axes:
                 if event.dblclick or event.button in [3]:
                     if event.inaxes in self.axes_to_zoom:
                         self.maximize_axis(event.inaxes)
@@ -168,7 +200,7 @@ class DiffusionMRIInterface(T1MriInterface):
 
         elif event.button in [3]:
             self.right_click_callback(event)
-        elif event.dblclick and event.inaxes is not None:
+        elif event.dblclick:
             self.zoom_in_callback(event)
         else:
             pass
@@ -191,11 +223,16 @@ class DiffusionMRIInterface(T1MriInterface):
         elif key_pressed in ['left', 'down']:
             self.left_arrow_callback()
         elif key_pressed in [' ', 'space']:
-            self.next_button_callback()
+            # space button stops the current animation
+            self.stop_animation_callback()
         elif key_pressed in ['ctrl+q', 'q+ctrl']:
             self.quit_button_callback()
         elif key_pressed in ['alt+s', 's+alt']:
             self.show_stdev_callback()
+        elif key_pressed in ['alt+0', '0+alt']:
+            self.show_b0_vol_callback()
+        elif key_pressed in ['alt+n', 'n+alt']:
+            self.flip_first_last_callback()
         else:
             if key_pressed in cfg.abbreviation_diffusion_mri_default_issue_list:
                 checked_label = cfg.abbreviation_diffusion_mri_default_issue_list[
@@ -210,7 +247,7 @@ class DiffusionMRIInterface(T1MriInterface):
 
     def on_scroll(self, scroll_event):
         """Implements the scroll callback"""
-
+        pass
 
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
@@ -235,6 +272,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  id_list=None,
                  name_pattern=None,
                  images_for_id=None,
+                 delay_in_animation=cfg.delay_in_animation_diffusion_mri,
                  issue_list=cfg.diffusion_mri_default_issue_list,
                  in_dir_type='BIDS',
                  outlier_method=cfg.default_outlier_detection_method,
@@ -288,6 +326,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         #
         self.current_grad_index = 0
+        self.delay_in_animation = delay_in_animation
 
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
@@ -443,6 +482,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.subplots_adjust(**cfg.review_area)
         plt.show(block=False)
 
+        self.anim_loop = asyncio.get_event_loop()
+
 
     def add_UI(self):
         """Adds the review UI with defaults"""
@@ -451,11 +492,15 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                         next_button_callback=self.next,
                                         quit_button_callback=self.quit,
                                         right_click_callback=self.zoom_in_on_gradient,
-                                        right_arrow_callback=self.show_next_gradient,
-                                        left_arrow_callback=self.show_prev_gradient,
+                                        right_arrow_callback=self.show_next,
+                                        left_arrow_callback=self.show_prev,
                                         zoom_in_callback=self.zoom_in_on_gradient,
                                         zoom_out_callback=self.zoom_out_callback,
                                         show_stdev_callback=self.show_stdev,
+                                        show_b0_vol_callback=self.show_b0_gradient,
+                                        flip_first_last_callback=self.flip_first_last,
+                                        alignment_callback=self.alignment_check,
+                                        stop_animation_callback=self.stop_animation,
                                         axes_to_zoom=self.fg_axes,
                                         total_num_layers=self.total_num_layers)
 
@@ -531,16 +576,23 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
             self.b0_indices = np.flatnonzero(self.b_values_this_unit == 0)
             if len(self.b0_indices) < 1:
+                skip_subject = True
                 raise ValueError('There are no b=0 volumes!')
+                return skip_subject
+
             if len(self.b0_indices) == 1:
                 self.b0_volume = self.img_this_unit_raw[:, :, :, self.b0_indices]
             else:
+                # TODO which is the correct b=0 volumes are available
+                # TODO is there a way to reduce multiple into one
                 self.b0_volume = self.img_this_unit_raw[:,:,:,self.b0_indices[0]]
             # need more thorough checks on whether image loaded is indeed DWI
 
             self.dw_indices = np.flatnonzero(self.b_values_this_unit != 0)
             self.dw_volumes = self.img_this_unit_raw[:, :, :, self.dw_indices]
             self.num_gradients = self.dw_volumes.shape[3]
+            # to check alignment
+            self.current_grad_index = 0
 
             skip_subject = False
             if np.count_nonzero(self.img_this_unit_raw) == 0:
@@ -553,8 +605,6 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def display_unit(self):
         """Adds multi-layered composite."""
 
-        self.img_this_unit = self.img_this_unit_raw.copy()
-
         # TODO show median signal instead of mean - or option for both?
         # TODO need separate kbd scut to show B0 volume
         # TODO keyboard shortcuts to show SD over grad, median, mean etc
@@ -562,7 +612,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # TODO what about slice timing correction?
 
-        num_voxels = np.prod(self.img_this_unit.shape[0:3])
+        num_voxels = np.prod(self.dw_volumes.shape[0:3])
         # TODO better way to label each gradient would be with unit vector/direction
         gradients = list(range(self.num_gradients))
 
@@ -589,13 +639,16 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         if event.x is None:
             return
+
+        self.checking_alignment = False  # to distinguish between no or alignment overlay
+
         # computing x in axes data coordinates myself, to avoid overlaps with other axes
         # retrieving the latest transform after to ensure its accurate at click time
         x_in_carpet, _y = self._event_location_in_axis(event, self.ax_carpet)
         # clipping it to [0, T]
-        self.current_grad_index = max(0, min(self.img_this_unit.shape[3],
+        self.current_grad_index = max(0, min(self.dw_volumes.shape[3],
                                              int(round(x_in_carpet))))
-        self.show_gradient(self.current_grad_index)
+        self.show_gradient()
 
 
     def change_gradient_by_step(self, step):
@@ -612,26 +665,123 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         new_index = self.current_grad_index + step
         # clipping from 0 to num_gradients
         self.current_grad_index = max(0, min(self.num_gradients, new_index))
-        self.show_gradient(self.current_grad_index)
+        self.show_gradient()
 
 
-    def show_next_gradient(self):
-
-        if self.current_grad_index == self.img_this_unit.shape[3] - 1:
+    def show_b0_gradient(self):
+        """Shows the b=0 volume"""
+        # TODO what if more than one b=0 volumees are available
+        if self.current_grad_index == self.b0_indices[0] and \
+            self.UI.zoomed_in:
             return  # do nothing
 
-        self.current_grad_index = min(self.img_this_unit.shape[3] - 1,
+        self.show_3dimage(self.b0_volume.squeeze(), 'b=0 volume')
+
+
+    def animate_through_gradients(self):
+        """Loops through all the gradients, in mulit-slice view, to help spot artefacts"""
+
+        self.anim_loop.run_until_complete(self._animate_through_gradients())
+
+
+    @asyncio.coroutine
+    def _animate_through_gradients(self):
+        """Show image 1, wait, show image 2"""
+
+        for grad_idx in range(self.num_gradients):
+            self.show_3dimage(self.dw_volumes[:, :, :, grad_idx].squeeze(),
+                              'zoomed-in gradient {}'.format(grad_idx))
+            plt.pause(0.05)
+            time.sleep(self.delay_in_animation)
+
+
+    def flip_first_last(self):
+        """Flips between first and last volume to identify any pulsation artefacts"""
+
+        # 0 and -1 are indexing into self.dw_volumes, not b0_volumes
+        self.flip_between_two(0, -1)
+
+
+    def flip_between_two(self, index_one, index_two, first_index_in_b0=False):
+        """Flips between first and last volume to identify any pulsation artefacts"""
+
+        self.anim_loop.run_until_complete(self._flip_between_two_nTimes(
+            index_one, index_two, first_index_in_b0=first_index_in_b0))
+
+
+    @asyncio.coroutine
+    def _flip_between_two_nTimes(self, index_one, index_two, first_index_in_b0=False):
+        """Show first, wait, show last, repeat"""
+
+        if first_index_in_b0:
+            _first_vol = self.b0_volume[:, :, :, index_one].squeeze()
+            _id_first = 'b=0 index {}'.format(index_one)
+        else:
+            _first_vol = self.dw_volumes[:, :, :, index_one].squeeze()
+            _id_first = 'DW gradient {}'.format(index_one)
+
+        _second_vol = self.dw_volumes[:, :, :, index_two].squeeze()
+        if index_two < 0:
+            # -1 would be confusing to the user
+            index_two = self.num_gradients+index_two
+        _id_second = 'DW gradient {}'.format(index_two)
+
+        for _ in range(cfg.num_times_to_animate_diffusion_mri):
+            for img, txt in ((_first_vol, _id_first),
+                             (_second_vol, _id_second)):
+                self.show_3dimage(img, txt)
+                plt.pause(0.05)
+                time.sleep(self.delay_in_animation)
+
+
+    def alignment_check(self, label):
+        """Chooses between the type of alignment check to show"""
+
+        if label in ['Alignment to b=0', 'Align to b=0']:
+            self.alignment_to_b0()
+        elif label in ['Animate all', 'Flip through all']:
+            self.animate_through_gradients()
+        elif label in ['Flip first & last', ]:
+            self.flip_first_last()
+        else:
+            raise NotImplementedError('alignment check:{} not implemented.')
+
+
+    def alignment_to_b0(self):
+        """Overlays a given gradient on b0 volume to check for alignment isses"""
+
+        self.checking_alignment = True
+        self.flip_between_two(self.b0_indices, self.current_grad_index,
+                              first_index_in_b0=True)
+
+
+    def stop_animation(self):
+        # TODO this not working - run_until_complete() is likely the reason
+        # call_soon does not start animation right away or at all
+        if self.anim_loop.is_running():
+            self.anim_loop.stop()
+
+
+    def show_next(self):
+
+        if self.current_grad_index == self.dw_volumes.shape[3] - 1:
+            return  # do nothing
+
+        self.current_grad_index = min(self.dw_volumes.shape[3] - 1,
                                       self.current_grad_index + 1)
-        self.show_gradient(self.current_grad_index)
+        if self.checking_alignment:
+            self.alignment_to_b0()
+        else:
+            self.show_gradient()
 
 
-    def show_prev_gradient(self):
+    def show_prev(self):
 
         if self.current_grad_index == 0:
             return  # do nothing
 
         self.current_grad_index = max(self.current_grad_index - 1, 0)
-        self.show_gradient(self.current_grad_index)
+        self.show_gradient()
 
 
     def zoom_out_callback(self, event):
@@ -651,18 +801,23 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         return axis.transData.inverted().transform_point((event.x, event.y))
 
 
-    def show_gradient(self, time_pt):
+    def show_gradient(self):
         """Exhibits a selected timepoint on top of stats/carpet"""
 
-        if time_pt < 0 or time_pt >= self.img_this_unit.shape[3]:
+        if self.current_grad_index < 0 or self.current_grad_index >= self.num_gradients:
             print('Requested time point outside '
-                  'range [0, {}]'.format(self.img_this_unit.shape[3]))
+                  'range [0, {}]'.format(self.num_gradients))
             return
 
-        # print('Time point zoomed-in {}'.format(time_pt))
-        image3d = np.squeeze(self.img_this_unit[:, :, :, time_pt])
-        self.attach_image_to_foreground_axes(image3d)
-        self._identify_foreground('zoomed-in time point {}'.format(time_pt))
+        self.show_3dimage(self.dw_volumes[:, :, :, self.current_grad_index].squeeze(),
+                          'zoomed-in gradient {}'.format(self.current_grad_index))
+
+
+    def show_3dimage(self, image, annot):
+        """generic display method."""
+
+        self.attach_image_to_foreground_axes(image)
+        self._identify_foreground(annot)
         # this state flag in important
         self.UI.zoomed_in = True
 
@@ -704,7 +859,6 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def compute_stats(self):
         """Computes the necessary stats to be displayed."""
 
-        mean_over_grad, stdev_over_grad = self.stats_over_gradients()
         mean_signal_spatial, stdev_signal_spatial = spatial_stats(self.dw_volumes)
         dvars = self.compute_DVARS()
 
@@ -743,7 +897,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """
 
         # TODO connect this
-        b0_subset = self.img_this_unit[:, :, :, self.b0_indices]
+        b0_subset = self.dw_volumes[:, :, :, self.b0_indices]
         mean_img = np.mean(b0_subset, axis=3)
         sd_img = np.std(b0_subset, axis=3)
 
@@ -753,7 +907,6 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def stats_over_gradients(self):
         """Computes voxel-wise stats over gradients of diffusion data
             --> single volume over space.
-
         """
 
         mean_img = np.mean(self.dw_volumes, axis=3)
@@ -765,9 +918,9 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def compute_DVARS(self):
         """
         Computes the DVARS for a given diffusion image.
-
         Statistic adapted from the fMRI world.
         """
+        # TODO need to use a common function across usecases
 
         RMS_diff = lambda img2, img1: np.sqrt(np.mean(np.square(img2 - img1)))
         DVARS_1_to_N = [RMS_diff(self.dw_volumes[:, :, :, grad_idx],
@@ -830,6 +983,9 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.fig.canvas.mpl_disconnect(self.con_id_click)
         self.fig.canvas.mpl_disconnect(self.con_id_keybd)
         plt.close('all')
+
+        self.anim_loop.run_until_complete(self.anim_loop.shutdown_asyncgens())
+        self.anim_loop.close()
 
 
 def pis_map(diffn_img, index_low_b_val, index_high_b_val):
@@ -1034,6 +1190,12 @@ def get_parser():
     This flag disables outlier detection and alerts altogether.
     \n""")
 
+    help_text_delay_in_animation = textwrap.dedent("""
+    Specifies the delay in animation of the display of two images (like in a GIF).
+
+    Default: {} (units in seconds).
+    \n""".format(cfg.delay_in_animation_diffusion_mri))
+
     in_out = parser.add_argument_group('Input and output', ' ')
 
     in_out.add_argument("-b", "--bids_dir", action="store", dest="bids_dir",
@@ -1061,6 +1223,13 @@ def get_parser():
     preproc.add_argument("-ap", "--apply_preproc", action="store_true",
                          dest="apply_preproc",
                          required=False, help=help_text_apply_preproc)
+
+    vis = parser.add_argument_group('Visualization', 'Customize behaviour of comparisons')
+
+    vis.add_argument("-dl", "--delay_in_animation", action="store",
+                     dest="delay_in_animation",
+                     default=cfg.delay_in_animation, required=False,
+                     help=help_text_delay_in_animation)
 
     outliers = parser.add_argument_group('Outlier detection',
                                          'options related to automatically detecting possible outliers')
@@ -1148,6 +1317,7 @@ def make_workflow_from_user_options():
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
     apply_preproc = user_args.apply_preproc
+    delay_in_animation = check_time(user_args.delay_in_animation, var_name='Delay')
 
     views = check_views(user_args.views)
     num_slices_per_view, num_rows_per_view = check_finite_int(user_args.num_slices,
@@ -1165,6 +1335,7 @@ def make_workflow_from_user_options():
                                  issue_list=cfg.diffusion_mri_default_issue_list,
                                  name_pattern=name_pattern, in_dir_type=in_dir_type,
                                  apply_preproc=apply_preproc,
+                                 delay_in_animation=delay_in_animation,
                                  outlier_method=outlier_method,
                                  outlier_fraction=outlier_fraction,
                                  outlier_feat_types=outlier_feat_types,

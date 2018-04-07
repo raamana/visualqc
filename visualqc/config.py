@@ -228,7 +228,11 @@ colormap_stdev_fmri = 'seismic'
 #           Diffusion mri specific
 ## ----------------------------------------------------------------------------
 
-diffusion_mri_pass_indicator = 'Pass'
+checkbox_rect_width_diffusion = 0.06
+checkbox_rect_height_diffusion = 0.051
+
+diffusion_mri_pass_indicator = visual_qc_pass_indicator
+# f, s, l are matplotlib builtin shortcuts
 abbreviation_diffusion_mri_default_issue_list = OrderedDict(p=diffusion_mri_pass_indicator,
                                                             m='Motion',
                                                             d='Dropout',
@@ -254,6 +258,9 @@ diffusion_mri_BIDS_filters = dict(modalities='dwi', types='dwi')
 # not important here, just for display, doing it anyways.
 scale_factor_diffusion = 1000
 
+delay_in_animation_diffusion_mri = 0.3
+num_times_to_animate_diffusion_mri = 4
+
 alpha_stats_overlay_diffusion = 0.5
 linewidth_stats_diffusion = 2
 linestyle_stats_diffusion = '-'
@@ -267,6 +274,12 @@ default_name_pattern_diffusion = '*.nii'
 diffusion_mri_features_OLD = ('dvars',)
 colormap_stdev_diffusion = 'seismic'
 
+choices_alignment_comparison_diffusion = ('Animate all',
+                                          'Flip first & last',
+                                          'Align to b=0')
+
+position_rating_checkbox_diffusion  = [0.899, 0.30, 0.095, 0.35]
+position_alignment_method_diffusion = [0.899, 0.66, 0.095, 0.10]
 ## ----------------------------------------------------------------------------
 
 

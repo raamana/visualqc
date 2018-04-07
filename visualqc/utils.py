@@ -663,6 +663,16 @@ def get_freesurfer_mri_path(in_dir, subject_id, req_file):
     return realpath(pjoin(in_dir, subject_id, 'mri', req_file))
 
 
+def check_time(time_interval, var_name='time interval'):
+    """"""
+
+    time_interval = np.float(time_interval)
+    if not np.isfinite(time_interval) or np.isclose(time_interval, 0.0):
+        raise ValueError('Value of {} must be > 0 and be finite.'.format(var_name))
+
+    return time_interval
+
+
 def check_outlier_params(method, fraction, feat_types, disable_outlier_detection,
                          id_list, vis_type, type_of_features):
     """Validates parameters related to outlier detection"""
