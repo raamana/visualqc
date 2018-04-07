@@ -7,7 +7,8 @@ include README.rst
 recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+recursive-exclude visualqc/resources
+recursive-exclude docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
 
-recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
 include versioneer.py
 include visualqc/_version.py
