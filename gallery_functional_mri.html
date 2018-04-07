@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Gallery - Functional MRI scan - artefact detection and rating &mdash; visualqc 0.3+65.gd2ac66a documentation</title>
+  <title>Gallery - Functional MRI scan - artefact detection and rating &mdash; visualqc 0.3.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.3+65.gd2ac66a documentation" href="index.html"/>
+    <link rel="top" title="visualqc 0.3.1 documentation" href="index.html"/>
         <link rel="next" title="Gallery - Registration : comparison of spatial alignment" href="gallery_registration_unimodal.html"/>
         <link rel="prev" title="Gallery - Freesurfer (labels filled)" href="gallery_freesurfer_filled.html"/> 
 
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.3+65.gd2ac66a
+                0.3.1
               </div>
             
           
@@ -184,21 +184,21 @@
             
   <div class="section" id="gallery-functional-mri-scan-artefact-detection-and-rating">
 <h1>Gallery - Functional MRI scan - artefact detection and rating<a class="headerlink" href="#gallery-functional-mri-scan-artefact-detection-and-rating" title="Permalink to this headline">¶</a></h1>
-<p><strong>This is an early preview of an app in active development - your feedback to improve will be greatly appreciated `here &lt;https://github.com/raamana/visualqc/issues/new&gt;`_.</strong></p>
+<p><strong>This is an early preview of an app in active development - your feedback to improve will be greatly appreciated:</strong> <a class="reference external" href="https://github.com/raamana/visualqc/issues/new">feedback welcome.</a></p>
 <p>The carpet plot <a class="footnote-reference" href="#id2" id="id1">[1]</a> can easily reveal abnormal frames (time-points) to the human eye, which is what VisualQC starts with for functional MRI scans - see below. VisualQC also overlay few useful statistics for each frame to further help you decide on the quality of that frame. We currently show 3 stats (mean, SD, and DVARS, but plan to few more such as framewise displacement (FD) and other motion parameters. Your suggestions and contributions are very <a class="reference external" href="https://github.com/raamana/visualqc/issues/new">welcome</a>.</p>
 <img alt="_images/func_mri1.png" src="_images/func_mri1.png" />
-<p>However, you may wish to dig into these “interesting” frames further to get a full view, so you can see what is going on in that frame - simply right click on any vertical line and VisualQC presents a full view of that frame in different views:</p>
+<p>However, you may wish to dig into these “interesting” frames further to get a full view, so you can see what is going on in that frame. You can do that simply with a right click on any vertical line and VisualQC presents a full view of that frame in different views (each with multiple slices):</p>
 <img alt="_images/func_mri2.png" src="_images/func_mri2.png" />
 <p>Given the focus of VisualQC and purpose of quality control, we need to be able to examine every detail before ruling out or rating any artefacts, so you can right click again on any slice to zoom it further to reveal all the voxels:</p>
 <img alt="_images/func_mri3.png" src="_images/func_mri3.png" />
 <p>You can do that on any other slice as well:</p>
 <img alt="_images/func_mri4.png" src="_images/func_mri4.png" />
-<p>A common way to inspect an fMRI run is to visualize the SD map (std. dev of a BOLD signal at each voxel over time), which can be commanded anytime with a simple keyboard shortcut <code class="docutils literal"><span class="pre">alt+s</span></code>:</p>
+<p>A common way to inspect an fMRI run is to visualize the SD map (std. dev of the BOLD signal at each voxel over time), which can be commanded anytime with a simple keyboard shortcut <code class="docutils literal"><span class="pre">alt+s</span></code>:</p>
 <img alt="_images/func_mri5.png" src="_images/func_mri5.png" />
 <p>You can already guess you can zoom in any of these slices too! :). btw, do you have any suggestions for a better colormap for SD maps? Check this <a class="reference external" href="https://matplotlib.org/tutorials/colors/colormaps.html">list</a> and let me know.</p>
 <img alt="_images/func_mri6.png" src="_images/func_mri6.png" />
 <img alt="_images/func_mri7.png" src="_images/func_mri7.png" />
-<p>You can easily get back to the home screen with single clicks, and once you are done click <code class="docutils literal"><span class="pre">Next</span></code> button to retrieve the next run:</p>
+<p>You can easily get back to the home screen with single clicks. Once you are done inspecting the run, you can rate the scan on various items, or approve it with <cite>Pass</cite>. FYI: You can not advance to next scan without rating the current scan. Then, click <code class="docutils literal"><span class="pre">Next</span></code> button to retrieve the next run:</p>
 <img alt="_images/func_mri8.png" src="_images/func_mri8.png" />
 <p>which is shown here, with atleast two “interesting” and likely bad frames:</p>
 <img alt="_images/func_mri9.png" src="_images/func_mri9.png" />
@@ -257,7 +257,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3+65.gd2ac66a',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

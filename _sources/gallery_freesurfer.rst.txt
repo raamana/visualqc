@@ -1,15 +1,27 @@
 Gallery - Freesurfer Parcellation
 ----------------------------------
 
-Some examples of how the interface looks are shown below. The first screenshot showcases the use case wherein we can review the accuracy of Freesufer's cortical parcellation against the original MRI (note that only one view is shown and one panel is zoomed-in):
+Some examples of how the interface looks are shown below. The first screenshot showcases the use case wherein we can review the accuracy of Freesufer's cortical parcellation against the original MRI:
 
-.. image:: vis/fs_contour/visual_qc_cortical_contour__Pitt_0050034_v1_ns18_4x6.png
+.. image:: vis/fs_contour/fs_cortical_contour_with_hist.png
 
-In this screenshot, we show the user interface showing the elements to rating, notes and alerts from outlier detection module:
+You could zoom in on any panel you wish:
 
-.. image:: vis/fs_contour/new_ui_with_outlier_alert_notes.png
+.. image:: vis/fs_contour/fs_cortical_contour_with_hist_zoomed.png
 
-In the screenshot below, we show the use case for a single label (subcortical segmentation, tissue class or cortical ROI) - shown here are hippocampus and amygdala:
+You could decrease color transparency level to see GM/WM boundaries better:
+
+.. image:: vis/fs_contour/fs_contour_high_transparency.png
+
+Or increase it to suit your preference:
+
+.. image:: vis/fs_contour/fs_contour_low_transparency.png
+
+Or turn it off completely in case really low contrast:
+
+.. image:: vis/fs_contour/fs_contour_overlay_disabled.png
+
+Further, we can choose show a single label (subcortical segmentation, tissue class or cortical ROI) - shown here are hippocampus and amygdala:
 
 .. image:: vis/fs_contour/visual_qc_labels_contour_53_Pitt_0050039_v012_ns18_9x6.png
 

@@ -10,7 +10,8 @@ Common elements
  - to rate, click the appropriate button, or press the key corresponding to its letter capitalized
     - This is usually the first later e.g. ``G`` for ``Good``, ``s`` for ``Spikes``, ``R`` for ``Review later``
     - but can also be others (capitalized) if there is overlap with other words: ``M` for ``i'M tired``
- - to advance to next subject, click ``Next`` button or press space or right arrow key
+ - You can not advance to next sbuject/scan/unit without rating the current one. If you are not sure yet about how to rate it, or need additional details or discussion, simply use ``Review later`` option.
+ - to advance to next subject, click ``Next`` button.
  - to quit the review temporarily, click ``Quit`` button or press ``Ctrl+Q`` keys.
 
 

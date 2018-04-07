@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Command line usage - Alignment &mdash; visualqc 0.3+65.gd2ac66a documentation</title>
+  <title>Command line usage - Alignment &mdash; visualqc 0.3.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.3+65.gd2ac66a documentation" href="index.html"/>
+    <link rel="top" title="visualqc 0.3.1 documentation" href="index.html"/>
         <link rel="next" title="Command line usage - T1w MRI" href="cli_t1_mri.html"/>
         <link rel="prev" title="Command line usage - Functional MRI" href="cli_func_mri.html"/> 
 
@@ -68,7 +68,7 @@
             
             
               <div class="version">
-                0.3+65.gd2ac66a
+                0.3.1
               </div>
             
           
@@ -210,9 +210,8 @@
 <kbd>-d, --in_dir</kbd></td>
 <td><p class="first">Absolute path to an input folder containing the MRI scan.
 Each subject will be queried after its ID in the metadata file,
-and is expected to have the MRI (specified <code class="docutils literal"><span class="pre">--mri_name</span></code>),
-in its own folder under –user_dir.</p>
-<p class="last">E.g. <code class="docutils literal"><span class="pre">--user_dir</span> <span class="pre">/project/images_to_QC</span></code></p>
+and is expected to have two  images (as specified <code class="docutils literal"><span class="pre">--image1</span></code> and <code class="docutils literal"><span class="pre">--image2</span></code>), in its own folder under –in_dir.</p>
+<p class="last">E.g. <code class="docutils literal"><span class="pre">--in_dir</span> <span class="pre">/project/images_to_QC</span></code></p>
 </td></tr>
 <tr><td class="option-group">
 <kbd>-i1, --image1</kbd></td>
@@ -380,7 +379,7 @@ This makes the switch from one subject to the next, even more seamless (saving f
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3+65.gd2ac66a',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
