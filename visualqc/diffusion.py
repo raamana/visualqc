@@ -15,19 +15,20 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import CheckButtons
 from mrivis.utils import crop_image
-from os.path import basename, join as pjoin, realpath, splitext
+from os.path import basename, join as pjoin
 
 from visualqc import config as cfg
-from visualqc.image_utils import mask_image
-from visualqc.readers import traverse_bids
+from visualqc.readers import diffusion_traverse_bids
 from visualqc.t1_mri import T1MriInterface
-from visualqc.utils import check_bids_dir, check_finite_int, check_id_list_with_regex, \
-    check_image_is_4d, check_out_dir, check_outlier_params, check_views, get_axis, \
+from visualqc.utils import check_bids_dir, check_finite_int, check_image_is_4d, \
+    check_out_dir, check_outlier_params, check_views, get_axis, \
     pick_slices, scale_0to1
 from visualqc.workflows import BaseWorkflowVisualQC
 
+_z_score = lambda x: (x - np.mean(x)) / np.std(x)
 
-def _unbidsify(filename, max_width=18):
+
+def _prettify(filename, max_width=18):
     """Returns a easily displayable and readable multiline string"""
 
     parts = [s.replace('-', ' ') for s in filename.split('_')]
@@ -42,16 +43,14 @@ def _unbidsify(filename, max_width=18):
     return '\n'.join(fixed_width)
 
 
-_z_score = lambda x: (x - np.mean(x)) / np.std(x)
-
-
 class DiffusionMRIInterface(T1MriInterface):
     """Interface for the review of fMRI images."""
+
 
     def __init__(self,
                  fig,
                  axes,
-                 issue_list=cfg.diffusion_default_issue_list,
+                 issue_list=cfg.diffusion_mri_default_issue_list,
                  next_button_callback=None,
                  quit_button_callback=None,
                  right_arrow_callback=None,
@@ -93,6 +92,7 @@ class DiffusionMRIInterface(T1MriInterface):
         # makes to handy to clean them all
         self.data_handles = list()
 
+
     def add_checkboxes(self):
         """
         Checkboxes offer the ability to select multiple tags such as Motion, Ghosting Aliasing etc,
@@ -119,6 +119,7 @@ class DiffusionMRIInterface(T1MriInterface):
 
         self._index_pass = self.issue_list.index(cfg.diffusion_mri_pass_indicator)
 
+
     def maximize_axis(self, ax):
         """zooms a given axes"""
 
@@ -132,6 +133,7 @@ class DiffusionMRIInterface(T1MriInterface):
             self.nested_zoomed_in = True
             self.prev_axis = ax
 
+
     def restore_axis(self):
 
         if self.nested_zoomed_in:
@@ -139,6 +141,7 @@ class DiffusionMRIInterface(T1MriInterface):
                                zorder=self.prev_ax_zorder,
                                alpha=self.prev_ax_alpha)
             self.nested_zoomed_in = False
+
 
     def on_mouse(self, event):
         """Callback for mouse events."""
@@ -173,6 +176,7 @@ class DiffusionMRIInterface(T1MriInterface):
         # redraw the figure - important
         self.fig.canvas.draw_idle()
 
+
     def on_keyboard(self, key_in):
         """Callback to handle keyboard shortcuts to rate and advance."""
 
@@ -194,13 +198,19 @@ class DiffusionMRIInterface(T1MriInterface):
             self.show_stdev_callback()
         else:
             if key_pressed in cfg.abbreviation_diffusion_mri_default_issue_list:
-                checked_label = cfg.abbreviation_diffusion_mri_default_issue_list[key_pressed]
+                checked_label = cfg.abbreviation_diffusion_mri_default_issue_list[
+                    key_pressed]
                 # TODO if user chooses a different set of names, keyboard shortcuts might not work
                 self.checkbox.set_active(self.issue_list.index(checked_label))
             else:
                 pass
 
         self.fig.canvas.draw_idle()
+
+
+    def on_scroll(self, scroll_event):
+        """Implements the scroll callback"""
+
 
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
@@ -217,12 +227,11 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     Rating workflow for BOLD fMRI.
     """
 
+
     def __init__(self,
                  in_dir,
                  out_dir,
-                 drop_start=1,
-                 drop_end=None,
-                 no_preproc=False,
+                 apply_preproc=False,
                  id_list=None,
                  name_pattern=None,
                  images_for_id=None,
@@ -234,9 +243,9 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  disable_outlier_detection=True,
                  prepare_first=False,
                  vis_type=None,
-                 views=cfg.default_views_fmri,
-                 num_slices_per_view=cfg.default_num_slices_fmri,
-                 num_rows_per_view=cfg.default_num_rows_fmri):
+                 views=cfg.default_views_diffusion,
+                 num_slices_per_view=cfg.default_num_slices_diffusion,
+                 num_rows_per_view=cfg.default_num_rows_diffusion):
         """
         Constructor.
 
@@ -248,12 +257,11 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         drop_start : int
             Number of frames to drop at the beginning of the time series.
 
-        no_preproc : bool
+        apply_preproc : bool
             Whether to apply basic preprocessing steps (detrend, slice timing correction etc)
                 before building the carpet image.
-                If the images are already preprocessed elsewhere, disable this with no_preproc=True
-            Default : True , apply to basic preprocessing before display for review.
-
+                If the images are already preprocessed elsewhere, disable this with apply_preproc=True
+            Default : False, to not apply any preprocessing before display for review.
 
         """
 
@@ -264,33 +272,26 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                          outlier_method, outlier_fraction,
                          outlier_feat_types, disable_outlier_detection)
 
-        # proper checks
-        self.drop_start = drop_start
-        self.drop_end = drop_end
-        if self.drop_start is None:
-            self.drop_start = 0
-        if self.drop_end is None:
-            self.drop_end = 0
-
         # basic cleaning before display
         # whether to remove and detrend before making carpet plot
-        self.no_preproc = no_preproc
+        self.apply_preproc = apply_preproc
 
         self.vis_type = vis_type
         self.issue_list = issue_list
         self.in_dir_type = in_dir_type
         self.name_pattern = name_pattern
         self.images_for_id = images_for_id
-        self.expt_id = 'rate_fmri'
+        self.expt_id = 'rate_diffusion'
         self.suffix = self.expt_id
         self.current_alert_msg = None
         self.prepare_first = prepare_first
 
         #
-        self.current_gradient = 0
+        self.current_grad_index = 0
 
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
+
 
     def preprocess(self):
         """
@@ -307,12 +308,14 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # no complex vis to generate - skipping
 
+
     def prepare_UI(self):
         """Main method to run the entire workflow"""
 
         self.open_figure()
         self.add_UI()
         self.add_histogram_panel()
+
 
     def init_layout(self, views, num_rows_per_view,
                     num_slices_per_view, padding=cfg.default_padding):
@@ -324,6 +327,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.num_cols = int((len(self.views) * self.num_slices_per_view) / self.num_rows)
         self.padding = padding
 
+
     def init_getters(self):
         """Initializes the getters methods for input paths and feature readers."""
 
@@ -333,22 +337,15 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if 'BIDS' in self.in_dir_type.upper():
             from bids.grabbids import BIDSLayout
             self.bids_layout = BIDSLayout(self.in_dir)
-            self.field_names, self.units = traverse_bids(self.bids_layout,
-                                                         **cfg.diffusion_mri_BIDS_filters)
-
-            # file name of each BOLD scan is the unique identifier, as it essentially contains all the key info.
-            self.unit_by_id = {splitext(basename(fpath))[0]: realpath(fpath) for _, fpath
-                               in self.units}
+            self.units = diffusion_traverse_bids(self.bids_layout)
+            # file name of each scan is the unique identifier,
+            #   as it essentially contains all the key info.
+            self.unit_by_id = {basename(sub_data['image']): sub_data
+                               for _, sub_data in self.units.items()}
             self.id_list = list(self.unit_by_id.keys())
-        elif 'GENERIC' in self.in_dir_type.upper():
-            if self.id_list is None or self.images_for_id is None:
-                raise ValueError('id_list or images_for_id can not be None for generic in_dir')
-            self.unit_by_id = self.images_for_id.copy()
         else:
-            raise NotImplementedError(
-                'Only two formats are supported: '
-                '1) BIDS format and '
-                '2) GENERIC with regex spec for filenames using --name_pattern')
+            raise NotImplementedError('Only the BIDS format is supported at the moment.')
+
 
     def open_figure(self):
         """Creates the master figure to show everything in."""
@@ -399,8 +396,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         for ix, (ax, (stat, label, color)) in enumerate(zip(self.stats_axes, stats)):
             (vh,) = ax.plot(gradients, stat, color=color)
             self.stats_handles[ix] = vh
-            vh.set_linewidth(cfg.linewidth_stats_fmri)
-            vh.set_linestyle(cfg.linestyle_stats_fmri)
+            vh.set_linewidth(cfg.linewidth_stats_diffusion)
+            vh.set_linestyle(cfg.linestyle_stats_diffusion)
             ax.xaxis.set_visible(False)
             ax.set_frame_on(False)
             ax.set_ylim(auto=True)
@@ -425,7 +422,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # vmin/vmax are controlled, because we rescale all to [0, 1]
         # TODO aspect auto here covers carpet so the user can focus on the frame,
         #   not accurately representing geometry underneath
-        self.imshow_params_zoomed = dict(interpolation='none', aspect='auto', rasterized=True,
+        self.imshow_params_zoomed = dict(interpolation='none', aspect='auto',
+                                         rasterized=True,
                                          origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
 
         # images to be shown in the forground
@@ -445,20 +443,21 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.subplots_adjust(**cfg.review_area)
         plt.show(block=False)
 
+
     def add_UI(self):
         """Adds the review UI with defaults"""
 
         self.UI = DiffusionMRIInterface(self.fig, self.ax_carpet, self.issue_list,
-                                         next_button_callback=self.next,
-                                         quit_button_callback=self.quit,
-                                         right_click_callback=self.zoom_in_on_gradient,
-                                         right_arrow_callback=self.show_next_gradient,
-                                         left_arrow_callback=self.show_prev_gradient,
-                                         zoom_in_callback=self.zoom_in_on_gradient,
-                                         zoom_out_callback=self.zoom_out_callback,
-                                         show_stdev_callback=self.show_stdev,
-                                         axes_to_zoom=self.fg_axes,
-                                         total_num_layers=self.total_num_layers)
+                                        next_button_callback=self.next,
+                                        quit_button_callback=self.quit,
+                                        right_click_callback=self.zoom_in_on_gradient,
+                                        right_arrow_callback=self.show_next_gradient,
+                                        left_arrow_callback=self.show_prev_gradient,
+                                        zoom_in_callback=self.zoom_in_on_gradient,
+                                        zoom_out_callback=self.zoom_out_callback,
+                                        show_stdev_callback=self.show_stdev,
+                                        axes_to_zoom=self.fg_axes,
+                                        total_num_layers=self.total_num_layers)
 
         # connecting callbacks
         self.con_id_click = self.fig.canvas.mpl_connect('button_press_event',
@@ -466,14 +465,16 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.con_id_keybd = self.fig.canvas.mpl_connect('key_press_event',
                                                         self.UI.on_keyboard)
 
-        # TODO implement the scrolling movement to scroll in time
+        # TODO implement the scrolling movement to scroll in gradient
         # con_id_scroll = self.fig.canvas.mpl_connect('scroll_event', self.UI.on_scroll)
 
         self.fig.set_size_inches(self.figsize)
 
+
     def add_histogram_panel(self):
         """Extra axis for histogram"""
         pass
+
 
     def update_histogram(self, img):
         """
@@ -482,6 +483,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         Mimic behaviour in T1 mri workflow if helpful!
         """
         pass
+
 
     def update_alerts(self):
         """Keeps a box, initially invisible."""
@@ -492,6 +494,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                          self.current_alert_msg, **cfg.alert_text_props)
             # adding it to list of elements to cleared when advancing to next subject
             self.UI.data_handles.append(h_alert_text)
+
 
     def add_alerts(self):
         """Brings up an alert if subject id is detected to be an outlier."""
@@ -509,20 +512,35 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         else:
             self.current_alert_msg = None
 
+
     def load_unit(self, unit_id):
         """Loads the image data for display."""
 
-        img_path = self.unit_by_id[unit_id]
+        img_path = self.unit_by_id[unit_id]['image']
+        bval_path = self.unit_by_id[unit_id]['bval']
         try:
             hdr = nib.load(img_path)
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
             self.img_this_unit_raw = self.hdr_this_unit.get_data()
+            self.b_values_this_unit = np.loadtxt(bval_path).flatten()
         except:
             print('Unable to read image at \n\t{}'.format(img_path))
             skip_subject = True
         else:
             check_image_is_4d(self.img_this_unit_raw)
-            self.TR_this_unit = self.hdr_this_unit.header.get_zooms()[-1]
+
+            self.b0_indices = np.flatnonzero(self.b_values_this_unit == 0)
+            if len(self.b0_indices) < 1:
+                raise ValueError('There are no b=0 volumes!')
+            if len(self.b0_indices) == 1:
+                self.b0_volume = self.img_this_unit_raw[:, :, :, self.b0_indices]
+            else:
+                self.b0_volume = self.img_this_unit_raw[:,:,:,self.b0_indices[0]]
+            # need more thorough checks on whether image loaded is indeed DWI
+
+            self.dw_indices = np.flatnonzero(self.b_values_this_unit != 0)
+            self.dw_volumes = self.img_this_unit_raw[:, :, :, self.dw_indices]
+            self.num_gradients = self.dw_volumes.shape[3]
 
             skip_subject = False
             if np.count_nonzero(self.img_this_unit_raw) == 0:
@@ -531,21 +549,22 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         return skip_subject
 
+
     def display_unit(self):
         """Adds multi-layered composite."""
 
-        # if frames are to be dropped
-        end_frame = self.img_this_unit_raw.shape[3] - self.drop_end
-        self.img_this_unit = self.img_this_unit_raw[:, :, :, self.drop_start:end_frame]
-        # TODO show median signal instead of mean - or option for both?
-        self.stdev_this_unit, self.mean_this_unit = stats_over_gradients(self.img_this_unit)
+        self.img_this_unit = self.img_this_unit_raw.copy()
 
-        # TODO should we perform head motion correction before any display at all?
+        # TODO show median signal instead of mean - or option for both?
+        # TODO need separate kbd scut to show B0 volume
+        # TODO keyboard shortcuts to show SD over grad, median, mean etc
+        self.stdev_this_unit, self.mean_this_unit = self.stats_over_gradients()
+
         # TODO what about slice timing correction?
 
         num_voxels = np.prod(self.img_this_unit.shape[0:3])
-        num_gradients = self.img_this_unit.shape[3]
-        gradients = list(range(num_gradients))
+        # TODO better way to label each gradient would be with unit vector/direction
+        gradients = list(range(self.num_gradients))
 
         # 1. compute necessary stats/composites
         carpet, mean_signal_spatial, stdev_signal_spatial, dvars = self.compute_stats()
@@ -558,52 +577,12 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.stats_handles[2].set_data(gradients[1:], dvars[1:])
 
         # 3. updating axes limits and views
-        self.update_axes_limits(num_gradients, carpet.shape[0])
+        self.update_axes_limits(self.num_gradients, carpet.shape[0])
         self.refresh_layer_order()
 
         # clean up
         del carpet, mean_signal_spatial, stdev_signal_spatial, dvars
 
-        print()
-
-    def make_carpet(self, mask, row_order=None):
-        """
-        Makes the carpet image
-
-
-        Parameters
-        ----------
-        diffn_img
-
-        Returns
-        -------
-
-        """
-
-        carpet = self.img_this_unit.reshape(-1, self.img_this_unit.shape[3])
-        if not self.no_preproc:
-            from nilearn.signal import clean
-            # notice the transpose before clean and after
-            carpet = clean(carpet.T, t_r=self.TR_this_unit,
-                           detrend=True, standardize=False).T
-
-        # Removes voxels with low variance
-        cropped_carpet = np.delete(carpet, np.where(mask.flatten() == 0), axis=0)
-        normed_carpet = _rescale_over_time(cropped_carpet)
-
-        del carpet, cropped_carpet
-
-        # TODO blurring within tissue segmentations and other deeper subcortical areas
-        # TODO reorder rows either using anatomical seg, or using clustering
-
-        # dropping alternating voxels if it gets too big
-        # to save on memory and avoid losing signal
-        if normed_carpet.shape[1] > 600:
-            print('Too many frames (n={}) to display: dropping alternating frames'.format(
-                normed_carpet.shape[1]))
-            normed_carpet = normed_carpet[:, ::2]
-
-        return normed_carpet
 
     def zoom_in_on_gradient(self, event):
         """Brings up selected time point"""
@@ -614,25 +593,46 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # retrieving the latest transform after to ensure its accurate at click time
         x_in_carpet, _y = self._event_location_in_axis(event, self.ax_carpet)
         # clipping it to [0, T]
-        self.current_gradient = max(0, min(self.img_this_unit.shape[3], int(round(x_in_carpet))))
-        self.show_timepoint(self.current_gradient)
+        self.current_grad_index = max(0, min(self.img_this_unit.shape[3],
+                                             int(round(x_in_carpet))))
+        self.show_gradient(self.current_grad_index)
+
+
+    def change_gradient_by_step(self, step):
+        """Changes the index of the gradient being shown.
+
+        Step could be negative to move in opposite direction.
+        """
+
+        # skipping unnecessary computation
+        if (self.current_grad_index >= self.num_gradients - 1) or \
+            (self.current_grad_index < 0):
+            return
+
+        new_index = self.current_grad_index + step
+        # clipping from 0 to num_gradients
+        self.current_grad_index = max(0, min(self.num_gradients, new_index))
+        self.show_gradient(self.current_grad_index)
+
 
     def show_next_gradient(self):
 
-        if self.current_gradient == self.img_this_unit.shape[3] - 1:
+        if self.current_grad_index == self.img_this_unit.shape[3] - 1:
             return  # do nothing
 
-        self.current_gradient = min(self.img_this_unit.shape[3] - 1,
-                                      self.current_gradient + 1)
-        self.show_timepoint(self.current_gradient)
+        self.current_grad_index = min(self.img_this_unit.shape[3] - 1,
+                                      self.current_grad_index + 1)
+        self.show_gradient(self.current_grad_index)
+
 
     def show_prev_gradient(self):
 
-        if self.current_gradient == 0:
+        if self.current_grad_index == 0:
             return  # do nothing
 
-        self.current_gradient = max(self.current_gradient - 1, 0)
-        self.show_timepoint(self.current_gradient)
+        self.current_grad_index = max(self.current_grad_index - 1, 0)
+        self.show_gradient(self.current_grad_index)
+
 
     def zoom_out_callback(self, event):
         """Hides the zoomed-in axes (showing frame)."""
@@ -642,6 +642,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.foreground_h.set_visible(False)
         self.UI.zoomed_in = False
 
+
     @staticmethod
     def _event_location_in_axis(event, axis):
         """returns (x_in_axis, y_in_axis)"""
@@ -649,7 +650,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # display pixels to axis coords
         return axis.transData.inverted().transform_point((event.x, event.y))
 
-    def show_timepoint(self, time_pt):
+
+    def show_gradient(self, time_pt):
         """Exhibits a selected timepoint on top of stats/carpet"""
 
         if time_pt < 0 or time_pt >= self.img_this_unit.shape[3]:
@@ -664,23 +666,32 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # this state flag in important
         self.UI.zoomed_in = True
 
+
     def _identify_foreground(self, text):
         """show the time point"""
 
         self.foreground_h.set_text(text)
         self.foreground_h.set_visible(True)
 
+
     def show_stdev(self):
         """Shows the image of temporal std. dev"""
 
-        self.attach_image_to_foreground_axes(self.stdev_this_unit, cfg.colormap_stdev_fmri)
-        self._identify_foreground('Std. dev over time')
-        self.UI.zoomed_in = True
+        if self.stdev_this_unit is not None:
+            self.attach_image_to_foreground_axes(self.stdev_this_unit,
+                                                 cfg.colormap_stdev_diffusion)
+            self._identify_foreground('Std. dev over gradients')
+            self.UI.zoomed_in = True
+        else:
+            # if the number of b0 volumes are not sufficient
+            print('SD for this unit is not available')
+
 
     def attach_image_to_foreground_axes(self, image3d, cmap='gray'):
         """Attaches a given image to the foreground axes and bring it forth"""
 
         image3d = crop_image(image3d, self.padding)
+        # TODO is it always acceptable to rescale diffusion data?
         image3d = scale_0to1(image3d)
         slices = pick_slices(image3d, self.views, self.num_slices_per_view)
         for ax_index, (dim_index, slice_index) in enumerate(slices):
@@ -689,24 +700,87 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         for ax in self.fg_axes:
             ax.set(visible=True, zorder=self.layer_order_zoomedin)
 
+
     def compute_stats(self):
         """Computes the necessary stats to be displayed."""
 
-        mean_img_temporal, stdev_img_temporal = stats_over_gradients(self.img_this_unit)
-        mean_signal_spatial, stdev_signal_spatial = spatial_stats(self.img_this_unit)
-        dvars = compute_DVARS(self.img_this_unit)
+        mean_over_grad, stdev_over_grad = self.stats_over_gradients()
+        mean_signal_spatial, stdev_signal_spatial = spatial_stats(self.dw_volumes)
+        dvars = self.compute_DVARS()
 
         for stat, sname in zip((mean_signal_spatial, stdev_signal_spatial, dvars),
                                ('mean_signal_spatial', 'stdev_signal_spatial', 'dvars')):
-            if len(stat) != self.img_this_unit.shape[3]:
+            if len(stat) != self.dw_volumes.shape[3]:
                 raise ValueError('ERROR: lengths of different stats do not match!')
             if any(np.isnan(stat)):
                 raise ValueError('ERROR: invalid values in stat : {}'.format(sname))
 
-        mask = mask_image(mean_img_temporal, update_factor=0.9, init_percentile=5)
-        carpet = self.make_carpet(mask)
+        carpet = self.make_carpet()
 
         return carpet, mean_signal_spatial, stdev_signal_spatial, dvars
+
+
+    def make_carpet(self, row_order=None):
+        """Makes the carpet image
+        """
+
+        carpet = self.dw_volumes.reshape(-1, self.dw_volumes.shape[3])
+        if self.apply_preproc:
+            # no cleaning implemented so far
+            raise NotImplementedError
+
+        # TODO is rescaled over gradients allowed?
+        carpet = _rescale_over_gradients(carpet)
+
+        # TODO reorder the carper in interesting groups of rows?
+
+        return carpet
+
+
+    def stats_over_b0(self, indices_b0):
+        """Computes voxel-wise stats over B=0 volumes (no diffusion) data
+            --> single volume over space.
+        """
+
+        # TODO connect this
+        b0_subset = self.img_this_unit[:, :, :, self.b0_indices]
+        mean_img = np.mean(b0_subset, axis=3)
+        sd_img = np.std(b0_subset, axis=3)
+
+        return mean_img, sd_img
+
+
+    def stats_over_gradients(self):
+        """Computes voxel-wise stats over gradients of diffusion data
+            --> single volume over space.
+
+        """
+
+        mean_img = np.mean(self.dw_volumes, axis=3)
+        sd_img = np.std(self.dw_volumes, axis=3)
+
+        return mean_img, sd_img
+
+
+    def compute_DVARS(self):
+        """
+        Computes the DVARS for a given diffusion image.
+
+        Statistic adapted from the fMRI world.
+        """
+
+        RMS_diff = lambda img2, img1: np.sqrt(np.mean(np.square(img2 - img1)))
+        DVARS_1_to_N = [RMS_diff(self.dw_volumes[:, :, :, grad_idx],
+                                 self.dw_volumes[:, :, :, grad_idx - 1])
+                        for grad_idx in range(1, self.dw_volumes.shape[-1])]
+
+        DVARS = np.full(self.dw_volumes.shape[-1], np.nan)
+        # dvars value at time point 0 is set to 0
+        DVARS[0] = 0.0
+        DVARS[1:] = DVARS_1_to_N
+
+        return DVARS
+
 
     def update_axes_limits(self, num_gradients, num_voxels_shown):
         """Synchronizes the x-axis limits and updates the carpet image extents"""
@@ -720,6 +794,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             (-0.5, num_gradients - 0.5, -0.5, num_voxels_shown - 0.5))
         self.ax_carpet.set_xticks(np.arange(0, num_gradients, 20))
 
+
     def refresh_layer_order(self):
         """Ensures the expected order for layers"""
 
@@ -730,12 +805,13 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             for a in self.fg_axes:
                 a.set_zorder(self.layer_order_to_hide)
 
+
     def identify_unit(self, unit_id, counter):
         """
         Method to inform the user which unit (subject or scan) they are reviewing.
         """
 
-        str_list = _unbidsify(unit_id)
+        str_list = _prettify(unit_id)
         id_with_counter = '{}\n({}/{})'.format(str_list, counter + 1,
                                                self.num_units_to_review)
         if len(id_with_counter) < 1:
@@ -743,6 +819,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.UI.annot_text = self.fig.text(cfg.position_annot_text[0],
                                            cfg.position_annot_text[1],
                                            id_with_counter, **cfg.annot_text_props)
+
 
     def cleanup(self):
         """Preparing for exit."""
@@ -755,48 +832,41 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.close('all')
 
 
-def compute_DVARS(diffn_img, mean_img=None, mask=None, apply_mask=False):
+def pis_map(diffn_img, index_low_b_val, index_high_b_val):
     """
-    Computes the DVARS for a given diffusion image.
+    Produces the physically implausible signal (PIS) map [1].
 
-    Statistic adapted from the fMRI world.
+    Parameters
+    ----------
+    diffn_img
+
+    index_low_b_val : int
+        index into the DWI identifying the image with lower b-value.
+        Usually 0 referring to the b=0 (non-DW) image
+
+    index_high_b_val : int
+        index into the DWI identifying the image with higher b-value
+
+    Returns
+    -------
+    pis_map : ndarray
+        Binary 3d image identifying voxels to be PIS.
+
+    References
+    -----------
+    1. D. Perrone et al. / NeuroImage 120 (2015) 441–455
+
     """
 
-    if mean_img is None:
-        mean_img = np.mean(diffn_img, axis=3)
+    pis = diffn_img[:, :, :, index_low_b_val] < diffn_img[:, :, :, index_high_b_val]
 
-    if apply_mask:
-        if mask is None:
-            mask = mask_image(mean_img)
-        mean_img[np.logical_not(mask)] = 0.0
-
-    num_gradients = diffn_img.shape[3]
-
-    RMS_diff = lambda img2, img1: np.sqrt(np.mean(np.square(img2 - img1)))
-    DVARS_1_to_N = [RMS_diff(diffn_img[:, :, :, t], diffn_img[:, :, :, t - 1]) for t in
-                    range(1, num_gradients)]
-
-    DVARS = np.full(num_gradients, np.nan)
-    # dvars value at time point 0 is set to 0
-    DVARS[0] = 0.0
-    DVARS[1:] = DVARS_1_to_N
-
-    return DVARS
-
-
-def stats_over_gradients(diffn_img):
-    """Computes voxel-wise temporal average of diffusion data --> single volume over space."""
-
-    raise NotImplementedError('does not make sense - consult more literature')
-
-    mean_img = np.mean(diffn_img, axis=3)
-    sd_img = np.std(diffn_img, axis=3)
-
-    return mean_img, sd_img
+    return pis
 
 
 def spatial_stats(diffn_img):
-    """Computes volume-wise spatial average of diffusion data --> single vector over time."""
+    """Computes volume-wise stats over space of diffusion data
+        --> single vector over time.
+    """
 
     num_gradients = diffn_img.shape[3]
     mean_signal = np.array(
@@ -807,15 +877,15 @@ def spatial_stats(diffn_img):
     return mean_signal, stdev_signal
 
 
-def _rescale_over_time(matrix):
+def _rescale_over_gradients(matrix):
     """
-    Voxel-wise normalization over time.
+    Voxel-wise normalization over gradients.
 
     Input: num_voxels x num_gradients
     """
 
     if matrix.shape[0] <= matrix.shape[1]:
-        raise ValueError('Number of voxels is less than the number of time points!! '
+        raise ValueError('Number of voxels is less than the number of gradients!! '
                          'Are you sure data is reshaped correctly?')
 
     min_ = matrix.min(axis=1)
@@ -845,7 +915,7 @@ def _within_frame_rescale(matrix):
 def get_parser():
     """Parser to specify arguments and their defaults."""
 
-    parser = argparse.ArgumentParser(prog="visualqc_diffusion_mri",
+    parser = argparse.ArgumentParser(prog="visualqc_diffusion",
                                      formatter_class=argparse.RawTextHelpFormatter,
                                      description='visualqc_diffusion_mri: rate quality of diffusion MR scan.')
 
@@ -884,9 +954,9 @@ def get_parser():
     Specifies the regex to be used to search for the image to be reviewed.
     Typical options include: 
 
-        - ``'bold.nii'``, when name is common across subjects
+        - ``'dwi.nii'``, when name is common across subjects
         - ``'*_preproc_*.nii'``, when filenames have additional info encoded (such as redundant subject ID as in BIDS format)
-         - ``'func/sub*_bold_*space-MNI152*_preproc.nii.gz'`` when you need to additional levels deeper (with a / in regex) 
+         - ``'func/sub*_dwi_*space-MNI152*_preproc.nii.gz'`` when you need to additional levels deeper (with a / in regex) 
             or control different versions (atlas space) of the same type of file. 
 
     Ensure the regex is *tight* enough to result in only one file for each ID in the id_list. You can do this by giving it a try in the shell and counting the number of results against the number of IDs in id_list. If you have more results than the IDs, then there are duplicates. You can use https://regex101.com to construct your pattern to tightly match your requirements. If multiple matches are found, the first one will be used.
@@ -898,15 +968,15 @@ def get_parser():
 
     help_text_out_dir = textwrap.dedent("""
     Output folder to store the visualizations & ratings.
-    Default: a new folder called ``{}`` will be created inside the ``fs_dir``
+    Default: a new folder called ``{}`` will be created inside the input dir.
     \n""".format(cfg.default_out_dir_name))
 
-    help_text_no_preproc = textwrap.dedent("""
+    help_text_apply_preproc = textwrap.dedent("""
     Whether to apply basic preprocessing steps (detrend, slice timing correction etc), before building the carpet image. 
 
-    If the images are already preprocessed elsewhere, use this flag ``--no_preproc``
+    If the images are already preprocessed elsewhere, use this flag ``--apply_preproc``
 
-    Default is to apply minimal preprocessing (detrending etc) before showing images for review.
+    Default is NOT to apply any preprocessing (detrending etc) before showing images for review.
     \n""")
 
     help_text_views = textwrap.dedent("""
@@ -970,9 +1040,9 @@ def get_parser():
                         default=cfg.default_user_dir,
                         required=False, help=help_text_bids_dir)
 
-    in_out.add_argument("-u", "--user_dir", action="store", dest="user_dir",
-                        default=cfg.default_user_dir,
-                        required=False, help=help_text_user_dir)
+    # in_out.add_argument("-u", "--user_dir", action="store", dest="user_dir",
+    #                     default=cfg.default_user_dir,
+    #                     required=False, help=help_text_user_dir)
 
     in_out.add_argument("-o", "--out_dir", action="store", dest="out_dir",
                         required=False, help=help_text_out_dir,
@@ -988,8 +1058,9 @@ def get_parser():
     preproc = parser.add_argument_group('Preprocessing',
                                         'options related to preprocessing before review')
 
-    preproc.add_argument("-np", "--no_preproc", action="store_true", dest="no_preproc",
-                         required=False, help=help_text_no_preproc)
+    preproc.add_argument("-ap", "--apply_preproc", action="store_true",
+                         dest="apply_preproc",
+                         required=False, help=help_text_apply_preproc)
 
     outliers = parser.add_argument_group('Outlier detection',
                                          'options related to automatically detecting possible outliers')
@@ -1008,7 +1079,12 @@ def get_parser():
                           default=cfg.diffusion_mri_features_OLD, required=False,
                           help=help_text_outlier_feat_types)
 
-    outliers.add_argument("-old", "--disable_outlier_detection", action="store_true",
+    # outliers.add_argument("-old", "--disable_outlier_detection", action="store_true",
+    #                       dest="disable_outlier_detection",
+    #                       required=False, help=help_text_disable_outlier_detection)
+
+    # TODO re-enable it when OLD is ready for DWI
+    outliers.add_argument("-old", "--disable_outlier_detection", action="store_false",
                           dest="disable_outlier_detection",
                           required=False, help=help_text_disable_outlier_detection)
 
@@ -1027,10 +1103,9 @@ def get_parser():
                         default=cfg.default_num_rows, required=False,
                         help=help_text_num_rows)
 
-    wf_args = parser.add_argument_group('Workflow', 'Options related to workflow '
-                                                    'e.g. to pre-compute resource-intensive features, '
-                                                    'and pre-generate all the visualizations required '
-                                                    'before bringin up the review interface.')
+    _wf_descr = 'Options related to workflow e.g. to pre-compute resource-intensive features,  ' \
+                'and pre-generate all the visualizations required before initiating the review.'
+    wf_args = parser.add_argument_group('Workflow', _wf_descr)
     wf_args.add_argument("-p", "--prepare_first", action="store_true",
                          dest="prepare_first",
                          help=help_text_prepare)
@@ -1057,21 +1132,22 @@ def make_workflow_from_user_options():
     vis_type = 'diffusion_mri'
     type_of_features = 'diffusion_mri'
 
-    if user_args.bids_dir is not None and user_args.user_dir is None:
-        in_dir, in_dir_type = check_bids_dir(user_args.bids_dir)
-        id_list = None
-        name_pattern = None
-        images_for_id = None
-    elif user_args.bids_dir is None and user_args.user_dir is not None:
-        name_pattern = user_args.name_pattern
-        in_dir = realpath(user_args.user_dir)
-        in_dir_type = 'generic'
-        id_list, images_for_id = check_id_list_with_regex(user_args.id_list, in_dir, name_pattern)
-    else:
-        raise ValueError('Invalid args: specify only one of bids_dir or user_dir, not both.')
+    if user_args.bids_dir is None:
+        raise ValueError('Invalid args: Only BIDS format input is supported at present.')
+
+    in_dir, in_dir_type = check_bids_dir(user_args.bids_dir)
+    id_list = None
+    name_pattern = None
+    images_for_id = None
+
+    # elif user_args.bids_dir is None and user_args.user_dir is not None:
+    #     name_pattern = user_args.name_pattern
+    #     in_dir = realpath(user_args.user_dir)
+    #     in_dir_type = 'generic'
+    #     id_list, images_for_id = check_id_list_with_regex(user_args.id_list, in_dir, name_pattern)
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
-    no_preproc = user_args.no_preproc
+    apply_preproc = user_args.apply_preproc
 
     views = check_views(user_args.views)
     num_slices_per_view, num_rows_per_view = check_finite_int(user_args.num_slices,
@@ -1084,17 +1160,18 @@ def make_workflow_from_user_options():
         id_list, vis_type, type_of_features)
 
     wf = DiffusionRatingWorkflow(in_dir, out_dir,
-                            id_list=id_list,
-                            images_for_id=images_for_id,
-                            issue_list=cfg.diffusion_mri_default_issue_list,
-                            name_pattern=name_pattern, in_dir_type=in_dir_type,
-                            no_preproc=no_preproc,
-                            outlier_method=outlier_method, outlier_fraction=outlier_fraction,
-                            outlier_feat_types=outlier_feat_types,
-                            disable_outlier_detection=disable_outlier_detection,
-                            prepare_first=user_args.prepare_first, vis_type=vis_type,
-                            views=views, num_slices_per_view=num_slices_per_view,
-                            num_rows_per_view=num_rows_per_view)
+                                 id_list=id_list,
+                                 images_for_id=images_for_id,
+                                 issue_list=cfg.diffusion_mri_default_issue_list,
+                                 name_pattern=name_pattern, in_dir_type=in_dir_type,
+                                 apply_preproc=apply_preproc,
+                                 outlier_method=outlier_method,
+                                 outlier_fraction=outlier_fraction,
+                                 outlier_feat_types=outlier_feat_types,
+                                 disable_outlier_detection=disable_outlier_detection,
+                                 prepare_first=user_args.prepare_first, vis_type=vis_type,
+                                 views=views, num_slices_per_view=num_slices_per_view,
+                                 num_rows_per_view=num_rows_per_view)
 
     return wf
 

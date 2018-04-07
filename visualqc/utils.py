@@ -679,10 +679,12 @@ def check_outlier_params(method, fraction, feat_types, disable_outlier_detection
 
     if type_of_features not in cfg.avail_OLD_source_of_features:
         raise NotImplementedError(
-            'Outlier detection based on current source of features is not implemented.\n'
-            'Allowed feature types: {}'.format(cfg.avail_OLD_source_of_features))
+            'Outlier detection based on current source of '
+            'features ({}) is not implemented.\n Allowed: {} '
+            ' '.format(type_of_features, cfg.avail_OLD_source_of_features))
 
-    if type_of_features.lower() == 'freesurfer' and vis_type not in cfg.freesurfer_vis_types:
+    if type_of_features.lower() == 'freesurfer' and \
+        vis_type not in cfg.freesurfer_vis_types:
         raise NotImplementedError(
             'Outlier detection based on current Freesurfer vis_type is not implemented.\n'
             'Allowed visualization types: {}'.format(cfg.freesurfer_vis_types))

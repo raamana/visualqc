@@ -40,7 +40,7 @@ default_outlier_detection_method = 'isolation_forest'
 default_outlier_fraction = 0.2
 avail_outlier_detection_methods = ('isolation_forest',)
 # OLD -> OutLier Detection
-avail_OLD_source_of_features = ('freesurfer', 't1_mri', 'func_mri')
+avail_OLD_source_of_features = ('freesurfer', 't1_mri', 'func_mri', 'diffusion_mri')
 
 default_freesurfer_dir = None
 cortical_types = ('cortical_volumetric', 'cortical_contour')
@@ -124,7 +124,9 @@ position_quit_button = [0.905, 0.05, 0.07, 0.04]
 position_navig_options = [0.905, 0.21, 0.07, 0.12]
 
 position_zoomed_time_point = [0.7, 0.02]
+position_zoomed_gradient = [0.7, 0.02]
 annot_time_point = dict(fontsize='medium', color='xkcd:pale orange')
+annot_gradient = dict(fontsize='medium', color='xkcd:pale orange')
 
 review_area = dict(left=0.06, right=0.88,
                    bottom=0.06, top=0.98,
@@ -218,22 +220,24 @@ colormap_stdev_fmri = 'seismic'
 #           Diffusion mri specific
 ## ----------------------------------------------------------------------------
 
-func_mri_pass_indicator = 'Pass'
-# TODO Tired and Review Later must also be handled separately??
-abbreviation_diffusion_mri_default_issue_list = OrderedDict(p=func_mri_pass_indicator,
+diffusion_mri_pass_indicator = 'Pass'
+abbreviation_diffusion_mri_default_issue_list = OrderedDict(p=diffusion_mri_pass_indicator,
                                                             m='Motion',
                                                             d='Dropout',
                                                             v='Vibration',
                                                             r='Ringing',
                                                             s='Spikes',
                                                             f='driFt (scanner)',
+                                                            l='puLsation',
                                                             g='Geometric',
-                                                            h='Ghosting',
-                                                            o='Orient/FOV', w='Weird',
-                                                            e='othEr', t="i'm Tired",
-                                                            i='reView later')
-diffusion_mri_default_issue_list = list(abbreviation_func_mri_default_issue_list.values())
-diffusion_mri_default_rating_list_shortform = abbreviation_func_mri_default_issue_list.keys()
+                                                            h='gHosting',
+                                                            o='Orient/FOV',
+                                                            i='Implausible',
+                                                            e='othEr',
+                                                            t="i'm Tired",
+                                                            w='revieW later')
+diffusion_mri_default_issue_list = list(abbreviation_diffusion_mri_default_issue_list.values())
+diffusion_mri_default_rating_list_shortform = abbreviation_diffusion_mri_default_issue_list.keys()
 
 diffusion_outlier_features = None
 
@@ -269,7 +273,7 @@ alignment_cmap = OrderedDict(Animate=None,
                              Edges=None,
                              Color_mix=None)
 choices_alignment_comparison = alignment_cmap.keys()
-alignment_default_vis_type = 'Checkerboard' # 'Animate'
+alignment_default_vis_type = 'Edges' # 'Checkerboard' # 'Animate'
 
 default_checkerboard_size = None # 25
 edge_threshold_alignment = 0.4
@@ -293,6 +297,14 @@ color_histogram_alignment  = ('#c9ae74')  # sandstone
 
 delay_in_animation = 0.5
 num_times_to_animate = 5
+
+# edge detection and filtering
+weak_edge_threshold = 60 # percentile: must be integer >1 and < 100
+num_iter_weak_edge_removal = 10
+median_filter_size = 3
+
+alpha_background_slice_alignment = 1.0
+alpha_edge_overlay_alignment = 1.0
 
 ## ----------------------------------------------------------------------------
 
