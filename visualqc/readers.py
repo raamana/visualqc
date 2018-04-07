@@ -4,8 +4,8 @@ Data reader module.
 
 """
 import numpy as np
-from os.path import exists as pexists, join as pjoin, realpath
-
+from os.path import exists as pexists, join as pjoin, realpath, splitext
+from itertools import product
 from visualqc import config as cfg
 
 
@@ -110,8 +110,8 @@ def read_aparc_stats_in_hemi(stats_file,
     if subset is None or not isinstance(subset, list):
         subset_return = subset_all
     else:
-        subset_return = [ st for st in subset if st in subset_all]
-        if len(subset_return) <1:
+        subset_return = [st for st in subset if st in subset_all]
+        if len(subset_return) < 1:
             raise ValueError('Atleast 1 valid stat must be chosen! '
                              'From: \n{}'.format(subset_all))
 
@@ -224,6 +224,79 @@ def gather_data(path_list, id_list):
     features = np.vstack([np.genfromtxt(path_list[sid]) for sid in id_list])
 
     return features
+
+
+def diffusion_traverse_bids(bids_layout,
+                            modalities='dwi',
+                            types='dwi',
+                            subjects=None,
+                            sessions=None,
+                            extensions=('nii', 'nii.gz',
+                                        'bval', 'bvec', 'json'),
+                            **kwargs):
+    """
+    Builds a convenient dictionary of usable DWI subjects/sessions.
+
+    """
+
+    meta_types = {'modality'  : modalities,
+                  'type'      : types,
+                  'extensions': extensions,
+                  'subjects'  : subjects,
+                  'sessions'  : sessions}
+
+    meta_types.update(kwargs)
+    non_empty_types = {type_: values for type_, values in meta_types.items() if values}
+
+    __FIELDS_TO_IGNORE__ = ('filename', 'modality', 'type')
+    __TYPES__ = ['subjects', 'sessions',]
+
+    results = bids_layout.get(**non_empty_types)
+    if len(results) < 1:
+        print('No results found!')
+        return None, None
+
+    all_subjects = bids_layout.get_subjects()
+    all_sessions = bids_layout.get_sessions()
+    if len(all_sessions) > 1:
+        sessions_exist = True
+        combinations = product(all_subjects, all_sessions)
+    else:
+        sessions_exist = False
+        combinations = all_subjects
+
+
+    reqd_exts_params = ('.bval', '.bvec', '.json')
+    named_exts_params = ('bval', 'bvec', 'params')
+    reqd_exts_images = ('.nii', '.gz')
+    named_exts_images = ('image', 'image')
+
+    files_by_id = dict()
+    for sub in combinations:
+        if sessions_exist:
+            # sub is a tuple of subject,session
+            results = bids_layout.get(subject=sub[0], session=sub[1], type='dwi')
+            final_sub_id = '_'.join(sub)
+        else:
+            results = bids_layout.get(subject=sub,  type='dwi')
+            final_sub_id = sub
+
+        temp = {splitext(file.filename)[-1] : realpath(file.filename) for file in results}
+
+        param_files_exist = all([file_ext in temp for file_ext in reqd_exts_params])
+        image_files_exist = any([file_ext in temp for file_ext in reqd_exts_images])
+        if not (param_files_exist and image_files_exist):
+            print('Not all the required files ({}) exist for {} - skipping it.')
+        else:
+            files_by_id[final_sub_id] = { new_ext : temp[old_ext]
+                                 for old_ext, new_ext in zip(reqd_exts_params, named_exts_params)}
+            if 'nii' in temp:
+                out_image = dict(image=temp['.nii'])
+            else:
+                out_image = dict(image=temp['.gz'])
+            files_by_id[final_sub_id].update(out_image)
+
+    return files_by_id
 
 
 def traverse_bids(bids_layout, modalities='func', types='bold',

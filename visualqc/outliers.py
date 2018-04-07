@@ -7,9 +7,9 @@ __all__ = ['outlier_advisory']
 
 from genericpath import exists as pexists
 from os import makedirs
-from os.path import join as pjoin
 
 import numpy as np
+from os.path import join as pjoin
 from scipy import stats
 from sklearn.ensemble import IsolationForest
 

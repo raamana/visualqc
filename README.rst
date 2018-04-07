@@ -2,6 +2,9 @@
 VisualQC
 ==========
 
+VisualQC : assistive tool to ease the quality control workflow of neuroimaging data.
+
+
 .. image:: https://zenodo.org/badge/105958496.svg
    :target: https://zenodo.org/badge/latestdoi/105958496
 
@@ -10,9 +13,6 @@ VisualQC
 
 .. image:: https://api.codacy.com/project/badge/Grade/2da8c2b4dbcd433eb4943eb52f0b00d6
         :target: https://www.codacy.com/app/raamana/visualqc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=raamana/visualqc&amp;utm_campaign=Badge_Grade
-
-
-VisualQC : assistive tool to improve the quality control workflow of neuroimaging data.
 
 .. image:: docs/vqc_logo_small.png
 
@@ -26,16 +26,16 @@ This manual process, in its simplest form, is quite cumbersome and time-consumin
 * Documentation: https://raamana.github.io/visualqc
 
 
-Use-cases supported
-------------------------
+Use-cases
+----------
 
 VisualQC supports the following use cases:
 
  * Functional MRI scans (focused visual review, with rich and custom-built visualizations)
  * Freesurfer cortical parcellations (accuracy of pial/white surfaces on T1w mri)
  * Structural T1w MRI scans (artefact rating)
- * Volumetric segmenation accuracy (on T1w MRI)
- * Registration quality (spatial alignment) within a single modality (multimodal support coming)
+ * Accuracy of volumetric segmentation (ROI) against their anatomical/structural scan (T1w, T2w MRI)
+ * Registration quality (spatial alignment) within a single modality or across multiple modalities
  * For your own important use case, feel free to `contact me <https://www.crossinvalidation.com>`_
  * Some others are being discussed - might be coming soon.
 
@@ -45,21 +45,23 @@ Features
 
 Each use case aims to offer the following features:
 
-* Ability to zoom-in slices displayed to to ensure you won't miss any detail (down to the voxel-level), so you can rate its quality with confidence.
-* Automatically detect and flag outliers during review (multivariate high-dimensional outlier detection)
-* Display multiple slices in multiple views, and easily navigate all subjects in a dataset
-* Keyboard shortcuts to speed up the process, no need to lift your fingers!
-* Allows to make arbitrary notes on the current review session
-* Allows you to customize the visualizations to your expert preference (such as removing certain overlays, control the transparency, change how two images blended together).
+ * Ability to zoom-in slices displayed to to ensure you won't miss any detail (down to the voxel-level), so you can rate its quality with confidence.
+ * Automatically detect and flag outliers during review (multivariate high-dimensional outlier detection)
+ * Display multiple slices in multiple views, and easily navigate all subjects in a dataset
+ * Keyboard shortcuts to speed up the process, no need to lift your fingers!
+ * Allows to make arbitrary notes on the current review session
+ * Allows you to customize the visualizations to your expert preference (such as removing certain overlays, control the transparency, change how two images blended together).
 
 Galleries
 ----------
 
- * `docs/gallery_freesurfer.rst`_
- * `docs/gallery_functional_mri`_
- * `docs/gallery_t1_mri`_
- * `docs/gallery_registration_unimodal`_
- * `docs/gallery_segmentation_volumetric`_
+ * `Freesurfer <https://raamana.github.io/visualqc/gallery_freesurfer.html>`_
+ * `Functional MRI <https://raamana.github.io/visualqc/gallery_functional_mri.html>`_
+ * `Registration/Alignment quality <https://raamana.github.io/visualqc/gallery_registration_unimodal.html>`_
+ * `Structural T1w MRI <https://raamana.github.io/visualqc/gallery_t1_mri.html>`_
+ * `Volumetric Segmentation <https://raamana.github.io/visualqc/gallery_segmentation_volumetric.html>`_
 
 
+`Contributions are welcome. <CONTRIBUTING.rst>`_
 
+`Citation details <docs/citation.rst>`_

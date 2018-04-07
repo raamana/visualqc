@@ -34,7 +34,7 @@ setup(
     name='visualqc',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description="Tool to automate the quality control of pial and white matter surfaces from Freesurfer Parcellation",
+    description="Assistive tool to improve the quality control workflow of neuroimaging data.",
     long_description=readme + '\n\n' + history,
     author="Pradeep Reddy Raamana",
     author_email='raamana@gmail.com',
@@ -44,23 +44,25 @@ setup(
         'console_scripts': [
             'visualqc_t1_mri=visualqc.__t1_mri__:main',
             'visualqc_func_mri=visualqc.__func_mri__:main',
+            'visualqc_diffusion=visualqc.__diffusion__:main',
             'visualqc_freesurfer=visualqc.__freesurfer__:main',
             'visualqc_alignment=visualqc.__alignment__:main',
-            'vqct1=visualqc.__t1_mri__:main', # shortcuts
-            'vqcfunc=visualqc.__func_mri__:main',
+            # shortcuts
+            'vqct1=visualqc.__t1_mri__:main',
+            'vqcdwi=visualqc.__diffusion__:main',
             'vqcfs=visualqc.__freesurfer__:main',
             'vqcalign=visualqc.__alignment__:main'
         ]
     },
     include_package_data=True,
     install_requires=requirements,
-    license="MIT license",
+    license="Apache license",
     zip_safe=False,
     keywords='visualqc',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: Apache License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',

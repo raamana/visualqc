@@ -1,13 +1,12 @@
 """
-Module defining various interfaces, base and derived.
+Module defining base interfaces.
 
 """
 
 from abc import ABC, abstractmethod
 
+from matplotlib.widgets import Button, TextBox
 from matplotlib import pyplot as plt
-from matplotlib.widgets import Button, RadioButtons, TextBox
-
 from visualqc import config as cfg
 
 
@@ -34,6 +33,10 @@ class BaseReviewInterface(ABC):
         self.add_annot()
         self.add_navigation(next_button_callback, quit_button_callback)
         self.add_notes_input()
+
+        # disabling all default keyboard shortcuts
+        for key in [k for k in plt.rcParams.keys() if k.startswith('keymap')]:
+            plt.rcParams[key] = ''
 
 
     def add_annot(self, annot_text=None):
@@ -137,38 +140,3 @@ class BaseReviewInterface(ABC):
     def reset_figure(self):
         """ Resets the state of UI and clears the axes. """
 
-
-class PialWhiteSurfReviewInterface(BaseReviewInterface):
-    """Review interface to rate the quality of pial and white matter surfaces on T1 mri."""
-
-
-    def __init__(self, fig, axes, rating_list):
-        """Constructor"""
-
-        super().__init__(fig, axes)
-        self.rating_list = rating_list
-
-
-    def add_rating_UI(self):
-        """Rating"""
-
-        ax_radio = self.fig.add_axes(cfg.position_rating_axis,
-                            facecolor=cfg.color_rating_axis,
-                            aspect='equal')
-        self.radio_bt_rating = RadioButtons(ax_radio,
-                                            self.rating_list,
-                                            active=None,
-                                            activecolor='orange')
-        self.radio_bt_rating.on_clicked(self.save_rating)
-        for txt_lbl in self.radio_bt_rating.labels:
-            txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
-
-        for circ in self.radio_bt_rating.circles:
-            circ.set(radius=0.06)
-
-
-    def save_rating(self, label):
-        """Update the rating"""
-
-        # print('  rating {}'.format(label))
-        self.user_rating = label

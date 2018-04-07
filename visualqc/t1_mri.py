@@ -91,10 +91,12 @@ class T1MriInterface(BaseReviewInterface):
 
         """
 
-        if label == cfg.t1_mri_pass_indicator:
+        if label == cfg.visual_qc_pass_indicator:
             self.clear_checkboxes(except_pass=True)
         else:
             self.clear_pass_only_if_on()
+
+        self.fig.canvas.draw_idle()
 
 
     def clear_checkboxes(self, except_pass=False):
@@ -134,7 +136,8 @@ class T1MriInterface(BaseReviewInterface):
         """Returns the final set of checked ratings"""
 
         cbox_statuses = self.checkbox.get_status()
-        user_ratings = [cfg.t1_mri_default_issue_list[idx] for idx, this_cbox_active in
+        user_ratings = [self.checkbox.labels[idx].get_text()
+                        for idx, this_cbox_active in
                         enumerate(cbox_statuses) if this_cbox_active]
 
         return user_ratings

@@ -5,34 +5,43 @@ Module to inspect the accuracy of spatial alignment (registration).
 """
 
 import argparse
+import asyncio
 import sys
 import textwrap
 import time
 import warnings
 from abc import ABC
-from scipy.ndimage import sobel, grey_erosion
 import numpy as np
-import asyncio
+from functools import partial
+from scipy.ndimage import grey_erosion, sobel, \
+    grey_opening, binary_opening
+from scipy.ndimage.filters import median_filter, minimum_filter, maximum_filter
+from scipy.signal import medfilt2d, medfilt
 
 import matplotlib
 matplotlib.interactive(True)
 
 from matplotlib import pyplot as plt
 from matplotlib.cm import get_cmap
-from matplotlib.widgets import Button, RadioButtons
+from matplotlib.widgets import RadioButtons
 from mrivis.utils import crop_to_seg_extents
 from os.path import join as pjoin, realpath
 from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import check_finite_int, check_id_list, check_input_dir_alignment, \
     check_out_dir, check_outlier_params, check_views, get_axis, pick_slices, read_image, \
-    scale_0to1
+    scale_0to1, check_time
 from visualqc.workflows import BaseWorkflowVisualQC
+from visualqc.image_utils import overlay_edges, mix_color, diff_image, mix_slices_in_checkers
 
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
-gray_cmap = get_cmap('gray')
-hot_cmap = get_cmap('hot')
+
+def mask_below_perc(img):
+    """returns a mask of pixels below a percentile value"""
+    # return img <= np.max(img)/10
+    return img <= np.percentile(img, cfg.weak_edge_threshold)
+
 
 class AlignmentInterface(BaseReviewInterface):
     """Custom interface for rating the quality of alignment between two 3d MR images"""
@@ -264,9 +273,9 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.current_cmap = cfg.alignment_cmap[self.vis_type]
         self.checker_size = cfg.default_checkerboard_size
         self.color_mix_alphas = cfg.default_color_mix_alphas
-
         self.delay_in_animation = delay_in_animation
         self.continue_animation = True
+        self.set_mixer_method()
 
         self.issue_list = issue_list
         self.image1_name = image1_name
@@ -495,6 +504,7 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Function to update vis type and display."""
 
         self.vis_type = user_choice_vis_type
+        self.set_mixer_method()
         self.display_unit()
 
     def animate(self):
@@ -522,14 +532,15 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
             mixed_slice = self.mixer(slice_one, slice_two)
             # mixed_slice is already in RGB mode m x p x 3, so
             #   prev. cmap (gray) has no effect on color_mixed data
-            self.h_images[ax_index].set_data(mixed_slice)
+            self.h_images[ax_index].set(data=mixed_slice, cmap=self.current_cmap)
 
 
     def show_image(self, img, annot=None):
         """Display the requested slices of an image on the existing axes."""
 
         for ax_index, (dim_index, slice_index) in enumerate(self.slices):
-            self.h_images[ax_index].set_data(get_axis(img, dim_index, slice_index))
+            self.h_images[ax_index].set(data=get_axis(img, dim_index, slice_index),
+                                        cmap=self.current_cmap)
 
         if annot is not None:
             self._identify_foreground(annot)
@@ -555,22 +566,26 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.fg_annot_h.set_visible(True)
 
 
-    def mixer(self, slice_one, slice_two):
+    def set_mixer_method(self):
         """Mixer to produce the image to be displayed."""
 
         if self.vis_type in ['Color_mix', 'color_mix', 'rgb']:
-            mixed = _mix_color(slice_one, slice_two, self.color_mix_alphas)
-        elif self.vis_type in ['Checkerboard', 'checkerboard', 'checker', 'cb',
-                               'checker_board']:
-            mixed = _mix_slices_in_checkers(slice_one, slice_two, self.checker_size)
+            self.mixer = partial(mix_color, alpha_channels=self.color_mix_alphas)
+        elif self.vis_type in ['Checkerboard', 'checkerboard', 'checker', 'cb']:
+            self.mixer = partial(mix_slices_in_checkers, checker_size=self.checker_size)
         elif self.vis_type in ['Voxelwise_diff', 'voxelwise_diff', 'vdiff']:
-            mixed = _diff_image(slice_one, slice_two)
-        elif self.vis_type in ['Edges', 'Edge overlay']:
-            mixed = _overlay_edges(slice_one, slice_two)
+            self.mixer = diff_image
+        elif self.vis_type in ['Edges_Sharp',]:
+            self.mixer = partial(overlay_edges, sharper=True)
+        elif self.vis_type in ['Edges_Diffused', ]:
+            self.mixer = partial(overlay_edges, sharper=False)
+        elif self.vis_type in ['GIF', 'Animate']:
+            self.mixer = None # this is handled by self.display_unit()
         else:
             raise ValueError('Invalid mixer name chosen.')
 
-        return mixed
+        # update colormap
+        self.current_cmap = cfg.alignment_cmap[self.vis_type]
 
 
     def toggle_animation(self, input_event_to_ignore=None):
@@ -594,131 +609,6 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         self.anim_loop.run_until_complete(self.anim_loop.shutdown_asyncgens())
         self.anim_loop.close()
-
-
-def _overlay_edges(slice_one, slice_two):
-    """Makes a composite image with edges from second image overlaid on first.
-
-    It will be in colormapped (RGB format) already.
-    """
-
-    edges_s2 = np.hypot(sobel(slice_two, axis=0), sobel(slice_two, axis=1))
-    # removing weak edges
-    weak_mask = edges_s2 <= np.percentile(edges_s2, 60)
-    edges_s2[weak_mask] = 0.0
-    sharp_edges = grey_erosion(edges_s2, 2)
-    edges_color_mapped = hot_cmap(sharp_edges)
-
-    composite = gray_cmap(slice_one)
-    mask_rgba = np.dstack([np.logical_not(weak_mask)]*4)
-    composite[mask_rgba>0] = edges_color_mapped[mask_rgba>0]
-
-    del edges_s2, weak_mask, sharp_edges, mask_rgba, edges_color_mapped
-
-    return composite
-
-
-def _get_checkers(slice_shape, patch_size):
-    """Creates checkerboard of a given tile size, filling a given slice."""
-
-    if patch_size is not None:
-        patch_size = _check_patch_size(patch_size)
-    else:
-        # 10 patches in each axis, min voxels/patch = 3
-        patch_size = np.round(np.array(slice_shape) / 10).astype('int16')
-        patch_size = np.maximum(patch_size, np.array([3, 3]))
-
-    black = np.zeros(patch_size)
-    white = np.ones(patch_size)
-    tile = np.vstack((np.hstack([black, white]), np.hstack([white, black])))
-
-    # using ceil so we can clip the extra portions
-    num_tiles = np.ceil(np.divide(slice_shape, tile.shape)).astype(int)
-    checkers = np.tile(tile, num_tiles)
-
-    # clipping any extra columns or rows
-    if any(np.greater(checkers.shape, slice_shape)):
-        if checkers.shape[0] > slice_shape[0]:
-            checkers = np.delete(checkers, np.s_[slice_shape[0]:], axis=0)
-        if checkers.shape[1] > slice_shape[1]:
-            checkers = np.delete(checkers, np.s_[slice_shape[1]:], axis=1)
-
-    return checkers
-
-
-def _mix_color(slice1, slice2, alpha_channels, color_space='rgb'):
-    """Mixing them as red and green channels"""
-
-    if slice1.shape != slice2.shape:
-        raise ValueError('size mismatch between cropped slices and checkers!!!')
-
-    alpha_channels = np.array(alpha_channels)
-    if len(alpha_channels) != 2:
-        raise ValueError('Alphas must be two value tuples.')
-
-    slice1 = scale_0to1(slice1)
-    slice2 = scale_0to1(slice2)
-
-    # masking background
-    combined_distr = np.concatenate((slice1.flatten(), slice2.flatten()))
-    image_eps = np.percentile(combined_distr, 5)
-    background = np.logical_or(slice1 <= image_eps, slice2 <= image_eps)
-
-    if color_space.lower() in ['rgb']:
-
-        red = alpha_channels[0] * slice1
-        grn = alpha_channels[1] * slice2
-        blu = np.zeros_like(slice1)
-
-        # foreground = np.logical_not(background)
-        # blu[foreground] = 1.0
-
-        mixed = np.stack((red, grn, blu), axis=2)
-
-    elif color_space.lower() in ['hsv']:
-
-        raise NotImplementedError(
-            'This method (color_space="hsv") is yet to fully conceptualized and implemented.')
-
-    # ensuring all values are clipped to [0, 1]
-    mixed[mixed <= 0.0] = 0.0
-    mixed[mixed >= 1.0] = 1.0
-
-    return mixed
-
-
-def _mix_slices_in_checkers(slice1, slice2, checker_size):
-    """Mixes the two slices in alternating areas specified by checkers"""
-
-    checkers = _get_checkers(slice1.shape, checker_size)
-    if slice1.shape != slice2.shape or slice2.shape != checkers.shape:
-        raise ValueError('size mismatch between cropped slices and checkers!!!')
-
-    mixed = slice1.copy()
-    mixed[checkers > 0] = slice2[checkers > 0]
-
-    return mixed
-
-
-def _diff_image(slice1, slice2, abs_value=True):
-    """Computes the difference image"""
-
-    diff = slice1 - slice2
-
-    if abs_value:
-        diff = np.abs(diff)
-
-    return diff
-
-
-def _check_patch_size(patch_size):
-    """Validation and typcasting"""
-
-    patch_size = np.array(patch_size)
-    if patch_size.size == 1:
-        patch_size = np.repeat(patch_size, 2).astype('int16')
-
-    return patch_size
 
 
 def get_parser():
@@ -894,16 +784,6 @@ def get_parser():
     return parser
 
 
-def _check_time(time_interval, var_name='time interval'):
-    """"""
-
-    time_interval = np.float(time_interval)
-    if not np.isfinite(time_interval) or np.isclose(time_interval, 0.0):
-        raise ValueError('Value of {} must be > 0 and be finite.'.format(var_name))
-
-    return time_interval
-
-
 def make_workflow_from_user_options():
     """Parser/validator for the cmd line args."""
 
@@ -929,7 +809,7 @@ def make_workflow_from_user_options():
     id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type,
                                            image1, image2, in_dir_type=in_dir_type)
 
-    delay_in_animation = _check_time(user_args.delay_in_animation, var_name='Delay')
+    delay_in_animation = check_time(user_args.delay_in_animation, var_name='Delay')
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
     views = check_views(user_args.views)

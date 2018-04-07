@@ -1,4 +1,6 @@
 # Byte-compiled / optimized / DLL files
+visualqc/tests/
+docs/videos
 __pycache__/
 *.py[cod]
 *$py.class

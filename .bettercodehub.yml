@@ -1,0 +1,10 @@
+exclude:
+- versioneer.py
+- visualqc/viz.py
+- visualqc/vqc.py
+- visualqc/_version.py
+- visualqc/config.py
+- viz.py
+- vqc.py
+- _version.py
+- config.py
