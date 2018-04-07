@@ -151,18 +151,22 @@ line_break = [np.NaN, np.NaN]
 ## ----------------------------------------------------------------------------
 #       T1 mri specific
 ## ----------------------------------------------------------------------------
-
-t1_mri_pass_indicator = 'Pass'  # TODO Tired and Review Later must also be handled separately??
-t1_mri_default_issue_list = (t1_mri_pass_indicator, 'Motion', 'Ringing', 'Ghosting',
-                             'Contrast', 'blurrY', 'Bright', 'Dark', 'Orient/FOV',
-                             'Weird', 'Other', "i'm Tired", 'reView later')
-abbreviation_t1_mri_default_issue_list = {'p': t1_mri_pass_indicator, 'm': 'Motion',
-                                          'r': 'Ringing', 'g': 'Ghosting',
-                                          'c': 'Contrast', 'y': 'blurrY', 'b': 'Bright',
-                                          'd': 'Dark', 'o': 'Orient/FOV',
-                                          'w': 'Weird', 's': 'Something else',
-                                          't': "i'm Tired", 'v': 'reView later'}
-
+visual_qc_pass_indicator = 'Pass'
+t1_mri_pass_indicator = visual_qc_pass_indicator
+abbreviation_t1_mri_default_issue_list = {'p': t1_mri_pass_indicator,
+                                          'm': 'Motion',
+                                          'r': 'Ringing',
+                                          'g': 'Ghosting',
+                                          'c': 'Contrast',
+                                          'y': 'bLurrY',
+                                          'b': 'Bright',
+                                          'd': 'Dark',
+                                          'o': 'Orient/FOV',
+                                          'w': 'Weird',
+                                          's': 'Something else',
+                                          't': "i'm Tired",
+                                          'l': 'reView Later'}
+t1_mri_default_issue_list = list(abbreviation_t1_mri_default_issue_list.values())
 t1_mri_default_rating_list_shortform = abbreviation_t1_mri_default_issue_list.keys()
 
 num_bins_histogram_intensity_distribution = 100
@@ -185,13 +189,17 @@ color_histogram_t1_mri = ('#c9ae74')  # sandstone
 #           Functional mri specific
 ## ----------------------------------------------------------------------------
 
-func_mri_pass_indicator = 'Pass'
+func_mri_pass_indicator = visual_qc_pass_indicator
 # TODO Tired and Review Later must also be handled separately??
 abbreviation_func_mri_default_issue_list = OrderedDict(p=func_mri_pass_indicator,
-                                                       m='Motion', r='Ringing',
-                                                       i='spIkes', g='Ghosting',
-                                                       o='Orient/FOV', w='Weird',
-                                                       e='othEr', t="i'm Tired",
+                                                       m='Motion',
+                                                       r='Ringing',
+                                                       s='Spikes',
+                                                       g='Ghosting',
+                                                       o='Orient/FOV',
+                                                       w='Weird',
+                                                       e='othEr',
+                                                       t="i'm Tired",
                                                        v='reView later')
 func_mri_default_issue_list = list(abbreviation_func_mri_default_issue_list.values())
 func_mri_default_rating_list_shortform = abbreviation_func_mri_default_issue_list.keys()

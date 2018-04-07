@@ -6,7 +6,7 @@ Module defining base interfaces.
 from abc import ABC, abstractmethod
 
 from matplotlib.widgets import Button, TextBox
-
+from matplotlib import pyplot as plt
 from visualqc import config as cfg
 
 
@@ -33,6 +33,10 @@ class BaseReviewInterface(ABC):
         self.add_annot()
         self.add_navigation(next_button_callback, quit_button_callback)
         self.add_notes_input()
+
+        # disabling all default keyboard shortcuts
+        for key in [k for k in plt.rcParams.keys() if k.startswith('keymap')]:
+            plt.rcParams[key] = ''
 
 
     def add_annot(self, annot_text=None):
