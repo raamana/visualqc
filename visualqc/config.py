@@ -288,7 +288,7 @@ position_alignment_method_diffusion = [0.899, 0.66, 0.095, 0.10]
 ## ----------------------------------------------------------------------------
 
 alignment_features_OLD = ('MSE', )
-alignment_cmap = OrderedDict(Animate=None,
+alignment_cmap = OrderedDict(Animate='gray',
                              Checkerboard='gray',
                              Voxelwise_diff='seismic',
                              Edges=None,
