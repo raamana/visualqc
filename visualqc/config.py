@@ -291,17 +291,18 @@ alignment_features_OLD = ('MSE', )
 alignment_cmap = OrderedDict(Animate='gray',
                              Checkerboard='gray',
                              Voxelwise_diff='seismic',
-                             Edges=None,
+                             Edges_Sharp=None,
+                             Edges_Diffused=None,
                              Color_mix=None)
 choices_alignment_comparison = alignment_cmap.keys()
-alignment_default_vis_type = 'Edges' # 'Checkerboard' # 'Animate'
+alignment_default_vis_type = 'Edges_Sharp' # 'Checkerboard' # 'Animate'
 
 default_checkerboard_size = None # 25
 edge_threshold_alignment = 0.4
 default_color_mix_alphas = (1, 1)
 
-position_alignment_radio_button_method = [0.905, 0.45, 0.09, 0.19]
-position_alignment_radio_button_rating = [0.905, 0.25, 0.09, 0.25]
+position_alignment_radio_button_method = [0.895, 0.45, 0.1, 0.19]
+position_alignment_radio_button_rating = [0.895, 0.25, 0.1, 0.25]
 position_text_input_alignment  = [0.900, 0.20, 0.09, 0.1]
 position_next_button_alignment = [0.905, 0.10, 0.07, 0.03]
 position_quit_button_alignment = [0.905, 0.03, 0.07, 0.03]

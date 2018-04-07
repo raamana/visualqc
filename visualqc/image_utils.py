@@ -78,6 +78,37 @@ def mask_image(input_img, update_factor=0.5, init_percentile=2):
     mask_img = ndimage.binary_closing(mask_img, se, iterations=3)
 
     return mask_img
+
+
+def overlay_edges(slice_one, slice_two, sharper=True):
+    """
+    Makes a composite image with edges from second image overlaid on first.
+
+    It will be in colormapped (RGB format) already.
+    """
+
+    # simple filtering to remove noise, while supposedly keeping edges
+    slice_two = medfilt2d(slice_two, kernel_size=cfg.median_filter_size)
+    # extracting edges
+    edges = np.hypot(sobel(slice_two, axis=0, mode='constant'),
+                     sobel(slice_two, axis=1, mode='constant'))
+
+    # trying to remove weak edges
+    if not sharper: # level of removal
+        edges = med_filter(max_filter(min_filter(edges)))
+    else:
+        edges = min_filter(min_filter(max_filter(min_filter(edges))))
+    edges_color_mapped = hot_cmap(edges, alpha=cfg.alpha_edge_overlay_alignment)
+    composite = gray_cmap(slice_one, alpha=cfg.alpha_background_slice_alignment)
+
+    composite[edges_color_mapped>0] = edges_color_mapped[edges_color_mapped>0]
+
+    # mask_rgba = np.dstack([edges>0] * 4)
+    # composite[mask_rgba] = edges_color_mapped[mask_rgba]
+
+    return composite
+
+
 def _get_checkers(slice_shape, patch_size):
     """Creates checkerboard of a given tile size, filling a given slice."""
 
