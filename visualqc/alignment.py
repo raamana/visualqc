@@ -580,7 +580,7 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.mixer = partial(mix_slices_in_checkers, checker_size=self.checker_size)
         elif self.vis_type in ['Voxelwise_diff', 'voxelwise_diff', 'vdiff']:
             self.mixer = diff_image
-        elif self.vis_type in ['Edges_Sharp',]:
+        elif self.vis_type in ['Edges_Sharp', 'Edges_Thinner']:
             self.mixer = partial(overlay_edges, sharper=True)
         elif self.vis_type in ['Edges_Diffused', ]:
             self.mixer = partial(overlay_edges, sharper=False)

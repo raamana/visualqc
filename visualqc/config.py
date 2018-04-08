@@ -293,11 +293,11 @@ alignment_features_OLD = ('MSE', )
 alignment_cmap = OrderedDict(Animate='gray',
                              Checkerboard='gray',
                              Voxelwise_diff='seismic',
-                             Edges_Sharp=None,
+                             Edges_Thinner=None,
                              Edges_Diffused=None,
                              Color_mix=None)
 choices_alignment_comparison = alignment_cmap.keys()
-alignment_default_vis_type = 'Edges_Sharp' # 'Checkerboard' # 'Animate'
+alignment_default_vis_type = 'Edges_Thinner' # 'Checkerboard' # 'Animate'
 
 default_checkerboard_size = None # 25
 edge_threshold_alignment = 0.4
