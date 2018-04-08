@@ -355,10 +355,14 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # turning off axes, creating image objects
         self.h_images = [None] * len(self.axes)
-        empty_image = np.full((10, 10, 3), 0.0)
+        self.h_slice_numbers = [None] * len(self.axes)
+        empty_image = np.full((100, 100, 3), 0.0)
+        label_x, label_y = 5, 5 # in image space
         for ix, ax in enumerate(self.axes):
             ax.axis('off')
             self.h_images[ix] = ax.imshow(empty_image, **self.display_params)
+            self.h_slice_numbers[ix]= ax.text(label_x, label_y, '',
+                                              **cfg.slice_num_label_properties)
 
         self.fg_annot_h = self.fig.text(cfg.position_annotate_foreground[0],
                                         cfg.position_annotate_foreground[1],
@@ -533,6 +537,7 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
             # mixed_slice is already in RGB mode m x p x 3, so
             #   prev. cmap (gray) has no effect on color_mixed data
             self.h_images[ax_index].set(data=mixed_slice, cmap=self.current_cmap)
+            self.h_slice_numbers[ax_index].set_text(str(slice_index))
 
 
     def show_image(self, img, annot=None):

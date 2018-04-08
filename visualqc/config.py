@@ -36,6 +36,8 @@ annot_text_props = dict(ha='right', va='top', multialignment='left',
 alert_text_props = dict(horizontalalignment='center', fontsize='medium',
                         color='white', backgroundcolor=alert_background_color)
 
+slice_num_label_properties = dict(color='xkcd:beige', ha='left', fontsize='small')
+
 default_outlier_detection_method = 'isolation_forest'
 default_outlier_fraction = 0.2
 avail_outlier_detection_methods = ('isolation_forest',)
