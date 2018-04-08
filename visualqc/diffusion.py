@@ -485,6 +485,13 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                           ' ', **cfg.annot_gradient)
         self.foreground_h.set_visible(False)
 
+        # identifying axes that could be hidden to avoid confusion
+        self.background_artists = list(self.stats_axes) + [self.ax_carpet, ]
+        self.foreground_artists = list(self.fg_axes) + [self.foreground_h, ]
+
+        # separating the list below to allow for differing x axes, while being background
+        self.axes_common_xaxis = list(self.stats_axes) + [self.ax_carpet, ]
+
         # leaving some space on the right for review elements
         plt.subplots_adjust(**cfg.review_area)
         plt.show(block=False)
@@ -791,10 +798,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def zoom_out_callback(self, event):
         """Hides the zoomed-in axes (showing frame)."""
 
-        for ax in self.fg_axes:
-            ax.set(visible=False, zorder=self.layer_order_to_hide)
-        self.foreground_h.set_visible(False)
-        self.UI.zoomed_in = False
+        self._set_foregrounds_visibility(False)
+        self._set_backgrounds_visibility(True)
 
 
     @staticmethod
@@ -822,8 +827,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         self.attach_image_to_foreground_axes(image)
         self._identify_foreground(annot)
-        # this state flag in important
-        self.UI.zoomed_in = True
+        self._set_backgrounds_visibility(False)
+        self._set_foregrounds_visibility(True)
 
 
     def _identify_foreground(self, text):
@@ -831,6 +836,25 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         self.foreground_h.set_text(text)
         self.foreground_h.set_visible(True)
+
+
+    def _set_backgrounds_visibility(self, visibility=True):
+
+        for ax in self.background_artists:
+            ax.set(visible=visibility)
+
+
+    def _set_foregrounds_visibility(self, visibility=False):
+
+        if visibility:
+            zorder = self.layer_order_zoomedin
+        else:
+            zorder = self.layer_order_to_hide
+
+        for ax in self.foreground_artists:
+            ax.set(visible=visibility, zorder=zorder)
+        # this state flag in important
+        self.UI.zoomed_in = visibility
 
 
     def show_stdev(self):
