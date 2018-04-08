@@ -61,6 +61,7 @@ class DiffusionMRIInterface(T1MriInterface):
                  zoom_out_callback=None,
                  right_click_callback=None,
                  show_stdev_callback=None,
+                 scroll_callback=None,
                  alignment_callback=None,
                  show_b0_vol_callback=None,
                  flip_first_last_callback=None,
@@ -89,6 +90,7 @@ class DiffusionMRIInterface(T1MriInterface):
         self.zoom_out_callback = zoom_out_callback
         self.right_arrow_callback = right_arrow_callback
         self.left_arrow_callback = left_arrow_callback
+        self.scroll_callback = scroll_callback,
         self.right_click_callback = right_click_callback
         self.show_stdev_callback = show_stdev_callback
         self.alignment_callback = alignment_callback
@@ -247,7 +249,8 @@ class DiffusionMRIInterface(T1MriInterface):
 
     def on_scroll(self, scroll_event):
         """Implements the scroll callback"""
-        pass
+
+        self.scroll_callback(scroll_event)
 
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
@@ -494,6 +497,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                         right_click_callback=self.zoom_in_on_gradient,
                                         right_arrow_callback=self.show_next,
                                         left_arrow_callback=self.show_prev,
+                                        scroll_callback=self.change_gradient_by_step,
                                         zoom_in_callback=self.zoom_in_on_gradient,
                                         zoom_out_callback=self.zoom_out_callback,
                                         show_stdev_callback=self.show_stdev,
@@ -509,9 +513,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                                         self.UI.on_mouse)
         self.con_id_keybd = self.fig.canvas.mpl_connect('key_press_event',
                                                         self.UI.on_keyboard)
-
-        # TODO implement the scrolling movement to scroll in gradient
-        # con_id_scroll = self.fig.canvas.mpl_connect('scroll_event', self.UI.on_scroll)
+        self.con_id_scroll = self.fig.canvas.mpl_connect('scroll_event',
+                                                         self.UI.on_scroll)
 
         self.fig.set_size_inches(self.figsize)
 
@@ -606,8 +609,6 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Adds multi-layered composite."""
 
         # TODO show median signal instead of mean - or option for both?
-        # TODO need separate kbd scut to show B0 volume
-        # TODO keyboard shortcuts to show SD over grad, median, mean etc
         self.stdev_this_unit, self.mean_this_unit = self.stats_over_gradients()
 
         # TODO what about slice timing correction?
@@ -658,11 +659,10 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """
 
         # skipping unnecessary computation
-        if (self.current_grad_index >= self.num_gradients - 1) or \
-            (self.current_grad_index < 0):
+        new_index = self.current_grad_index + step
+        if (new_index > self.num_gradients - 1) or (new_index < 0):
             return
 
-        new_index = self.current_grad_index + step
         # clipping from 0 to num_gradients
         self.current_grad_index = max(0, min(self.num_gradients, new_index))
         self.show_gradient()
@@ -979,9 +979,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # save ratings before exiting
         self.save_ratings()
-
-        self.fig.canvas.mpl_disconnect(self.con_id_click)
-        self.fig.canvas.mpl_disconnect(self.con_id_keybd)
+        for cid in (self.con_id_click, self.con_id_keybd, self.con_id_scroll):
+            self.fig.canvas.mpl_disconnect(cid)
         plt.close('all')
 
         self.anim_loop.run_until_complete(self.anim_loop.shutdown_asyncgens())
