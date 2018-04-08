@@ -44,6 +44,7 @@ class BaseWorkflowVisualQC(ABC):
         self.id_list = id_list
         self.in_dir = in_dir
         self.out_dir = out_dir
+        print('Input folder: {}\nOutput folder: {}'.format(self.in_dir, self.out_dir))
 
         self.ratings = dict()
         self.notes = dict()
