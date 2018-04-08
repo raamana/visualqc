@@ -398,6 +398,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # empty/dummy data for placeholding
         empty_image = np.full((200, 200), 0.0)
+        label_x, label_y = (5, 5) # x, y in image data space
         empty_vec = np.full((200, 1), 0.0)
         gradients = list(range(200))
 
@@ -470,11 +471,14 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # images to be shown in the forground
         self.images_fg = [None] * len(self.fg_axes)
+        self.images_fg_label = [None] * len(self.fg_axes)
         for ix, ax in enumerate(self.fg_axes):
             ax.axis('off')
             self.images_fg[ix] = ax.imshow(empty_image, **self.imshow_params_zoomed)
-            ax.set_visible(False)
-            ax.set_zorder(self.layer_order_zoomedin)
+            self.images_fg_label[ix] = ax.text(label_x, label_y, '',
+                                               **cfg.slice_num_label_properties,
+                                               zorder=self.layer_order_zoomedin+1)
+            ax.set(visible=False, zorder=self.layer_order_zoomedin)
 
         self.foreground_h = self.fig.text(cfg.position_zoomed_gradient[0],
                                           cfg.position_zoomed_gradient[1],
@@ -852,8 +856,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         for ax_index, (dim_index, slice_index) in enumerate(slices):
             slice_data = get_axis(image3d, dim_index, slice_index)
             self.images_fg[ax_index].set(data=slice_data, cmap=cmap)
-        for ax in self.fg_axes:
-            ax.set(visible=True, zorder=self.layer_order_zoomedin)
+            self.images_fg_label[ax_index].set_text(str(slice_index))
 
 
     def compute_stats(self):
@@ -938,7 +941,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def update_axes_limits(self, num_gradients, num_voxels_shown):
         """Synchronizes the x-axis limits and updates the carpet image extents"""
 
-        for a in list(self.stats_axes) + [self.ax_carpet, ]:
+        for a in self.axes_common_xaxis:
             a.set_xlim(-0.5, num_gradients - 0.5)
             a.set_ylim(auto=True)
             a.relim()
