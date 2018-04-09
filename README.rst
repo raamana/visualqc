@@ -1,9 +1,6 @@
-==========
-VisualQC
-==========
-
-VisualQC : assistive tool to ease the quality control workflow of neuroimaging data.
-
+==========================================================================================
+VisualQC : Assistive tool to ease the quality control workflow of neuroimaging data
+==========================================================================================
 
 .. image:: https://zenodo.org/badge/105958496.svg
    :target: https://zenodo.org/badge/latestdoi/105958496
@@ -23,13 +20,21 @@ This manual process, in its simplest form, is quite cumbersome and time-consumin
 ``VisualQC``, purpose-built for rigorous quality control, aims to reduce this laborious process to a single command to seamlessly present relevant composite visualizations while alerting user of any outliers, offer an easy way to record the ratings, and quickly navigate through 100s of subjects with ease. All you need to do is sit back, focus your expert eye on data and ``VisualQC`` takes care of the flow and bookkeeping.
 
 
-Always look at your data, they said.
-Now you can. Thoroughly, yet easily.
+| Always look at your data, they said.
+| Now you can. Thoroughly, yet easily.
 
-You may have 99 problems, but QC isn’t going to be one of them with VisualQC.
 
-* Free software: Apache license
+| You may have 99 problems with your data,
+| but QC isn?t going to be one of them with VisualQC.
+
+
+Note: VisualQC employs `release early and release often mechanism<https://en.wikipedia.org/wiki/Release_early,_release_often>`_ to seek user feedback and for thorough testing. Hence you might find some rough edges in docs or examples - please let us know if you do.
+
+
 * Documentation: https://raamana.github.io/visualqc
+* Free software: Apache 2.0 license
+* Pure python package (no licensing issues ala matlab, easy to install and update requiring no other external installations or maintenance)
+* Generic design for API that can be adapted for other domains, imaging or medical or otherwise.
 
 
 Use-cases
@@ -49,7 +54,7 @@ VisualQC supports the following use cases:
 Features
 --------
 
-Each use case aims to offer the following features:
+For each use case, VisualQC aims to offer the following features:
 
  * Ability to zoom-in slices displayed to to ensure you won't miss any detail (down to the voxel-level), so you can rate its quality with confidence.
  * Automatically detect and flag outliers during review (multivariate high-dimensional outlier detection)
@@ -68,6 +73,13 @@ Galleries
  * `Volumetric Segmentation <https://raamana.github.io/visualqc/gallery_segmentation_volumetric.html>`_
 
 
+Contributions
+--------------
+
 `Contributions are welcome. <CONTRIBUTING.rst>`_
 
-`Citation details <docs/citation.rst>`_
+
+Citation
+--------------
+
+`Citation details are here <docs/citation.rst>`_
