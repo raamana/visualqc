@@ -24,11 +24,13 @@ This manual process, in its simplest form, is quite cumbersome and time-consumin
 | Now you can. Thoroughly, yet easily.
 
 
+
 | You may have 99 problems with your data,
-| but QC isn?t going to be one of them with VisualQC.
+| but QC isn't going to be one of them with VisualQC.
 
 
-Note: VisualQC employs `release early and release often mechanism<https://en.wikipedia.org/wiki/Release_early,_release_often>`_ to seek user feedback and for thorough testing. Hence you might find some rough edges in docs or examples - please let us know if you do.
+
+Note: VisualQC employs `release early and release often mechanism <https://en.wikipedia.org/wiki/Release_early,_release_often>`_ to seek user feedback and for thorough testing. Hence you might find some rough edges in docs or examples - please let us know if you do.
 
 
 * Documentation: https://raamana.github.io/visualqc
