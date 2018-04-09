@@ -20,14 +20,13 @@ This manual process, in its simplest form, is quite cumbersome and time-consumin
 ``VisualQC``, purpose-built for rigorous quality control, aims to reduce this laborious process to a single command to seamlessly present relevant composite visualizations while alerting user of any outliers, offer an easy way to record the ratings, and quickly navigate through 100s of subjects with ease. All you need to do is sit back, focus your expert eye on data and ``VisualQC`` takes care of the flow and bookkeeping.
 
 
-| Always look at your data, they said.
-| Now you can. Thoroughly, yet easily.
+    Always look at your data, they said.
+    Now you can. Thoroughly, yet easily.
 
 
 
-| You may have 99 problems with your data,
-| but QC isn't going to be one of them with VisualQC.
-
+    You may have 99 problems with your data,
+    but QC isn't going to be one of them with VisualQC.
 
 
 Note: VisualQC employs `release early and release often mechanism <https://en.wikipedia.org/wiki/Release_early,_release_often>`_ to seek user feedback and for thorough testing. Hence you might find some rough edges in docs or examples - please let us know if you do.
