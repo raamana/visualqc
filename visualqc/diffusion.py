@@ -17,7 +17,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import CheckButtons, RadioButtons
 from mrivis.utils import crop_image
-from os.path import basename, join as pjoin
+from os.path import basename, join as pjoin, exists as pexists
+import traceback
 
 from visualqc import config as cfg
 from visualqc.readers import diffusion_traverse_bids
@@ -375,11 +376,14 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         from visualqc.features import diffusion_mri_features
         self.feature_extractor = diffusion_mri_features
+        # enable this if you need bval/bvec
+        self.param_files_required = False
 
         if 'BIDS' in self.in_dir_type.upper():
             from bids.grabbids import BIDSLayout
             self.bids_layout = BIDSLayout(self.in_dir)
-            self.units = diffusion_traverse_bids(self.bids_layout)
+            self.units = diffusion_traverse_bids(self.bids_layout,
+                                                 param_files_required=self.param_files_required)
             # file name of each scan is the unique identifier,
             #   as it essentially contains all the key info.
             self.unit_by_id = {basename(sub_data['image']): sub_data
@@ -575,45 +579,70 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def load_unit(self, unit_id):
         """Loads the image data for display."""
 
+        skip_subject = False
         img_path = self.unit_by_id[unit_id]['image']
-        bval_path = self.unit_by_id[unit_id]['bval']
+        # reading and checking image info
         try:
             hdr = nib.load(img_path)
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
-            self.img_this_unit_raw = self.hdr_this_unit.get_data()
-            self.b_values_this_unit = np.loadtxt(bval_path).flatten()
+            self.img_this_unit_raw = self.hdr_this_unit.get_data().squeeze()
+            check_image_is_4d(self.img_this_unit_raw, min_num_volumes=2, name='diffusion')
         except:
+            traceback.print_exc()
             print('Unable to read image at \n\t{}'.format(img_path))
             skip_subject = True
         else:
-            check_image_is_4d(self.img_this_unit_raw)
-
-            self.b0_indices = np.flatnonzero(self.b_values_this_unit == 0)
-            if len(self.b0_indices) < 1:
+            # reading and checking gradient info
+            try:
+                self.b_values, self.b0_indices, self.b0_volume = self.get_gradient_info(unit_id)
+            except:
+                traceback.print_exc()
+                print('Unable to read gradient info from'
+                      '\n\t{}'.format(self.unit_by_id[unit_id]['bval']))
                 skip_subject = True
-                raise ValueError('There are no b=0 volumes!')
-                return skip_subject
-
-            if len(self.b0_indices) == 1:
-                self.b0_volume = self.img_this_unit_raw[:, :, :, self.b0_indices]
             else:
-                # TODO which is the correct b=0 volumes are available
-                # TODO is there a way to reduce multiple into one
-                self.b0_volume = self.img_this_unit_raw[:,:,:,self.b0_indices[0]]
-            # need more thorough checks on whether image loaded is indeed DWI
-
-            self.dw_indices = np.flatnonzero(self.b_values_this_unit != 0)
-            self.dw_volumes = self.img_this_unit_raw[:, :, :, self.dw_indices]
-            self.num_gradients = self.dw_volumes.shape[3]
-            # to check alignment
-            self.current_grad_index = 0
-
-            skip_subject = False
-            if np.count_nonzero(self.img_this_unit_raw) == 0:
-                skip_subject = True
-                print('Diffusion image is empty!')
+                # need more thorough checks on whether image loaded is indeed DWI
+                self.dw_indices = np.flatnonzero(self.b_values != 0)
+                self.dw_volumes = self.img_this_unit_raw[:, :, :, self.dw_indices]
+                self.num_gradients = self.dw_volumes.shape[3]
+                # to check alignment
+                self.current_grad_index = 0
 
         return skip_subject
+
+
+    def get_gradient_info(self, unit_id):
+        """Reads b-values and b-values if available."""
+
+        bval_info = self.unit_by_id[unit_id]['bval']
+
+        if self.param_files_required and pexists(bval_info):
+            b_values = np.loadtxt(bval_path).flatten()
+            b0_indices = np.flatnonzero(b_values == 0)
+        elif isinstance(bval_info, str) and bval_info=='assume_first':
+            b_values = np.full(self.img_this_unit_raw.shape[3], np.nan)
+            # indicating the first volume to be b=0
+            # TODO need a CLI param to let user specify b0 indices 0-6 or 0 or n etc
+            b0_indices = [0, ]
+            b_values[b0_indices] = 0
+        else:
+            raise ValueError('invalid state of b-value/files for {}'.format(unit_id))
+
+        if len(b0_indices) < 1:
+            raise ValueError('There are no b=0 volumes!')
+
+        # checking the number
+        if len(b_values) != self.img_this_unit_raw.shape[3]:
+            raise ValueError('Number of b values does not match number of volumes in the image!')
+
+        if len(b0_indices) == 1:
+            b0_volume = self.img_this_unit_raw[:, :, :, b0_indices]
+        else:
+            # TODO which is the correct b=0 volumes are available
+            # TODO is there a way to reduce multiple into one
+            b0_volume = self.img_this_unit_raw[:, :, :, b0_indices[0]]
+
+        return b_values, b0_indices, b0_volume
 
 
     def display_unit(self):
