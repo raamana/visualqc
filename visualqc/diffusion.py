@@ -253,6 +253,15 @@ class DiffusionMRIInterface(T1MriInterface):
 
         self.scroll_callback(scroll_event)
 
+    def clear_radio_bt_vis_method(self):
+        """Clears the radio button"""
+
+        for index, label in enumerate(self.radio_bt_vis_type.labels):
+            if label.get_text() == self.radio_bt_vis_type.value_selected:
+                self.radio_bt_vis_type.circles[index].set_facecolor(cfg.color_rating_axis)
+                break
+        self.radio_bt_vis_type.value_selected = None
+
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
 
@@ -260,6 +269,7 @@ class DiffusionMRIInterface(T1MriInterface):
         self.restore_axis()
         self.clear_data()
         self.clear_checkboxes()
+        self.clear_radio_bt_vis_method()
         self.clear_notes_annot()
 
 
