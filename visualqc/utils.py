@@ -194,17 +194,23 @@ def check_image_is_3d(img):
     return img
 
 
-def check_image_is_4d(img):
+def check_image_is_4d(img, min_num_volumes=1, name='4D image'):
     """Ensures the image loaded is 4d and nothing else."""
 
     if len(img.shape) <= 3:
-        raise ValueError('Input volume must be atleast 4D!')
+        raise ValueError('Input {} must be atleast 4D!'.format(name))
     elif len(img.shape) == 4:
         for dim_size in img.shape:
             if dim_size < 1:
                 raise ValueError('Atleast one slice must exist in each dimension')
+        # atleast one volume existing is already checked in the above loop
+        if min_num_volumes >1 and img.shape[-1]<min_num_volumes:
+            raise ValueError('Given {} has fewer than {} volumes!'.format(name, min_num_volumes))
     elif len(img.shape) > 4:
-        raise ValueError('Invalid shape of image : {}'.format(img.shape))
+        raise ValueError('{} has more than 4 dimensions : {}'.format(name, img.shape))
+
+    if np.count_nonzero(img) == 0:
+        raise ValueError('given image is empty!')
 
     return
 
