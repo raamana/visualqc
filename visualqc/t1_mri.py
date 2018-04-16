@@ -21,7 +21,7 @@ from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import check_finite_int, check_id_list, check_input_dir_T1, \
     check_out_dir, check_outlier_params, check_views, get_axis, pick_slices, read_image, \
-    scale_0to1
+    scale_0to1, saturate_brighter_intensities
 from visualqc.workflows import BaseWorkflowVisualQC
 
 # each rating is a set of labels, join them with a plus delimiter
@@ -37,7 +37,9 @@ class T1MriInterface(BaseReviewInterface):
                  axes,
                  issue_list=cfg.t1_mri_default_issue_list,
                  next_button_callback=None,
-                 quit_button_callback=None):
+                 quit_button_callback=None,
+                 saturated_callback=None,
+                 unsaturated_callback=None):
         """Constructor"""
 
         super().__init__(fig, axes, next_button_callback, quit_button_callback)
@@ -51,6 +53,8 @@ class T1MriInterface(BaseReviewInterface):
 
         self.next_button_callback = next_button_callback
         self.quit_button_callback = quit_button_callback
+        self.saturated_callback = saturated_callback
+        self.unsaturated_callback = unsaturated_callback
 
         # this list of artists to be populated later
         # makes to handy to clean them all
@@ -229,8 +233,12 @@ class T1MriInterface(BaseReviewInterface):
         # print(key_pressed)
         if key_pressed in ['right', ' ', 'space']:
             self.next_button_callback()
-        if key_pressed in ['ctrl+q', 'q+ctrl']:
+        elif key_pressed in ['ctrl+q', 'q+ctrl']:
             self.quit_button_callback()
+        elif key_pressed in ['alt+s', 's+alt']:
+            self.saturated_callback()
+        elif key_pressed in ['alt+u', 'u+alt']:
+            self.unsaturated_callback()
         else:
             if key_pressed in cfg.abbreviation_t1_mri_default_issue_list:
                 checked_label = cfg.abbreviation_t1_mri_default_issue_list[key_pressed]
@@ -349,8 +357,11 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
     def add_UI(self):
         """Adds the review UI with defaults"""
 
-        self.UI = T1MriInterface(self.fig, self.axes, self.issue_list, self.next,
-                                 self.quit)
+        self.UI = T1MriInterface(self.collage.fig, self.collage.flat_grid, self.issue_list,
+                                 next_button_callback=self.next,
+                                 quit_button_callback=self.quit,
+                                 saturated_callback=self.show_saturated,
+                                 unsaturated_callback=self.show_unsaturated)
 
         # connecting callbacks
         self.con_id_click = self.fig.canvas.mpl_connect('button_press_event',
@@ -415,8 +426,17 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
     def load_unit(self, unit_id):
         """Loads the image data for display."""
 
+        # starting fresh
+        for attr in ('current_img_raw', 'current_img', 'saturated_img'):
+            if hasattr(self, attr):
+                delattr(self, attr)
+
         t1_mri_path = self.path_getter_inputs(unit_id)
-        self.current_img = read_image(t1_mri_path, error_msg='T1 mri')
+        self.current_img_raw = read_image(t1_mri_path, error_msg='T1 mri')
+        # crop and rescale
+        self.current_img = scale_0to1(crop_image(self.current_img_raw, self.padding))
+
+        self.saturated_img = None
 
         skip_subject = False
         if np.count_nonzero(self.current_img) == 0:
@@ -435,7 +455,25 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         # showing the collage
         self.collage.attach(self.current_img)
         # updating histogram
-        self.update_histogram(img)
+        self.update_histogram(self.current_img)
+
+    def show_saturated(self, show=True):
+        """Callback for ghosting specific review"""
+
+        if show:
+            if self.saturated_img is None:
+                self.saturated_img = saturate_brighter_intensities(self.current_img, percentile=70)
+            self.collage.attach(self.saturated_img)
+        else:
+            # switching to unsaturated
+            self.collage.attach(self.current_img)
+
+
+    def show_unsaturated(self):
+        """"""
+
+        # switching to unsaturated
+        self.collage.attach(self.current_img)
 
 
     def cleanup(self):
