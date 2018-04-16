@@ -12,7 +12,7 @@ from abc import ABC
 
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.widgets import CheckButtons
+from matplotlib.widgets import CheckButtons, RadioButtons
 from mrivis.utils import crop_image
 from mrivis.base import Collage
 from os.path import join as pjoin, realpath
@@ -38,6 +38,7 @@ class T1MriInterface(BaseReviewInterface):
                  issue_list=cfg.t1_mri_default_issue_list,
                  next_button_callback=None,
                  quit_button_callback=None,
+                 processing_choice_callback=None,
                  saturated_callback=None,
                  unsaturated_callback=None):
         """Constructor"""
@@ -49,12 +50,14 @@ class T1MriInterface(BaseReviewInterface):
         self.prev_axis = None
         self.prev_ax_pos = None
         self.zoomed_in = False
-        self.add_checkboxes()
-
         self.next_button_callback = next_button_callback
         self.quit_button_callback = quit_button_callback
+        self.processing_choice_callback = processing_choice_callback
         self.saturated_callback = saturated_callback
         self.unsaturated_callback = unsaturated_callback
+
+        self.add_checkboxes()
+        self.add_process_options()
 
         # this list of artists to be populated later
         # makes to handy to clean them all
@@ -68,7 +71,7 @@ class T1MriInterface(BaseReviewInterface):
 
         """
 
-        ax_checkbox = plt.axes(cfg.position_checkbox, facecolor=cfg.color_rating_axis)
+        ax_checkbox = plt.axes(cfg.position_checkbox_t1_mri, facecolor=cfg.color_rating_axis)
         # initially de-activating all
         actives = [False] * len(self.issue_list)
         self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list, actives=actives)
@@ -86,6 +89,20 @@ class T1MriInterface(BaseReviewInterface):
             x_line2.set_color(cfg.checkbox_cross_color)
 
         self._index_pass = cfg.t1_mri_default_issue_list.index(cfg.t1_mri_pass_indicator)
+
+
+    def add_process_options(self):
+
+        ax_radio = plt.axes(cfg.position_radio_bt_t1_mri,
+                            facecolor=cfg.color_rating_axis)
+        self.radio_bt_vis_type = RadioButtons(ax_radio, cfg.processing_choices_t1_mri,
+                                              active=None, activecolor='orange')
+        self.radio_bt_vis_type.on_clicked(self.processing_choice_callback)
+        for txt_lbl in self.radio_bt_vis_type.labels:
+            txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
+
+        for circ in self.radio_bt_vis_type.circles:
+            circ.set(radius=0.06)
 
 
     def save_issues(self, label):
@@ -360,6 +377,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.UI = T1MriInterface(self.collage.fig, self.collage.flat_grid, self.issue_list,
                                  next_button_callback=self.next,
                                  quit_button_callback=self.quit,
+                                 processing_choice_callback=self.process_and_display,
                                  saturated_callback=self.show_saturated,
                                  unsaturated_callback=self.show_unsaturated)
 
@@ -437,6 +455,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.current_img = scale_0to1(crop_image(self.current_img_raw, self.padding))
 
         self.saturated_img = None
+        self.currently_showing = None
 
         skip_subject = False
         if np.count_nonzero(self.current_img) == 0:
@@ -457,16 +476,29 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         # updating histogram
         self.update_histogram(self.current_img)
 
-    def show_saturated(self, show=True):
+    def process_and_display(self, user_choice):
+        """Updates the display after applying the chosen method."""
+
+        if user_choice in ('Saturate', ):
+            self.show_saturated(no_toggle=True)
+        elif user_choice in ('Unsaturated', ):
+            self.show_unsaturated()
+        else:
+            print('Chosen option seems to be not implemented!')
+
+    def show_saturated(self, no_toggle=False):
         """Callback for ghosting specific review"""
 
-        if show:
+        if not self.currently_showing in ['saturated', ] or no_toggle:
             if self.saturated_img is None:
-                self.saturated_img = saturate_brighter_intensities(self.current_img, percentile=70)
+                self.saturated_img = saturate_brighter_intensities(self.current_img,
+                                                                   percentile=cfg.saturate_perc_t1)
             self.collage.attach(self.saturated_img)
+            self.currently_showing = 'saturated'
         else:
             # switching to unsaturated
             self.collage.attach(self.current_img)
+            self.currently_showing = 'unsaturated'
 
 
     def show_unsaturated(self):
