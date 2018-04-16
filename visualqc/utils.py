@@ -64,6 +64,27 @@ def scale_0to1(image, multiply_factor=1.0):
     return out_image
 
 
+def saturate_brighter_intensities(img,
+                                  factor=0.1,
+                                  percentile=None):
+    """Sets all the intensities above max_intensity*factor to the max intensity.
+
+    Helpful to detect ghosting.
+    """
+
+    saturated = img.copy()
+    max_value = saturated.max()
+
+    if percentile is None and factor is not None:
+        saturated[saturated>(factor*max_value)] = max_value
+    elif percentile:
+        saturated[saturated > np.percentile(saturated, float(percentile))] = max_value
+    else:
+        raise ValueError('Invalid input specification')
+
+    return saturated
+
+
 def get_label_set(seg, label_set, background=0):
     """Extracts only the required labels"""
 
