@@ -48,12 +48,26 @@ def read_image(img_spec, error_msg='image',
     return img
 
 
-def scale_0to1(image, multiply_factor=1.0):
+def scale_0to1(image_in,
+               exclude_outliers_below=False,
+               exclude_outliers_above=False
+               , multiply_factor=1.0):
     """Scale the two images to [0, 1] based on min/max."""
 
-    min_value = image.min()
-    max_value = image.max()
-    out_image = (image - min_value) / (max_value - min_value)
+    min_value = image_in.min()
+    max_value = image_in.max()
+
+    # making a copy to ensure no side-effects
+    out_image = image_in.copy()
+    if exclude_outliers_below:
+        perctl = float(exclude_outliers_below)
+        out_image[out_image < np.percentile(out_image, perctl)] = min_value
+
+    if exclude_outliers_above:
+        perctl = float(exclude_outliers_above)
+        out_image[out_image > np.percentile(out_image, 100.0-perctl)] = max_value
+
+    out_image = (out_image - min_value) / (max_value - min_value)
 
     if not np.isclose(multiply_factor, 1.0):
         # makes it go from [0, 1] to [0, multiply_factor]
