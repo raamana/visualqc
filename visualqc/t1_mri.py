@@ -14,6 +14,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import CheckButtons
 from mrivis.utils import crop_image
+from mrivis.base import Collage
 from os.path import join as pjoin, realpath
 
 from visualqc import config as cfg
@@ -198,11 +199,8 @@ class T1MriInterface(BaseReviewInterface):
                 self.prev_axis.patch.set_alpha(0.5)
                 self.zoomed_in = False
 
-        # right click ignored
-        if event.button in [3]:
-            pass
-        # double click to zoom in to any axis
-        elif event.dblclick and event.inaxes is not None and \
+        # right or double click to zoom in to any axis
+        if (event.button in [3] or event.dblclick) and (event.inaxes is not None) and \
             event.inaxes not in [self.checkbox.ax, self.text_box.ax,
                                  self.bt_next.ax, self.bt_quit.ax]:
             # zoom axes full-screen
@@ -217,7 +215,7 @@ class T1MriInterface(BaseReviewInterface):
         else:
             pass
 
-        plt.draw()
+        self.fig.canvas.draw_idle()
 
 
     def on_keyboard(self, key_in):
@@ -240,6 +238,8 @@ class T1MriInterface(BaseReviewInterface):
                     cfg.t1_mri_default_issue_list.index(checked_label))
             else:
                 pass
+
+        self.fig.canvas.draw_idle()
 
 
 class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
@@ -305,11 +305,22 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
     def init_layout(self, views, num_rows_per_view,
                     num_slices_per_view, padding=cfg.default_padding):
 
-        self.views = views
-        self.num_slices_per_view = num_slices_per_view
-        self.num_rows_per_view = num_rows_per_view
-        self.num_rows = len(self.views) * self.num_rows_per_view
-        self.num_cols = int((len(self.views) * self.num_slices_per_view) / self.num_rows)
+        plt.style.use('dark_background')
+
+        # vmin/vmax are controlled, because we rescale all to [0, 1]
+        self.display_params = dict(interpolation='none', aspect='equal',
+                                   origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
+        self.figsize = cfg.default_review_figsize
+
+        self.collage = Collage(view_set=views,
+                               num_slices=num_slices_per_view, num_rows=num_rows_per_view,
+                               display_params=self.display_params,
+                               bounding_rect=cfg.bounding_box_review,
+                               figsize=self.figsize)
+        self.fig = self.collage.fig
+        self.fig.canvas.set_window_title('VisualQC T1 MRI : {} {} '
+                                         ''.format(self.in_dir, self.mri_name))
+
         self.padding = padding
 
 
@@ -332,28 +343,6 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
     def open_figure(self):
         """Creates the master figure to show everything in."""
 
-        self.figsize = cfg.default_review_figsize
-        plt.style.use('dark_background')
-        self.fig, self.axes = plt.subplots(self.num_rows, self.num_cols,
-                                           figsize=self.figsize)
-        self.axes = self.axes.flatten()
-
-        self.fig.canvas.set_window_title('VisualQC T1 MRI : {} {} '
-                                         ''.format(self.in_dir, self.mri_name))
-
-        # vmin/vmax are controlled, because we rescale all to [0, 1]
-        self.display_params = dict(interpolation='none', aspect='equal',
-                                   origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
-
-        # turning off axes, creating image objects
-        self.images = [None] * len(self.axes)
-        empty_image = np.full((10, 10), 0.0)
-        for ix, ax in enumerate(self.axes):
-            ax.axis('off')
-            self.images[ix] = ax.imshow(empty_image, **self.display_params)
-
-        # leaving some space on the right for review elements
-        plt.subplots_adjust(**cfg.review_area)
         plt.show(block=False)
 
 
@@ -443,16 +432,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
     def display_unit(self):
         """Adds slice collage to the given axes"""
 
-        # crop and rescale
-        img = crop_image(self.current_img, self.padding)
-        img = scale_0to1(img)
-
-        # adding slices
-        slices = pick_slices(img, self.views, self.num_slices_per_view)
-        for ax_index, (dim_index, slice_index) in enumerate(slices):
-            slice_data = get_axis(img, dim_index, slice_index)
-            self.images[ax_index].set_data(slice_data)
-
+        # showing the collage
+        self.collage.attach(self.current_img)
         # updating histogram
         self.update_histogram(img)
 
