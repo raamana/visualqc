@@ -40,7 +40,8 @@ class T1MriInterface(BaseReviewInterface):
                  quit_button_callback=None,
                  processing_choice_callback=None,
                  saturated_callback=None,
-                 unsaturated_callback=None):
+                 tails_trimmed_callback=None,
+                 show_original_callback=None):
         """Constructor"""
 
         super().__init__(fig, axes, next_button_callback, quit_button_callback)
@@ -58,6 +59,9 @@ class T1MriInterface(BaseReviewInterface):
 
         self.add_checkboxes()
         self.add_process_options()
+        # include all the non-data axes here (so they wont be zoomed-in)
+        self.unzoomable_axes = [self.checkbox.ax, self.text_box.ax,
+                                self.bt_next.ax, self.bt_quit.ax, self.radio_bt_vis_type]
 
         # this list of artists to be populated later
         # makes to handy to clean them all
@@ -187,6 +191,7 @@ class T1MriInterface(BaseReviewInterface):
 
         self.clear_data()
         self.clear_checkboxes()
+        self.clear_radio_buttons()
         self.clear_notes_annot()
 
 
@@ -208,13 +213,23 @@ class T1MriInterface(BaseReviewInterface):
         self.annot_text.remove()
 
 
+    def clear_radio_buttons(self):
+        """Clears the radio button"""
+
+        # enabling default rating encourages lazy advancing without review
+        # self.radio_bt_rating.set_active(cfg.index_freesurfer_default_rating)
+        for index, label in enumerate(self.radio_bt_vis_type.labels):
+            if label.get_text() == self.radio_bt_vis_type.value_selected:
+                self.radio_bt_vis_type.circles[index].set_facecolor(cfg.color_rating_axis)
+                break
+        self.radio_bt_vis_type.value_selected = None
+
+
     def on_mouse(self, event):
         """Callback for mouse events."""
 
         if self.prev_axis is not None:
-            # include all the non-data axes here (so they wont be zoomed-in)
-            if event.inaxes not in [self.checkbox.ax, self.text_box.ax,
-                                    self.bt_next.ax, self.bt_quit.ax]:
+            if event.inaxes not in self.unzoomable_axes:
                 self.prev_axis.set_position(self.prev_ax_pos)
                 self.prev_axis.set_zorder(0)
                 self.prev_axis.patch.set_alpha(0.5)
@@ -222,9 +237,7 @@ class T1MriInterface(BaseReviewInterface):
 
         # right or double click to zoom in to any axis
         if (event.button in [3] or event.dblclick) and (event.inaxes is not None) and \
-            event.inaxes not in [self.checkbox.ax, self.text_box.ax,
-                                 self.bt_next.ax, self.bt_quit.ax]:
-            # zoom axes full-screen
+            event.inaxes not in self.unzoomable_axes:
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(cfg.zoomed_position)
             event.inaxes.set_zorder(1)  # bring forth
@@ -232,7 +245,6 @@ class T1MriInterface(BaseReviewInterface):
             event.inaxes.patch.set_alpha(1.0)  # opaque
             self.zoomed_in = True
             self.prev_axis = event.inaxes
-
         else:
             pass
 
@@ -255,7 +267,7 @@ class T1MriInterface(BaseReviewInterface):
         elif key_pressed in ['alt+s', 's+alt']:
             self.saturated_callback()
         elif key_pressed in ['alt+u', 'u+alt']:
-            self.unsaturated_callback()
+            self.show_original_callback()
         else:
             if key_pressed in cfg.abbreviation_t1_mri_default_issue_list:
                 checked_label = cfg.abbreviation_t1_mri_default_issue_list[key_pressed]
@@ -417,8 +429,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         """Keeps a box, initially invisible."""
 
         if self.current_alert_msg is not None:
-            h_alert_text = self.fig.text(cfg.position_outlier_alert[0],
-                                         cfg.position_outlier_alert[1],
+            h_alert_text = self.fig.text(cfg.position_outlier_alert_t1_mri[0],
+                                         cfg.position_outlier_alert_t1_mri[1],
                                          self.current_alert_msg, **cfg.alert_text_props)
             # adding it to list of elements to cleared when advancing to next subject
             self.UI.data_handles.append(h_alert_text)
@@ -445,7 +457,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         """Loads the image data for display."""
 
         # starting fresh
-        for attr in ('current_img_raw', 'current_img', 'saturated_img'):
+        for attr in ('current_img_raw', 'current_img',
+                     'saturated_img', 'tails_trimmed_img'):
             if hasattr(self, attr):
                 delattr(self, attr)
 
@@ -498,13 +511,12 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         else:
             # switching to unsaturated
             self.collage.attach(self.current_img)
-            self.currently_showing = 'unsaturated'
+            self.currently_showing = 'original'
 
 
-    def show_unsaturated(self):
-        """"""
+    def show_original(self):
+        """Show the original"""
 
-        # switching to unsaturated
         self.collage.attach(self.current_img)
 
 
