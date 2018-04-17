@@ -23,6 +23,7 @@ from visualqc.utils import check_finite_int, check_id_list, check_input_dir_T1, 
     check_out_dir, check_outlier_params, check_views, get_axis, pick_slices, read_image, \
     scale_0to1, saturate_brighter_intensities
 from visualqc.workflows import BaseWorkflowVisualQC
+from visualqc.image_utils import mask_image
 
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
@@ -31,7 +32,6 @@ _plus_join = lambda label_set: '+'.join(label_set)
 class T1MriInterface(BaseReviewInterface):
     """Custom interface for rating the quality of T1 MRI scan."""
 
-
     def __init__(self,
                  fig,
                  axes,
@@ -39,9 +39,7 @@ class T1MriInterface(BaseReviewInterface):
                  next_button_callback=None,
                  quit_button_callback=None,
                  processing_choice_callback=None,
-                 saturated_callback=None,
-                 tails_trimmed_callback=None,
-                 show_original_callback=None):
+                 map_key_to_callback=None):
         """Constructor"""
 
         super().__init__(fig, axes, next_button_callback, quit_button_callback)
@@ -54,9 +52,12 @@ class T1MriInterface(BaseReviewInterface):
         self.next_button_callback = next_button_callback
         self.quit_button_callback = quit_button_callback
         self.processing_choice_callback = processing_choice_callback
-        self.saturated_callback = saturated_callback
-        self.tails_trimmed_callback = tails_trimmed_callback
-        self.show_original_callback = show_original_callback
+        if map_key_to_callback is None:
+            self.map_key_to_callback = {} # empty
+        elif isinstance(map_key_to_callback, dict):
+            self.map_key_to_callback = map_key_to_callback
+        else:
+            raise ValueError('map_key_to_callback must be a dict')
 
         self.add_checkboxes()
         self.add_process_options()
@@ -67,7 +68,6 @@ class T1MriInterface(BaseReviewInterface):
         # this list of artists to be populated later
         # makes to handy to clean them all
         self.data_handles = list()
-
 
     def add_checkboxes(self):
         """
@@ -95,7 +95,6 @@ class T1MriInterface(BaseReviewInterface):
 
         self._index_pass = cfg.t1_mri_default_issue_list.index(cfg.t1_mri_pass_indicator)
 
-
     def add_process_options(self):
 
         ax_radio = plt.axes(cfg.position_radio_bt_t1_mri,
@@ -108,7 +107,6 @@ class T1MriInterface(BaseReviewInterface):
 
         for circ in self.radio_bt_vis_type.circles:
             circ.set(radius=0.06)
-
 
     def save_issues(self, label):
         """
@@ -124,7 +122,6 @@ class T1MriInterface(BaseReviewInterface):
             self.clear_pass_only_if_on()
 
         self.fig.canvas.draw_idle()
-
 
     def clear_checkboxes(self, except_pass=False):
         """Clears all checkboxes.
@@ -142,7 +139,6 @@ class T1MriInterface(BaseReviewInterface):
                 # not calling checkbox.set_active() as it calls the callback self.save_issues() each time, if eventson is True
                 self._toggle_visibility_checkbox(index)
 
-
     def clear_pass_only_if_on(self):
         """Clear pass checkbox only"""
 
@@ -150,14 +146,12 @@ class T1MriInterface(BaseReviewInterface):
         if cbox_statuses[self._index_pass]:
             self._toggle_visibility_checkbox(self._index_pass)
 
-
     def _toggle_visibility_checkbox(self, index):
         """toggles the visibility of a given checkbox"""
 
         l1, l2 = self.checkbox.lines[index]
         l1.set_visible(not l1.get_visible())
         l2.set_visible(not l2.get_visible())
-
 
     def get_ratings(self):
         """Returns the final set of checked ratings"""
@@ -168,7 +162,6 @@ class T1MriInterface(BaseReviewInterface):
                         enumerate(cbox_statuses) if this_cbox_active]
 
         return user_ratings
-
 
     def allowed_to_advance(self):
         """
@@ -186,7 +179,6 @@ class T1MriInterface(BaseReviewInterface):
 
         return allowed
 
-
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
 
@@ -194,7 +186,6 @@ class T1MriInterface(BaseReviewInterface):
         self.clear_checkboxes()
         self.clear_radio_buttons()
         self.clear_notes_annot()
-
 
     def clear_data(self):
         """clearing all data/image handles"""
@@ -205,14 +196,12 @@ class T1MriInterface(BaseReviewInterface):
             # resetting it
             self.data_handles = list()
 
-
     def clear_notes_annot(self):
         """clearing notes and annotations"""
 
         self.text_box.set_val(cfg.textbox_initial_text)
         # text is matplotlib artist
         self.annot_text.remove()
-
 
     def clear_radio_buttons(self):
         """Clears the radio button"""
@@ -224,7 +213,6 @@ class T1MriInterface(BaseReviewInterface):
                 self.radio_bt_vis_type.circles[index].set_facecolor(cfg.color_rating_axis)
                 break
         self.radio_bt_vis_type.value_selected = None
-
 
     def on_mouse(self, event):
         """Callback for mouse events."""
@@ -251,7 +239,6 @@ class T1MriInterface(BaseReviewInterface):
 
         self.fig.canvas.draw_idle()
 
-
     def on_keyboard(self, key_in):
         """Callback to handle keyboard shortcuts to rate and advance."""
 
@@ -265,10 +252,9 @@ class T1MriInterface(BaseReviewInterface):
             self.next_button_callback()
         elif key_pressed in ['ctrl+q', 'q+ctrl']:
             self.quit_button_callback()
-        elif key_pressed in ['alt+s', 's+alt']:
-            self.saturated_callback()
-        elif key_pressed in ['alt+u', 'u+alt']:
-            self.show_original_callback()
+        elif key_pressed in self.map_key_to_callback:
+            # notice parentheses at the end
+            self.map_key_to_callback[key_pressed]()
         else:
             if key_pressed in cfg.abbreviation_t1_mri_default_issue_list:
                 checked_label = cfg.abbreviation_t1_mri_default_issue_list[key_pressed]
@@ -284,7 +270,6 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
     """
     Rating workflow without any overlay.
     """
-
 
     def __init__(self,
                  id_list,
@@ -315,7 +300,6 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
 
-
     def preprocess(self):
         """
         Preprocess the input data
@@ -331,14 +315,12 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
 
         # no complex vis to generate - skipping
 
-
     def prepare_UI(self):
         """Main method to run the entire workflow"""
 
         self.open_figure()
         self.add_UI()
         self.add_histogram_panel()
-
 
     def init_layout(self, views, num_rows_per_view,
                     num_slices_per_view, padding=cfg.default_padding):
@@ -361,7 +343,6 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
 
         self.padding = padding
 
-
     def init_getters(self):
         """Initializes the getters methods for input paths and feature readers."""
 
@@ -377,23 +358,28 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
             self.path_getter_inputs = lambda sub_id: realpath(
                 pjoin(self.in_dir, sub_id, self.mri_name))
 
-
     def open_figure(self):
         """Creates the master figure to show everything in."""
 
         plt.show(block=False)
 
-
     def add_UI(self):
         """Adds the review UI with defaults"""
 
+        # two keys for same combinations exist to account for time delays in key presses
+        map_key_to_callback = {'alt+s': self.show_saturated,
+                               's+alt': self.show_saturated,
+                               'alt+b': self.show_background_only,
+                               'b+alt': self.show_background_only,
+                               'alt+t': self.show_tails_trimmed,
+                               't+alt': self.show_tails_trimmed,
+                               'alt+o': self.show_original,
+                               'o+alt': self.show_original}
         self.UI = T1MriInterface(self.collage.fig, self.collage.flat_grid, self.issue_list,
                                  next_button_callback=self.next,
                                  quit_button_callback=self.quit,
                                  processing_choice_callback=self.process_and_display,
-                                 saturated_callback=self.show_saturated,
-                                 tails_trimmed_callback=self.show_tails_trimmed,
-                                 show_original_callback=self.show_original)
+                                 map_key_to_callback=map_key_to_callback)
 
         # connecting callbacks
         self.con_id_click = self.fig.canvas.mpl_connect('button_press_event',
@@ -403,7 +389,6 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         # con_id_scroll = self.fig.canvas.mpl_connect('scroll_event', self.UI.on_scroll)
 
         self.fig.set_size_inches(self.figsize)
-
 
     def add_histogram_panel(self):
         """Extra axis for histogram"""
@@ -415,7 +400,6 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.ax_hist.set_prop_cycle('color', cfg.color_histogram_t1_mri)
         self.ax_hist.set_title(cfg.title_histogram_t1_mri, fontsize='small')
 
-
     def update_histogram(self, img):
         """Updates histogram with current image data"""
 
@@ -426,7 +410,6 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.ax_hist.autoscale_view(scalex=False)  # xlim fixed to [0, 1]
         self.UI.data_handles.extend(patches_hist)
 
-
     def update_alerts(self):
         """Keeps a box, initially invisible."""
 
@@ -436,7 +419,6 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
                                          self.current_alert_msg, **cfg.alert_text_props)
             # adding it to list of elements to cleared when advancing to next subject
             self.UI.data_handles.append(h_alert_text)
-
 
     def add_alerts(self):
         """Brings up an alert if subject id is detected to be an outlier."""
@@ -454,13 +436,12 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         else:
             self.current_alert_msg = None
 
-
     def load_unit(self, unit_id):
         """Loads the image data for display."""
 
         # starting fresh
         for attr in ('current_img_raw', 'current_img',
-                     'saturated_img', 'tails_trimmed_img'):
+                     'saturated_img', 'tails_trimmed_img', 'background_img'):
             if hasattr(self, attr):
                 delattr(self, attr)
 
@@ -468,9 +449,6 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.current_img_raw = read_image(t1_mri_path, error_msg='T1 mri')
         # crop and rescale
         self.current_img = scale_0to1(crop_image(self.current_img_raw, self.padding))
-
-        self.saturated_img = None
-        self.tails_trimmed_img = None
         self.currently_showing = None
 
         skip_subject = False
@@ -483,7 +461,6 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
 
         return skip_subject
 
-
     def display_unit(self):
         """Adds slice collage to the given axes"""
 
@@ -495,11 +472,13 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
     def process_and_display(self, user_choice):
         """Updates the display after applying the chosen method."""
 
-        if user_choice in ('Saturate', ):
+        if user_choice in ('Saturate',):
             self.show_saturated(no_toggle=True)
+        elif user_choice in ('Background only',):
+            self.show_background_only(no_toggle=True)
         elif user_choice in ('Tails_trimmed', 'Tails trimmed'):
             self.show_tails_trimmed(no_toggle=True)
-        elif user_choice in ('Original', ):
+        elif user_choice in ('Original',):
             self.show_original()
         else:
             print('Chosen option seems to be not implemented!')
@@ -508,7 +487,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         """Callback for ghosting specific review"""
 
         if not self.currently_showing in ['saturated', ] or no_toggle:
-            if self.saturated_img is None:
+            if not hasattr(self, 'saturated_img'):
                 self.saturated_img = saturate_brighter_intensities(self.current_img,
                                                                    percentile=cfg.saturate_perc_t1)
             self.collage.attach(self.saturated_img)
@@ -518,28 +497,25 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
             self.collage.attach(self.current_img)
             self.currently_showing = 'original'
 
-
     def show_original(self):
         """Show the original"""
 
         self.collage.attach(self.current_img)
 
-
     def show_tails_trimmed(self, no_toggle=False):
         """Callback for ghosting specific review"""
 
         if not self.currently_showing in ['tails_trimmed', ] or no_toggle:
-            if self.tails_trimmed_img is None:
+            if not hasattr(self, 'tails_trimmed_img'):
                 self.tails_trimmed_img = scale_0to1(self.current_img,
-                                                exclude_outliers_below=5,
-                                                exclude_outliers_above=5)
+                                                    exclude_outliers_below=1,
+                                                    exclude_outliers_above=0.05)
             self.collage.attach(self.tails_trimmed_img)
             self.currently_showing = 'tails_trimmed'
         else:
             # switching to unsaturated
             self.collage.attach(self.current_img)
             self.currently_showing = 'original'
-
 
     def cleanup(self):
         """Preparating for exit."""
