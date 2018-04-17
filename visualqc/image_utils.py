@@ -99,6 +99,23 @@ def mask_image(input_img,
 
     return mask_img
 
+# alias
+foreground_mask = mask_image
+
+def equalize_image_histogram(image_in, num_bins=cfg.num_bins_histogram_contrast_enhancement,
+                             max_value=255):
+    """Modifies the image to achieve an equalized histogram."""
+
+    image_flat = image_in.flatten()
+    hist_image, bin_edges = np.histogram(image_flat, bins=num_bins, normed=True)
+    cdf = hist_image.cumsum()
+    cdf = max_value * cdf / cdf[-1] # last element is total sum
+
+    # linear interpolation
+    array_equalized = np.interp(image_flat, bin_edges[:-1], cdf)
+
+    return array_equalized.reshape(image_in.shape)
+
 
 def overlay_edges(slice_one, slice_two, sharper=True):
     """
