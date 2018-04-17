@@ -493,7 +493,26 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
             self.collage.attach(self.saturated_img)
             self.currently_showing = 'saturated'
         else:
-            # switching to unsaturated
+            # switching to original
+            self.collage.attach(self.current_img)
+            self.currently_showing = 'original'
+
+    def show_background_only(self, no_toggle=False):
+        """Callback for ghosting specific review"""
+
+        if not self.currently_showing in ['Background only', ] or no_toggle:
+            if not hasattr(self, 'background_img'):
+                # need to scale the mask, as Collage class does NOT automatically rescale
+                self.foreground_mask = mask_image(self.current_img, out_dtype=bool)
+                temp_background_img = np.copy(self.current_img)
+                temp_background_img[self.foreground_mask] = 0.0
+                self.background_img = scale_0to1(temp_background_img,
+                                                 exclude_outliers_below=1,
+                                                 exclude_outliers_above=3)
+            self.collage.attach(self.background_img)
+            self.currently_showing = 'Background only'
+        else:
+            # switching to original
             self.collage.attach(self.current_img)
             self.currently_showing = 'original'
 
