@@ -61,11 +61,11 @@ def scale_0to1(image_in,
     out_image = image_in.copy()
     if exclude_outliers_below:
         perctl = float(exclude_outliers_below)
-        out_image[out_image < np.percentile(out_image, perctl)] = min_value
+        out_image[out_image < np.percentile(out_image.flatten(), perctl)] = min_value
 
     if exclude_outliers_above:
         perctl = float(exclude_outliers_above)
-        out_image[out_image > np.percentile(out_image, 100.0-perctl)] = max_value
+        out_image[out_image > np.percentile(out_image.flatten(), 100.0-perctl)] = max_value
 
     out_image = (out_image - min_value) / (max_value - min_value)
 
