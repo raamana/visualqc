@@ -177,10 +177,12 @@ position_histogram_t1_mri = [0.905, 0.70, 0.09, 0.1]
 position_outlier_alert_t1_mri = (0.950, 0.85)
 
 processing_choices_t1_mri = ('Saturate',
+                             'Background only',
                              'Tails_trimmed',
                              'Original')
 saturate_perc_t1 = 33 # supra-threshold values are saturated.
 num_bins_histogram_intensity_distribution = 100
+num_bins_histogram_contrast_enhancement = 256
 
 # outlier detection (OLD)
 t1_mri_features_OLD = ('histogram_whole_scan',)
