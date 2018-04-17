@@ -55,7 +55,8 @@ class T1MriInterface(BaseReviewInterface):
         self.quit_button_callback = quit_button_callback
         self.processing_choice_callback = processing_choice_callback
         self.saturated_callback = saturated_callback
-        self.unsaturated_callback = unsaturated_callback
+        self.tails_trimmed_callback = tails_trimmed_callback
+        self.show_original_callback = show_original_callback
 
         self.add_checkboxes()
         self.add_process_options()
@@ -391,7 +392,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
                                  quit_button_callback=self.quit,
                                  processing_choice_callback=self.process_and_display,
                                  saturated_callback=self.show_saturated,
-                                 unsaturated_callback=self.show_unsaturated)
+                                 tails_trimmed_callback=self.show_tails_trimmed,
+                                 show_original_callback=self.show_original)
 
         # connecting callbacks
         self.con_id_click = self.fig.canvas.mpl_connect('button_press_event',
@@ -468,6 +470,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.current_img = scale_0to1(crop_image(self.current_img_raw, self.padding))
 
         self.saturated_img = None
+        self.tails_trimmed_img = None
         self.currently_showing = None
 
         skip_subject = False
@@ -494,8 +497,10 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
 
         if user_choice in ('Saturate', ):
             self.show_saturated(no_toggle=True)
-        elif user_choice in ('Unsaturated', ):
-            self.show_unsaturated()
+        elif user_choice in ('Tails_trimmed', 'Tails trimmed'):
+            self.show_tails_trimmed(no_toggle=True)
+        elif user_choice in ('Original', ):
+            self.show_original()
         else:
             print('Chosen option seems to be not implemented!')
 
@@ -518,6 +523,22 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         """Show the original"""
 
         self.collage.attach(self.current_img)
+
+
+    def show_tails_trimmed(self, no_toggle=False):
+        """Callback for ghosting specific review"""
+
+        if not self.currently_showing in ['tails_trimmed', ] or no_toggle:
+            if self.tails_trimmed_img is None:
+                self.tails_trimmed_img = scale_0to1(self.current_img,
+                                                exclude_outliers_below=5,
+                                                exclude_outliers_above=5)
+            self.collage.attach(self.tails_trimmed_img)
+            self.currently_showing = 'tails_trimmed'
+        else:
+            # switching to unsaturated
+            self.collage.attach(self.current_img)
+            self.currently_showing = 'original'
 
 
     def cleanup(self):
