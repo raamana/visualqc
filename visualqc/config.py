@@ -133,6 +133,7 @@ annot_gradient = dict(fontsize='medium', color='xkcd:pale orange')
 review_area = dict(left=0.06, right=0.88,
                    bottom=0.06, top=0.98,
                    wspace=0.0, hspace=0.0)
+bounding_box_review = (0.02, 0.02, 0.88, 0.98)
 no_blank_area = dict(left=0.01, right=0.99,
                      bottom=0.01, top=0.99,
                      wspace=0.05, hspace=0.02)
@@ -170,8 +171,18 @@ abbreviation_t1_mri_default_issue_list = {'p': t1_mri_pass_indicator,
                                           'l': 'reView Later'}
 t1_mri_default_issue_list = list(abbreviation_t1_mri_default_issue_list.values())
 t1_mri_default_rating_list_shortform = abbreviation_t1_mri_default_issue_list.keys()
+position_checkbox_t1_mri = [0.905, 0.31, 0.09, 0.25]
+position_radio_bt_t1_mri = [0.905, 0.57, 0.09, 0.10]
+position_histogram_t1_mri = [0.905, 0.70, 0.09, 0.1]
+position_outlier_alert_t1_mri = (0.950, 0.85)
 
+processing_choices_t1_mri = ('Saturate',
+                             'Background only',
+                             'Tails_trimmed',
+                             'Original')
+saturate_perc_t1 = 33 # supra-threshold values are saturated.
 num_bins_histogram_intensity_distribution = 100
+num_bins_histogram_contrast_enhancement = 256
 
 # outlier detection (OLD)
 t1_mri_features_OLD = ('histogram_whole_scan',)
@@ -181,7 +192,6 @@ checkbox_cross_color = 'xkcd:goldenrod'
 checkbox_font_properties = dict(color=text_option_color,
                                 fontweight='normal')  # , fontname='Arial Narrow')
 
-position_histogram_t1_mri = [0.905, 0.7, 0.09, 0.1]
 title_histogram_t1_mri = 'nonzero intensities'
 num_bins_histogram_display = 30
 xticks_histogram_t1_mri = np.arange(0.1, 1.01, 0.2)

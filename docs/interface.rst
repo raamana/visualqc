@@ -28,6 +28,7 @@ Review interface - T1w MRI
  - Double click to zoom in on any slice.
  - Double click the histogram to zoom the intensity distribution
  - keyboard shortcuts (capitalized letters in label) to rate artefacts
+ - ``alt+s`` to saturate the brainmask to reveal in the hypo-intense texture in the background. press ``alt+s`` again to toggle the saturation, or press ``alt+u`` to show the original unsaturated image.
 
 
 Review interface - Registration

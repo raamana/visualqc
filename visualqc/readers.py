@@ -233,6 +233,7 @@ def diffusion_traverse_bids(bids_layout,
                             sessions=None,
                             extensions=('nii', 'nii.gz',
                                         'bval', 'bvec', 'json'),
+                            param_files_required=False,
                             **kwargs):
     """
     Builds a convenient dictionary of usable DWI subjects/sessions.
@@ -285,16 +286,28 @@ def diffusion_traverse_bids(bids_layout,
 
         param_files_exist = all([file_ext in temp for file_ext in reqd_exts_params])
         image_files_exist = any([file_ext in temp for file_ext in reqd_exts_images])
-        if not (param_files_exist and image_files_exist):
-            print('Not all the required files ({}) exist for {} - skipping it.')
-        else:
+        if param_files_required and not param_files_exist:
+            print('b-value/b-vec are required, but do not exist for {} - skipping it.'.format(sub))
+            continue
+
+        if not image_files_exist:
+            print('Image file is required, but does not exist for {} - skipping it.'.format(sub))
+            continue
+
+        files_by_id[final_sub_id] = dict()
+        # only when all the files required exist, do we include it for review
+        # adding parameter files, only if they exist
+        if param_files_exist:
             files_by_id[final_sub_id] = { new_ext : temp[old_ext]
                                  for old_ext, new_ext in zip(reqd_exts_params, named_exts_params)}
-            if 'nii' in temp:
-                out_image = dict(image=temp['.nii'])
-            else:
-                out_image = dict(image=temp['.gz'])
-            files_by_id[final_sub_id].update(out_image)
+        else:
+            # assuming the first volume is b=0
+            files_by_id[final_sub_id]['bval'] = 'assume_first'
+            # indicating the absence with None
+            files_by_id[final_sub_id]['bvec'] = None
+
+        # adding the image file
+        files_by_id[final_sub_id]['image'] = temp['.nii'] if 'nii' in temp else temp['.gz']
 
     return files_by_id
 

@@ -48,12 +48,26 @@ def read_image(img_spec, error_msg='image',
     return img
 
 
-def scale_0to1(image, multiply_factor=1.0):
+def scale_0to1(image_in,
+               exclude_outliers_below=False,
+               exclude_outliers_above=False
+               , multiply_factor=1.0):
     """Scale the two images to [0, 1] based on min/max."""
 
-    min_value = image.min()
-    max_value = image.max()
-    out_image = (image - min_value) / (max_value - min_value)
+    min_value = image_in.min()
+    max_value = image_in.max()
+
+    # making a copy to ensure no side-effects
+    out_image = image_in.copy()
+    if exclude_outliers_below:
+        perctl = float(exclude_outliers_below)
+        out_image[out_image < np.percentile(out_image.flatten(), perctl)] = min_value
+
+    if exclude_outliers_above:
+        perctl = float(exclude_outliers_above)
+        out_image[out_image > np.percentile(out_image.flatten(), 100.0-perctl)] = max_value
+
+    out_image = (out_image - min_value) / (max_value - min_value)
 
     if not np.isclose(multiply_factor, 1.0):
         # makes it go from [0, 1] to [0, multiply_factor]
@@ -62,6 +76,27 @@ def scale_0to1(image, multiply_factor=1.0):
         out_image = out_image * multiply_factor
 
     return out_image
+
+
+def saturate_brighter_intensities(img,
+                                  factor=0.1,
+                                  percentile=None):
+    """Sets all the intensities above max_intensity*factor to the max intensity.
+
+    Helpful to detect ghosting.
+    """
+
+    saturated = img.copy()
+    max_value = saturated.max()
+
+    if percentile is None and factor is not None:
+        saturated[saturated>(factor*max_value)] = max_value
+    elif percentile:
+        saturated[saturated > np.percentile(saturated, float(percentile))] = max_value
+    else:
+        raise ValueError('Invalid input specification')
+
+    return saturated
 
 
 def get_label_set(seg, label_set, background=0):
@@ -194,17 +229,23 @@ def check_image_is_3d(img):
     return img
 
 
-def check_image_is_4d(img):
+def check_image_is_4d(img, min_num_volumes=1, name='4D image'):
     """Ensures the image loaded is 4d and nothing else."""
 
     if len(img.shape) <= 3:
-        raise ValueError('Input volume must be atleast 4D!')
+        raise ValueError('Input {} must be atleast 4D!'.format(name))
     elif len(img.shape) == 4:
         for dim_size in img.shape:
             if dim_size < 1:
                 raise ValueError('Atleast one slice must exist in each dimension')
+        # atleast one volume existing is already checked in the above loop
+        if min_num_volumes >1 and img.shape[-1]<min_num_volumes:
+            raise ValueError('Given {} has fewer than {} volumes!'.format(name, min_num_volumes))
     elif len(img.shape) > 4:
-        raise ValueError('Invalid shape of image : {}'.format(img.shape))
+        raise ValueError('{} has more than 4 dimensions : {}'.format(name, img.shape))
+
+    if np.count_nonzero(img) == 0:
+        raise ValueError('given image is empty!')
 
     return
 
