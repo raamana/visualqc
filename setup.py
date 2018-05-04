@@ -17,16 +17,14 @@ requirements = [
     'matplotlib',
     'mrivis',
     'nibabel',
-    'scikit-learn'
+    'scikit-learn',
+    'pybids',
+    'nilearn'
 ]
 
-setup_requirements = [
-    'pytest-runner',
-]
+setup_requirements = requirements
 
-test_requirements = [
-    'pytest',
-]
+test_requirements = requirements
 
 import versioneer
 
@@ -49,6 +47,7 @@ setup(
             'visualqc_alignment=visualqc.__alignment__:main',
             # shortcuts
             'vqct1=visualqc.__t1_mri__:main',
+            'vqcfunc=visualqc.__func_mri__:main',
             'vqcdwi=visualqc.__diffusion__:main',
             'vqcfs=visualqc.__freesurfer__:main',
             'vqcalign=visualqc.__alignment__:main'
