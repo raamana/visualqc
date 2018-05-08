@@ -41,3 +41,6 @@ Examples showing the usage of each of these use cases are shown below:
  - :doc:`examples_func_mri`
  - :doc:`examples_alignment`
  - :doc:`examples_t1_mri`
+
+
+Once the interface is up and running, check the :doc:`interface` page to learn various actions and shortcuts implemented.

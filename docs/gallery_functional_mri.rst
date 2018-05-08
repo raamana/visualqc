@@ -1,7 +1,7 @@
 Gallery - Functional MRI scan - artefact detection and rating
 --------------------------------------------------------------
 
-**This is an early preview of an app in active development - your feedback to improve will be greatly appreciated:**: `feedback welcome.<https://github.com/raamana/visualqc/issues/new>`_
+**This is an early preview of an app in active development - your feedback to improve will be appreciated:**: `feedback welcome. <https://github.com/raamana/visualqc/issues/new>`_
 
 The carpet plot [1]_ can easily reveal abnormal frames (time-points) to the human eye, which is what VisualQC starts with for functional MRI scans - see below. VisualQC also overlay few useful statistics for each frame to further help you decide on the quality of that frame. We currently show 3 stats (mean, SD, and DVARS, but plan to few more such as framewise displacement (FD) and other motion parameters. Your suggestions and contributions are very `welcome <https://github.com/raamana/visualqc/issues/new>`_.
 
@@ -18,6 +18,8 @@ Given the focus of VisualQC and purpose of quality control, we need to be able t
 You can do that on any other slice as well:
 
 .. image:: vis/func_mri/func_mri4.png
+
+You can sweep through the time points simply with arrow keys, each time getting a full coverage of all the views in a collage!
 
 A common way to inspect an fMRI run is to visualize the SD map (std. dev of the BOLD signal at each voxel over time), which can be commanded anytime with a simple keyboard shortcut ``alt+s``:
 
