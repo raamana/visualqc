@@ -171,6 +171,11 @@ abbreviation_t1_mri_default_issue_list = {'p': t1_mri_pass_indicator,
                                           'l': 'reView Later'}
 t1_mri_default_issue_list = list(abbreviation_t1_mri_default_issue_list.values())
 t1_mri_default_rating_list_shortform = abbreviation_t1_mri_default_issue_list.keys()
+
+bounding_box_full_t1_mri = (0.01, 0.01, 0.88, 0.98)
+bounding_box_main_t1_mri = (0.01, 0.12, 0.88, 0.87)
+bounding_box_suppl_t1_mri = (0.01, 0.01, 0.88, 0.1)
+
 position_checkbox_t1_mri = [0.905, 0.31, 0.09, 0.25]
 position_radio_bt_t1_mri = [0.905, 0.57, 0.09, 0.10]
 position_histogram_t1_mri = [0.905, 0.70, 0.09, 0.1]
