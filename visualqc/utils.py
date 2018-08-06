@@ -669,6 +669,19 @@ def read_id_list(id_list_file):
     return id_list
 
 
+def write_id_list(id_list, file_path, delimiter='\n', file_mode='w'):
+    """Writes a list of ids into a file path specified
+        in the mode specified (w for overwrite and a for append),
+        joined a given delimiter.
+
+    """
+
+    with open(realpath(file_path), file_mode) as fp:
+        fp.write(delimiter.join(id_list))
+
+    return
+
+
 def expand_regex_paths(in_dir, subject_id, req_file):
     """Simple file finder with regex in name."""
 
