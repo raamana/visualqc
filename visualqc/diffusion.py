@@ -728,8 +728,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Show first, wait, show last, repeat"""
 
         if first_index_in_b0:
-            _first_vol = self.b0_volume[:, :, :, index_one].squeeze()
-            _id_first = 'b=0 index {}'.format(index_one)
+            _first_vol = self.b0_volume  # [:, :, :, index_one].squeeze()
+            _id_first = 'b=0'  # index {}'.format(index_one)
         else:
             _first_vol = self.dw_volumes[:, :, :, index_one].squeeze()
             _id_first = 'DW gradient {}'.format(index_one)
