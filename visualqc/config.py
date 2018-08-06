@@ -295,7 +295,8 @@ colormap_stdev_diffusion = 'seismic'
 
 choices_alignment_comparison_diffusion = ('Animate all',
                                           'Flip first & last',
-                                          'Align to b=0')
+                                          'Align to b=0 (animate)',
+                                          'Align to b=0 (edges)')
 
 position_rating_checkbox_diffusion  = [0.899, 0.30, 0.095, 0.35]
 position_alignment_method_diffusion = [0.899, 0.66, 0.095, 0.10]
