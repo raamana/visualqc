@@ -124,6 +124,10 @@ def overlay_edges(slice_one, slice_two, sharper=True):
     It will be in colormapped (RGB format) already.
     """
 
+    if slice_one.shape != slice_two.shape:
+        raise ValueError("slices' dimensions do not match: "
+                         " {} and {} ".format(slice_one.shape, slice_two.shape))
+
     # simple filtering to remove noise, while supposedly keeping edges
     slice_two = medfilt2d(slice_two, kernel_size=cfg.median_filter_size)
     # extracting edges
