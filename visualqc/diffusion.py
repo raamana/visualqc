@@ -702,9 +702,12 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def _animate_through_gradients(self):
         """Show image 1, wait, show image 2"""
 
+        # fixing the same slices for all gradients
+        slices = pick_slices(self.b0_volume, self.views, self.num_slices_per_view)
+
         for grad_idx in range(self.num_gradients):
             self.show_3dimage(self.dw_volumes[:, :, :, grad_idx].squeeze(),
-                              'zoomed-in gradient {}'.format(grad_idx))
+                              slices=slices, annot='gradient {}'.format(grad_idx))
             plt.pause(0.05)
             time.sleep(self.delay_in_animation)
 
@@ -825,10 +828,10 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                           'zoomed-in gradient {}'.format(self.current_grad_index))
 
 
-    def show_3dimage(self, image, annot):
+    def show_3dimage(self, image, annot, slices=None):
         """generic display method."""
 
-        self.attach_image_to_foreground_axes(image)
+        self.attach_image_to_foreground_axes(image, slices=slices)
         self._identify_foreground(annot)
         self._set_backgrounds_visibility(False)
         self._set_foregrounds_visibility(True)
