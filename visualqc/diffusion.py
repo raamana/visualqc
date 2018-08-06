@@ -867,7 +867,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         if self.stdev_this_unit is not None:
             self.attach_image_to_foreground_axes(self.stdev_this_unit,
-                                                 cfg.colormap_stdev_diffusion)
+                                                 cmap=cfg.colormap_stdev_diffusion)
             self._identify_foreground('Std. dev over gradients')
             self.UI.zoomed_in = True
         else:
@@ -875,13 +875,14 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             print('SD for this unit is not available')
 
 
-    def attach_image_to_foreground_axes(self, image3d, cmap='gray'):
+    def attach_image_to_foreground_axes(self, image3d, slices=None, cmap='gray'):
         """Attaches a given image to the foreground axes and bring it forth"""
 
         image3d = crop_image(image3d, self.padding)
         # TODO is it always acceptable to rescale diffusion data?
         image3d = scale_0to1(image3d)
-        slices = pick_slices(image3d, self.views, self.num_slices_per_view)
+        if slices is None:
+            slices = pick_slices(image3d, self.views, self.num_slices_per_view)
         for ax_index, (dim_index, slice_index) in enumerate(slices):
             slice_data = get_axis(image3d, dim_index, slice_index)
             self.images_fg[ax_index].set(data=slice_data, cmap=cmap)
