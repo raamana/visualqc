@@ -6,6 +6,7 @@ Data reader module.
 import numpy as np
 from os.path import exists as pexists, join as pjoin, realpath, splitext
 from itertools import product
+from collections import Sequence
 from visualqc import config as cfg
 
 
@@ -107,7 +108,7 @@ def read_aparc_stats_in_hemi(stats_file,
                   'ThickAvg', 'ThickStd',
                   'MeanCurv', 'GausCurv',
                   'FoldInd', 'CurvInd']
-    if subset is None or not isinstance(subset, list):
+    if subset is None or not isinstance(subset, Sequence):
         subset_return = subset_all
     else:
         subset_return = [st for st in subset if st in subset_all]
@@ -118,7 +119,7 @@ def read_aparc_stats_in_hemi(stats_file,
     roi_stats = np.genfromtxt(stats_file, dtype=aparc_roi_dtype, filling_values=np.NaN)
     roi_stats_values = np.full((len(roi_stats), len(subset_return)), np.NaN)
     for idx, stat in enumerate(roi_stats):
-        roi_stats_values[idx, :] = [stat[feat] for feat in subset]
+        roi_stats_values[idx, :] = [stat[feat] for feat in subset_return]
 
     stats = roi_stats_values.flatten()
     if include_whole_brain_stats:
