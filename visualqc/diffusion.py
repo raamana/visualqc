@@ -17,10 +17,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import CheckButtons, RadioButtons
 from mrivis.utils import crop_image
-from os.path import basename, join as pjoin, exists as pexists
-import traceback
-
+from os.path import basename, join as pjoin
 from visualqc import config as cfg
+from visualqc.image_utils import dwi_overlay_edges
 from visualqc.readers import diffusion_traverse_bids
 from visualqc.t1_mri import T1MriInterface
 from visualqc.utils import check_bids_dir, check_finite_int, check_image_is_4d, \
