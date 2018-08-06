@@ -349,5 +349,18 @@ alpha_background_slice_alignment = 1.0
 alpha_edge_overlay_alignment = 1.0
 
 ## ----------------------------------------------------------------------------
+#          Groupwise comparison of registration/alignment
+## ----------------------------------------------------------------------------
+
+
+alignment_features_groupwise = ('MSE', )
+alignment_cmap_groupwise = 'seismic'
+choices_alignment_comparison_groupwise = ('Std. dev map',
+                                          'Animate through',
+                                          'Animate with ref',
+                                          'show outliers')
+alignment_groupwise_default_vis_type = 'Std. dev map' # 'Checkerboard' # 'Animate'
+
+## ----------------------------------------------------------------------------
 
 features_outlier_detection = freesurfer_features_outlier_detection + t1_mri_features_OLD + func_mri_features_OLD
