@@ -133,7 +133,9 @@ annot_gradient = dict(fontsize='medium', color='xkcd:pale orange')
 review_area = dict(left=0.06, right=0.88,
                    bottom=0.06, top=0.98,
                    wspace=0.0, hspace=0.0)
-bounding_box_review = (0.02, 0.02, 0.88, 0.98)
+bounding_box_review = (review_area['left'], review_area['bottom'],
+                     review_area['right']-review_area['left'],
+                     review_area['top']-review_area['bottom'])
 no_blank_area = dict(left=0.01, right=0.99,
                      bottom=0.01, top=0.99,
                      wspace=0.05, hspace=0.02)
