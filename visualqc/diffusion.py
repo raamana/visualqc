@@ -748,10 +748,14 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                 time.sleep(self.delay_in_animation)
 
 
-    def alignment_check(self, label):
+    def alignment_check(self, label=None):
         """Chooses between the type of alignment check to show"""
 
-        if label in ['Alignment to b=0', 'Align to b=0']:
+        if label is not None:
+            self.current_alignment_check = label
+
+        if label in ['Align to b=0 (animate)', 'Alignment to b=0', 'Align to b=0',
+                     'Align to b=0 (edges)']:
             self.alignment_to_b0()
         elif label in ['Animate all', 'Flip through all']:
             self.animate_through_gradients()
@@ -795,7 +799,10 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             return  # do nothing
 
         self.current_grad_index = max(self.current_grad_index - 1, 0)
-        self.show_gradient()
+        if self.checking_alignment:
+            self.alignment_to_b0()
+        else:
+            self.show_gradient()
 
 
     def zoom_out_callback(self, event):
