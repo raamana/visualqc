@@ -769,9 +769,31 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Overlays a given gradient on b0 volume to check for alignment isses"""
 
         self.checking_alignment = True
-        self.flip_between_two(self.b0_indices, self.current_grad_index,
-                              first_index_in_b0=True)
 
+        if self.current_alignment_check in ['Align to b=0 (animate)', 'Align to b=0']:
+            self.flip_between_two(self.b0_indices, self.current_grad_index,
+                                  first_index_in_b0=True)
+        elif self.current_alignment_check in ['Align to b=0 (edges)', ]:
+            self.overlay_dwi_edges()
+
+
+    def overlay_dwi_edges(self):
+
+        # not cropping to help checking align in full FOV
+        overlaid = scale_0to1(self.b0_volume)
+        base_img = scale_0to1(self.dw_volumes[..., self.current_grad_index].squeeze())
+        slices = pick_slices(base_img, self.views, self.num_slices_per_view)
+        for ax_index, (dim_index, slice_index) in enumerate(slices):
+            mixed = dwi_overlay_edges(get_axis(base_img, dim_index, slice_index),
+                                      get_axis(overlaid, dim_index, slice_index))
+            self.images_fg[ax_index].set(data=mixed)
+            self.images_fg_label[ax_index].set_text(str(slice_index))
+
+        # the following needs to be done outside show_image3d, as we need custom mixing
+        self._set_backgrounds_visibility(False)
+        self._set_foregrounds_visibility(True)
+        self._identify_foreground('Alignment check to b=0, '
+                                  'grad index {}'.format(self.current_grad_index))
 
     def stop_animation(self):
         # TODO this not working - run_until_complete() is likely the reason
