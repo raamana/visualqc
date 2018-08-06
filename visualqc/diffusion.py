@@ -375,14 +375,11 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         from visualqc.features import diffusion_mri_features
         self.feature_extractor = diffusion_mri_features
-        # enable this if you need bval/bvec
-        self.param_files_required = False
 
         if 'BIDS' in self.in_dir_type.upper():
             from bids.grabbids import BIDSLayout
             self.bids_layout = BIDSLayout(self.in_dir)
-            self.units = diffusion_traverse_bids(self.bids_layout,
-                                                 param_files_required=self.param_files_required)
+            self.units = diffusion_traverse_bids(self.bids_layout)
             # file name of each scan is the unique identifier,
             #   as it essentially contains all the key info.
             self.unit_by_id = {basename(sub_data['image']): sub_data
