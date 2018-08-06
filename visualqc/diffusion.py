@@ -462,15 +462,13 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # 3. axes to show slices in foreground when a time point is selected
         matrix_handles = self.fig.subplots(self.num_rows, self.num_cols,
                                            subplot_kw=dict(rasterized=True),
-                                           gridspec_kw=dict(wspace=0.0, hspace=0.0))
+                                           gridspec_kw=dict(wspace=0.01, hspace=0.01))
         self.fg_axes = matrix_handles.flatten()
 
         # vmin/vmax are controlled, because we rescale all to [0, 1]
-        # TODO aspect auto here covers carpet so the user can focus on the frame,
-        #   not accurately representing geometry underneath
-        self.imshow_params_zoomed = dict(interpolation='none', aspect='auto',
-                                         rasterized=True,
-                                         origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
+        self.imshow_params_zoomed = dict(interpolation='none', aspect='equal',
+                                         rasterized=True, origin='lower', cmap='gray',
+                                         vmin=0.0, vmax=1.0)
 
         # images to be shown in the forground
         self.images_fg = [None] * len(self.fg_axes)
