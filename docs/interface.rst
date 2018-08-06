@@ -6,11 +6,11 @@ Review interface refers to the interactive components (mouse and keyboard shortc
 Common elements
 -----------------------------------
 
- - Double or right click would zoom the data being displayed.
+ - Double or right click would zoom the data being displayed
  - to rate, click the appropriate button, or press the key corresponding to its letter capitalized
     - This is usually the first later e.g. ``G`` for ``Good``, ``s`` for ``Spikes``, ``R`` for ``Review later``
     - but can also be others (capitalized) if there is overlap with other words: ``M` for ``i'M tired``
- - You can not advance to next sbuject/scan/unit without rating the current one. If you are not sure yet about how to rate it, or need additional details or discussion, simply use ``Review later`` option.
+ - You can not advance to next sbuject/scan/unit without rating the current one. If you are not sure yet about how to rate it, or need additional details or discussion, simply use ``Review later`` option
  - to advance to next subject, click ``Next`` button.
  - to quit the review temporarily, click ``Quit`` button or press ``Ctrl+Q`` keys.
 
@@ -28,7 +28,11 @@ Review interface - T1w MRI
  - Double click to zoom in on any slice.
  - Double click the histogram to zoom the intensity distribution
  - keyboard shortcuts (capitalized letters in label) to rate artefacts
- - ``alt+s`` to saturate the brainmask to reveal in the hypo-intense texture in the background. press ``alt+s`` again to toggle the saturation, or press ``alt+u`` to show the original unsaturated image.
+ - Click on any radio button to do the action represented
+ - ``alt+s`` to saturate the brainmask to reveal in the hypo-intense texture in the background
+     - Press ``alt+s`` again to toggle the saturation,
+     - or press ``alt+u`` to show the original unsaturated image
+ - ``alt+b`` to show the intensity distribution in background only (after masking out the brain as a single lump)
 
 
 Review interface - Registration
