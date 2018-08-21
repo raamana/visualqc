@@ -47,7 +47,7 @@ avail_OLD_source_of_features = ('freesurfer', 't1_mri', 'func_mri', 'diffusion_m
 default_freesurfer_dir = None
 cortical_types = ('cortical_volumetric', 'cortical_contour')
 label_types = ('labels_volumetric', 'labels_contour')
-freesurfer_vis_types = cortical_types
+freesurfer_vis_types = cortical_types + label_types
 visualization_combination_choices = cortical_types + label_types
 default_vis_type = 'cortical_contour'
 
