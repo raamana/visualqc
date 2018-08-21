@@ -788,7 +788,8 @@ def check_labels(vis_type, label_set):
     if label_set is not None:
         if vis_type not in cfg.label_types:
             raise ValueError(
-                'Invalid selection of vis_type when labels are specifed. Choose --vis_type labels')
+                'Invalid selection of vis_type when labels are specifed. '
+                'Choose one of {} for --vis_type'.format(cfg.label_types))
 
         label_set = np.array(label_set).astype('int16')
 
