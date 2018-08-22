@@ -100,6 +100,7 @@ def saturate_brighter_intensities(img,
 
 
 def get_label_set(seg, label_set, background=cfg.background_value):
+    """Extracts only the required labels, and remaps the labels from 1 to n"""
 
     if label_set is None:
         out_seg = seg
