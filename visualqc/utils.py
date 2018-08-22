@@ -145,7 +145,12 @@ def get_axis(array, axis, slice_num):
 
     slice_list = [slice(None)] * array.ndim
     slice_list[axis] = slice_num
-    slice_data = array[slice_list].T  # for proper appearance
+    # handling the FutureWarning:
+    # Using a non-tuple sequence for multidimensional indexing is deprecated;
+    #   use `arr[tuple(seq)]` instead of `arr[seq]`.
+    # In the future this will be interpreted as an array index,
+    #   `arr[np.array(seq)]`, which will result either in an error or a different result.
+    slice_data = array[tuple(slice_list)].T  # for proper appearance
 
     return slice_data
 
