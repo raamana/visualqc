@@ -202,7 +202,6 @@ checkbox_font_properties = dict(color=text_option_color,
                                 fontweight='normal')  # , fontname='Arial Narrow')
 
 title_histogram_t1_mri = 'nonzero intensities'
-num_bins_histogram_display = 30
 xticks_histogram_t1_mri = np.arange(0.1, 1.01, 0.2)
 color_histogram_t1_mri = ('#c9ae74')  # sandstone
 
