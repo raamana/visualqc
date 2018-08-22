@@ -419,12 +419,19 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                                 clip=True)
 
         elif self.vis_type in cfg.cortical_types:
-            # TODO this might become a bug, if the number of cortical labels become more than 34
+            # TODO this might become a bug, if num of cortical labels become more than 34
             num_cortical_labels = len(fs_cmap.colors)
+            if num_cortical_labels < 1:
+                raise ValueError('number of cortical labels seem to be zero:\n'
+                                 ' invalid colormap/labels set for Freesurfer!\n'
+                                 'Must be typically 34 or higher - '
+                                 'report this bug to the developers. Thanks.')
             unique_labels = np.arange(num_cortical_labels, dtype='int8')
+            # as the cortical labels
+            normalize_labels = colors.Normalize(vmin=0,
+                                                vmax=num_cortical_labels,
+                                                clip=True)
 
-        normalize_labels = colors.Normalize(vmin=np.min(unique_labels),
-                                            vmax=np.max(unique_labels), clip=True)
         self.seg_mapper = cm.ScalarMappable(norm=normalize_labels, cmap=fs_cmap)
 
         # removing background - 0 stays 0
