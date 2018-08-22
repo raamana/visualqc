@@ -778,7 +778,11 @@ def check_outlier_params(method, fraction, feat_types, disable_outlier_detection
 
 
 def check_labels(vis_type, label_set):
-    """Validates the selections."""
+    """
+    Validates the vis type and ensures appropriate labels are specified.
+    Returns a set of unique labels for volumetric visualizations.
+
+    """
 
     vis_type = vis_type.lower()
     if vis_type not in visualization_combination_choices:
@@ -791,7 +795,9 @@ def check_labels(vis_type, label_set):
                 'Invalid selection of vis_type when labels are specifed. '
                 'Choose one of {} for --vis_type'.format(cfg.label_types))
 
-        label_set = np.array(label_set).astype('int16')
+        label_set = np.unique(np.array(label_set).astype('int16'))
+        if label_set.size < 1:
+            raise ValueError('Atleast one unique label must be supplied!')
 
     return vis_type, label_set
 

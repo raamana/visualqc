@@ -564,8 +564,11 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
             temp_seg_uncropped, roi_set_is_empty = void_subcortical_symmetrize_cortical(temp_fs_seg)
         elif self.vis_type in ('labels_volumetric', 'labels_contour'):
             if self.label_set is not None:
+                # TODO same colors for same labels is not guaranteed
+                #   if one subject fewer labels than others
+                #   due to remapping of labels for each subject
                 temp_seg_uncropped, roi_set_is_empty = get_label_set(temp_fs_seg,
-                                                                     self.unique_labels_display)
+                                                                     self.label_set)
             else:
                 raise ValueError('--label_set must be specified for visualization types: '
                                  ' labels_volumetric and labels_contour')
