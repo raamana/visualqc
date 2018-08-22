@@ -488,6 +488,9 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def add_histogram_panel(self):
         """Extra axis for histogram of cortical thickness!"""
 
+        if not self.vis_type in cfg.cortical_types:
+            return
+
         self.ax_hist = plt.axes(cfg.position_histogram_freesurfer)
         self.ax_hist.set(xticks=cfg.xticks_histogram_freesurfer,
                          xticklabels=cfg.xticks_histogram_freesurfer,
@@ -644,7 +647,9 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
             del slice_seg, slice_mri, mri_rgba
 
-        self.update_histogram()
+        # histogram shown only for cortical parcellation QC
+        if self.vis_type in cfg.cortical_types:
+            self.update_histogram()
 
 
     def plot_contours_in_slice(self, slice_seg, target_axis):
