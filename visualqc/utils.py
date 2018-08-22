@@ -99,8 +99,6 @@ def saturate_brighter_intensities(img,
     return saturated
 
 
-def get_label_set(seg, label_set, background=0):
-    """Extracts only the required labels"""
 def get_label_set(seg, label_set, background=cfg.background_value):
 
     if label_set is None:
@@ -111,17 +109,11 @@ def get_label_set(seg, label_set, background=cfg.background_value):
         for label in label_set:
             mask = np.logical_or(mask, seg == label)
 
-        out_seg = np.full_like(seg, background)
-        out_seg[mask] = seg[mask]
+        masked_seg = np.full_like(seg, background)
+        masked_seg[mask] = seg[mask]
 
         # remap labels from arbitrary range to 1:N
-        # helps to facilitate distinguishable colors
-        unique_labels = np.unique(out_seg.flatten())
-        # removing background - 0 stays 0
-        unique_labels = np.setdiff1d(unique_labels, background)
-        for index, label in enumerate(unique_labels):
-            # index=0 would make it background, so using index+1
-            out_seg[out_seg == label] = index + 1
+        out_seg = remap_labels_1toN(masked_seg, background)
 
     roi_set_empty = False
     if np.count_nonzero(out_seg) < 1:
@@ -131,6 +123,22 @@ def get_label_set(seg, label_set, background=cfg.background_value):
 
 
 def remap_labels_1toN(in_seg, background=cfg.background_value):
+    """Remap [arbitrary] labels in a volumetric seg to range from 1 to N."""
+
+    out_seg = np.full_like(in_seg, background)
+
+    # remap labels from arbitrary range to 1:N
+    # helps to facilitate distinguishable colors
+    unique_labels = np.unique(in_seg.flatten())
+    # removing background - 0 stays 0
+    unique_labels = np.setdiff1d(unique_labels, background)
+    for index, label in enumerate(unique_labels):
+        # index=0 would make it background, so using index+1
+        out_seg[in_seg == label] = index + 1
+
+    return out_seg
+
+
 def get_axis(array, axis, slice_num):
     """Returns a fixed axis"""
 
