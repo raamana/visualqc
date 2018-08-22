@@ -837,7 +837,9 @@ def get_parser():
     help_text_label = textwrap.dedent("""
     Specifies the set of labels to include for overlay.
 
-    Default: None (show all the labels in the selected segmentation)
+    Atleast one label must be specified when vis_type is labels_volumetric or labels_contour
+
+    Default: None (show nothing)
     \n""")
 
     help_text_contour_color = textwrap.dedent("""
