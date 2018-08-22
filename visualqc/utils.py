@@ -101,6 +101,7 @@ def saturate_brighter_intensities(img,
 
 def get_label_set(seg, label_set, background=0):
     """Extracts only the required labels"""
+def get_label_set(seg, label_set, background=cfg.background_value):
 
     if label_set is None:
         out_seg = seg
@@ -129,6 +130,7 @@ def get_label_set(seg, label_set, background=0):
     return out_seg, roi_set_empty
 
 
+def remap_labels_1toN(in_seg, background=cfg.background_value):
 def get_axis(array, axis, slice_num):
     """Returns a fixed axis"""
 

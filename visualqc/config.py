@@ -73,6 +73,8 @@ max_cmap_range_t1_mri = 1
 mri_zorder_freesurfer = 0
 seg_zorder_freesurfer = 1
 
+background_value = 0 # for segmentations or MRI
+
 default_views = (0, 1, 2)
 default_num_slices = 12
 default_num_rows = 2
