@@ -402,7 +402,22 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         fs_cmap = get_freesurfer_cmap(self.vis_type)
         # deciding colors for the whole image
         if self.label_set is not None and self.vis_type in cfg.label_types:
-            unique_labels = np.unique(self.label_set)
+
+            # re-numbering as remapping happens for each vol. seg via utils.get_label_set()
+            unique_labels = np.arange(self.label_set.size)+1
+
+            # NOTE vmin and vmax can't be the same as Normalize would simply return 0,
+            #   even for nonzero values
+            # NOTE PREV BUG although norm method here is set up to rescale values from
+            #   (np.min(unique_labels), np.max(unique_labels)) to (0, 1)
+            #   it was being applied to values outside this range (typically in [0, 5] range)
+            #   as unique_labels tend be > 10.. so setting it up correctly now
+            #   from 0 to L, L being number of unique labels
+            #   this interacts with utils.get_label_set(), so they need to be handled together
+            normalize_labels = colors.Normalize(vmin=0,
+                                                vmax=unique_labels.size,
+                                                clip=True)
+
         elif self.vis_type in cfg.cortical_types:
             # TODO this might become a bug, if the number of cortical labels become more than 34
             num_cortical_labels = len(fs_cmap.colors)
