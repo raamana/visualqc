@@ -4,7 +4,7 @@ Data reader module.
 
 """
 import numpy as np
-from os.path import exists as pexists, join as pjoin, realpath, splitext
+from os.path import exists as pexists, join as pjoin, realpath, splitext, basename, getsize
 from itertools import product
 from collections import Sequence
 from visualqc import config as cfg
@@ -365,9 +365,20 @@ def traverse_bids(bids_layout, modalities='func', types='bold',
     if len(final_fields) < 1:
         return None, None
 
+    def regular_nonempty_file(filename):
+        """Checks the file is not hidden and exists! """
+
+        if basename(filename).startswith('.'):
+            return False
+
+        if getsize(filename) <= 0:
+            return False
+
+        return True
+
     # print('Dataset will be traversed for different values of:\n {}'.format(final_fields))
     unit_paths = [[[file.__getattribute__(unit) for unit in final_fields], file.filename]
-                  for file in results]
+                  for file in results if regular_nonempty_file(file.filename)]
 
     return final_fields, unit_paths
 
