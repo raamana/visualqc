@@ -24,6 +24,7 @@ from visualqc.utils import check_finite_int, check_input_dir_T1w, check_id_list_
     scale_0to1, saturate_brighter_intensities
 from visualqc.workflows import BaseWorkflowVisualQC
 from visualqc.image_utils import mask_image
+from visualqc.readers import traverse_bids
 
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
@@ -354,6 +355,19 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
             'freesurfer', ]):
             self.path_getter_inputs = lambda sub_id: realpath(
                 pjoin(self.in_dir, sub_id, 'mri', self.mri_name))
+        elif 'BIDS' in self.in_dir_type.upper():
+            from bids.grabbids import BIDSLayout
+            self.bids_layout = BIDSLayout(self.in_dir)
+            self.field_names, self.units = traverse_bids(self.bids_layout,
+                                                         **cfg.t1w_mri_BIDS_filters)
+
+            # file name of each BOLD scan is the unique identifier, as it essentially contains all the key info.
+            self.unit_by_id = {splitext(basename(fpath))[0]: realpath(fpath) for _, fpath
+                               in self.units}
+            self.id_list = list(self.unit_by_id.keys())
+
+            self.path_getter_inputs = self.unit_by_id.get # callable
+
         else:
             self.path_getter_inputs = lambda sub_id: realpath(
                 pjoin(self.in_dir, sub_id, self.mri_name))
