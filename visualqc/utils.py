@@ -141,7 +141,7 @@ def remap_labels_1toN(in_seg, background=cfg.background_value):
 
 
 def get_axis(array, axis, slice_num):
-    """Returns a fixed axis"""
+    """Returns a fixed slice of an array along a given axis"""
 
     slice_list = [slice(None)] * array.ndim
     slice_list[axis] = slice_num
@@ -470,35 +470,31 @@ def check_input_dir(fs_dir, user_dir, vis_type,
     return in_dir, type_of_features
 
 
-def check_input_dir_T1(fs_dir, user_dir):
+def check_input_dir_T1w(fs_dir, user_dir, bids_dir):
     """Ensures proper input is specified."""
 
-    in_dir = fs_dir
-    if fs_dir is None and user_dir is None:
-        raise ValueError('At least one of --fs_dir or --user_dir must be specified.')
+    in_dir_paths = np.array([fs_dir, user_dir, bids_dir])
+    in_dir_type_list = np.array(['freesurfer', 'generic', 'bids'])
+    input_specd_or_not = np.array([fs_dir is not None,
+                                   user_dir is not None,
+                                   bids_dir is not None],
+                                  dtype='bool')
+    num_types_specified = np.count_nonzero(input_specd_or_not)
 
-    if fs_dir is not None:
-        if user_dir is not None:
-            raise ValueError('Only one of --fs_dir or --user_dir can be specified.')
+    if num_types_specified < 1:
+        raise ValueError('At least one of --fs_dir or --user_dir or --bids_dir must be specified.')
 
-    if user_dir is None:
-        if not pexists(fs_dir):
-            raise IOError('Freesurfer directory specified does not exist!')
-        else:
-            in_dir = fs_dir
-            type_of_features = 'freesurfer'
-    elif fs_dir is None:
-        if not pexists(user_dir):
-            raise IOError('User-specified input directory does not exist!')
-        else:
-            in_dir = user_dir
-            type_of_features = 'generic'
+    if num_types_specified > 1:
+        raise ValueError('More than one type of input structure is specified.\n'
+                         'Specify only one of --fs_dir / --user_dir / --bids_dir')
 
-    if not pexists(in_dir):
-        raise IOError(
-            'Invalid specification - check proper combination of --fs_dir and --user_dir')
+    in_dir_path = in_dir_paths[input_specd_or_not][0]
+    in_dir_type = in_dir_type_list[input_specd_or_not][0]
 
-    return in_dir, type_of_features
+    if not pexists(in_dir_path):
+        raise IOError('Specified input {} folder does not exist'.format(in_dir_type))
+
+    return in_dir_path, in_dir_type
 
 
 def check_input_dir_alignment(in_dir):
@@ -619,6 +615,74 @@ def check_id_list(id_list_in, in_dir, vis_type,
     print('{} subjects are usable for review.'.format(len(id_list_out)))
 
     return np.array(id_list_out), images_for_id
+
+
+def check_id_list_T1w(in_dir, in_dir_type, id_list_in, mri_name=None, vis_type='t1_mri'):
+    """
+    Checks to ensure each subject listed has the required files
+
+    and returns only those that can be processed.
+
+    """
+
+    if 'BIDS' in in_dir_type.upper():
+        if id_list_in is not None:
+            raise ValueError('At this time, you can not specify the list of IDs to review in the BIDS folder. '
+                             'You can only specify the path to BIDS input folder. '
+                             'All available subject IDs will be presented. '
+                             'This is merely due to difficulties is specifying the IDs correctly, '
+                             'accounting for various factors.')
+        if mri_name is not None:
+            raise ValueError('At this time, you can not specify name of MRI file to review in the BIDS folder. '
+                             'You can only specify the path to BIDS input folder. '
+                             'All available anatomical images will be presented. '
+                             'This is merely due to difficulties is specifying the file names correctly, '
+                             'accounting for various factors.')
+
+        id_list_out = None
+
+    else:
+        # only for non-BIDS folder at the moment
+        if id_list_in is not None:
+            if not pexists(id_list_in):
+                raise IOError('Given ID list does not exist!')
+
+            try:
+                id_list = read_id_list(id_list_in)
+            except:
+                raise IOError('unable to read the ID list.')
+        else:
+            # get all IDs in the given folder
+            id_list = [folder for folder in os.listdir(in_dir) if
+                       os.path.isdir(pjoin(in_dir, folder))]
+
+        id_list_out = list()
+        id_list_err = list()
+        invalid_list = list()
+
+        for subject_id in id_list:
+            fpath = get_path_for_subject(in_dir, subject_id, mri_name, vis_type, in_dir_type)
+            if not pexists(fpath) or os.path.getsize(fpath) <= 0:
+                id_list_err.append(subject_id)
+                invalid_list.append(fpath)
+            else:
+                id_list_out.append(subject_id)
+                # images_for_id[subject_id] = fpath
+
+        if len(id_list_err) > 0:
+            warnings.warn(
+                'Subjects below do NOT have all the required images or are empty - skipping them!')
+            print('\n'.join(id_list_err))
+            print('\n\nThe following files do not exist or empty: \n {} \n\n'.format(
+                '\n'.join(invalid_list)))
+
+        if len(id_list_out) < 1:
+            raise ValueError('All the subject IDs do not have the required files '
+                             '- unable to proceed.')
+
+        print('{} subjects are usable for review.'.format(len(id_list_out)))
+
+    return np.array(id_list_out) # , images_for_id
 
 
 def check_id_list_with_regex(id_list_in, in_dir, name_pattern):

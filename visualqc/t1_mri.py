@@ -15,12 +15,12 @@ from matplotlib import pyplot as plt
 from matplotlib.widgets import CheckButtons, RadioButtons
 from mrivis.utils import crop_image
 from mrivis.base import Collage
-from os.path import join as pjoin, realpath
+from os.path import basename, join as pjoin, realpath, splitext
 
 from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
-from visualqc.utils import check_finite_int, check_id_list, check_input_dir_T1, \
-    check_out_dir, check_outlier_params, check_views, get_axis, pick_slices, read_image, \
+from visualqc.utils import check_finite_int, check_input_dir_T1w, check_id_list_T1w, \
+    check_out_dir, check_outlier_params, check_views, read_image, \
     scale_0to1, saturate_brighter_intensities
 from visualqc.workflows import BaseWorkflowVisualQC
 from visualqc.image_utils import mask_image
@@ -749,12 +749,10 @@ def make_workflow_from_user_options():
 
     vis_type = 'collage_t1_mri'
     type_of_features = 't1_mri'
-    in_dir, in_dir_type = check_input_dir_T1(user_args.fs_dir, user_args.user_dir)
+    in_dir, in_dir_type = check_input_dir_T1w(user_args.fs_dir, user_args.user_dir, user_args.bids_dir)
 
     mri_name = user_args.mri_name
-    id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type,
-                                           mri_name, seg_name=None,
-                                           in_dir_type=in_dir_type)
+    id_list = check_id_list_T1w(in_dir, in_dir_type, user_args.id_list, mri_name, vis_type)
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
     views = check_views(user_args.views)
