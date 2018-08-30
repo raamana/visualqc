@@ -561,6 +561,14 @@ def get_parser():
     E.g. ``--fs_dir /project/freesurfer_v5.3``
     \n""")
 
+    help_text_bids_dir = textwrap.dedent("""
+    Absolute path to ``BIDS`` folder containing the anatomical data.
+    For BIDS folder, ``--id_list`` or ``--mri_name`` can NOT be specified. 
+    The folder will be traversed to show all scans under the `anat` modality.
+
+    E.g. ``--bids_dir /project/BIDS``
+    \n""")
+
     help_text_user_dir = textwrap.dedent("""
     Absolute path to an input folder containing the MRI scan. 
     Each subject will be queried after its ID in the metadata file, 
@@ -588,10 +596,9 @@ def get_parser():
     help_text_mri_name = textwrap.dedent("""
     Specifies the name of MRI image to serve as the reference slice.
     Typical options include orig.mgz, brainmask.mgz, T1.mgz etc.
-    Make sure to choose the right vis_type.
 
-    Default: {} (within the mri folder of Freesurfer format).
-    \n""".format(cfg.default_mri_name))
+    Default: None.
+    \n""".format(cfg.default_mri_name_T1w_generic))
 
     help_text_out_dir = textwrap.dedent("""
     Output folder to store the visualizations & ratings.
@@ -652,7 +659,7 @@ def get_parser():
     This flag disables outlier detection and alerts altogether.
     \n""")
 
-    in_out = parser.add_argument_group('Input and output', ' ')
+    in_out = parser.add_argument_group('Inputs', ' various ways to provide input')
 
     in_out.add_argument("-i", "--id_list", action="store", dest="id_list",
                         default=None, required=False, help=help_text_id_list)
@@ -662,16 +669,24 @@ def get_parser():
                         required=False, help=help_text_user_dir)
 
     in_out.add_argument("-m", "--mri_name", action="store", dest="mri_name",
-                        default=cfg.default_mri_name, required=False,
+                        default=cfg.default_mri_name_T1w_generic, required=False,
                         help=help_text_mri_name)
-
-    in_out.add_argument("-o", "--out_dir", action="store", dest="out_dir",
-                        required=False, help=help_text_out_dir,
-                        default=None)
 
     in_out.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
                         default=cfg.default_freesurfer_dir,
                         required=False, help=help_text_fs_dir)
+
+    in_out.add_argument("-b", "--bids_dir", action="store", dest="bids_dir",
+                        default=None,
+                        required=False, help=help_text_bids_dir)
+
+    out_spec = parser.add_argument_group('Outputs',
+                                         'options related to outputs')
+
+    out_spec.add_argument("-o", "--out_dir", action="store", dest="out_dir",
+                        required=False, help=help_text_out_dir,
+                        default=None)
+
     outliers = parser.add_argument_group('Outlier detection',
                                          'options related to automatically detecting possible outliers')
     outliers.add_argument("-olm", "--outlier_method", action="store",

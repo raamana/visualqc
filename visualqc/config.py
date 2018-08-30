@@ -206,6 +206,9 @@ num_bins_histogram_display = 30
 xticks_histogram_t1_mri = np.arange(0.1, 1.01, 0.2)
 color_histogram_t1_mri = ('#c9ae74')  # sandstone
 
+default_mri_name_T1w_generic = None
+t1w_mri_BIDS_filters = dict(modalities='anat', types=None)
+
 ## ----------------------------------------------------------------------------
 #           Functional mri specific
 ## ----------------------------------------------------------------------------
