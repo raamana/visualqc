@@ -815,6 +815,10 @@ def check_labels(vis_type, label_set):
         if label_set.size < 1:
             raise ValueError('Atleast one unique label must be supplied!')
 
+    elif vis_type in cfg.label_types:
+        raise ValueError('When vis_type is one of {}, at least one label must be specified!'
+                         ''.format(cfg.label_types))
+
     return vis_type, label_set
 
 
