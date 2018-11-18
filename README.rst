@@ -10,6 +10,8 @@ VisualQC : Assistive tool to ease the quality control workflow of neuroimaging d
 
 .. image:: https://api.codacy.com/project/badge/Grade/2da8c2b4dbcd433eb4943eb52f0b00d6
         :target: https://www.codacy.com/app/raamana/visualqc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=raamana/visualqc&amp;utm_campaign=Badge_Grade
+.. image:: https://img.shields.io/badge/say-thanks-ff69b4.svg
+        :target: https://saythanks.io/to/raamana
 
 
 .. image:: docs/visualqc_poster_comprehensive.png
@@ -43,3 +45,10 @@ Citation
 --------------
 
 `Citation details are here <docs/citation.rst>`_
+
+---
+
+.. image:: https://img.shields.io/badge/say-thanks-ff69b4.svg
+        :target: https://saythanks.io/to/raamana
+        
+        
