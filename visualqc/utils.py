@@ -5,15 +5,15 @@ import sys
 import warnings
 from genericpath import exists as pexists
 from os import makedirs
+from os.path import basename, join as pjoin, realpath, splitext
 from shutil import copyfile, which
 
 import nibabel as nib
 import numpy as np
-from os.path import basename, join as pjoin, realpath, splitext
 
 import visualqc.config as cfg
-from visualqc.config import default_out_dir_name, freesurfer_vis_cmd, \
-    freesurfer_vis_types, visualization_combination_choices
+from visualqc.config import (default_out_dir_name, freesurfer_vis_cmd,
+                             freesurfer_vis_types, visualization_combination_choices)
 
 
 def read_image(img_spec, error_msg='image',
@@ -575,13 +575,8 @@ def check_out_dir(out_dir, fs_dir):
     return out_dir
 
 
-def check_id_list(id_list_in, in_dir, vis_type,
-                  mri_name, seg_name=None,
-                  in_dir_type=None):
-    """Checks to ensure each subject listed has the required files
-        and returns only those that can be processed.
-
-    """
+def get_id_list_in_dir(id_list_in, in_dir):
+    """Validates the list of IDs, or returns the existing IDs in a given in_dir"""
 
     if id_list_in is not None:
         if not pexists(id_list_in):
@@ -595,6 +590,19 @@ def check_id_list(id_list_in, in_dir, vis_type,
         # get all IDs in the given folder
         id_list = [folder for folder in os.listdir(in_dir) if
                    os.path.isdir(pjoin(in_dir, folder))]
+
+    return id_list
+
+
+def check_id_list(id_list_in, in_dir, vis_type,
+                  mri_name, seg_name=None,
+                  in_dir_type=None):
+    """Checks to ensure each subject listed has the required files
+        and returns only those that can be processed.
+
+    """
+
+    id_list = get_id_list_in_dir(id_list_in, in_dir)
 
     if seg_name is not None:
         required_files = {'mri': mri_name, 'seg': seg_name}
