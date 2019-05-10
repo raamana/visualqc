@@ -281,7 +281,8 @@ def diffusion_traverse_bids(bids_layout,
             results = bids_layout.get(subject=sub,  datatype='dwi')
             final_sub_id = sub
 
-        temp = {splitext(file.filename)[-1] : realpath(file.filename) for file in results}
+        temp = {splitext(file.filename)[-1] : realpath(file.path)
+                for file in results}
 
         param_files_exist = all([file_ext in temp for file_ext in reqd_exts_params])
         image_files_exist = any([file_ext in temp for file_ext in reqd_exts_images])
