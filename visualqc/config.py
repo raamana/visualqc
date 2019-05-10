@@ -350,6 +350,28 @@ alpha_background_slice_alignment = 1.0
 alpha_edge_overlay_alignment = 1.0
 
 ## ----------------------------------------------------------------------------
+#          Quantitative MR
+## ----------------------------------------------------------------------------
+
+qmr_alignment_rating = OrderedDict(a='Aligned', o='Out of alignment')
+default_qmr_alignment_ratings = tuple(qmr_alignment_rating.values())
+
+qmr_contrast_rating = OrderedDict(g='Good contrast', b='Bad contrast')
+default_qmr_contrast_ratings = tuple(qmr_contrast_rating.values())
+
+position_alignment_radio_button = [0.895, 0.55, 0.1, 0.19]
+position_contrast_radio_button = [0.895, 0.32, 0.1, 0.25]
+
+position_contrast_button = [0.905, 0.80, 0.11, 0.09]
+
+color_contrast_button = 'xkcd:maroon'
+color_contrast_axis = 'xkcd:purple'
+color_alignment_axis = 'xkcd:orange'
+
+position_annotate_fg_quantMR = [0.45, 0.5]
+annotate_fg_quantMR_properties = dict(fontsize=30, color='xkcd:pale orange')
+
+## ----------------------------------------------------------------------------
 #          Groupwise comparison of registration/alignment
 ## ----------------------------------------------------------------------------
 
