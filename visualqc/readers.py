@@ -229,7 +229,6 @@ def gather_data(path_list, id_list):
 
 def diffusion_traverse_bids(bids_layout,
                             modalities='dwi',
-                            types='dwi',
                             subjects=None,
                             sessions=None,
                             extensions=('nii', 'nii.gz',
@@ -241,8 +240,7 @@ def diffusion_traverse_bids(bids_layout,
 
     """
 
-    meta_types = {'modality'  : modalities,
-                  'type'      : types,
+    meta_types = {'datatype'  : modalities,
                   'extensions': extensions,
                   'subjects'  : subjects,
                   'sessions'  : sessions}
@@ -277,10 +275,10 @@ def diffusion_traverse_bids(bids_layout,
     for sub in combinations:
         if sessions_exist:
             # sub is a tuple of subject,session
-            results = bids_layout.get(subject=sub[0], session=sub[1], type='dwi')
+            results = bids_layout.get(subject=sub[0], session=sub[1], datatype='dwi')
             final_sub_id = '_'.join(sub)
         else:
-            results = bids_layout.get(subject=sub,  type='dwi')
+            results = bids_layout.get(subject=sub,  datatype='dwi')
             final_sub_id = sub
 
         temp = {splitext(file.filename)[-1] : realpath(file.filename) for file in results}
