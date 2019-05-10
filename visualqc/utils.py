@@ -564,7 +564,10 @@ def check_out_dir(out_dir, fs_dir):
 def check_id_list(id_list_in, in_dir, vis_type,
                   mri_name, seg_name=None,
                   in_dir_type=None):
-    """Checks to ensure each subject listed has the required files and returns only those that can be processed."""
+    """Checks to ensure each subject listed has the required files
+        and returns only those that can be processed.
+
+    """
 
     if id_list_in is not None:
         if not pexists(id_list_in):
@@ -593,9 +596,10 @@ def check_id_list(id_list_in, in_dir, vis_type,
     images_for_id = dict()
 
     for subject_id in id_list:
-        path_list = { img: get_path_for_subject(in_dir, subject_id, name, vis_type, in_dir_type)
-                        for img, name in required_files.items()
-                    }
+        path_list = {img: get_path_for_subject(in_dir, subject_id, name,
+                                               vis_type, in_dir_type)
+                     for img, name in required_files.items()
+                     }
         invalid = [pfile for pfile in path_list.values() if
                    not pexists(pfile) or os.path.getsize(pfile) <= 0]
         if len(invalid) > 0:
@@ -607,7 +611,8 @@ def check_id_list(id_list_in, in_dir, vis_type,
 
     if len(id_list_err) > 0:
         warnings.warn(
-            'The following subjects do NOT have all the required files or some are empty - skipping them!')
+            'The following subjects do NOT have all the required files '
+            'or some are empty - skipping them!')
         print('\n'.join(id_list_err))
         print('\n\nThe following files do not exist or empty: \n {} \n\n'.format(
             '\n'.join(invalid_list)))
