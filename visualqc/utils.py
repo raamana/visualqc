@@ -696,6 +696,55 @@ def check_id_list_with_regex(id_list_in, in_dir, name_pattern):
     return np.array(id_list_out), images_for_id
 
 
+def check_id_list_quantitative(id_list_in, in_dir, image_names, in_dir_type=None):
+    """Checks to ensure each subject listed has the required files
+        and returns only those that can be processed.
+
+    """
+
+    id_list = get_id_list_in_dir(id_list_in, in_dir)
+
+    if image_names is None or len(image_names) < 1:
+        raise ValueError('Atleast one image name must be specified!')
+
+    id_list_out = list()
+    id_list_err = list()
+    invalid_list = list()
+
+    # this dict contains existing files for each ID
+    # useful to open external programs like tkmedit
+    images_for_id = dict()
+
+    for subject_id in id_list:
+        path_list = [ get_path_for_subject(in_dir, subject_id, name, in_dir_type)
+                     for name in image_names
+                    ]
+        invalid = [pfile for pfile in path_list
+                   if (not pexists(pfile)) or (os.path.getsize(pfile) <= 0)]
+        if len(invalid) > 0:
+            id_list_err.append(subject_id)
+            invalid_list.extend(invalid)
+        else:
+            id_list_out.append(subject_id)
+            images_for_id[subject_id] = path_list
+
+    if len(id_list_err) > 0:
+        warnings.warn(
+            'The following subjects do NOT have all the required files '
+            'or some are empty - skipping them!')
+        print('\n'.join(id_list_err))
+        print('\n\nThe following files do not exist or empty: \n {} \n\n'.format(
+            '\n'.join(invalid_list)))
+
+    if len(id_list_out) < 1:
+        raise ValueError(
+            'All the subject IDs do not have the required files - unable to proceed.')
+
+    print('{} subjects are usable for review.'.format(len(id_list_out)))
+
+    return np.array(id_list_out), images_for_id
+
+
 def read_id_list(id_list_file):
     """Read all lines and strip them of newlines/spaces."""
 
