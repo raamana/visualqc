@@ -512,6 +512,20 @@ def check_input_dir_alignment(in_dir):
     return in_dir, type_of_features
 
 
+def check_input_dir_quantitative_MR(in_dir):
+    """Ensures proper input directory is specified for Quantitative MR."""
+
+    if in_dir is None:
+        raise ValueError('Invalid input - specify an input dir that is not None!')
+
+    if not pexists(in_dir):
+        raise IOError('input dir does not exist!')
+
+    type_of_features = 'generic'
+
+    return in_dir, type_of_features
+
+
 def check_bids_dir(dir_path):
     """Checks if its a BIDS folder or not"""
 
