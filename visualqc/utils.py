@@ -869,6 +869,7 @@ def check_labels(vis_type, label_set):
         raise ValueError('Selected visualization type not recognized! '
                          'Choose one of:\n{}'.format(visualization_combination_choices))
 
+    label_map = dict()
     if label_set is not None:
         if vis_type not in cfg.label_types:
             raise ValueError(
@@ -879,11 +880,15 @@ def check_labels(vis_type, label_set):
         if label_set.size < 1:
             raise ValueError('Atleast one unique label must be supplied!')
 
+        # mapping below helps guarantee the same index is used for same label across all subjects
+        #   index+1 is important to ensure nothing becomes 0/background
+        label_map = {label: index+1 for index, label in enumerate(label_set)}
+
     elif vis_type in cfg.label_types:
         raise ValueError('When vis_type is one of {}, at least one label must be specified!'
                          ''.format(cfg.label_types))
 
-    return vis_type, label_set
+    return vis_type, label_set, label_map
 
 
 def check_views(views):

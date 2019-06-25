@@ -435,7 +435,7 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.seg_mapper = cm.ScalarMappable(norm=normalize_labels, cmap=fs_cmap)
 
         # removing background - 0 stays 0
-        self.unique_labels_display = np.setdiff1d(unique_labels, 0)
+        self.unique_labels_display = np.setdiff1d(unique_labels, cfg.background_value)
         if len(self.unique_labels_display) == 1:
             self.color_for_label = [self.contour_color]
         else:
@@ -1009,7 +1009,7 @@ def make_workflow_from_user_options():
     except:
         parser.exit(1)
 
-    vis_type, label_set = check_labels(user_args.vis_type, user_args.label_set)
+    vis_type, label_set, label_map = check_labels(user_args.vis_type, user_args.label_set)
     in_dir, source_of_features = check_input_dir(user_args.fs_dir, None, vis_type,
                                                  freesurfer_install_required=False)
 
