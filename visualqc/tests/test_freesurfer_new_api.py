@@ -10,7 +10,7 @@ from pytest import raises, warns
 test_dir = dirname(realpath(__file__))
 
 fs_dir = realpath(pjoin(test_dir, '..', '..', 'example_datasets'))
-id_list = pjoin(fs_dir, 'sub_list')
+id_list = pjoin(fs_dir, 'id_list')
 
 # fs_dir = '/data1/strother_lab/praamana/ABIDE/processed/freesurfer_v5.1' # base_dir
 # id_list = '/data1/strother_lab/praamana/ABIDE/processed/target_lists/list.visualqc_n10.csv'
