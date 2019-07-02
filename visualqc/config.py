@@ -84,18 +84,21 @@ default_review_figsize = [15, 11]
 
 default_navigation_options = ("Next", "Quit")
 # shortcuts L, F, S have actions on matplotlib interface, so choosing other words
-freesurfer_default_rating = 'Review later'
-map_short_rating = OrderedDict(g='Good',
-                               d='Doubtful',
-                               b='Bad',
-                               e='Error',
-                               m="i'M tired",
+freesurfer_default_rating = 'rEVIEW LATER'
+map_short_rating = OrderedDict(g='gOOD',
+                               n='MInOR error',
+                               m='mAJOR error',
+                               a='FaIL',
+                               t="I'M tIRED",
                                r=freesurfer_default_rating)
 default_rating_list = tuple(map_short_rating.values())
 index_freesurfer_default_rating = default_rating_list.index(freesurfer_default_rating)
 default_rating_list_shortform = map_short_rating.keys()
-ratings_not_to_be_recorded = [None, '', 'something else',
-                              "i'm tired", 'review later']
+ratings_not_to_be_recorded = [None,
+                              '',
+                              'something else',
+                              "i'm tired",
+                              'review later']
 
 # for serialization
 delimiter = ','
