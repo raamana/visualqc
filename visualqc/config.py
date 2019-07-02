@@ -89,7 +89,7 @@ map_short_rating = OrderedDict(g='gOOD',
                                n='MInOR error',
                                m='mAJOR error',
                                a='FaIL',
-                               t="I'M tIRED",
+                               d="I'M TIREd",
                                r=freesurfer_default_rating)
 default_rating_list = tuple(map_short_rating.values())
 index_freesurfer_default_rating = default_rating_list.index(freesurfer_default_rating)
