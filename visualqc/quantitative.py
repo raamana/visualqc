@@ -111,6 +111,7 @@ class QuantitativeMrInterface(BaseReviewInterface):
                               facecolor=cfg.color_contrast_button)
         self.bt_contrast = Button(ax_bt_contrast, 'Check Contrast',
                                   hovercolor='blue')
+        ax_bt_contrast.set_facecolor(cfg.color_contrast_button)
         if self.user_contrast_callback is not None:
             self.bt_contrast.on_clicked(self.user_contrast_callback)
         else:
@@ -363,6 +364,16 @@ class QuantitativeMrRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # animation setup
         self.anim_loop = asyncio.get_event_loop()
+
+        # # collages for all the images
+        # self.num_images = len(self.image_names)
+        # for ix in range(self.num_images)
+        # self.collage = Collage(view_set=views,
+        #                        num_slices=num_slices_per_view, num_rows=num_rows_per_view,
+        #                        display_params=self.display_params,
+        #                        bounding_rect=cfg.bounding_box_review,
+        #                        figsize=self.figsize)
+        # self.fig = self.collage.fig
 
 
     def add_UI(self):
