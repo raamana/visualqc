@@ -108,7 +108,7 @@ class QuantitativeMrInterface(BaseReviewInterface):
         """Adds a button that invokes contrast checks"""
 
         ax_bt_contrast = self.fig.add_axes(cfg.position_contrast_button,
-                              facecolor=cfg.color_contrast_button, aspect='equal')
+                              facecolor=cfg.color_contrast_button)
         self.bt_contrast = Button(ax_bt_contrast, 'Check Contrast',
                                   hovercolor='blue')
         if self.user_contrast_callback is not None:
