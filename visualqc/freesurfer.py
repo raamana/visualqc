@@ -328,11 +328,15 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if not freesurfer_installed():  # needs tksurfer
             print('Freesurfer does not seem to be installed '
                   '- skipping surface visualizations.')
-            self.surface_vis_paths = dict()
-            return
+            self._freesurfer_installed = False
+        else:
+            self._freesurfer_installed = True
 
-        self.surface_vis_paths = {sid: make_vis_pial_surface(self.in_dir, sid, self.out_dir) for
-                                      sid in self.id_list}
+        self.surface_vis_paths = dict()
+        for sid in self.id_list:
+            self.surface_vis_paths[sid] = \
+                make_vis_pial_surface(self.in_dir, sid, self.out_dir,
+                                      self._freesurfer_installed)
 
 
     def prepare_UI(self):
@@ -683,7 +687,9 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.close('all')
 
 
-def make_vis_pial_surface(in_dir, subject_id, out_dir, annot_file='aparc.annot'):
+def make_vis_pial_surface(in_dir, subject_id, out_dir,
+                          FREESURFER_INSTALLED,
+                          annot_file='aparc.annot'):
     """Generate screenshot for the pial surface in different views"""
 
     out_vis_dir = pjoin(out_dir, cfg.annot_vis_dir_name)
@@ -699,7 +705,7 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir, annot_file='aparc.annot')
         try:
             # run the script only if all the visualizations were not generated before
             all_vis_exist = all([pexists(vis_path) for vis_path in vis_files.values()])
-            if not all_vis_exist:
+            if not all_vis_exist and FREESURFER_INSTALLED:
                 _, _ = run_tksurfer_script(in_dir, subject_id, hemi, script_file)
 
             vis_list[hemi_l].update(vis_files)

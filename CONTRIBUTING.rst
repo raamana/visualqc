@@ -7,7 +7,7 @@ Contributing
 Contributions are welcome, and they are greatly appreciated! Every
 little bit helps, and credit will always be given.
 
-You can contribute in many ways, which are listed below, and various ideas and suggestions are collected `here <https://github.com/raamana/visualqc/blob/master/CONTRIBUTING_IDEAS_SUGGESTIONS.rst>`_.
+You can contribute in many ways, which are listed below, and various **ideas and suggestions for contribution are collected `here <https://github.com/raamana/visualqc/blob/master/CONTRIBUTING_IDEAS_SUGGESTIONS.rst>`_**.
 
 Types of Contributions
 ----------------------
