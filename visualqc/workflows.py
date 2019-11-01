@@ -219,7 +219,8 @@ class BaseWorkflowVisualQC(ABC):
         Parameters
         ----------
         unit_id : str
-            Identifier to locate the data for the given unit (subject, session or run) in self.in_dir
+            Identifier to locate the data for the given unit in self.in_dir.
+            Unit could be a subject, session or run depending on the task.
 
         Returns
         -------
@@ -238,7 +239,10 @@ class BaseWorkflowVisualQC(ABC):
 
     @abstractmethod
     def add_alerts(self):
-        """Method to appropriately alert the reviewer e.g. when subject was flagged as an outlier"""
+        """
+        Method to appropriately alert the reviewer
+            e.g. when subject was flagged as an outlier
+        """
 
 
     def quit(self, input_event_to_ignore=None):

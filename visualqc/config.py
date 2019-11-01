@@ -368,3 +368,25 @@ alignment_groupwise_default_vis_type = 'Std. dev map' # 'Checkerboard' # 'Animat
 ## ----------------------------------------------------------------------------
 
 features_outlier_detection = freesurfer_features_outlier_detection + t1_mri_features_OLD + func_mri_features_OLD
+
+
+## ----------------------------------------------------------------------------
+#          defacing MRI scan quality
+## ----------------------------------------------------------------------------
+
+default_defaced_mri_name = 'defaced.nii'
+default_render_name = 'render.png'
+
+defacing_pass_indicator = visual_qc_pass_indicator
+abbreviation_defacing_default_issue_list = {'p': defacing_pass_indicator,
+                                          'f': 'Fail',
+                                          'o': 'Overstripped',
+                                          'u': 'Understripped',
+                                          'a': 'Axial',
+                                          'c': 'Coronal',
+                                          's': 'Sagittal',
+                                          'e': 'something Else',
+                                          't': "i'm Tired",
+                                          'l': 'reView Later'}
+defacing_default_issue_list = list(abbreviation_defacing_default_issue_list.values())
+defacing_default_rating_list_shortform = abbreviation_defacing_default_issue_list.keys()
