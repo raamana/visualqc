@@ -16,24 +16,28 @@ from visualqc.config import default_out_dir_name, freesurfer_vis_cmd, \
     freesurfer_vis_types, visualization_combination_choices
 
 
-def read_image(img_spec, error_msg='image',
-               num_dims=3):
+def read_image(img_spec,
+               error_msg='image',
+               num_dims=3,
+               reorient_canonical=True):
     """Image reader. Removes stray values close to zero (smaller than 5 %ile)."""
 
     if isinstance(img_spec, str):
         if pexists(realpath(img_spec)):
             hdr = nib.load(img_spec)
             # trying to stick to an orientation
-            hdr = nib.as_closest_canonical(hdr)
+            if reorient_canonical:
+                hdr = nib.as_closest_canonical(hdr)
             img = hdr.get_data()
         else:
-            raise IOError(
-                'Given path to {} does not exist!\n\t{}'.format(error_msg, img_spec))
+            raise IOError('Given path to {} does not exist!\n\t{}'
+                          ''.format(error_msg, img_spec))
     elif isinstance(img_spec, np.ndarray):
         img = img_spec
     else:
         raise ValueError('Invalid input specified! '
-                         'Input either a path to image data, or provide 3d Matrix directly.')
+                         'Input either a path to image data, '
+                         'or provide 3d Matrix directly.')
 
     if num_dims == 3:
         img = check_image_is_3d(img)
