@@ -390,3 +390,10 @@ abbreviation_defacing_default_issue_list = {'p': defacing_pass_indicator,
                                           'l': 'reView Later'}
 defacing_default_issue_list = list(abbreviation_defacing_default_issue_list.values())
 defacing_default_rating_list_shortform = abbreviation_defacing_default_issue_list.keys()
+
+bbox_defacing_MRI_review = (0.05, 0.05, 0.88, 0.87)
+defacing_slice_locations = (5, 10, 50, 90, 95)
+
+vis_choices_defacing = ('Defaced only',
+                        'Original only',
+                        'Mixed')
