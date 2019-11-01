@@ -884,8 +884,7 @@ def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_i
                    os.path.isdir(pjoin(in_dir, folder))]
 
     required_files = {'original': mri_name,
-                      'defaced': defaced_name,
-                      'render': render_name}
+                      'defaced': defaced_name} # 'render': render_name
 
     id_list_out = list()
     id_list_err = list()
@@ -899,6 +898,15 @@ def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_i
         path_list = { img_type: pjoin(in_dir, subject_id, name)
                         for img_type, name in required_files.items()
                     }
+
+        # finding all rendered screenshots
+        import fnmatch
+        rendered_images = fnmatch.filter(os.listdir(pjoin(in_dir, subject_id)),
+                                         '{}*'.format(render_name))
+        rendered_images = [pjoin(in_dir, subject_id, img) for img in rendered_images]
+        rendered_images = [ path for path in rendered_images
+                            if pexists(path) and os.path.getsize(path) > 0]
+
         invalid = [pfile for pfile in path_list.values() if
                    not pexists(pfile) or os.path.getsize(pfile) <= 0]
         if len(invalid) > 0:
@@ -906,6 +914,10 @@ def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_i
             invalid_list.extend(invalid)
         else:
             id_list_out.append(subject_id)
+            if len(rendered_images) < 1:
+                raise ValueError(
+                    'Atleast 1 non-empty rendered image is required!')
+            path_list['render'] = rendered_images
             images_for_id[subject_id] = path_list
 
     if len(id_list_err) > 0:
@@ -924,3 +936,29 @@ def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_i
     return in_dir, np.array(id_list_out), images_for_id, \
            defaced_name, mri_name, render_name
 
+
+def compute_cell_extents_grid(bounding_rect=(0.03, 0.03, 0.97, 0.97),
+                               num_rows=2, num_cols=6,
+                               axis_pad=0.01):
+    """
+    Produces array of num_rows*num_cols elements each containing the rectangular extents of
+    the corresponding cell the grid, whose position is within bounding_rect.
+    """
+
+    left, bottom, width, height = bounding_rect
+    height_padding = axis_pad * (num_rows + 1)
+    width_padding = axis_pad * (num_cols + 1)
+    cell_height = float((height - height_padding) / num_rows)
+    cell_width = float((width - width_padding) / num_cols)
+
+    cell_height_padded = cell_height + axis_pad
+    cell_width_padded = cell_width + axis_pad
+
+    extents = list()
+    for row in range(num_rows - 1, -1, -1):
+        for col in range(num_cols):
+            extents.append((left + col * cell_width_padded,
+                            bottom + row * cell_height_padded,
+                            cell_width, cell_height))
+
+    return extents

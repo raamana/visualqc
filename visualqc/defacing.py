@@ -21,7 +21,8 @@ from os.path import join as pjoin, realpath
 from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.image_utils import mix_color
-from visualqc.utils import  check_inputs_defacing, check_out_dir, check_finite_int, \
+from visualqc.utils import  check_inputs_defacing, check_out_dir, \
+    compute_cell_extents_grid, check_finite_int, \
     check_outlier_params, check_views, get_axis, pick_slices, \
     read_image, scale_0to1, saturate_brighter_intensities
 from visualqc.workflows import BaseWorkflowVisualQC
@@ -335,11 +336,6 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
 
         self.padding = padding
 
-        # rendered images
-        cell_ext_render = cfg.bbox_defacing_render_review
-        self.ax_render = self.fig.add_axes(cell_ext_render, frameon=False)
-        self.ax_render.set_axis_off()
-
 
     def prepare_UI(self):
         """Main method to run the entire workflow"""
@@ -394,11 +390,14 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                                       error_msg='defaced mri')
         self.orig_img = read_image(self.images_for_id[unit_id]['original'],
                                    error_msg='T1 mri')
-        try:
-            self.render_img = imread(self.images_for_id[unit_id]['render'])
-        except:
-            raise IOError('Unable to read the 3D rendered image @\n {}'
-                          ''.format(self.images_for_id[unit_id]['render']))
+
+        self.render_img_list = list()
+        for rimg_path in self.images_for_id[unit_id]['render']:
+            try:
+                self.render_img_list.append(imread(rimg_path))
+            except:
+                raise IOError('Unable to read the 3D rendered image @\n {}'
+                              ''.format(rimg_path))
 
         # crop and rescale
         self.defaced_img = scale_0to1(crop_image(self.defaced_img, self.padding))
@@ -445,9 +444,19 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
     def show_renders(self):
         """Show all the rendered images"""
 
-        # self.ax_render.clear()
-        self.ax_render.imshow(self.render_img)
-        self.ax_render.set_visible(True)
+        num_cells = len(self.render_img_list)
+        cell_extents = compute_cell_extents_grid(
+            cfg.bbox_defacing_render_review,
+            num_rows=cfg.defacing_num_rows_renders,
+            num_cols=num_cells)
+
+        self.ax_render = list()
+        for img, ext in zip(self.render_img_list, cell_extents):
+            ax = self.fig.add_axes(ext, frameon=False)
+            ax.set_axis_off()
+            ax.imshow(img)
+            ax.set_visible(True)
+            self.ax_render.append(ax)
 
 
     def show_defaced(self):

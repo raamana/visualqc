@@ -388,8 +388,10 @@ abbreviation_defacing_default_issue_list = {'p': defacing_pass_indicator,
 defacing_default_issue_list = list(abbreviation_defacing_default_issue_list.values())
 defacing_default_rating_list_shortform = abbreviation_defacing_default_issue_list.keys()
 
-bbox_defacing_MRI_review = (0.02, 0.02, 0.88, 0.8)
-bbox_defacing_render_review = (0.02, 0.82, 0.2, 0.2)
+bbox_defacing_MRI_review = (0.02, 0.02, 0.88, 0.7)
+bbox_defacing_render_review = (0.02, 0.72, 0.88, 0.3)
+
+defacing_num_rows_renders = 1
 
 defacing_slice_locations = (10, 20, 30, 50, 70, 80, 90)
 defacing_num_slices_per_view = len(defacing_slice_locations)
