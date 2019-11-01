@@ -12,6 +12,7 @@ from abc import ABC
 
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.image import imread
 from matplotlib.widgets import CheckButtons, RadioButtons
 from mrivis.utils import crop_image
 from mrivis.base import Collage, SlicePicker
@@ -307,9 +308,9 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
 
 
     def init_layout(self,
-                    view_set=(0, 1, 2),
-                    num_rows_per_view=1,
-                    num_slices_per_view=5,
+                    view_set=cfg.defacing_view_set,
+                    num_rows_per_view=cfg.defacing_num_rows_per_view,
+                    num_slices_per_view=cfg.defacing_num_slices_per_view,
                     padding=cfg.default_padding):
         """initializes the layout"""
 
@@ -333,6 +334,11 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                                                    self.defaced_name))
 
         self.padding = padding
+
+        # rendered images
+        cell_ext_render = cfg.bbox_defacing_render_review
+        self.ax_render = self.fig.add_axes(cell_ext_render, frameon=False)
+        self.ax_render.set_axis_off()
 
 
     def prepare_UI(self):
@@ -388,8 +394,11 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                                       error_msg='defaced mri')
         self.orig_img = read_image(self.images_for_id[unit_id]['original'],
                                    error_msg='T1 mri')
-        self.render_img = read_image(self.images_for_id[unit_id]['render'],
-                                     error_msg='3D render')
+        try:
+            self.render_img = imread(self.images_for_id[unit_id]['render'])
+        except:
+            raise IOError('Unable to read the 3D rendered image @\n {}'
+                          ''.format(self.images_for_id[unit_id]['render']))
 
         # crop and rescale
         self.defaced_img = scale_0to1(crop_image(self.defaced_img, self.padding))
@@ -430,25 +439,34 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
     def display_unit(self):
         """Adds slice collage to the given axes"""
 
-        self.show()
+        self.show_renders()
+        self.show_mr_images()
+
+    def show_renders(self):
+        """Show all the rendered images"""
+
+        # self.ax_render.clear()
+        self.ax_render.imshow(self.render_img)
+        self.ax_render.set_visible(True)
+
 
     def show_defaced(self):
         """Show defaced only"""
 
-        self.show(vis_type='defaced')
+        self.show_mr_images(vis_type='defaced')
 
     def show_original(self):
         """Show original only"""
 
-        self.show(vis_type='original')
+        self.show_mr_images(vis_type='original')
 
     def show_mixed(self):
         """Show mixed"""
 
-        self.show(vis_type='mixed')
+        self.show_mr_images(vis_type='mixed')
 
 
-    def show(self, vis_type='mixed'):
+    def show_mr_images(self, vis_type='mixed'):
         """Generic router"""
 
         self.collage.clear()
@@ -458,7 +476,11 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                                                             self.orig_img]):
 
             if vis_type in ('mixed', ):
-                final_slice = mix_color(df, orig)
+                #final_slice = mix_color(orig, df)
+                red = 0.9*orig
+                grn = 1.0*df
+                blu = np.zeros_like(orig)
+                final_slice = np.stack((red, grn, blu), axis=2)
             elif vis_type in ('defaced', ):
                 final_slice = df
             elif vis_type in ('original', ):
@@ -469,6 +491,8 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
 
             self.collage.flat_grid[ax_counter].imshow(final_slice)
             ax_counter += 1
+
+        self.collage.show()
 
 
     def add_alerts(self):
