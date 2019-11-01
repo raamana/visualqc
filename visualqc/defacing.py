@@ -197,11 +197,11 @@ def get_parser():
                         default=cfg.default_defaced_mri_name, required=False,
                         help=help_text_defaced_mri_name)
 
-    in_out.add_argument("-m", "--mri_name", action="store", dest="render_name",
+    in_out.add_argument("-m", "--mri_name", action="store", dest="mri_name",
                         default=cfg.default_mri_name, required=False,
                         help=help_text_mri_name)
 
-    in_out.add_argument("-r", "--render_name", action="store", dest="mri_name",
+    in_out.add_argument("-r", "--render_name", action="store", dest="render_name",
                         default=cfg.default_render_name, required=False,
                         help=help_text_render_name)
 
