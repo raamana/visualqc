@@ -475,21 +475,21 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         for df, orig in self.slice_picker.get_slices_multi([self.defaced_img,
                                                             self.orig_img]):
 
+            ax = self.collage.flat_grid[ax_counter]
             if vis_type in ('mixed', ):
                 #final_slice = mix_color(orig, df)
                 red = 0.9*orig
                 grn = 1.0*df
                 blu = np.zeros_like(orig)
-                final_slice = np.stack((red, grn, blu), axis=2)
+                ax.imshow(np.stack((red, grn, blu), axis=2),
+                          **self.display_params)
             elif vis_type in ('defaced', ):
-                final_slice = df
+                ax.imshow(df, **self.display_params)
             elif vis_type in ('original', ):
-                final_slice = orig
+                ax.imshow(orig, **self.display_params)
             else:
                 raise ValueError('Invalid vis_type. Must be either mixed, '
                                  'defaced, or original')
-
-            self.collage.flat_grid[ax_counter].imshow(final_slice)
             ax_counter += 1
 
         self.collage.show()
