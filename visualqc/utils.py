@@ -58,18 +58,19 @@ def scale_0to1(image_in,
                , multiply_factor=1.0):
     """Scale the two images to [0, 1] based on min/max."""
 
-    min_value = image_in.min()
-    max_value = image_in.max()
-
     # making a copy to ensure no side-effects
     out_image = image_in.copy()
+
+    min_value = np.percentile(out_image.flatten(),
+                              float(exclude_outliers_below))
+    max_value = np.percentile(out_image.flatten(),
+                              100-float(exclude_outliers_above))
+
     if exclude_outliers_below:
-        perctl = float(exclude_outliers_below)
-        out_image[out_image < np.percentile(out_image.flatten(), perctl)] = min_value
+        out_image[out_image < min_value] = min_value
 
     if exclude_outliers_above:
-        perctl = float(exclude_outliers_above)
-        out_image[out_image > np.percentile(out_image.flatten(), 100.0-perctl)] = max_value
+        out_image[out_image > max_value] = max_value
 
     out_image = (out_image - min_value) / (max_value - min_value)
 
