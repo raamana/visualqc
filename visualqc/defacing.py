@@ -285,8 +285,10 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         """Constructor"""
 
         super().__init__(id_list, in_dir, out_dir,
+                         show_unit_id=False, # preventing bias/batch-effects
                          outlier_method=None, outlier_fraction=None,
-                         outlier_feat_types=None, disable_outlier_detection=None)
+                         outlier_feat_types=None,
+                         disable_outlier_detection=None)
 
         self.vis_type = vis_type
         self.issue_list = issue_list

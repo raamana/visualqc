@@ -27,7 +27,8 @@ color_histogram_freesurfer = ('#c9ae74')  # sandstone
 freesurfer_features_outlier_detection = ('cortical', 'subcortical')
 outlier_list_prefix = 'possible_outliers'
 alert_background_color = 'xkcd:coral'
-alert_colors_outlier = dict(cortical='xkcd:hot pink', subcortical='xkcd:periwinkle')
+alert_colors_outlier = dict(cortical='xkcd:hot pink',
+                            subcortical='xkcd:periwinkle')
 
 position_annot_text = (0.990, 0.98)
 annot_text_props = dict(ha='right', va='top', multialignment='left',
