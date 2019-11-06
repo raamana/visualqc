@@ -20,7 +20,7 @@ from os.path import join as pjoin, realpath
 
 from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
-from visualqc.image_utils import mix_color
+from visualqc.image_utils import mix_color, rescale_without_outliers
 from visualqc.utils import  check_inputs_defacing, check_out_dir, \
     compute_cell_extents_grid, check_finite_int, \
     check_outlier_params, check_views, get_axis, pick_slices, \
@@ -401,9 +401,13 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                 raise IOError('Unable to read the 3D rendered image @\n {}'
                               ''.format(rimg_path))
 
-        # crop and rescale
-        self.defaced_img = scale_0to1(crop_image(self.defaced_img, self.padding))
-        self.orig_img = scale_0to1(crop_image(self.orig_img, self.padding))
+        # crop, trim, and rescale
+        self.defaced_img = rescale_without_outliers(self.defaced_img,
+                                                    padding=self.padding,
+                                                    trim_percentile=cfg.defacing_trim_percentile)
+        self.orig_img = rescale_without_outliers(self.orig_img,
+                                                 padding=self.padding,
+                                                 trim_percentile=cfg.defacing_trim_percentile)
         self.currently_showing = None
 
         skip_subject = False

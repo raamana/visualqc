@@ -402,3 +402,5 @@ defacing_view_set = (0, 1, 2)
 vis_choices_defacing = ('Defaced only',
                         'Original only',
                         'Mixed')
+
+defacing_trim_percentile = 1
