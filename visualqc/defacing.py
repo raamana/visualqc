@@ -14,17 +14,12 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.image import imread
 from matplotlib.widgets import CheckButtons, RadioButtons
-from mrivis.utils import crop_image
 from mrivis.base import Collage, SlicePicker
-from os.path import join as pjoin, realpath
-
 from visualqc import config as cfg
+from visualqc.image_utils import rescale_without_outliers
 from visualqc.interfaces import BaseReviewInterface
-from visualqc.image_utils import mix_color, rescale_without_outliers
-from visualqc.utils import  check_inputs_defacing, check_out_dir, \
-    compute_cell_extents_grid, check_finite_int, \
-    check_outlier_params, check_views, get_axis, pick_slices, \
-    read_image, scale_0to1, saturate_brighter_intensities
+from visualqc.utils import (check_inputs_defacing, check_out_dir,
+                            compute_cell_extents_grid, read_image)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -71,8 +66,9 @@ class DefacingInterface(BaseReviewInterface):
 
     def add_checkboxes(self):
         """
-        Checkboxes offer the ability to select multiple tags such as Motion, Ghosting Aliasing etc,
-            instead of one from a list of mutual exclusive rating options (such as Good, Bad, Error etc).
+        Checkboxes offer the ability to select multiple tags such as Motion,
+        Ghosting Aliasing etc, instead of one from a list of mutual exclusive
+        rating options (such as Good, Bad, Error etc).
 
         """
 
@@ -95,7 +91,8 @@ class DefacingInterface(BaseReviewInterface):
             x_line1.set_color(cfg.checkbox_cross_color)
             x_line2.set_color(cfg.checkbox_cross_color)
 
-        self._index_pass = cfg.defacing_default_issue_list.index(cfg.defacing_pass_indicator)
+        self._index_pass = cfg.defacing_default_issue_list.index(
+            cfg.defacing_pass_indicator)
 
     def add_process_options(self):
 
@@ -114,7 +111,8 @@ class DefacingInterface(BaseReviewInterface):
         """
         Update the rating
 
-        This function is called whenever set_active() happens on any label, if checkbox.eventson is True.
+        This function is called whenever set_active() happens on any label,
+            if checkbox.eventson is True.
 
         """
 
@@ -138,7 +136,8 @@ class DefacingInterface(BaseReviewInterface):
                 continue
             # if it was selected already, toggle it.
             if this_cbox_active:
-                # not calling checkbox.set_active() as it calls the callback self.save_issues() each time, if eventson is True
+                # not calling checkbox.set_active() as it calls the callback
+                #   self.save_issues() each time, if eventson is True
                 self._toggle_visibility_checkbox(index)
 
     def clear_pass_only_if_on(self):
@@ -212,7 +211,8 @@ class DefacingInterface(BaseReviewInterface):
         # self.radio_bt_rating.set_active(cfg.index_freesurfer_default_rating)
         for index, label in enumerate(self.radio_bt_vis_type.labels):
             if label.get_text() == self.radio_bt_vis_type.value_selected:
-                self.radio_bt_vis_type.circles[index].set_facecolor(cfg.color_rating_axis)
+                self.radio_bt_vis_type.circles[index].set_facecolor(
+                    cfg.color_rating_axis)
                 break
         self.radio_bt_vis_type.value_selected = None
 
@@ -227,7 +227,8 @@ class DefacingInterface(BaseReviewInterface):
                 self.zoomed_in = False
 
         # right or double click to zoom in to any axis
-        if (event.button in [3] or event.dblclick) and (event.inaxes is not None) and \
+        if (event.button in [3] or event.dblclick) and \
+            (event.inaxes is not None) and \
             event.inaxes not in self.unzoomable_axes:
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(cfg.zoomed_position)
@@ -354,7 +355,7 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
     def add_UI(self):
         """Adds the review UI with defaults"""
 
-        # two keys for same combinations exist to account for time delays in key presses
+        # 2 keys for same combination exist to account for time delays in key presses
         map_key_to_callback = {'alt+b': self.show_defaced,
                                'b+alt': self.show_defaced,
                                'alt+o': self.show_original,
@@ -402,12 +403,12 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                               ''.format(rimg_path))
 
         # crop, trim, and rescale
-        self.defaced_img = rescale_without_outliers(self.defaced_img,
-                                                    padding=self.padding,
-                                                    trim_percentile=cfg.defacing_trim_percentile)
-        self.orig_img = rescale_without_outliers(self.orig_img,
-                                                 padding=self.padding,
-                                                 trim_percentile=cfg.defacing_trim_percentile)
+        self.defaced_img = rescale_without_outliers(
+            self.defaced_img, padding=self.padding,
+            trim_percentile=cfg.defacing_trim_percentile)
+        self.orig_img = rescale_without_outliers(
+            self.orig_img, padding=self.padding,
+            trim_percentile=cfg.defacing_trim_percentile)
         self.currently_showing = None
 
         skip_subject = False
