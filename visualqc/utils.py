@@ -16,24 +16,28 @@ from visualqc.config import default_out_dir_name, freesurfer_vis_cmd, \
     freesurfer_vis_types, visualization_combination_choices
 
 
-def read_image(img_spec, error_msg='image',
-               num_dims=3):
+def read_image(img_spec,
+               error_msg='image',
+               num_dims=3,
+               reorient_canonical=True):
     """Image reader. Removes stray values close to zero (smaller than 5 %ile)."""
 
     if isinstance(img_spec, str):
         if pexists(realpath(img_spec)):
             hdr = nib.load(img_spec)
             # trying to stick to an orientation
-            hdr = nib.as_closest_canonical(hdr)
+            if reorient_canonical:
+                hdr = nib.as_closest_canonical(hdr)
             img = hdr.get_data()
         else:
-            raise IOError(
-                'Given path to {} does not exist!\n\t{}'.format(error_msg, img_spec))
+            raise IOError('Given path to {} does not exist!\n\t{}'
+                          ''.format(error_msg, img_spec))
     elif isinstance(img_spec, np.ndarray):
         img = img_spec
     else:
         raise ValueError('Invalid input specified! '
-                         'Input either a path to image data, or provide 3d Matrix directly.')
+                         'Input either a path to image data, '
+                         'or provide 3d Matrix directly.')
 
     if num_dims == 3:
         img = check_image_is_3d(img)
@@ -54,18 +58,19 @@ def scale_0to1(image_in,
                , multiply_factor=1.0):
     """Scale the two images to [0, 1] based on min/max."""
 
-    min_value = image_in.min()
-    max_value = image_in.max()
-
     # making a copy to ensure no side-effects
     out_image = image_in.copy()
+
+    min_value = np.percentile(out_image.flatten(),
+                              float(exclude_outliers_below))
+    max_value = np.percentile(out_image.flatten(),
+                              100-float(exclude_outliers_above))
+
     if exclude_outliers_below:
-        perctl = float(exclude_outliers_below)
-        out_image[out_image < np.percentile(out_image.flatten(), perctl)] = min_value
+        out_image[out_image < min_value] = min_value
 
     if exclude_outliers_above:
-        perctl = float(exclude_outliers_above)
-        out_image[out_image > np.percentile(out_image.flatten(), 100.0-perctl)] = max_value
+        out_image[out_image > max_value] = max_value
 
     out_image = (out_image - min_value) / (max_value - min_value)
 
@@ -840,3 +845,121 @@ def check_views(views):
             'Atleast one valid view must be selected. Choose one or more of 0, 1, 2.')
 
     return out_views
+
+
+def check_string_is_nonempty(string, string_type='string'):
+    """Ensures input is a string of non-zero length"""
+
+    if string is None or \
+        (not isinstance(string, str)) or \
+        len(string) < 1:
+        raise ValueError('name of the {} must not be empty!'
+                         ''.format(string_type))
+
+    return string
+
+
+def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_in):
+    """Validates the integrity of the inputs"""
+
+    in_dir = realpath(in_dir)
+    if not pexists(in_dir):
+        raise ValueError('user_dir does not exist : {}'.format(in_dir))
+
+    defaced_name = check_string_is_nonempty(defaced_name, 'defaced MRI scan')
+    mri_name = check_string_is_nonempty(mri_name, 'original MRI scan')
+    render_name = check_string_is_nonempty(render_name, '3D rendered image')
+
+    if id_list_in is not None:
+        if not pexists(id_list_in):
+            raise IOError('Given ID list does not exist @ \n'
+                          ' {}'.format(id_list_in))
+
+        try:
+            id_list = read_id_list(id_list_in)
+        except:
+            raise IOError('unable to read the ID list @ {}'.format(id_list_in))
+    else:
+        # get all IDs in the given folder
+        id_list = [folder for folder in os.listdir(in_dir) if
+                   os.path.isdir(pjoin(in_dir, folder))]
+
+    required_files = {'original': mri_name,
+                      'defaced': defaced_name} # 'render': render_name
+
+    id_list_out = list()
+    id_list_err = list()
+    invalid_list = list()
+
+    # this dict contains existing files for each ID
+    # useful to open external programs like tkmedit
+    images_for_id = dict()
+
+    for subject_id in id_list:
+        path_list = { img_type: pjoin(in_dir, subject_id, name)
+                        for img_type, name in required_files.items()
+                    }
+
+        # finding all rendered screenshots
+        import fnmatch
+        rendered_images = fnmatch.filter(os.listdir(pjoin(in_dir, subject_id)),
+                                         '{}*'.format(render_name))
+        rendered_images = [pjoin(in_dir, subject_id, img) for img in rendered_images]
+        rendered_images = [ path for path in rendered_images
+                            if pexists(path) and os.path.getsize(path) > 0]
+
+        invalid = [pfile for pfile in path_list.values() if
+                   not pexists(pfile) or os.path.getsize(pfile) <= 0]
+        if len(invalid) > 0:
+            id_list_err.append(subject_id)
+            invalid_list.extend(invalid)
+        else:
+            id_list_out.append(subject_id)
+            if len(rendered_images) < 1:
+                raise ValueError(
+                    'Atleast 1 non-empty rendered image is required!')
+            path_list['render'] = rendered_images
+            images_for_id[subject_id] = path_list
+
+    if len(id_list_err) > 0:
+        warnings.warn('The following subjects do NOT have all the required files, '
+                       'or some are empty - skipping them!')
+        print('\n'.join(id_list_err))
+        print('\n\nThe following files do not exist or empty: \n {} \n\n'.format(
+            '\n'.join(invalid_list)))
+
+    if len(id_list_out) < 1:
+        raise ValueError('All the subject IDs do not have the required files - '
+                          'unable to proceed.')
+
+    print('{} subjects are usable for review.'.format(len(id_list_out)))
+
+    return in_dir, np.array(id_list_out), images_for_id, \
+           defaced_name, mri_name, render_name
+
+
+def compute_cell_extents_grid(bounding_rect=(0.03, 0.03, 0.97, 0.97),
+                               num_rows=2, num_cols=6,
+                               axis_pad=0.01):
+    """
+    Produces array of num_rows*num_cols elements each containing the rectangular extents of
+    the corresponding cell the grid, whose position is within bounding_rect.
+    """
+
+    left, bottom, width, height = bounding_rect
+    height_padding = axis_pad * (num_rows + 1)
+    width_padding = axis_pad * (num_cols + 1)
+    cell_height = float((height - height_padding) / num_rows)
+    cell_width = float((width - width_padding) / num_cols)
+
+    cell_height_padded = cell_height + axis_pad
+    cell_width_padded = cell_width + axis_pad
+
+    extents = list()
+    for row in range(num_rows - 1, -1, -1):
+        for col in range(num_cols):
+            extents.append((left + col * cell_width_padded,
+                            bottom + row * cell_height_padded,
+                            cell_width, cell_height))
+
+    return extents

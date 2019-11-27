@@ -27,7 +27,8 @@ color_histogram_freesurfer = ('#c9ae74')  # sandstone
 freesurfer_features_outlier_detection = ('cortical', 'subcortical')
 outlier_list_prefix = 'possible_outliers'
 alert_background_color = 'xkcd:coral'
-alert_colors_outlier = dict(cortical='xkcd:hot pink', subcortical='xkcd:periwinkle')
+alert_colors_outlier = dict(cortical='xkcd:hot pink',
+                            subcortical='xkcd:periwinkle')
 
 position_annot_text = (0.990, 0.98)
 annot_text_props = dict(ha='right', va='top', multialignment='left',
@@ -368,3 +369,38 @@ alignment_groupwise_default_vis_type = 'Std. dev map' # 'Checkerboard' # 'Animat
 ## ----------------------------------------------------------------------------
 
 features_outlier_detection = freesurfer_features_outlier_detection + t1_mri_features_OLD + func_mri_features_OLD
+
+
+## ----------------------------------------------------------------------------
+#          defacing MRI scan quality
+## ----------------------------------------------------------------------------
+
+default_defaced_mri_name = 'defaced.nii'
+default_render_name = 'render.png'
+
+defacing_pass_indicator = visual_qc_pass_indicator
+abbreviation_defacing_default_issue_list = {'p': defacing_pass_indicator,
+                                          'f': 'Fail',
+                                          'o': 'Overstripped',
+                                          'u': 'Understripped',
+                                          'e': 'something Else',
+                                          't': "i'm Tired",
+                                          'l': 'reView Later'}
+defacing_default_issue_list = list(abbreviation_defacing_default_issue_list.values())
+defacing_default_rating_list_shortform = abbreviation_defacing_default_issue_list.keys()
+
+bbox_defacing_MRI_review = (0.02, 0.02, 0.88, 0.7)
+bbox_defacing_render_review = (0.02, 0.72, 0.88, 0.3)
+
+defacing_num_rows_renders = 1
+
+defacing_slice_locations = (20, 30, 35, 40, 50, 60, 65, 70, 80)
+defacing_num_slices_per_view = len(defacing_slice_locations)
+defacing_num_rows_per_view = 1
+defacing_view_set = (0, 1, 2)
+
+vis_choices_defacing = ('Defaced only',
+                        'Original only',
+                        'Mixed')
+
+defacing_trim_percentile = 1

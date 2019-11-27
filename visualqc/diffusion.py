@@ -377,7 +377,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.feature_extractor = diffusion_mri_features
 
         if 'BIDS' in self.in_dir_type.upper():
-            from bids.grabbids import BIDSLayout
+            from bids import BIDSLayout
             self.bids_layout = BIDSLayout(self.in_dir)
             self.units = diffusion_traverse_bids(self.bids_layout)
             # file name of each scan is the unique identifier,

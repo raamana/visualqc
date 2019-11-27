@@ -35,8 +35,11 @@ class BaseWorkflowVisualQC(ABC):
                  id_list,
                  in_dir,
                  out_dir,
-                 outlier_method, outlier_fraction,
-                 outlier_feat_types, disable_outlier_detection):
+                 outlier_method,
+                 outlier_fraction,
+                 outlier_feat_types,
+                 disable_outlier_detection,
+                 show_unit_id=True):
         """Constructor"""
 
         # super().__init__()
@@ -53,6 +56,10 @@ class BaseWorkflowVisualQC(ABC):
         self.outlier_fraction = outlier_fraction
         self.outlier_feat_types = outlier_feat_types
         self.disable_outlier_detection = disable_outlier_detection
+
+        # option to hide the ID, which may contain meta data such as site/time
+        # hiding ID reduces bias or batch effects
+        self.show_unit_id = show_unit_id
 
         # following properties must be instantiated
         self.feature_extractor = DummyCallable()
@@ -198,8 +205,13 @@ class BaseWorkflowVisualQC(ABC):
 
         """
 
-        self.UI.add_annot(
-            '{}\n({}/{})'.format(unit_id, counter + 1, self.num_units_to_review))
+        if self.show_unit_id:
+            annot_text = '{}\n({}/{})'.format(unit_id, counter + 1,
+                                              self.num_units_to_review)
+        else:
+            annot_text = '{}/{}'.format(counter+1, self.num_units_to_review)
+
+        self.UI.add_annot(annot_text)
 
 
     def show_fig_and_wait(self):
@@ -219,7 +231,8 @@ class BaseWorkflowVisualQC(ABC):
         Parameters
         ----------
         unit_id : str
-            Identifier to locate the data for the given unit (subject, session or run) in self.in_dir
+            Identifier to locate the data for the given unit in self.in_dir.
+            Unit could be a subject, session or run depending on the task.
 
         Returns
         -------
@@ -238,7 +251,10 @@ class BaseWorkflowVisualQC(ABC):
 
     @abstractmethod
     def add_alerts(self):
-        """Method to appropriately alert the reviewer e.g. when subject was flagged as an outlier"""
+        """
+        Method to appropriately alert the reviewer
+            e.g. when subject was flagged as an outlier
+        """
 
 
     def quit(self, input_event_to_ignore=None):

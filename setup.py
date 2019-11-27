@@ -41,11 +41,13 @@ setup(
     entry_points={
         'console_scripts': [
             'visualqc_t1_mri=visualqc.__t1_mri__:main',
+            'visualqc_defacing=visualqc.__defacing__:main',
             'visualqc_func_mri=visualqc.__func_mri__:main',
             'visualqc_diffusion=visualqc.__diffusion__:main',
             'visualqc_freesurfer=visualqc.__freesurfer__:main',
             'visualqc_alignment=visualqc.__alignment__:main',
             # shortcuts
+            'vqcdeface=visualqc.__defacing__:main',
             'vqct1=visualqc.__t1_mri__:main',
             'vqcfunc=visualqc.__func_mri__:main',
             'vqcdwi=visualqc.__diffusion__:main',
