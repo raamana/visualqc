@@ -377,8 +377,8 @@ class BaseWorkflowVisualQC(ABC):
             return
 
         if len(self.feature_paths) < 1:
-            print(
-                'Features required for outlier detection are not available - skipping it.')
+            print('Features required for outlier detection are not available -'
+                  ' skipping it.')
             return
 
         from visualqc.outliers import detect_outliers
@@ -391,10 +391,10 @@ class BaseWorkflowVisualQC(ABC):
                 out_file = pjoin(self.out_dir,
                                  '{}_{}_{}.txt'.format(cfg.outlier_list_prefix,
                                                        self.outlier_method, feature_type))
-                self.by_feature[feature_type] = detect_outliers(features, self.id_list,
-                                                                method=self.outlier_method,
-                                                                out_file=out_file,
-                                                                fraction_of_outliers=self.outlier_fraction)
+                self.by_feature[feature_type] = \
+                    detect_outliers(features, self.id_list,
+                                    method=self.outlier_method, out_file=out_file,
+                                    fraction_of_outliers=self.outlier_fraction)
             else:
                 print('Insufficient number of samples (with features: {}) \n'
                       ' \t to run outlier detection - skipping it.'.format(feature_type))
@@ -406,7 +406,7 @@ class BaseWorkflowVisualQC(ABC):
                                    sid in self.by_feature[feat]]
 
         # dropping the IDs that were not flagged by any feature
-        # so a imple ID in dict would reveal whether it was ever suspected as an outlier
+        # so a simple ID in dict implies --> it was ever suspected as an outlier
         self.by_sample = {id: flag_list for id, flag_list in self.by_sample.items() if
                           flag_list}
 

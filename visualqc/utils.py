@@ -771,8 +771,8 @@ def check_outlier_params(method, fraction, feat_types, disable_outlier_detection
     if type_of_features.lower() == 'freesurfer' and \
         vis_type not in cfg.freesurfer_vis_types:
         raise NotImplementedError(
-            'Outlier detection based on current Freesurfer vis_type is not implemented.\n'
-            'Allowed visualization types: {}'.format(cfg.freesurfer_vis_types))
+            'Outlier detection based on current vis_type is not implemented.'
+            '\nAllowed visualization types: {}'.format(cfg.freesurfer_vis_types))
 
     fraction = np.float64(fraction)
     # not clipping automatically to force the user to think about it.
@@ -801,7 +801,7 @@ def check_outlier_params(method, fraction, feat_types, disable_outlier_detection
     for feat in feat_types:
         if feat not in cfg.features_outlier_detection:
             raise NotImplementedError('{} features for outlier detection '
-                                      'is not recognized or implemented'.format(feat))
+                                      'is not recognized / implemented'.format(feat))
 
     return method, fraction, feat_types, disable_outlier_detection
 

@@ -1,11 +1,10 @@
 
-from os import makedirs
-from os.path import join as pjoin, exists as pexists, abspath, realpath, basename, dirname
-from visualqc.freesurfer import cli_run
 import shlex
 import sys
-import numpy as np
-from pytest import raises, warns
+from os import makedirs
+from os.path import dirname, join as pjoin, realpath
+
+from visualqc.freesurfer import cli_run
 
 test_dir = dirname(realpath(__file__))
 
@@ -20,7 +19,6 @@ vis_type =  'cortical_contour' # 'cortical_volumetric' #
 
 makedirs(out_dir, exist_ok=True)
 
-sys.argv = shlex.split('visualqc_freesurfer -f {} -i {} '
-                       '-o {} -v {} -old '
+sys.argv = shlex.split('visualqc_freesurfer -f {} -i {} -o {} -v {} '
                        ''.format(fs_dir, id_list, out_dir, vis_type))
 cli_run()
