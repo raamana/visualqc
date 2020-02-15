@@ -198,6 +198,7 @@ num_bins_histogram_intensity_distribution = 100
 num_bins_histogram_contrast_enhancement = 256
 
 # outlier detection (OLD)
+min_num_samples_needed = 10
 t1_mri_features_OLD = ('histogram_whole_scan',)
 checkbox_rect_width = 0.05
 checkbox_rect_height = 0.05

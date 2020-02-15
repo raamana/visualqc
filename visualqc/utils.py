@@ -778,10 +778,18 @@ def check_outlier_params(method, fraction, feat_types, disable_outlier_detection
     # not clipping automatically to force the user to think about it.
     # fraction = min(max(1 / ns, fraction), 0.5)
     if id_list is not None:
-        ns = len(id_list)  # number of samples
-        if fraction < 1 / ns:
-            raise ValueError('Invalid fraction of outliers: '
-                             'must be more than 1/n (to enable detection of atleast 1)')
+        num_ids = len(id_list)
+        if num_ids >= cfg.min_num_samples_needed:
+            if fraction < 1 / num_ids:
+                raise ValueError('Invalid fraction of outliers:'
+                                 ' must be more than 1/n ({}) '
+                                 ' (to enable detection of atleast 1 sample)'
+                                 ''.format(1/num_ids))
+        else:
+            print('\nNumber of samples to review = {} < {}: '
+                  ' insufficient for outlier detection, disabling it.\n'
+                  ''.format(num_ids, cfg.min_num_samples_needed))
+            disable_outlier_detection = True
 
     if fraction > 0.5:
         raise ValueError('Invalid fraction of outliers: can not be more than 50%')
