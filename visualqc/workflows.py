@@ -381,33 +381,43 @@ class BaseWorkflowVisualQC(ABC):
                   ' skipping it.')
             return
 
-        from visualqc.outliers import detect_outliers
-        from visualqc.readers import gather_data
-        for feature_type in self.outlier_feat_types:
-            features = gather_data(self.feature_paths[feature_type], self.id_list)
-            if features.shape[0] > self.outlier_fraction * len(self.id_list):
-                print('\nRunning outlier detection based on {} measures:'.format(
-                    feature_type))
-                out_file = pjoin(self.out_dir,
-                                 '{}_{}_{}.txt'.format(cfg.outlier_list_prefix,
-                                                       self.outlier_method, feature_type))
-                self.by_feature[feature_type] = \
-                    detect_outliers(features, self.id_list,
-                                    method=self.outlier_method, out_file=out_file,
-                                    fraction_of_outliers=self.outlier_fraction)
-            else:
-                print('Insufficient number of samples (with features: {}) \n'
-                      ' \t to run outlier detection - skipping it.'.format(feature_type))
+        try:
+            from visualqc.outliers import detect_outliers
+            from visualqc.readers import gather_data
+            for feature_type in self.outlier_feat_types:
+                features = gather_data(self.feature_paths[feature_type], self.id_list)
+                if features.shape[0] > self.outlier_fraction * len(self.id_list):
+                    print('\nRunning outlier detection based on {} measures:'
+                          ''.format(feature_type))
+                    out_file = pjoin(self.out_dir, '{}_{}_{}.txt'.format(
+                        cfg.outlier_list_prefix, self.outlier_method, feature_type))
+                    self.by_feature[feature_type] = \
+                        detect_outliers(features, self.id_list,
+                                        method=self.outlier_method, out_file=out_file,
+                                        fraction_of_outliers=self.outlier_fraction)
+                else:
+                    print('Insufficient number of samples (with features: {}) \n'
+                          ' \t to run outlier detection - skipping it.'
+                          ''.format(feature_type))
 
-        # re-organizing the identified outliers by sample
-        for sid in self.id_list:
-            # each id contains a list of all feature types that flagged it as an outlier
-            self.by_sample[sid] = [feat for feat in self.outlier_feat_types if
-                                   sid in self.by_feature[feat]]
+            # re-organizing the identified outliers by sample
+            for sid in self.id_list:
+                # each id --> list of all feature types that flagged it as an outlier
+                self.by_sample[sid] = [feat for feat in self.outlier_feat_types
+                                       if sid in self.by_feature[feat]]
 
-        # dropping the IDs that were not flagged by any feature
-        # so a simple ID in dict implies --> it was ever suspected as an outlier
-        self.by_sample = {id: flag_list for id, flag_list in self.by_sample.items() if
-                          flag_list}
+            # dropping the IDs that were not flagged by any feature
+            # so a simple ID in dict implies --> it was ever suspected as an outlier
+            self.by_sample = {id_: flag_list
+                              for id_, flag_list in self.by_sample.items()
+                              if flag_list}
+        except:
+            self.disable_outlier_detection = False
+            self.by_feature = dict()
+            self.by_sample = dict()
+            print('Assitance with outlier detection did not succeed.\n'
+                  'Proceeding by disabling it. Stack trace below:\n')
+            import traceback
+            traceback.print_exc()
 
         return
