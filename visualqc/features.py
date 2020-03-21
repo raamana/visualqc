@@ -65,7 +65,11 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
     else:
         prefix = ''
     out_csv_name = '{}{}_features.csv'.format(prefix, feature_type)
-    path_to_csv = lambda sid: pjoin(wf.out_dir, sid, out_csv_name)
+
+    feat_dir = pjoin(wf.out_dir, cfg.outlier_feature_folder_name)
+    makedirs(feat_dir, exist_ok=True)
+    path_to_csv = lambda sid: pjoin(feat_dir, sid, out_csv_name)
+
     if feature_type in ['histogram_whole_scan', ]:
         extract_method = t1_histogram_whole_scan
     else:
@@ -77,7 +81,7 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
     num_subjects = len(wf.id_list)
     for counter, sid in enumerate(wf.id_list):
         print('{} : {}/{}'.format(sid, counter + 1, num_subjects))
-        makedirs(pjoin(wf.out_dir, sid), exist_ok=True)
+        makedirs(pjoin(feat_dir, sid), exist_ok=True)
         feat_file = path_to_csv(sid)
         if not pexists(feat_file):
             features = extract_method(wf.path_getter_inputs(sid))
