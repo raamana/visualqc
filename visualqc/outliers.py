@@ -105,7 +105,7 @@ def run_isolation_forest(features, id_list, fraction_of_outliers=.3):
     iso_f.fit(features)
     pred_scores = iso_f.decision_function(features)
 
-    threshold = stats.scoreatpercentile(pred_scores, [100 * fraction_of_outliers, ])
+    threshold = stats.scoreatpercentile(pred_scores, 100 * fraction_of_outliers)
     outlying_ids = id_list[pred_scores < threshold]
 
     return outlying_ids
