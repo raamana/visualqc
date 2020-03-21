@@ -9,21 +9,23 @@ import sys
 import textwrap
 import warnings
 from abc import ABC
+from os.path import join as pjoin, realpath
 
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import CheckButtons, RadioButtons
-from mrivis.utils import crop_image
 from mrivis.base import Collage
-from os.path import join as pjoin, realpath
+from mrivis.utils import crop_image
 
 from visualqc import config as cfg
-from visualqc.interfaces import BaseReviewInterface
-from visualqc.utils import check_finite_int, check_id_list, check_input_dir_T1, \
-    check_out_dir, check_outlier_params, check_views, get_axis, pick_slices, read_image, \
-    scale_0to1, saturate_brighter_intensities
-from visualqc.workflows import BaseWorkflowVisualQC
 from visualqc.image_utils import mask_image
+from visualqc.interfaces import BaseReviewInterface
+from visualqc.utils import (check_finite_int, check_id_list, check_input_dir_T1,
+                            check_out_dir, check_outlier_params, check_views,
+                            read_image, saturate_brighter_intensities, scale_0to1,
+                            check_bids_dir)
+from visualqc.readers import find_anatomical_images_in_BIDS
+from visualqc.workflows import BaseWorkflowVisualQC
 
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
@@ -570,16 +572,16 @@ def get_parser():
     \n""")
 
     help_text_fs_dir = textwrap.dedent("""
-    Absolute path to ``SUBJECTS_DIR`` containing the finished runs of Freesurfer parcellation
+    Absolute path to ``SUBJECTS_DIR`` containing Freesurfer runs.
     Each subject will be queried after its ID in the metadata file.
 
     E.g. ``--fs_dir /project/freesurfer_v5.3``
     \n""")
 
     help_text_user_dir = textwrap.dedent("""
-    Absolute path to an input folder containing the MRI scan. 
-    Each subject will be queried after its ID in the metadata file, 
-    and is expected to have the MRI (specified ``--mri_name``), 
+    Absolute path to an input folder containing the MRI scan.
+    Each subject will be queried after its ID in the metadata file,
+    and is expected to have the MRI (specified ``--mri_name``),
     in its own folder under --user_dir.
 
     E.g. ``--user_dir /project/images_to_QC``
@@ -620,18 +622,18 @@ def get_parser():
     \n""".format(cfg.default_views[0], cfg.default_views[1], cfg.default_views[2]))
 
     help_text_num_slices = textwrap.dedent("""
-    Specifies the number of slices to display per each view. 
+    Specifies the number of slices to display per each view.
     This must be even to facilitate better division.
     Default: {}.
     \n""".format(cfg.default_num_slices))
 
     help_text_num_rows = textwrap.dedent("""
-    Specifies the number of rows to display per each axis. 
+    Specifies the number of rows to display per each axis.
     Default: {}.
     \n""".format(cfg.default_num_rows))
 
     help_text_prepare = textwrap.dedent("""
-    This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations. 
+    This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations.
     This makes the switch from one subject to the next, even more seamless (saving few seconds :) ).
 
     Default: False (required visualizations are generated only on demand, which can take 5-10 seconds for each subject).
@@ -646,7 +648,7 @@ def get_parser():
     \n""".format(cfg.default_outlier_detection_method))
 
     help_text_outlier_fraction = textwrap.dedent("""
-    Fraction of outliers expected in the given sample. Must be >= 1/n and <= (n-1)/n, 
+    Fraction of outliers expected in the given sample. Must be >= 1/n and <= (n-1)/n,
     where n is the number of samples in the current sample.
 
     For more info, read http://scikit-learn.org/stable/modules/outlier_detection.html
@@ -655,9 +657,9 @@ def get_parser():
     \n""".format(cfg.default_outlier_fraction))
 
     help_text_outlier_feat_types = textwrap.dedent("""
-    Type of features to be employed in training the outlier detection method.  It could be one of  
-    'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label), 
-    'subcortical' (aseg.stats: volumes of several subcortical structures), 
+    Type of features to be employed in training the outlier detection method.  It could be one of
+    'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label),
+    'subcortical' (aseg.stats: volumes of several subcortical structures),
     or 'both' (using both aseg and aparc stats).
 
     Default: {}.
@@ -691,8 +693,10 @@ def get_parser():
     in_out.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
                         default=cfg.default_freesurfer_dir,
                         required=False, help=help_text_fs_dir)
+
     outliers = parser.add_argument_group('Outlier detection',
-                                         'options related to automatically detecting possible outliers')
+                                         'options related to automatically detecting '
+                                         'possible outliers')
     outliers.add_argument("-olm", "--outlier_method", action="store",
                           dest="outlier_method",
                           default=cfg.default_outlier_detection_method, required=False,
@@ -725,9 +729,11 @@ def get_parser():
                         default=cfg.default_num_rows, required=False,
                         help=help_text_num_rows)
 
-    wf_args = parser.add_argument_group('Workflow', 'Options related to workflow '
-                                                    'e.g. to pre-compute resource-intensive features, '
-                                                    'and pre-generate all the visualizations required')
+    wf_args = parser.add_argument_group('Workflow',
+                                        'Options related to workflow e.g. to '
+                                        'pre-compute resource-intensive features, '
+                                        'and pre-generate all the visualizations '
+                                        'required')
     wf_args.add_argument("-p", "--prepare_first", action="store_true",
                          dest="prepare_first",
                          help=help_text_prepare)
@@ -753,7 +759,8 @@ def make_workflow_from_user_options():
 
     vis_type = 'collage_t1_mri'
     type_of_features = 't1_mri'
-    in_dir, in_dir_type = check_input_dir_T1(user_args.fs_dir, user_args.user_dir)
+    in_dir, in_dir_type = check_input_dir_T1(user_args.fs_dir, user_args.user_dir,
+                                             user_args.bids_dir)
 
     if in_dir_type.upper() in ('BIDS', ):
         mri_name = None

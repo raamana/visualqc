@@ -386,7 +386,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                for _, sub_data in self.units.items()}
             self.id_list = list(self.unit_by_id.keys())
         else:
-            raise NotImplementedError('Only the BIDS format is supported at the moment.')
+            raise NotImplementedError('Only the BIDS format is supported for now!')
 
 
     def open_figure(self):
@@ -1142,9 +1142,9 @@ def get_parser():
     \n""")
 
     help_text_user_dir = textwrap.dedent("""
-    Absolute path to an input folder containing the MRI scan. 
-    Each subject will be queried after its ID in the metadata file, 
-    and is expected to have a file, uniquely specified ``--name_pattern``), 
+    Absolute path to an input folder containing the MRI scan.
+    Each subject will be queried after its ID in the metadata file,
+    and is expected to have a file, uniquely specified ``--name_pattern``),
     in its own folder under this path ``--user_dir``.
 
     E.g. ``--user_dir /project/images_to_QC``
@@ -1167,12 +1167,12 @@ def get_parser():
 
     help_text_name_pattern = textwrap.dedent("""
     Specifies the regex to be used to search for the image to be reviewed.
-    Typical options include: 
+    Typical options include:
 
         - ``'dwi.nii'``, when name is common across subjects
         - ``'*_preproc_*.nii'``, when filenames have additional info encoded (such as redundant subject ID as in BIDS format)
-         - ``'func/sub*_dwi_*space-MNI152*_preproc.nii.gz'`` when you need to additional levels deeper (with a / in regex) 
-            or control different versions (atlas space) of the same type of file. 
+         - ``'func/sub*_dwi_*space-MNI152*_preproc.nii.gz'`` when you need to additional levels deeper (with a / in regex)
+            or control different versions (atlas space) of the same type of file.
 
     Ensure the regex is *tight* enough to result in only one file for each ID in the id_list. You can do this by giving it a try in the shell and counting the number of results against the number of IDs in id_list. If you have more results than the IDs, then there are duplicates. You can use https://regex101.com to construct your pattern to tightly match your requirements. If multiple matches are found, the first one will be used.
 
@@ -1187,7 +1187,7 @@ def get_parser():
     \n""".format(cfg.default_out_dir_name))
 
     help_text_apply_preproc = textwrap.dedent("""
-    Whether to apply basic preprocessing steps (detrend, slice timing correction etc), before building the carpet image. 
+    Whether to apply basic preprocessing steps (detrend, slice timing correction etc), before building the carpet image.
 
     If the images are already preprocessed elsewhere, use this flag ``--apply_preproc``
 
@@ -1201,13 +1201,13 @@ def get_parser():
     \n""".format(cfg.default_views[0], cfg.default_views[1], cfg.default_views[2]))
 
     help_text_num_slices = textwrap.dedent("""
-    Specifies the number of slices to display per each view. 
+    Specifies the number of slices to display per each view.
     This must be even to facilitate better division.
     Default: {}.
     \n""".format(cfg.default_num_slices))
 
     help_text_num_rows = textwrap.dedent("""
-    Specifies the number of rows to display per each axis. 
+    Specifies the number of rows to display per each axis.
     Default: {}.
     \n""".format(cfg.default_num_rows))
 

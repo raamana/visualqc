@@ -70,8 +70,8 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
         extract_method = t1_histogram_whole_scan
     else:
         raise NotImplementedError('Requested feature type {} not implemented!\n'
-                                  '\tAllowed options : {} '.format(feature_type,
-                                                                   cfg.t1_mri_features_OLD))
+                                  '\tAllowed options : {} '
+                                  ''.format(feature_type, cfg.t1_mri_features_OLD))
 
     feature_paths = dict()
     num_subjects = len(wf.id_list)

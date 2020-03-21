@@ -387,11 +387,13 @@ def diffusion_traverse_bids(bids_layout,
         param_files_exist = all([file_ext in temp for file_ext in reqd_exts_params])
         image_files_exist = any([file_ext in temp for file_ext in reqd_exts_images])
         if param_files_required and not param_files_exist:
-            print('b-value/b-vec are required, but do not exist for {} - skipping it.'.format(sub))
+            print('b-value/b-vec are required, but do not exist for {}'
+                  ' - skipping it.'.format(sub))
             continue
 
         if not image_files_exist:
-            print('Image file is required, but does not exist for {} - skipping it.'.format(sub))
+            print('Image file is required, but does not exist for {}'
+                  ' - skipping it.'.format(sub))
             continue
 
         files_by_id[final_sub_id] = dict()
@@ -399,7 +401,8 @@ def diffusion_traverse_bids(bids_layout,
         # adding parameter files, only if they exist
         if param_files_exist:
             files_by_id[final_sub_id] = { new_ext : temp[old_ext]
-                                 for old_ext, new_ext in zip(reqd_exts_params, named_exts_params)}
+                                 for old_ext, new_ext in zip(reqd_exts_params,
+                                                             named_exts_params)}
         else:
             # assuming the first volume is b=0
             files_by_id[final_sub_id]['bval'] = 'assume_first'

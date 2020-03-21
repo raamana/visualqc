@@ -4,6 +4,7 @@ import os
 import sys
 import warnings
 from genericpath import exists as pexists
+from os.path import realpath
 from os import makedirs
 from shutil import copyfile, which
 
@@ -495,7 +496,7 @@ def check_input_dir_T1(fs_dir, user_dir, bids_dir):
 
     if fs_dir is not None:
         if user_dir is not None:
-            raise ValueError('Only one of --fs_dir or --user_dir can be specified.')
+            raise ValueError('--user_dir can not be specified when --fs_dir is ')
 
     if user_dir is None:
         if not pexists(fs_dir):
@@ -511,10 +512,10 @@ def check_input_dir_T1(fs_dir, user_dir, bids_dir):
             type_of_features = 'generic'
 
     if not pexists(in_dir):
-        raise IOError(
-            'Invalid specification - check proper combination of --fs_dir and --user_dir')
+        raise IOError('Invalid specification: check proper combination of '
+                      '--bids_dir, --fs_dir,  --user_dir')
 
-    return in_dir, type_of_features
+    return realpath(in_dir), type_of_features
 
 
 def check_input_dir_alignment(in_dir):
@@ -535,7 +536,8 @@ def check_bids_dir(dir_path):
     descr_path = pjoin(dir_path, descr_file_name)
     if not pexists(descr_path):
         raise ValueError('There is no {} file at the root\n '
-                         'Ensure folder is formatted according to BIDS spec.'.format(descr_file_name))
+                         'Ensure folder is formatted according to BIDS spec.'
+                         ''.format(descr_file_name))
 
     try:
         import json
@@ -563,11 +565,11 @@ def freesurfer_installed():
     return True
 
 
-def check_out_dir(out_dir, fs_dir):
+def check_out_dir(out_dir, base_dir):
     """Creates the output folder."""
 
     if out_dir is None:
-        out_dir = pjoin(fs_dir, default_out_dir_name)
+        out_dir = pjoin(base_dir, default_out_dir_name)
 
     try:
         os.makedirs(out_dir, exist_ok=True)
@@ -580,7 +582,10 @@ def check_out_dir(out_dir, fs_dir):
 def check_id_list(id_list_in, in_dir, vis_type,
                   mri_name, seg_name=None,
                   in_dir_type=None):
-    """Checks to ensure each subject listed has the required files and returns only those that can be processed."""
+    """
+    Checks to ensure each subject listed has the required files
+    and returns only those that can be processed.
+    """
 
     if id_list_in is not None:
         if not pexists(id_list_in):
@@ -609,7 +614,8 @@ def check_id_list(id_list_in, in_dir, vis_type,
     images_for_id = dict()
 
     for subject_id in id_list:
-        path_list = { img: get_path_for_subject(in_dir, subject_id, name, vis_type, in_dir_type)
+        path_list = { img: get_path_for_subject(in_dir, subject_id, name,
+                                                vis_type, in_dir_type)
                         for img, name in required_files.items()
                     }
         invalid = [pfile for pfile in path_list.values() if
@@ -622,15 +628,15 @@ def check_id_list(id_list_in, in_dir, vis_type,
             images_for_id[subject_id] = path_list
 
     if len(id_list_err) > 0:
-        warnings.warn(
-            'The following subjects do NOT have all the required files or some are empty - skipping them!')
+        warnings.warn('The following subjects do NOT have all the required files'
+                      ' or some are empty - skipping them!')
         print('\n'.join(id_list_err))
-        print('\n\nThe following files do not exist or empty: \n {} \n\n'.format(
-            '\n'.join(invalid_list)))
+        print('\n\nThe following files do not exist or empty:'
+              ' \n {} \n\n'.format('\n'.join(invalid_list)))
 
     if len(id_list_out) < 1:
-        raise ValueError(
-            'All the subject IDs do not have the required files - unable to proceed.')
+        raise ValueError('All the subject IDs do not have the required files'
+                         ' - unable to proceed.')
 
     print('{} subjects are usable for review.'.format(len(id_list_out)))
 
