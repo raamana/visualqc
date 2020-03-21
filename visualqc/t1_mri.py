@@ -65,7 +65,8 @@ class T1MriInterface(BaseReviewInterface):
         self.add_process_options()
         # include all the non-data axes here (so they wont be zoomed-in)
         self.unzoomable_axes = [self.checkbox.ax, self.text_box.ax,
-                                self.bt_next.ax, self.bt_quit.ax, self.radio_bt_vis_type]
+                                self.bt_next.ax, self.bt_quit.ax,
+                                self.radio_bt_vis_type]
 
         # this list of artists to be populated later
         # makes to handy to clean them all
@@ -73,15 +74,17 @@ class T1MriInterface(BaseReviewInterface):
 
     def add_checkboxes(self):
         """
-        Checkboxes offer the ability to select multiple tags such as Motion, Ghosting Aliasing etc,
-            instead of one from a list of mutual exclusive rating options (such as Good, Bad, Error etc).
-
+        Checkboxes offer the ability to select multiple tags such as Motion,
+        Ghosting, Aliasing etc, instead of one from a list of mutual exclusive
+        rating options (such as Good, Bad, Error etc).
         """
 
-        ax_checkbox = plt.axes(cfg.position_checkbox_t1_mri, facecolor=cfg.color_rating_axis)
+        ax_checkbox = plt.axes(cfg.position_checkbox_t1_mri,
+                               facecolor=cfg.color_rating_axis)
         # initially de-activating all
         actives = [False] * len(self.issue_list)
-        self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list, actives=actives)
+        self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list,
+                                     actives=actives)
         self.checkbox.on_clicked(self.save_issues)
         for txt_lbl in self.checkbox.labels:
             txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
@@ -227,8 +230,9 @@ class T1MriInterface(BaseReviewInterface):
                 self.zoomed_in = False
 
         # right or double click to zoom in to any axis
-        if (event.button in [3] or event.dblclick) and (event.inaxes is not None) and \
-            event.inaxes not in self.unzoomable_axes:
+        if (event.button in [3] or event.dblclick) and \
+            (event.inaxes is not None) and \
+            (event.inaxes not in self.unzoomable_axes):
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(cfg.zoomed_position)
             event.inaxes.set_zorder(1)  # bring forth
@@ -338,7 +342,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.figsize = cfg.default_review_figsize
 
         self.collage = Collage(view_set=views,
-                               num_slices=num_slices_per_view, num_rows=num_rows_per_view,
+                               num_slices=num_slices_per_view,
+                               num_rows=num_rows_per_view,
                                display_params=self.display_params,
                                bounding_rect=cfg.bounding_box_review,
                                figsize=self.figsize)
@@ -384,7 +389,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
                                't+alt': self.show_tails_trimmed,
                                'alt+o': self.show_original,
                                'o+alt': self.show_original}
-        self.UI = T1MriInterface(self.collage.fig, self.collage.flat_grid, self.issue_list,
+        self.UI = T1MriInterface(self.collage.fig, self.collage.flat_grid,
+                                 self.issue_list,
                                  next_button_callback=self.next,
                                  quit_button_callback=self.quit,
                                  processing_choice_callback=self.process_and_display,
@@ -436,8 +442,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         if flagged_as_outlier:
             alerts_list = self.by_sample.get(self.current_unit_id,
                                              None)  # None, if id not in dict
-            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'.format(
-                '\t'.join(alerts_list)))
+            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'
+                  ''.format('\t'.join(alerts_list)))
 
             strings_to_show = ['Flagged as an outlier:', ] + alerts_list
             self.current_alert_msg = '\n'.join(strings_to_show)
@@ -497,8 +503,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
 
         if not self.currently_showing in ['saturated', ] or no_toggle:
             if not hasattr(self, 'saturated_img'):
-                self.saturated_img = saturate_brighter_intensities(self.current_img,
-                                                                   percentile=cfg.saturate_perc_t1)
+                self.saturated_img = saturate_brighter_intensities(
+                    self.current_img, percentile=cfg.saturate_perc_t1)
             self.collage.attach(self.saturated_img)
             self.currently_showing = 'saturated'
         else:
@@ -633,10 +639,12 @@ def get_parser():
     \n""".format(cfg.default_num_rows))
 
     help_text_prepare = textwrap.dedent("""
-    This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations.
-    This makes the switch from one subject to the next, even more seamless (saving few seconds :) ).
+    This flag enables batch-generation of 3d surface visualizations,
+    prior to starting any review and rating operations. This makes the switch
+    from one subject to the next, even more seamless (saving few seconds :) ).
 
-    Default: False (required visualizations are generated only on demand, which can take 5-10 seconds for each subject).
+    Default: False  (required visualizations are generated only on demand,
+    which can take 5-10 seconds for each subject).
     \n""")
 
     help_text_outlier_detection_method = textwrap.dedent("""
@@ -657,10 +665,11 @@ def get_parser():
     \n""".format(cfg.default_outlier_fraction))
 
     help_text_outlier_feat_types = textwrap.dedent("""
-    Type of features to be employed in training the outlier detection method.  It could be one of
-    'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label),
-    'subcortical' (aseg.stats: volumes of several subcortical structures),
-    or 'both' (using both aseg and aparc stats).
+    Type of features to be employed in training the outlier detection method.
+    It could be one of 'cortical' (aparc.stats: mean thickness and other
+    geometrical features from each cortical label), 'subcortical' (aseg.stats:
+    volumes of several subcortical structures), or 'both' (using both aseg and
+    aparc stats).
 
     Default: {}.
     \n""".format(cfg.t1_mri_features_OLD))
@@ -671,12 +680,12 @@ def get_parser():
 
     in_out = parser.add_argument_group('Input and output', ' ')
 
-    in_out.add_argument("-i", "--id_list", action="store", dest="id_list",
-                        default=None, required=False, help=help_text_id_list)
-
     in_out.add_argument("-b", "--bids_dir", action="store", dest="bids_dir",
                         default=cfg.default_bids_dir,
                         required=False, help=help_text_bids_dir)
+
+    in_out.add_argument("-i", "--id_list", action="store", dest="id_list",
+                        default=None, required=False, help=help_text_id_list)
 
     in_out.add_argument("-u", "--user_dir", action="store", dest="user_dir",
                         default=cfg.default_user_dir,
