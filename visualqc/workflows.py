@@ -385,6 +385,12 @@ class BaseWorkflowVisualQC(ABC):
             from visualqc.outliers import detect_outliers
             from visualqc.readers import gather_data
             for feature_type in self.outlier_feat_types:
+
+                if len(self.feature_paths[feature_type]) < 1:
+                    print('{} features for outlier detection are not available ...'
+                          ' '.format(feature_type))
+                    continue
+
                 try:
                     features = gather_data(self.feature_paths[feature_type], self.id_list)
                 except:
