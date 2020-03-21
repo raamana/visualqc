@@ -475,12 +475,23 @@ def check_input_dir(fs_dir, user_dir, vis_type,
     return in_dir, type_of_features
 
 
-def check_input_dir_T1(fs_dir, user_dir):
+def check_input_dir_T1(fs_dir, user_dir, bids_dir):
     """Ensures proper input is specified."""
 
-    in_dir = fs_dir
-    if fs_dir is None and user_dir is None:
-        raise ValueError('At least one of --fs_dir or --user_dir must be specified.')
+    if fs_dir is None and user_dir is None and bids_dir is None:
+        raise ValueError('At least one of --bids_dir or --fs_dir or --user_dir must '
+                         'be specified, and only one can be specified.')
+
+    if bids_dir is not None:
+        if fs_dir is not None or user_dir is not None:
+            raise ValueError('fs_dir and user_dir can NOT be specified when '
+                             'specifying BIDS')
+        in_dir = realpath(bids_dir)
+        if not pexists(in_dir):
+            raise IOError('BIDS directory specified does not exist!')
+
+        type_of_features = 'BIDS'
+        return in_dir, type_of_features
 
     if fs_dir is not None:
         if user_dir is not None:
