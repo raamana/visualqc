@@ -178,42 +178,6 @@ def gather_freesurfer_data(qcw,
     return features
 
 
-def gather_T1_features(wf, feature_type='histogram_whole_scan'):
-    """
-    Returns a set of features from T1 sMRI scan from each subject.
-
-    Parameters
-    ----------
-    wf : QCWorkFlow
-        Self-contained object describing the details of a particular QC operation.
-
-    feature_type : str
-        String the identifying the type of features to read.
-
-    Returns
-    -------
-    features : ndarray
-        An array of size N x p (N=number of input samples, p=dimensionality)
-
-    """
-
-    from visualqc.features import t1_histogram_whole_scan
-    from visualqc.utils import get_path_for_subject
-
-    feature_type = feature_type.lower()
-    if feature_type in ['histogram_whole_scan', ]:
-        path_to_mri = lambda sid: get_path_for_subject(wf.in_dir, sid, wf.mri_name,
-                                                       wf.vis_type)
-        features = np.vstack(
-            [t1_histogram_whole_scan(path_to_mri(sid)) for sid in wf.id_list])
-    else:
-        raise NotImplementedError('Requested feature type {} not implemented!\n'
-                                  '\tAllowed options : {} '.format(feature_type,
-                                                                   cfg.t1_mri_features_OLD))
-
-    return features
-
-
 def gather_data(path_list, id_list):
     """
     Takes in a list of CSVs, and return a table of features.
