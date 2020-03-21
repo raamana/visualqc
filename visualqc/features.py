@@ -89,8 +89,8 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
                 np.savetxt(feat_file, features, delimiter='\n', header=feature_type)
             except:
                 raise IOError('Unable to save extracted features to disk!')
-        else:
-            feature_paths[sid] = feat_file
+
+        feature_paths[sid] = feat_file
 
     return feature_paths
 
