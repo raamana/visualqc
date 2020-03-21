@@ -5,15 +5,15 @@ import sys
 import warnings
 from genericpath import exists as pexists
 from os import makedirs
+from os.path import basename, join as pjoin, realpath, splitext
 from shutil import copyfile, which
 
 import nibabel as nib
 import numpy as np
-from os.path import basename, join as pjoin, realpath, splitext
 
 import visualqc.config as cfg
-from visualqc.config import default_out_dir_name, freesurfer_vis_cmd, \
-    freesurfer_vis_types, visualization_combination_choices
+from visualqc.config import (default_out_dir_name, freesurfer_vis_cmd,
+                             freesurfer_vis_types, visualization_combination_choices)
 
 
 def read_image(img_spec,
@@ -517,6 +517,20 @@ def check_input_dir_alignment(in_dir):
     return in_dir, type_of_features
 
 
+def check_input_dir_quantitative_MR(in_dir):
+    """Ensures proper input directory is specified for Quantitative MR."""
+
+    if in_dir is None:
+        raise ValueError('Invalid input - specify an input dir that is not None!')
+
+    if not pexists(in_dir):
+        raise IOError('input dir does not exist!')
+
+    type_of_features = 'generic'
+
+    return in_dir, type_of_features
+
+
 def check_bids_dir(dir_path):
     """Checks if its a BIDS folder or not"""
 
@@ -566,10 +580,8 @@ def check_out_dir(out_dir, fs_dir):
     return out_dir
 
 
-def check_id_list(id_list_in, in_dir, vis_type,
-                  mri_name, seg_name=None,
-                  in_dir_type=None):
-    """Checks to ensure each subject listed has the required files and returns only those that can be processed."""
+def get_id_list_in_dir(id_list_in, in_dir):
+    """Validates the list of IDs, or returns the existing IDs in a given in_dir"""
 
     if id_list_in is not None:
         if not pexists(id_list_in):
@@ -583,6 +595,19 @@ def check_id_list(id_list_in, in_dir, vis_type,
         # get all IDs in the given folder
         id_list = [folder for folder in os.listdir(in_dir) if
                    os.path.isdir(pjoin(in_dir, folder))]
+
+    return id_list
+
+
+def check_id_list(id_list_in, in_dir, vis_type,
+                  mri_name, seg_name=None,
+                  in_dir_type=None):
+    """Checks to ensure each subject listed has the required files
+        and returns only those that can be processed.
+
+    """
+
+    id_list = get_id_list_in_dir(id_list_in, in_dir)
 
     if seg_name is not None:
         required_files = {'mri': mri_name, 'seg': seg_name}
@@ -598,9 +623,10 @@ def check_id_list(id_list_in, in_dir, vis_type,
     images_for_id = dict()
 
     for subject_id in id_list:
-        path_list = { img: get_path_for_subject(in_dir, subject_id, name, vis_type, in_dir_type)
-                        for img, name in required_files.items()
-                    }
+        path_list = {img: get_path_for_subject(in_dir, subject_id, name,
+                                               vis_type, in_dir_type)
+                     for img, name in required_files.items()
+                     }
         invalid = [pfile for pfile in path_list.values() if
                    not pexists(pfile) or os.path.getsize(pfile) <= 0]
         if len(invalid) > 0:
@@ -612,7 +638,8 @@ def check_id_list(id_list_in, in_dir, vis_type,
 
     if len(id_list_err) > 0:
         warnings.warn(
-            'The following subjects do NOT have all the required files or some are empty - skipping them!')
+            'The following subjects do NOT have all the required files '
+            'or some are empty - skipping them!')
         print('\n'.join(id_list_err))
         print('\n\nThe following files do not exist or empty: \n {} \n\n'.format(
             '\n'.join(invalid_list)))
@@ -678,6 +705,55 @@ def check_id_list_with_regex(id_list_in, in_dir, name_pattern):
             'All the subject IDs do not have the required files - unable to proceed.')
 
     print('{} subjects/sessions/units are usable for review.'.format(len(id_list_out)))
+
+    return np.array(id_list_out), images_for_id
+
+
+def check_id_list_quantitative(id_list_in, in_dir, image_names, in_dir_type=None):
+    """Checks to ensure each subject listed has the required files
+        and returns only those that can be processed.
+
+    """
+
+    id_list = get_id_list_in_dir(id_list_in, in_dir)
+
+    if image_names is None or len(image_names) < 1:
+        raise ValueError('Atleast one image name must be specified!')
+
+    id_list_out = list()
+    id_list_err = list()
+    invalid_list = list()
+
+    # this dict contains existing files for each ID
+    # useful to open external programs like tkmedit
+    images_for_id = dict()
+
+    for subject_id in id_list:
+        path_list = [ get_path_for_subject(in_dir, subject_id, name, in_dir_type)
+                     for name in image_names
+                    ]
+        invalid = [pfile for pfile in path_list
+                   if (not pexists(pfile)) or (os.path.getsize(pfile) <= 0)]
+        if len(invalid) > 0:
+            id_list_err.append(subject_id)
+            invalid_list.extend(invalid)
+        else:
+            id_list_out.append(subject_id)
+            images_for_id[subject_id] = path_list
+
+    if len(id_list_err) > 0:
+        warnings.warn(
+            'The following subjects do NOT have all the required files '
+            'or some are empty - skipping them!')
+        print('\n'.join(id_list_err))
+        print('\n\nThe following files do not exist or empty: \n {} \n\n'.format(
+            '\n'.join(invalid_list)))
+
+    if len(id_list_out) < 1:
+        raise ValueError(
+            'All the subject IDs do not have the required files - unable to proceed.')
+
+    print('{} subjects are usable for review.'.format(len(id_list_out)))
 
     return np.array(id_list_out), images_for_id
 

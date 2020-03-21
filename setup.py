@@ -46,13 +46,15 @@ setup(
             'visualqc_diffusion=visualqc.__diffusion__:main',
             'visualqc_freesurfer=visualqc.__freesurfer__:main',
             'visualqc_alignment=visualqc.__alignment__:main',
+            'visualqc_quantitative=visualqc.__quantitative__:main',
             # shortcuts
             'vqcdeface=visualqc.__defacing__:main',
             'vqct1=visualqc.__t1_mri__:main',
             'vqcfunc=visualqc.__func_mri__:main',
             'vqcdwi=visualqc.__diffusion__:main',
             'vqcfs=visualqc.__freesurfer__:main',
-            'vqcalign=visualqc.__alignment__:main'
+            'vqcalign=visualqc.__alignment__:main',
+            'vqcqmr=visualqc.__quantitative__:main'
         ]
     },
     include_package_data=True,
