@@ -4,7 +4,7 @@ Data reader module.
 
 """
 import numpy as np
-from os.path import exists as pexists, join as pjoin, realpath, splitext
+from os.path import exists as pexists, join as pjoin, realpath, splitext, basename
 from itertools import product
 from collections import Sequence
 from visualqc import config as cfg
@@ -225,6 +225,106 @@ def gather_data(path_list, id_list):
     features = np.vstack([np.genfromtxt(path_list[sid]) for sid in id_list])
 
     return features
+
+
+def anatomical_traverse_bids(bids_layout,
+                            modalities='anat',
+                            subjects=None,
+                            sessions=None,
+                            extensions=('nii', 'nii.gz', 'json'),
+                            param_files_required=False,
+                            **kwargs):
+    """
+    Builds a convenient dictionary of usable anatomical subjects/sessions.
+    """
+
+    meta_types = {'datatype'  : modalities,
+                  'extensions': extensions,
+                  'subjects'  : subjects,
+                  'sessions'  : sessions}
+
+    meta_types.update(kwargs)
+    non_empty_types = {type_: values for type_, values in meta_types.items() if values}
+
+    __FIELDS_TO_IGNORE__ = ('filename', 'modality', 'type')
+    __TYPES__ = ['subjects', 'sessions',]
+
+    results = bids_layout.get(**non_empty_types)
+    if len(results) < 1:
+        print('No results found!')
+        return None, None
+
+    all_subjects = bids_layout.get_subjects()
+    all_sessions = bids_layout.get_sessions()
+    if len(all_sessions) > 1:
+        sessions_exist = True
+        combinations = product(all_subjects, all_sessions)
+    else:
+        sessions_exist = False
+        combinations = all_subjects
+
+
+    reqd_exts_params = ('.json', )
+    named_exts_params = ('params', )
+    reqd_exts_images = ('.nii', '.gz')
+    named_exts_images = ('image', 'image')
+
+    files_by_id = dict()
+    for sub in combinations:
+        if sessions_exist:
+            # sub is a tuple of subject,session
+            results = bids_layout.get(subject=sub[0], session=sub[1],
+                                      datatype='anat')
+            final_sub_id = '_'.join(sub)
+        else:
+            results = bids_layout.get(subject=sub,  datatype='anat')
+            final_sub_id = sub
+
+        temp = {splitext(file.filename)[-1] : realpath(file.path)
+                for file in results}
+
+        param_files_exist = all([file_ext in temp for file_ext in reqd_exts_params])
+        image_files_exist = any([file_ext in temp for file_ext in reqd_exts_images])
+        if param_files_required and (not param_files_exist):
+            print('parameter files are required, but do not exist for {}'
+                  ' - skipping it.'.format(sub))
+            continue
+
+        if not image_files_exist:
+            print('Image file is required, but does not exist for {}'
+                  ' - skipping it.'.format(sub))
+            continue
+
+        files_by_id[final_sub_id] = dict()
+        # only when all the files required exist, do we include it for review
+        # adding parameter files, only if they exist
+        if param_files_exist:
+            files_by_id[final_sub_id] = { new_ext : temp[old_ext]
+                                 for old_ext, new_ext in zip(reqd_exts_params,
+                                                             named_exts_params)}
+        else:
+            files_by_id[final_sub_id]['params'] = 'None'
+
+        # adding the image file
+        files_by_id[final_sub_id]['image'] = temp['.nii'] \
+            if 'nii' in temp else temp['.gz']
+
+    return files_by_id
+
+
+def find_anatomical_images_in_BIDS(bids_dir):
+    """Traverses the BIDS structure to find all the relevant anatomical images."""
+
+    from bids import BIDSLayout
+    bids_layout = BIDSLayout(bids_dir)
+    images = anatomical_traverse_bids(bids_layout)
+    # file name of each scan is the unique identifier,
+    #   as it essentially contains all the key info.
+    images_by_id = {basename(sub_data['image']): sub_data
+                       for _, sub_data in images.items()}
+    id_list = np.array(list(images_by_id.keys()))
+
+    return id_list, images_by_id
 
 
 def diffusion_traverse_bids(bids_layout,
