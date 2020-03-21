@@ -276,7 +276,9 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
                  in_dir,
                  out_dir,
                  issue_list,
-                 mri_name, in_dir_type,
+                 mri_name,
+                 in_dir_type,
+                 images_for_id,
                  outlier_method, outlier_fraction,
                  outlier_feat_types, disable_outlier_detection,
                  prepare_first,
@@ -292,6 +294,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.issue_list = issue_list
         self.mri_name = mri_name
         self.in_dir_type = in_dir_type
+        self.images_for_id = images_for_id
         self.expt_id = 'rate_mri_{}'.format(self.mri_name)
         self.suffix = self.expt_id
         self.current_alert_msg = None
@@ -355,8 +358,12 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
             self.path_getter_inputs = lambda sub_id: realpath(
                 pjoin(self.in_dir, sub_id, 'mri', self.mri_name))
         else:
-            self.path_getter_inputs = lambda sub_id: realpath(
-                pjoin(self.in_dir, sub_id, self.mri_name))
+            if self.in_dir_type.upper() in ('BIDS', ):
+                self.path_getter_inputs = lambda sub_id: self.images_for_id[
+                    sub_id]['image']
+            else:
+                self.path_getter_inputs = lambda sub_id: realpath(
+                    pjoin(self.in_dir, sub_id, self.mri_name))
 
     def open_figure(self):
         """Creates the master figure to show everything in."""
@@ -554,6 +561,14 @@ def get_parser():
                                      formatter_class=argparse.RawTextHelpFormatter,
                                      description='visualqc_t1_mri: rate quality of anatomical MR scan.')
 
+    help_text_bids_dir = textwrap.dedent("""
+    Absolute path to the top-level BIDS folder containing the dataset.
+    Each subject will be named after the longest/unique ID encoding info on
+    sessions and anything else available in the filename in the deepest hierarchy etc
+
+    E.g. ``--bids_dir /project/dataset_bids``
+    \n""")
+
     help_text_fs_dir = textwrap.dedent("""
     Absolute path to ``SUBJECTS_DIR`` containing the finished runs of Freesurfer parcellation
     Each subject will be queried after its ID in the metadata file.
@@ -657,6 +672,10 @@ def get_parser():
     in_out.add_argument("-i", "--id_list", action="store", dest="id_list",
                         default=None, required=False, help=help_text_id_list)
 
+    in_out.add_argument("-b", "--bids_dir", action="store", dest="bids_dir",
+                        default=cfg.default_bids_dir,
+                        required=False, help=help_text_bids_dir)
+
     in_out.add_argument("-u", "--user_dir", action="store", dest="user_dir",
                         default=cfg.default_user_dir,
                         required=False, help=help_text_user_dir)
@@ -736,10 +755,15 @@ def make_workflow_from_user_options():
     type_of_features = 't1_mri'
     in_dir, in_dir_type = check_input_dir_T1(user_args.fs_dir, user_args.user_dir)
 
-    mri_name = user_args.mri_name
-    id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type,
-                                           mri_name, seg_name=None,
-                                           in_dir_type=in_dir_type)
+    if in_dir_type.upper() in ('BIDS', ):
+        mri_name = None
+        in_dir, bids_dir_type = check_bids_dir(in_dir)
+        id_list, images_for_id = find_anatomical_images_in_BIDS(in_dir)
+    else:
+        mri_name = user_args.mri_name
+        id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type,
+                                               mri_name, seg_name=None,
+                                               in_dir_type=in_dir_type)
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
     views = check_views(user_args.views)
@@ -757,7 +781,7 @@ def make_workflow_from_user_options():
 
     wf = RatingWorkflowT1(id_list, in_dir, out_dir,
                           cfg.t1_mri_default_issue_list,
-                          mri_name, in_dir_type,
+                          mri_name, in_dir_type, images_for_id,
                           outlier_method, outlier_fraction,
                           outlier_feat_types, disable_outlier_detection,
                           user_args.prepare_first,
