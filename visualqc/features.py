@@ -60,7 +60,11 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
 
     feature_type = feature_type.lower()
     basename = lambda name: splitext(name)[0]
-    out_csv_name = '{}_{}_features.csv'.format(basename(wf.mri_name), feature_type)
+    if wf.mri_name is not None:
+        prefix = basename(wf.mri_name)+'_'
+    else:
+        prefix = ''
+    out_csv_name = '{}{}_features.csv'.format(prefix, feature_type)
     path_to_csv = lambda sid: pjoin(wf.out_dir, sid, out_csv_name)
     if feature_type in ['histogram_whole_scan', ]:
         extract_method = t1_histogram_whole_scan
