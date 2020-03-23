@@ -12,7 +12,8 @@ from visualqc import config as cfg
 
 def read_aseg_stats(fs_dir, subject_id, include_global_areas=False):
     """
-    Returns the volumes of both the subcortical and whole brain segmentations, found in Freesurfer output: subid/stats/aseg.stats
+    Returns the volumes of both the subcortical and whole brain segmentations,
+    found in Freesurfer output: subid/stats/aseg.stats
 
     Parameters
     ----------
@@ -41,10 +42,12 @@ def read_aseg_stats(fs_dir, subject_id, include_global_areas=False):
 
 
 def read_volumes_global_areas(seg_stats_file):
-    """Returns the volumes of big global areas such as the ICV, Left/Right hemisphere cortical gray/white matter volume, Subcortical gray matter volume and Supratentorial volume etc.
+    """Returns the volumes of big global areas such as the ICV,
+    Left/Right hemisphere cortical gray/white matter volume,
+    Subcortical gray matter volume and Supratentorial volume etc.
 
-
-    Order of the return values is as it appears in the original aseg.stats file (not as mentioned above).
+    Order of the return values is the same as it appears
+    in the original aseg.stats file (not as mentioned above).
     """
 
     # Snippet from the relevant part of the aseg.stats
@@ -59,7 +62,8 @@ def read_volumes_global_areas(seg_stats_file):
     # Measure SupraTentorial, SupraTentorialVol, Supratentorial volume, 1046623.140109, mm^3
     # Measure IntraCranialVol, ICV, Intracranial Volume, 1137205.249190, mm^3
 
-    wb_regex_pattern = r'# Measure ([\w/+_\- ]+), ([\w/+_\- ]+), ([\w/+_\- ]+), ([\d\.]+), ([\w/+_\-^]+)'
+    wb_regex_pattern = r'# Measure ([\w/+_\- ]+), ([\w/+_\- ]+), ([\w/+_\- ]+), ' \
+                       r'([\d\.]+), ([\w/+_\-^]+)'
     datatypes = np.dtype('U100,U100,U100,f8,U10')
     stats = np.fromregex(seg_stats_file, wb_regex_pattern, dtype=datatypes)
     wb_data = np.array([seg[3] for seg in stats])
@@ -82,17 +86,19 @@ def read_aparc_stats_wholebrain(fs_dir, subject_id, subset=None):
 def read_aparc_stats_in_hemi(stats_file,
                              subset=None,
                              include_whole_brain_stats=False):
-    """Read statistics on cortical features (such as thickness, curvature etc) produced by Freesurfer.
+    """
+    Read statistics on cortical features (such as thickness, curvature etc)
+    produced by Freesurfer.
 
     file_path would contain whether it is from the right or left hemisphere.
-
     """
 
     stats_file = realpath(stats_file)
     if not pexists(stats_file):
         raise IOError('given path does not exist : {}'.format(stats_file))
 
-    # ColHeaders StructName NumVert SurfArea GrayVol ThickAvg ThickStd MeanCurv GausCurv FoldInd CurvInd
+    # ColHeaders
+    # StructName NumVert SurfArea GrayVol ThickAvg ThickStd MeanCurv GausCurv FoldInd CurvInd
     aparc_roi_dtype = [('StructName', 'S50'),
                        ('NumVert', '<i4'),
                        ('SurfArea', '<i4'),
@@ -130,13 +136,14 @@ def read_aparc_stats_in_hemi(stats_file,
 
 
 def read_global_mean_surf_area_thickness(stats_file):
-    """Returns total surface area of the white surface, and global mean cortical thickness"""
+    """Returns total surface area of white surface, global mean cortical thickness"""
 
     # Snippet from the relevant part of aparc.stats
     # Measure Cortex, NumVert, Number of Vertices, 120233, unitless
     # Measure Cortex, WhiteSurfArea, White Surface Total Area, 85633.5, mm^2
     # Measure Cortex, MeanThickness, Mean Thickness, 2.59632, mm
-    wb_regex_pattern = r'# Measure Cortex, ([\w/+_\- ]+), ([\w/+_\- ]+), ([\d\.]+), ([\w/+_\-^]+)'
+    wb_regex_pattern = r'# Measure Cortex, ([\w/+_\- ]+), ([\w/+_\- ]+), ([\d\.]+),' \
+                       r' ([\w/+_\-^]+)'
     wb_aparc_dtype = np.dtype('U100,U100,f8,U10')
     # wb_aparc_dtype = [('f0', '<U100'), ('f1', '<U100'), ('f2', '<f8'), ('f3', '<U10')]
     wb_stats = np.fromregex(stats_file, wb_regex_pattern, dtype=wb_aparc_dtype)
