@@ -9,21 +9,23 @@ import sys
 import textwrap
 import warnings
 from abc import ABC
+from os.path import join as pjoin, realpath
 
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import CheckButtons, RadioButtons
-from mrivis.utils import crop_image
 from mrivis.base import Collage
-from os.path import join as pjoin, realpath
+from mrivis.utils import crop_image
 
 from visualqc import config as cfg
-from visualqc.interfaces import BaseReviewInterface
-from visualqc.utils import check_finite_int, check_id_list, check_input_dir_T1, \
-    check_out_dir, check_outlier_params, check_views, get_axis, pick_slices, read_image, \
-    scale_0to1, saturate_brighter_intensities
-from visualqc.workflows import BaseWorkflowVisualQC
 from visualqc.image_utils import mask_image
+from visualqc.interfaces import BaseReviewInterface
+from visualqc.utils import (check_finite_int, check_id_list, check_input_dir_T1,
+                            check_out_dir, check_outlier_params, check_views,
+                            read_image, saturate_brighter_intensities, scale_0to1,
+                            check_bids_dir)
+from visualqc.readers import find_anatomical_images_in_BIDS
+from visualqc.workflows import BaseWorkflowVisualQC
 
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
@@ -63,7 +65,8 @@ class T1MriInterface(BaseReviewInterface):
         self.add_process_options()
         # include all the non-data axes here (so they wont be zoomed-in)
         self.unzoomable_axes = [self.checkbox.ax, self.text_box.ax,
-                                self.bt_next.ax, self.bt_quit.ax, self.radio_bt_vis_type]
+                                self.bt_next.ax, self.bt_quit.ax,
+                                self.radio_bt_vis_type]
 
         # this list of artists to be populated later
         # makes to handy to clean them all
@@ -71,15 +74,17 @@ class T1MriInterface(BaseReviewInterface):
 
     def add_checkboxes(self):
         """
-        Checkboxes offer the ability to select multiple tags such as Motion, Ghosting Aliasing etc,
-            instead of one from a list of mutual exclusive rating options (such as Good, Bad, Error etc).
-
+        Checkboxes offer the ability to select multiple tags such as Motion,
+        Ghosting, Aliasing etc, instead of one from a list of mutual exclusive
+        rating options (such as Good, Bad, Error etc).
         """
 
-        ax_checkbox = plt.axes(cfg.position_checkbox_t1_mri, facecolor=cfg.color_rating_axis)
+        ax_checkbox = plt.axes(cfg.position_checkbox_t1_mri,
+                               facecolor=cfg.color_rating_axis)
         # initially de-activating all
         actives = [False] * len(self.issue_list)
-        self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list, actives=actives)
+        self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list,
+                                     actives=actives)
         self.checkbox.on_clicked(self.save_issues)
         for txt_lbl in self.checkbox.labels:
             txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
@@ -225,8 +230,9 @@ class T1MriInterface(BaseReviewInterface):
                 self.zoomed_in = False
 
         # right or double click to zoom in to any axis
-        if (event.button in [3] or event.dblclick) and (event.inaxes is not None) and \
-            event.inaxes not in self.unzoomable_axes:
+        if (event.button in [3] or event.dblclick) and \
+            (event.inaxes is not None) and \
+            (event.inaxes not in self.unzoomable_axes):
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(cfg.zoomed_position)
             event.inaxes.set_zorder(1)  # bring forth
@@ -276,7 +282,9 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
                  in_dir,
                  out_dir,
                  issue_list,
-                 mri_name, in_dir_type,
+                 mri_name,
+                 in_dir_type,
+                 images_for_id,
                  outlier_method, outlier_fraction,
                  outlier_feat_types, disable_outlier_detection,
                  prepare_first,
@@ -292,6 +300,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.issue_list = issue_list
         self.mri_name = mri_name
         self.in_dir_type = in_dir_type
+        self.images_for_id = images_for_id
         self.expt_id = 'rate_mri_{}'.format(self.mri_name)
         self.suffix = self.expt_id
         self.current_alert_msg = None
@@ -333,7 +342,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.figsize = cfg.default_review_figsize
 
         self.collage = Collage(view_set=views,
-                               num_slices=num_slices_per_view, num_rows=num_rows_per_view,
+                               num_slices=num_slices_per_view,
+                               num_rows=num_rows_per_view,
                                display_params=self.display_params,
                                bounding_rect=cfg.bounding_box_review,
                                figsize=self.figsize)
@@ -355,8 +365,12 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
             self.path_getter_inputs = lambda sub_id: realpath(
                 pjoin(self.in_dir, sub_id, 'mri', self.mri_name))
         else:
-            self.path_getter_inputs = lambda sub_id: realpath(
-                pjoin(self.in_dir, sub_id, self.mri_name))
+            if self.in_dir_type.upper() in ('BIDS', ):
+                self.path_getter_inputs = lambda sub_id: self.images_for_id[
+                    sub_id]['image']
+            else:
+                self.path_getter_inputs = lambda sub_id: realpath(
+                    pjoin(self.in_dir, sub_id, self.mri_name))
 
     def open_figure(self):
         """Creates the master figure to show everything in."""
@@ -375,7 +389,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
                                't+alt': self.show_tails_trimmed,
                                'alt+o': self.show_original,
                                'o+alt': self.show_original}
-        self.UI = T1MriInterface(self.collage.fig, self.collage.flat_grid, self.issue_list,
+        self.UI = T1MriInterface(self.collage.fig, self.collage.flat_grid,
+                                 self.issue_list,
                                  next_button_callback=self.next,
                                  quit_button_callback=self.quit,
                                  processing_choice_callback=self.process_and_display,
@@ -427,8 +442,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         if flagged_as_outlier:
             alerts_list = self.by_sample.get(self.current_unit_id,
                                              None)  # None, if id not in dict
-            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'.format(
-                '\t'.join(alerts_list)))
+            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'
+                  ''.format('\t'.join(alerts_list)))
 
             strings_to_show = ['Flagged as an outlier:', ] + alerts_list
             self.current_alert_msg = '\n'.join(strings_to_show)
@@ -488,8 +503,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
 
         if not self.currently_showing in ['saturated', ] or no_toggle:
             if not hasattr(self, 'saturated_img'):
-                self.saturated_img = saturate_brighter_intensities(self.current_img,
-                                                                   percentile=cfg.saturate_perc_t1)
+                self.saturated_img = saturate_brighter_intensities(
+                    self.current_img, percentile=cfg.saturate_perc_t1)
             self.collage.attach(self.saturated_img)
             self.currently_showing = 'saturated'
         else:
@@ -554,17 +569,25 @@ def get_parser():
                                      formatter_class=argparse.RawTextHelpFormatter,
                                      description='visualqc_t1_mri: rate quality of anatomical MR scan.')
 
+    help_text_bids_dir = textwrap.dedent("""
+    Absolute path to the top-level BIDS folder containing the dataset.
+    Each subject will be named after the longest/unique ID encoding info on
+    sessions and anything else available in the filename in the deepest hierarchy etc
+
+    E.g. ``--bids_dir /project/dataset_bids``
+    \n""")
+
     help_text_fs_dir = textwrap.dedent("""
-    Absolute path to ``SUBJECTS_DIR`` containing the finished runs of Freesurfer parcellation
+    Absolute path to ``SUBJECTS_DIR`` containing Freesurfer runs.
     Each subject will be queried after its ID in the metadata file.
 
     E.g. ``--fs_dir /project/freesurfer_v5.3``
     \n""")
 
     help_text_user_dir = textwrap.dedent("""
-    Absolute path to an input folder containing the MRI scan. 
-    Each subject will be queried after its ID in the metadata file, 
-    and is expected to have the MRI (specified ``--mri_name``), 
+    Absolute path to an input folder containing the MRI scan.
+    Each subject will be queried after its ID in the metadata file,
+    and is expected to have the MRI (specified ``--mri_name``),
     in its own folder under --user_dir.
 
     E.g. ``--user_dir /project/images_to_QC``
@@ -605,21 +628,23 @@ def get_parser():
     \n""".format(cfg.default_views[0], cfg.default_views[1], cfg.default_views[2]))
 
     help_text_num_slices = textwrap.dedent("""
-    Specifies the number of slices to display per each view. 
+    Specifies the number of slices to display per each view.
     This must be even to facilitate better division.
     Default: {}.
     \n""".format(cfg.default_num_slices))
 
     help_text_num_rows = textwrap.dedent("""
-    Specifies the number of rows to display per each axis. 
+    Specifies the number of rows to display per each axis.
     Default: {}.
     \n""".format(cfg.default_num_rows))
 
     help_text_prepare = textwrap.dedent("""
-    This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations. 
-    This makes the switch from one subject to the next, even more seamless (saving few seconds :) ).
+    This flag enables batch-generation of 3d surface visualizations,
+    prior to starting any review and rating operations. This makes the switch
+    from one subject to the next, even more seamless (saving few seconds :) ).
 
-    Default: False (required visualizations are generated only on demand, which can take 5-10 seconds for each subject).
+    Default: False  (required visualizations are generated only on demand,
+    which can take 5-10 seconds for each subject).
     \n""")
 
     help_text_outlier_detection_method = textwrap.dedent("""
@@ -631,7 +656,7 @@ def get_parser():
     \n""".format(cfg.default_outlier_detection_method))
 
     help_text_outlier_fraction = textwrap.dedent("""
-    Fraction of outliers expected in the given sample. Must be >= 1/n and <= (n-1)/n, 
+    Fraction of outliers expected in the given sample. Must be >= 1/n and <= (n-1)/n,
     where n is the number of samples in the current sample.
 
     For more info, read http://scikit-learn.org/stable/modules/outlier_detection.html
@@ -640,10 +665,11 @@ def get_parser():
     \n""".format(cfg.default_outlier_fraction))
 
     help_text_outlier_feat_types = textwrap.dedent("""
-    Type of features to be employed in training the outlier detection method.  It could be one of  
-    'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label), 
-    'subcortical' (aseg.stats: volumes of several subcortical structures), 
-    or 'both' (using both aseg and aparc stats).
+    Type of features to be employed in training the outlier detection method.
+    It could be one of 'cortical' (aparc.stats: mean thickness and other
+    geometrical features from each cortical label), 'subcortical' (aseg.stats:
+    volumes of several subcortical structures), or 'both' (using both aseg and
+    aparc stats).
 
     Default: {}.
     \n""".format(cfg.t1_mri_features_OLD))
@@ -653,6 +679,10 @@ def get_parser():
     \n""")
 
     in_out = parser.add_argument_group('Input and output', ' ')
+
+    in_out.add_argument("-b", "--bids_dir", action="store", dest="bids_dir",
+                        default=cfg.default_bids_dir,
+                        required=False, help=help_text_bids_dir)
 
     in_out.add_argument("-i", "--id_list", action="store", dest="id_list",
                         default=None, required=False, help=help_text_id_list)
@@ -672,8 +702,10 @@ def get_parser():
     in_out.add_argument("-f", "--fs_dir", action="store", dest="fs_dir",
                         default=cfg.default_freesurfer_dir,
                         required=False, help=help_text_fs_dir)
+
     outliers = parser.add_argument_group('Outlier detection',
-                                         'options related to automatically detecting possible outliers')
+                                         'options related to automatically detecting '
+                                         'possible outliers')
     outliers.add_argument("-olm", "--outlier_method", action="store",
                           dest="outlier_method",
                           default=cfg.default_outlier_detection_method, required=False,
@@ -706,9 +738,11 @@ def get_parser():
                         default=cfg.default_num_rows, required=False,
                         help=help_text_num_rows)
 
-    wf_args = parser.add_argument_group('Workflow', 'Options related to workflow '
-                                                    'e.g. to pre-compute resource-intensive features, '
-                                                    'and pre-generate all the visualizations required')
+    wf_args = parser.add_argument_group('Workflow',
+                                        'Options related to workflow e.g. to '
+                                        'pre-compute resource-intensive features, '
+                                        'and pre-generate all the visualizations '
+                                        'required')
     wf_args.add_argument("-p", "--prepare_first", action="store_true",
                          dest="prepare_first",
                          help=help_text_prepare)
@@ -734,12 +768,18 @@ def make_workflow_from_user_options():
 
     vis_type = 'collage_t1_mri'
     type_of_features = 't1_mri'
-    in_dir, in_dir_type = check_input_dir_T1(user_args.fs_dir, user_args.user_dir)
+    in_dir, in_dir_type = check_input_dir_T1(user_args.fs_dir, user_args.user_dir,
+                                             user_args.bids_dir)
 
-    mri_name = user_args.mri_name
-    id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type,
-                                           mri_name, seg_name=None,
-                                           in_dir_type=in_dir_type)
+    if in_dir_type.upper() in ('BIDS', ):
+        mri_name = None
+        in_dir, bids_dir_type = check_bids_dir(in_dir)
+        id_list, images_for_id = find_anatomical_images_in_BIDS(in_dir)
+    else:
+        mri_name = user_args.mri_name
+        id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type,
+                                               mri_name, seg_name=None,
+                                               in_dir_type=in_dir_type)
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
     views = check_views(user_args.views)
@@ -757,7 +797,7 @@ def make_workflow_from_user_options():
 
     wf = RatingWorkflowT1(id_list, in_dir, out_dir,
                           cfg.t1_mri_default_issue_list,
-                          mri_name, in_dir_type,
+                          mri_name, in_dir_type, images_for_id,
                           outlier_method, outlier_fraction,
                           outlier_feat_types, disable_outlier_detection,
                           user_args.prepare_first,

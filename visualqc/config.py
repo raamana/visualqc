@@ -369,6 +369,7 @@ alignment_groupwise_default_vis_type = 'Std. dev map' # 'Checkerboard' # 'Animat
 
 ## ----------------------------------------------------------------------------
 
+outlier_feature_folder_name = 'features_outlier_detection'
 features_outlier_detection = freesurfer_features_outlier_detection + t1_mri_features_OLD + func_mri_features_OLD
 
 
