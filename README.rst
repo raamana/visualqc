@@ -2,6 +2,8 @@
 VisualQC : Assistive tool to ease the quality control workflow of neuroimaging data
 ==========================================================================================
 
+.. image:: docs/vqc_logo_small.png
+
 .. image:: https://zenodo.org/badge/105958496.svg
    :target: https://zenodo.org/badge/latestdoi/105958496
 
@@ -50,5 +52,5 @@ Citation
 
 .. image:: https://img.shields.io/badge/say-thanks-ff69b4.svg
         :target: https://saythanks.io/to/raamana
-        
-        
+
+
