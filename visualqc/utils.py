@@ -432,30 +432,42 @@ def summarize_ratings(ratings_file, out_dir=None):
     if out_dir is None:
         out_dir = ratings_file.parents[0]
 
-    ratings, notes = load_ratings_csv(ratings_file)
-    counter = Counter(ratings.values())
+    import re
+    clean = lambda lbl: re.sub(r'\W+', '_', lbl.lower())
 
-    clean = lambda lbl: lbl.lower().replace(' ', '_')
-    counter = { clean(rt) : val for rt, val in counter.items() }
+    rating_dict, notes = load_ratings_csv(ratings_file)
 
-    max_width = 1+max([len(rt) for rt in counter.keys()])
-    print('Counts for different labels:')
+    rating_list = list()
+    uniq_labels = set()
+    all_labels = list()
+    for sid, labels in rating_dict.items():
+        # each ID can have multiple ratings
+        sid_labels = [ clean(lbl) for lbl in labels.split(cfg.rating_joiner) ]
+        for lbl in sid_labels:
+            rating_list.append((sid, lbl))
+            uniq_labels.add(lbl)
+            all_labels.append(lbl)
+
+    counter = Counter(all_labels)
+
+    max_width = 1+max([len(rt) for rt in uniq_labels])
+    print('Ratings summary\n  Counts (note some IDs can have multiple ratings):')
     id_lists = dict()
     for label, count in counter.items():
         print('\t{lbl:>{mw}} : {cnt:>7}'.format(lbl=label, cnt=count, mw=max_width))
 
     # reorg dict by rating label
-    label_set = list(counter.keys())
     id_lists = dict()
-    for label in label_set:
+    for label in uniq_labels:
         id_lists[label] = list()
-    for sid, label in ratings.items():
-        id_lists[clean(label)].append(sid)
+    for sid, label in rating_list:
+        id_lists[label].append(sid)
 
-    # list of IDs by label
-    for label in label_set:
-        print('{lbl} (n={cnt}) : {lst}'
-              ''.format(lbl=label, cnt=len(id_lists[label]), lst=id_lists[label]))
+    print('\nList of IDs by rating:')
+    for label in uniq_labels:
+        print('  {lbl:>{mw}} (n={cnt:>}) : {lst}'
+              ''.format(lbl=label, cnt=len(id_lists[label]), lst=id_lists[label],
+                        mw=max_width))
 
         out_path = out_dir.joinpath('id_list_rating_{}.txt'.format(label))
         with open(out_path, 'w') as of:
