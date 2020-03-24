@@ -409,21 +409,25 @@ def save_ratings_to_disk(ratings, notes, qcw):
     if pexists(ratings_file):
         copyfile(ratings_file, prev_ratings_backup)
 
-    lines = '\n'.join(
-        ['{},{},{}'.format(sid, rating, notes[sid]) for sid, rating in ratings.items()])
+    lines = '\n'.join(['{},{},{}'.format(sid, rating, notes[sid])
+                       for sid, rating in ratings.items()])
     try:
         with open(ratings_file, 'w') as cf:
             cf.write(lines)
     except:
-        raise IOError(
-            'Error in saving ratings to file!!\nBackup might be helpful at:\n\t{}'.format(
-                prev_ratings_backup))
+        raise IOError('Error in saving ratings to file!!\n'
+                      'Backup might be helpful at:\n\t{}'
+                      ''.format(prev_ratings_backup))
 
     return
 
 
 def summarize_ratings(ratings_file, out_dir=None):
-    """summarizes the counts and ID for different unique ratings"""
+    """
+    Summarizes the counts and ID for different unique ratings
+
+    Returns a counter per rating label as well as list of IDs per each label.
+    """
 
     ratings_file = Path(ratings_file).resolve()
     if not pexists(ratings_file):
@@ -504,12 +508,12 @@ def check_input_dir(fs_dir, user_dir, vis_type,
             raise ValueError('Only one of --fs_dir or --user_dir can be specified.')
 
         if freesurfer_install_required and not freesurfer_installed():
-            raise EnvironmentError(
-                'Freesurfer functionality is requested(e.g. visualizing annotations), but is not installed!')
+            raise EnvironmentError('Freesurfer functionality is requested (e.g. '
+                                   'visualizing annotations), but is not installed!')
 
     if fs_dir is None and vis_type in freesurfer_vis_types:
-        raise ValueError(
-            'vis_type depending on Freesurfer organization is specified, but --fs_dir is not provided.')
+        raise ValueError('vis_type depending on Freesurfer organization is specified,'
+                         ' but --fs_dir is not provided.')
 
     if user_dir is None:
         if not pexists(fs_dir):
@@ -525,8 +529,8 @@ def check_input_dir(fs_dir, user_dir, vis_type,
             type_of_features = 'generic'
 
     if not pexists(in_dir):
-        raise IOError(
-            'Invalid specification - check proper combination of --fs_dir and --user_dir')
+        raise IOError('Invalid specification - check proper combination '
+                      'of --fs_dir and --user_dir')
 
     return in_dir, type_of_features
 
@@ -699,7 +703,10 @@ def check_id_list(id_list_in, in_dir, vis_type,
 
 
 def check_id_list_with_regex(id_list_in, in_dir, name_pattern):
-    """Checks to ensure each subject listed has the required files and returns only those that can be processed."""
+    """
+    Checks to ensure each subject listed has the required files
+    and returns only those that can be processed.
+    """
 
     if id_list_in is not None:
         if not pexists(id_list_in):
@@ -746,10 +753,11 @@ def check_id_list_with_regex(id_list_in, in_dir, name_pattern):
             '\n'.join(invalid_list)))
 
     if len(id_list_out) < 1:
-        raise ValueError(
-            'All the subject IDs do not have the required files - unable to proceed.')
+        raise ValueError('All the subject IDs do not have the required files'
+                         ' - unable to proceed.')
 
-    print('{} subjects/sessions/units are usable for review.'.format(len(id_list_out)))
+    print('{} subjects/sessions/units are usable for review.'
+          ''.format(len(id_list_out)))
 
     return np.array(id_list_out), images_for_id
 
@@ -794,7 +802,7 @@ def expand_regex_paths(in_dir, subject_id, req_file):
 
 
 def get_path_for_subject(in_dir, subject_id, req_file, vis_type, in_dir_type=None):
-    """Constructs the path for the image file based on chosen input and visualization type"""
+    """Constructs the path for the image file based on chosen input and vis type"""
 
     if vis_type is not None and (
         vis_type in freesurfer_vis_types or in_dir_type in ['freesurfer', ]):
@@ -901,7 +909,8 @@ def check_labels(vis_type, label_set):
             raise ValueError('Atleast one unique label must be supplied!')
 
     elif vis_type in cfg.label_types:
-        raise ValueError('When vis_type is one of {}, at least one label must be specified!'
+        raise ValueError('When vis_type is one of {}, '
+                         'at least one label must be specified!'
                          ''.format(cfg.label_types))
 
     return vis_type, label_set
@@ -1022,8 +1031,9 @@ def compute_cell_extents_grid(bounding_rect=(0.03, 0.03, 0.97, 0.97),
                                num_rows=2, num_cols=6,
                                axis_pad=0.01):
     """
-    Produces array of num_rows*num_cols elements each containing the rectangular extents of
-    the corresponding cell the grid, whose position is within bounding_rect.
+    Produces array of num_rows*num_cols elements each containing
+    the rectangular extents of the corresponding cell the grid, whose position is
+    within bounding_rect.
     """
 
     left, bottom, width, height = bounding_rect

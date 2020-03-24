@@ -12,7 +12,7 @@ from shutil import copyfile
 from os.path import exists as pexists, join as pjoin
 
 from visualqc import config as cfg
-from visualqc.utils import get_ratings_path_info, load_ratings_csv
+from visualqc.utils import get_ratings_path_info, load_ratings_csv, summarize_ratings
 
 
 class DummyCallable(object):
@@ -78,7 +78,7 @@ class BaseWorkflowVisualQC(ABC):
         self.loop_through_units()
         self.cleanup()
 
-        print('Done.\nResults are available in:\n\t{}'.format(self.out_dir))
+        print('\nAll Done - results are available in:\n\t{}'.format(self.out_dir))
 
 
     @abstractmethod
@@ -126,8 +126,8 @@ class BaseWorkflowVisualQC(ABC):
             self.notes = dict()
 
         if len(prev_done) > 0:
-            print('\nRatings for {}/{} subjects '
-                  'were restored.'.format(len(prev_done), len(self.id_list)))
+            print('\nRatings for {}/{} subjects were restored.'
+                  ''.format(len(prev_done), len(self.id_list)))
 
         if len(self.incomplete_list) < 1:
             print('No subjects to review/rate - exiting.')
@@ -158,6 +158,9 @@ class BaseWorkflowVisualQC(ABC):
             raise IOError(
                 'Error in saving ratings to file!!\n'
                 'Backup might be helpful at:\n\t{}'.format(prev_ratings_backup))
+
+        # summarize ratings to stdout and id lists
+        summarize_ratings(ratings_file)
 
 
     @staticmethod
