@@ -4,6 +4,7 @@ import os
 import sys
 import warnings
 from genericpath import exists as pexists
+from collections import Counter
 from os.path import realpath
 from os import makedirs
 from shutil import copyfile, which
@@ -11,7 +12,7 @@ from shutil import copyfile, which
 import nibabel as nib
 import numpy as np
 from os.path import basename, join as pjoin, realpath, splitext
-
+from pathlib import Path
 import visualqc.config as cfg
 from visualqc.config import default_out_dir_name, freesurfer_vis_cmd, \
     freesurfer_vis_types, visualization_combination_choices
@@ -419,6 +420,48 @@ def save_ratings_to_disk(ratings, notes, qcw):
                 prev_ratings_backup))
 
     return
+
+
+def summarize_ratings(ratings_file, out_dir=None):
+    """summarizes the counts and ID for different unique ratings"""
+
+    ratings_file = Path(ratings_file).resolve()
+    if not pexists(ratings_file):
+        raise IOError('Ratings file does not exist! : {}'.format(ratings_file))
+
+    if out_dir is None:
+        out_dir = ratings_file.parents[0]
+
+    ratings, notes = load_ratings_csv(ratings_file)
+    counter = Counter(ratings.values())
+
+    clean = lambda lbl: lbl.lower().replace(' ', '_')
+    counter = { clean(rt) : val for rt, val in counter.items() }
+
+    max_width = 1+max([len(rt) for rt in counter.keys()])
+    print('Counts for different labels:')
+    id_lists = dict()
+    for label, count in counter.items():
+        print('\t{lbl:>{mw}} : {cnt:>7}'.format(lbl=label, cnt=count, mw=max_width))
+
+    # reorg dict by rating label
+    label_set = list(counter.keys())
+    id_lists = dict()
+    for label in label_set:
+        id_lists[label] = list()
+    for sid, label in ratings.items():
+        id_lists[clean(label)].append(sid)
+
+    # list of IDs by label
+    for label in label_set:
+        print('{lbl} (n={cnt}) : {lst}'
+              ''.format(lbl=label, cnt=len(id_lists[label]), lst=id_lists[label]))
+
+        out_path = out_dir.joinpath('id_list_rating_{}.txt'.format(label))
+        with open(out_path, 'w') as of:
+            of.write('\n'.join(id_lists[label]))
+
+    return counter, id_lists
 
 
 def get_ratings_path_info(qcw):
