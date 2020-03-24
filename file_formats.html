@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Data formats and requirements &mdash; visualqc 0.3.1 documentation</title>
+  <title>Data formats and requirements &mdash; visualqc 0.3.3.3+1.g6f52c67.dirty documentation</title>
   
 
   
@@ -17,44 +17,37 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.3.1 documentation" href="index.html"/>
-        <link rel="next" title="Review interface" href="interface.html"/>
-        <link rel="prev" title="Command line usage" href="usage_all.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Review interface" href="interface.html" />
+    <link rel="prev" title="Command line usage" href="usage_all.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -68,7 +61,7 @@
             
             
               <div class="version">
-                0.3.1
+                0.3.3.3+1.g6f52c67.dirty
               </div>
             
           
@@ -130,7 +123,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">visualqc</a>
@@ -138,9 +131,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -184,36 +178,34 @@
             
   <div class="section" id="data-formats-and-requirements">
 <h1>Data formats and requirements<a class="headerlink" href="#data-formats-and-requirements" title="Permalink to this headline">¶</a></h1>
-<p><code class="docutils literal"><span class="pre">visualqc</span></code> relies on <a class="reference external" href="http://nipy.org/nibabel/">nibabel</a> to read the input image data, and supports all the formats that nibabel can read.</p>
+<p><code class="docutils literal notranslate"><span class="pre">visualqc</span></code> relies on <a class="reference external" href="http://nipy.org/nibabel/">nibabel</a> to read the input image data, and supports all the formats that nibabel can read.</p>
 <p><strong>The only requirement being the two images to be overlaid must be of the same shape, in dimensions and size.</strong></p>
 <p>And, for a given subject ID, these two images must be in the same folder (although this might be relaxed in the future with a more generic input mechanism).</p>
 <p>Following imaging formats are strongly encouraged:</p>
 <blockquote>
 <div><ul class="simple">
-<li>Nifti</li>
-<li>MGH/Freesurfer</li>
+<li><p>Nifti</p></li>
+<li><p>MGH/Freesurfer</p></li>
 </ul>
 </div></blockquote>
-<p>while the following formats are supported, as they can be ready via <code class="docutils literal"><span class="pre">nibabel</span></code>, but they are not routinely tested:</p>
+<p>while the following formats are supported, as they can be ready via <code class="docutils literal notranslate"><span class="pre">nibabel</span></code>, but they are not routinely tested:</p>
 <blockquote>
 <div><ul class="simple">
-<li>MINC (1/2)</li>
-<li>gifti</li>
-<li>Analyze</li>
-<li>DICOM</li>
-<li>PAR/REC</li>
-<li>ECAT</li>
-<li>TrackVis</li>
-<li>Streamlines</li>
+<li><p>MINC (1/2)</p></li>
+<li><p>gifti</p></li>
+<li><p>Analyze</p></li>
+<li><p>DICOM</p></li>
+<li><p>PAR/REC</p></li>
+<li><p>ECAT</p></li>
+<li><p>TrackVis</p></li>
+<li><p>Streamlines</p></li>
 </ul>
 </div></blockquote>
 </div>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -222,7 +214,7 @@
         <a href="interface.html" class="btn btn-neutral float-right" title="Review interface" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="usage_all.html" class="btn btn-neutral" title="Command line usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="usage_all.html" class="btn btn-neutral float-left" title="Command line usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -231,11 +223,11 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Pradeep Reddy Raamana.
+        &copy; Copyright 2017, Pradeep Reddy Raamana
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -248,37 +240,15 @@
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'0.3.1',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

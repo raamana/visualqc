@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Example usage - Freesurfer &mdash; visualqc 0.3.1 documentation</title>
+  <title>Example usage - Freesurfer &mdash; visualqc 0.3.3.3+1.g6f52c67.dirty documentation</title>
   
 
   
@@ -17,44 +17,37 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.3.1 documentation" href="index.html"/>
-        <link rel="next" title="Example usage - Segmentation" href="examples_freesurfer_generic.html"/>
-        <link rel="prev" title="Command line usage - T1w MRI" href="cli_t1_mri.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Example usage - Segmentation" href="examples_freesurfer_generic.html" />
+    <link rel="prev" title="Command line usage - T1w MRI" href="cli_t1_mri.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -68,7 +61,7 @@
             
             
               <div class="version">
-                0.3.1
+                0.3.3.3+1.g6f52c67.dirty
               </div>
             
           
@@ -130,7 +123,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">visualqc</a>
@@ -138,9 +131,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -185,46 +179,43 @@
   <div class="section" id="example-usage-freesurfer">
 <h1>Example usage - Freesurfer<a class="headerlink" href="#example-usage-freesurfer" title="Permalink to this headline">¶</a></h1>
 <p>A rough example of usage can be:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>visualqc_freesurfer --fs_dir /project/freesurfer
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>visualqc_freesurfer --fs_dir /project/freesurfer
 </pre></div>
 </div>
 <p>which searches the specified directory for all subjects with successfully completed runs of Freesurfer and presents with cortical parcellation in all the three views, along with surface rendering (annotated with cortical ROIs). You can then review these visualizations for one subject at a time, rate their accuracy and move on to the next subject.</p>
-<dl class="docutils">
-<dt>Note:</dt>
-<dd><ul class="first last simple">
-<li>right click toggles the overlay</li>
-<li>slider changes the transparency of the overlay in all slices</li>
-<li>double click in a given slice zooms it full-window</li>
+<dl class="simple">
+<dt>Note:</dt><dd><ul class="simple">
+<li><p>right click toggles the overlay</p></li>
+<li><p>slider changes the transparency of the overlay in all slices</p></li>
+<li><p>double click in a given slice zooms it full-window</p></li>
 </ul>
 </dd>
 </dl>
 <p>You can choose to work on pre-selected list of subjects, as you choose:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>visualqc_freesurfer --fs_dir /project/freesurfer --id_list list_complete.txt
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>visualqc_freesurfer --fs_dir /project/freesurfer --id_list list_complete.txt
 </pre></div>
 </div>
-<p>Note the default visualization type is <code class="docutils literal"><span class="pre">cortical_contour</span></code> and you can change it to QC a particular ROI e.g. left hippocampus (label 17 in <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT">Freesurfer color lookup table</a> (We can also use the shortcut <code class="docutils literal"><span class="pre">vqcfs</span></code> to invoke the same program. ):</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>vqcfs -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour --labels <span class="m">17</span>
+<p>Note the default visualization type is <code class="docutils literal notranslate"><span class="pre">cortical_contour</span></code> and you can change it to QC a particular ROI e.g. left hippocampus (label 17 in <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT">Freesurfer color lookup table</a> (We can also use the shortcut <code class="docutils literal notranslate"><span class="pre">vqcfs</span></code> to invoke the same program. ):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vqcfs -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour --labels <span class="m">17</span>
 </pre></div>
 </div>
 <p>You can add as many ROIs as you wish</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>vqcfs -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour --labels <span class="m">10</span> <span class="m">11</span> <span class="m">12</span> <span class="m">13</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vqcfs -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour --labels <span class="m">10</span> <span class="m">11</span> <span class="m">12</span> <span class="m">13</span>
 </pre></div>
 </div>
 <p>However, be sure your layout is providing you with enough detail and convenience to get a quick glance of whole structure(s). If you don’t need all the 3 views, or you’d like to focus on one particular view that is ideal for a given ROI, you can specify that with –views. It accepts a list of dimensions (max 3), from 0 to 2, inclusive.</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>vqcfs -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour -l <span class="m">10</span> <span class="m">11</span> <span class="m">12</span> <span class="m">13</span> --views <span class="m">0</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vqcfs -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour -l <span class="m">10</span> <span class="m">11</span> <span class="m">12</span> <span class="m">13</span> --views <span class="m">0</span>
 </pre></div>
 </div>
 <p>If you would like many more slices or rows (or fewer), you can control that with –num_rows and –num_slices. These parameters are applied separately for each view (not the entire layout). So if you choose -r 3 and -s 10 for -w 0 2, then <cite>visualqc</cite> displays 10 slices in 3 rows for each of dimensions 0 and 2 (20 panels in total).</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>vqcfs -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour -l <span class="m">10</span> <span class="m">11</span> <span class="m">12</span> <span class="m">13</span> --views <span class="m">0</span> -w <span class="m">0</span> <span class="m">2</span> -r <span class="m">3</span> -s <span class="m">10</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vqcfs -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour -l <span class="m">10</span> <span class="m">11</span> <span class="m">12</span> <span class="m">13</span> --views <span class="m">0</span> -w <span class="m">0</span> <span class="m">2</span> -r <span class="m">3</span> -s <span class="m">10</span>
 </pre></div>
 </div>
 </div>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -233,7 +224,7 @@
         <a href="examples_freesurfer_generic.html" class="btn btn-neutral float-right" title="Example usage - Segmentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="cli_t1_mri.html" class="btn btn-neutral" title="Command line usage - T1w MRI" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="cli_t1_mri.html" class="btn btn-neutral float-left" title="Command line usage - T1w MRI" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -242,11 +233,11 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Pradeep Reddy Raamana.
+        &copy; Copyright 2017, Pradeep Reddy Raamana
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -259,37 +250,15 @@
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'0.3.1',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

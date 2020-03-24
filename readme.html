@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>VisualQC &mdash; visualqc 0.3.1 documentation</title>
+  <title>VisualQC &mdash; visualqc 0.3.3.3+1.g6f52c67.dirty documentation</title>
   
 
   
@@ -17,44 +17,37 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.3.1 documentation" href="index.html"/>
-        <link rel="next" title="Installation" href="installation.html"/>
-        <link rel="prev" title="Welcome to visualqc’s documentation!" href="index.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="prev" title="Welcome to visualqc’s documentation!" href="index.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -68,7 +61,7 @@
             
             
               <div class="version">
-                0.3.1
+                0.3.3.3+1.g6f52c67.dirty
               </div>
             
           
@@ -135,7 +128,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">visualqc</a>
@@ -143,9 +136,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -193,26 +187,26 @@
 <a class="reference external image-reference" href="https://pypi.python.org/pypi/visualqc"><img alt="https://img.shields.io/pypi/v/visualqc.svg" src="https://img.shields.io/pypi/v/visualqc.svg" /></a>
 <a class="reference external image-reference" href="https://www.codacy.com/app/raamana/visualqc?utm_source=github.com&amp;amp;utm_medium=referral&amp;amp;utm_content=raamana/visualqc&amp;amp;utm_campaign=Badge_Grade"><img alt="https://api.codacy.com/project/badge/Grade/2da8c2b4dbcd433eb4943eb52f0b00d6" src="https://api.codacy.com/project/badge/Grade/2da8c2b4dbcd433eb4943eb52f0b00d6" /></a>
 <p>VisualQC : assistive tool to improve the quality control workflow of neuroimaging data.</p>
-<img alt="_images/vqc_logo_small.png" src="_images/vqc_logo_small.png" />
+<a class="reference internal image-reference" href="_images/vqc_logo_small.png"><img alt="_images/vqc_logo_small.png" class="align-center" src="_images/vqc_logo_small.png" style="height: 200px;" /></a>
 <p>Assessing and assuring the quality of imaging data, be it an raw acquisition (fMRI run or T1w MRI) or an automatic segmentation (be it gray or white surfaces for cortical thickness, or a subcortical segmentation) requires visual inspection manually. Not just one slice. Or one view. But many slices in all the views to ensure the 3d segmentation is accurate at the voxel-level. Often, looking at raw data is not sufficient to spot subtle errors, wherein statistical measurements (across space or time) assist greatly in rating the quality of image or severity of artefacts spotted.</p>
 <p>This manual process, in its simplest form, is quite cumbersome and time-consuming. Without any assistive tool, it requires opening both the MRI and segmentation for one subject in an editor that can overlay and color them properly, and manually reviewing one slice at a time, navigate through many many slices, and record your rating in a spreadsheet. And repeat this process for multiple subjects. In some even more demanding tasks (such as assessing the accuracy of cortical thickness e.g. generated by Freesurfer, or in reviewing an EPI sequence), you may need to review multiple types of visualizations (such as surface-redering of pial surface or carpet plots with specific temporal stats in fMRI), in addition to voxel-wise data. Without an automatic tool, this logistics process allows too many human mistakes, esp. as you flip through 100s of subjects over many weeks jumping through multiple visualization software and spreadsheets. Moreover, with careful use of outlier detection technique on dataset-wide statistics (across all the subjects in a dataset) can help us identify subtle errors (such as a small ROI with unrealiastic thickness value) that would otherwise go undetected.</p>
-<p><code class="docutils literal"><span class="pre">VisualQC</span></code>, purpose-built for rigorous quality control, aims to reduce this laborious process to a single command to seamlessly present relevant composite visualizations while alerting user of any outliers, offer an easy way to record the ratings, and quickly navigate through 100s of subjects with ease. All you need to do is sit back, focus your expert eye on data and <code class="docutils literal"><span class="pre">VisualQC</span></code> takes care of the flow and bookkeeping.</p>
+<p><code class="docutils literal notranslate"><span class="pre">VisualQC</span></code>, purpose-built for rigorous quality control, aims to reduce this laborious process to a single command to seamlessly present relevant composite visualizations while alerting user of any outliers, offer an easy way to record the ratings, and quickly navigate through 100s of subjects with ease. All you need to do is sit back, focus your expert eye on data and <code class="docutils literal notranslate"><span class="pre">VisualQC</span></code> takes care of the flow and bookkeeping.</p>
 <ul class="simple">
-<li>Free software: Apache license</li>
-<li>Documentation: <a class="reference external" href="https://raamana.github.io/visualqc">https://raamana.github.io/visualqc</a></li>
+<li><p>Free software: Apache license</p></li>
+<li><p>Documentation: <a class="reference external" href="https://raamana.github.io/visualqc">https://raamana.github.io/visualqc</a></p></li>
 </ul>
 <div class="section" id="use-cases-supported">
 <h2>Use-cases supported<a class="headerlink" href="#use-cases-supported" title="Permalink to this headline">¶</a></h2>
 <p>VisualQC supports the following use cases:</p>
 <blockquote>
 <div><ul class="simple">
-<li>Functional MRI scans (focused visual review, with rich and custom-built visualizations)</li>
-<li>Freesurfer cortical parcellations (accuracy of pial/white surfaces on T1w mri)</li>
-<li>Structural T1w MRI scans (artefact rating)</li>
-<li>Volumetric segmenation accuracy (on T1w MRI)</li>
-<li>Registration quality (spatial alignment) within a single modality or across different modalities</li>
-<li>For your own important use case, feel free to <a class="reference external" href="https://www.crossinvalidation.com">contact me</a></li>
-<li>Some others are being discussed - might be coming soon.</li>
+<li><p>Functional MRI scans (focused visual review, with rich and custom-built visualizations)</p></li>
+<li><p>Freesurfer cortical parcellations (accuracy of pial/white surfaces on T1w mri)</p></li>
+<li><p>Structural T1w MRI scans (artefact rating)</p></li>
+<li><p>Volumetric segmenation accuracy (on T1w MRI)</p></li>
+<li><p>Registration quality (spatial alignment) within a single modality or across different modalities</p></li>
+<li><p>For your own important use case, feel free to <a class="reference external" href="https://www.crossinvalidation.com">contact me</a></p></li>
+<li><p>Some others are being discussed - might be coming soon.</p></li>
 </ul>
 </div></blockquote>
 </div>
@@ -220,23 +214,23 @@
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
 <p>Each use case aims to offer the following features:</p>
 <ul class="simple">
-<li>Ability to zoom-in slices displayed to to ensure you won’t miss any detail (down to the voxel-level), so you can rate its quality with confidence.</li>
-<li>Automatically detect and flag outliers during review (multivariate high-dimensional outlier detection)</li>
-<li>Display multiple slices in multiple views, and easily navigate all subjects in a dataset</li>
-<li>Keyboard shortcuts to speed up the process, no need to lift your fingers!</li>
-<li>Allows to make arbitrary notes on the current review session</li>
-<li>Allows you to customize the visualizations to your expert preference (such as removing certain overlays, control the transparency, change how two images blended together).</li>
+<li><p>Ability to zoom-in slices displayed to to ensure you won’t miss any detail (down to the voxel-level), so you can rate its quality with confidence.</p></li>
+<li><p>Automatically detect and flag outliers during review (multivariate high-dimensional outlier detection)</p></li>
+<li><p>Display multiple slices in multiple views, and easily navigate all subjects in a dataset</p></li>
+<li><p>Keyboard shortcuts to speed up the process, no need to lift your fingers!</p></li>
+<li><p>Allows to make arbitrary notes on the current review session</p></li>
+<li><p>Allows you to customize the visualizations to your expert preference (such as removing certain overlays, control the transparency, change how two images blended together).</p></li>
 </ul>
 </div>
 <div class="section" id="galleries">
 <h2>Galleries<a class="headerlink" href="#galleries" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="gallery_freesurfer.html"><span class="doc">Gallery - Freesurfer Parcellation</span></a></li>
-<li><a class="reference internal" href="gallery_functional_mri.html"><span class="doc">Gallery - Functional MRI scan - artefact detection and rating</span></a></li>
-<li><a class="reference internal" href="gallery_t1_mri.html"><span class="doc">Gallery - Structural T1w MRI - artefact detection and rating</span></a></li>
-<li><a class="reference internal" href="gallery_registration_unimodal.html"><span class="doc">Gallery - Registration : comparison of spatial alignment</span></a></li>
-<li><a class="reference internal" href="gallery_segmentation_volumetric.html"><span class="doc">Gallery - Segmentation/ROI - anatomical accuracy evaluation</span></a></li>
+<li><p><a class="reference internal" href="gallery_freesurfer.html"><span class="doc">Gallery - Freesurfer Parcellation</span></a></p></li>
+<li><p><a class="reference internal" href="gallery_functional_mri.html"><span class="doc">Gallery - Functional MRI scan - artefact detection and rating</span></a></p></li>
+<li><p><a class="reference internal" href="gallery_t1_mri.html"><span class="doc">Gallery - Structural T1w MRI - artefact detection and rating</span></a></p></li>
+<li><p><a class="reference internal" href="gallery_registration_unimodal.html"><span class="doc">Gallery - Registration : comparison of spatial alignment</span></a></p></li>
+<li><p><a class="reference internal" href="gallery_segmentation_volumetric.html"><span class="doc">Gallery - Segmentation/ROI - anatomical accuracy evaluation</span></a></p></li>
 </ul>
 </div></blockquote>
 <p><a class="reference external" href="CONTRIBUTING.rst">Contributions are welcome.</a></p>
@@ -246,9 +240,7 @@
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -257,7 +249,7 @@
         <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="Welcome to visualqc’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to visualqc’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -266,11 +258,11 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Pradeep Reddy Raamana.
+        &copy; Copyright 2017, Pradeep Reddy Raamana
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -283,37 +275,15 @@
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'0.3.1',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

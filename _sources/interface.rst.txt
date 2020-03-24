@@ -23,8 +23,8 @@ Review interface - Freesurfer
  - slider changes the transparency of the overlay in all slices.
 
 
-Review interface - T1w MRI
--------------------------------
+Review interface - Anatomical / T1w MRI
+-----------------------------------------
  - Double click to zoom in on any slice.
  - Double click the histogram to zoom the intensity distribution
  - keyboard shortcuts (capitalized letters in label) to rate artefacts

@@ -6,14 +6,14 @@ Once the installation is successful, options for the corresponding usecase could
  - ``visualqc_alignment``
  - ``visualqc_freesurfer``
  - ``visualqc_func_mri``
- - ``visualqc_t1_mri``
+ - ``visualqc_anatomical``
 
 Each of them has a shorter name shortcut too to save a bit of typing :):
 
  - ``vqcalign``
  - ``vqcfs``
  - ``vqcfunc``
- - ``vqct1``
+ - ``vqcanat``
 
 
 For example,

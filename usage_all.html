@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Command line usage &mdash; visualqc 0.3.1 documentation</title>
+  <title>Command line usage &mdash; visualqc 0.3.3.3+1.g6f52c67.dirty documentation</title>
   
 
   
@@ -17,44 +17,37 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.3.1 documentation" href="index.html"/>
-        <link rel="next" title="Data formats and requirements" href="file_formats.html"/>
-        <link rel="prev" title="Recommended Usage" href="recommended_usage.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Data formats and requirements" href="file_formats.html" />
+    <link rel="prev" title="Recommended Usage" href="recommended_usage.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -68,7 +61,7 @@
             
             
               <div class="version">
-                0.3.1
+                0.3.3.3+1.g6f52c67.dirty
               </div>
             
           
@@ -130,7 +123,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">visualqc</a>
@@ -138,9 +131,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -184,55 +178,53 @@
             
   <div class="section" id="command-line-usage">
 <h1>Command line usage<a class="headerlink" href="#command-line-usage" title="Permalink to this headline">¶</a></h1>
-<p>Once the installation is successful, options for the corresponding usecase could be obtained by typing the corresponding command, or by adding <code class="docutils literal"><span class="pre">-h</span></code> flag to it:</p>
+<p>Once the installation is successful, options for the corresponding usecase could be obtained by typing the corresponding command, or by adding <code class="docutils literal notranslate"><span class="pre">-h</span></code> flag to it:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal"><span class="pre">visualqc_alignment</span></code></li>
-<li><code class="docutils literal"><span class="pre">visualqc_freesurfer</span></code></li>
-<li><code class="docutils literal"><span class="pre">visualqc_func_mri</span></code></li>
-<li><code class="docutils literal"><span class="pre">visualqc_t1_mri</span></code></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">visualqc_alignment</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">visualqc_freesurfer</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">visualqc_func_mri</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">visualqc_anatomical</span></code></p></li>
 </ul>
 </div></blockquote>
 <p>Each of them has a shorter name shortcut too to save a bit of typing :):</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal"><span class="pre">vqcalign</span></code></li>
-<li><code class="docutils literal"><span class="pre">vqcfs</span></code></li>
-<li><code class="docutils literal"><span class="pre">vqcfunc</span></code></li>
-<li><code class="docutils literal"><span class="pre">vqct1</span></code></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vqcalign</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vqcfs</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vqcfunc</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vqcanat</span></code></p></li>
 </ul>
 </div></blockquote>
 <p>For example,</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>vqcalign
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vqcalign
 vqcfunc -h
 </pre></div>
 </div>
 <p>Those options for each command are shown in their respective pages:</p>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="cli_alignment.html"><span class="doc">Command line usage - Alignment</span></a></li>
-<li><a class="reference internal" href="cli_freesurfer.html"><span class="doc">Command line usage - Freesurfer</span></a></li>
-<li><a class="reference internal" href="cli_func_mri.html"><span class="doc">Command line usage - Functional MRI</span></a></li>
-<li><a class="reference internal" href="cli_t1_mri.html"><span class="doc">Command line usage - T1w MRI</span></a></li>
+<li><p><a class="reference internal" href="cli_alignment.html"><span class="doc">Command line usage - Alignment</span></a></p></li>
+<li><p><a class="reference internal" href="cli_freesurfer.html"><span class="doc">Command line usage - Freesurfer</span></a></p></li>
+<li><p><a class="reference internal" href="cli_func_mri.html"><span class="doc">Command line usage - Functional MRI</span></a></p></li>
+<li><p><a class="reference internal" href="cli_t1_mri.html"><span class="doc">Command line usage - T1w MRI</span></a></p></li>
 </ul>
 </div></blockquote>
 <p>Check the bottom of this page for examples.</p>
 <p>Examples showing the usage of each of these use cases are shown below:</p>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="examples_freesurfer.html"><span class="doc">Example usage - Freesurfer</span></a></li>
-<li><a class="reference internal" href="examples_func_mri.html"><span class="doc">Example usage - Functional MRI</span></a></li>
-<li><a class="reference internal" href="examples_alignment.html"><span class="doc">Example usage - Alignment</span></a></li>
-<li><a class="reference internal" href="examples_t1_mri.html"><span class="doc">Example usage - T1w MRI</span></a></li>
+<li><p><a class="reference internal" href="examples_freesurfer.html"><span class="doc">Example usage - Freesurfer</span></a></p></li>
+<li><p><a class="reference internal" href="examples_func_mri.html"><span class="doc">Example usage - Functional MRI</span></a></p></li>
+<li><p><a class="reference internal" href="examples_alignment.html"><span class="doc">Example usage - Alignment</span></a></p></li>
+<li><p><a class="reference internal" href="examples_t1_mri.html"><span class="doc">Example usage - T1w MRI</span></a></p></li>
 </ul>
 </div></blockquote>
 </div>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -241,7 +233,7 @@ vqcfunc -h
         <a href="file_formats.html" class="btn btn-neutral float-right" title="Data formats and requirements" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="recommended_usage.html" class="btn btn-neutral" title="Recommended Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="recommended_usage.html" class="btn btn-neutral float-left" title="Recommended Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -250,11 +242,11 @@ vqcfunc -h
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Pradeep Reddy Raamana.
+        &copy; Copyright 2017, Pradeep Reddy Raamana
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -267,37 +259,15 @@ vqcfunc -h
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'0.3.1',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

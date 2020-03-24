@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Command line usage - Functional MRI &mdash; visualqc 0.3.1 documentation</title>
+  <title>Command line usage - Functional MRI &mdash; visualqc 0.3.3.3+1.g6f52c67.dirty documentation</title>
   
 
   
@@ -17,44 +17,37 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.3.1 documentation" href="index.html"/>
-        <link rel="next" title="Command line usage - Alignment" href="cli_alignment.html"/>
-        <link rel="prev" title="Command line usage - Freesurfer" href="cli_freesurfer.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Command line usage - Alignment" href="cli_alignment.html" />
+    <link rel="prev" title="Command line usage - Freesurfer" href="cli_freesurfer.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -68,7 +61,7 @@
             
             
               <div class="version">
-                0.3.1
+                0.3.3.3+1.g6f52c67.dirty
               </div>
             
           
@@ -107,14 +100,7 @@
 <li class="toctree-l1"><a class="reference internal" href="gallery_segmentation_volumetric.html">Gallery - Segmentation/ROI - anatomical accuracy evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_t1_mri.html">Gallery - Structural T1w MRI - artefact detection and rating</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_freesurfer.html">Command line usage - Freesurfer</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Command line usage - Functional MRI</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Input and output">Input and output</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Preprocessing">Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Outlier detection">Outlier detection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Layout options">Layout options</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Workflow">Workflow</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Command line usage - Functional MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_alignment.html">Command line usage - Alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_t1_mri.html">Command line usage - T1w MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_freesurfer.html">Example usage - Freesurfer</a></li>
@@ -137,7 +123,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">visualqc</a>
@@ -145,9 +131,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -191,185 +178,11 @@
             
   <div class="section" id="command-line-usage-functional-mri">
 <h1>Command line usage - Functional MRI<a class="headerlink" href="#command-line-usage-functional-mri" title="Permalink to this headline">¶</a></h1>
-<p>visualqc_func_mri: rate quality of functional MR scan.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">visualqc_func_mri</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">b</span> <span class="n">BIDS_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">u</span> <span class="n">USER_DIR</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OUT_DIR</span><span class="p">]</span>
-                         <span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="n">ID_LIST</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">n</span> <span class="n">NAME_PATTERN</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">np</span><span class="p">]</span>
-                         <span class="p">[</span><span class="o">-</span><span class="n">olm</span> <span class="n">OUTLIER_METHOD</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">olf</span> <span class="n">OUTLIER_FRACTION</span><span class="p">]</span>
-                         <span class="p">[</span><span class="o">-</span><span class="n">olt</span> <span class="n">OUTLIER_FEAT_TYPES</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">old</span><span class="p">]</span>
-                         <span class="p">[</span><span class="o">-</span><span class="n">w</span> <span class="n">VIEWS</span> <span class="p">[</span><span class="n">VIEWS</span> <span class="o">...</span><span class="p">]]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span> <span class="n">NUM_SLICES</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">r</span> <span class="n">NUM_ROWS</span><span class="p">]</span>
-                         <span class="p">[</span><span class="o">-</span><span class="n">p</span><span class="p">]</span>
-</pre></div>
-</div>
-<div class="section" id="Input and output">
-<h2>Input and output<a class="headerlink" href="#Input and output" title="Permalink to this headline">¶</a></h2>
-<table class="docutils option-list" frame="void" rules="none">
-<col class="option" />
-<col class="description" />
-<tbody valign="top">
-<tr><td class="option-group">
-<kbd>-b, --bids_dir</kbd></td>
-<td><p class="first">Absolute path to the root folder of the dataset formatted with the BIDS spec.
-See bids.neuroimaging.io for more info.</p>
-<p class="last">E.g. <code class="docutils literal"><span class="pre">--bids_dir</span> <span class="pre">/project/new_big_idea/ds042</span></code></p>
-</td></tr>
-<tr><td class="option-group">
-<kbd>-u, --user_dir</kbd></td>
-<td><p class="first">Absolute path to an input folder containing the MRI scan.
-Each subject will be queried after its ID in the metadata file,
-and is expected to have a file, uniquely specified <code class="docutils literal"><span class="pre">--name_pattern</span></code>),
-in its own folder under this path <code class="docutils literal"><span class="pre">--user_dir</span></code>.</p>
-<p class="last">E.g. <code class="docutils literal"><span class="pre">--user_dir</span> <span class="pre">/project/images_to_QC</span></code></p>
-</td></tr>
-<tr><td class="option-group">
-<kbd>-o, --out_dir</kbd></td>
-<td>Output folder to store the visualizations &amp; ratings.
-Default: a new folder called <code class="docutils literal"><span class="pre">visualqc</span></code> will be created inside the <code class="docutils literal"><span class="pre">fs_dir</span></code></td></tr>
-<tr><td class="option-group">
-<kbd>-i, --id_list</kbd></td>
-<td><p class="first">Abs path to file containing list of subject IDs to be processed.
-If not provided, all the subjects with required files will be processed.</p>
-<p>E.g.</p>
-<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">sub001</span>
-<span class="n">sub002</span>
-<span class="n">cn_003</span>
-<span class="n">cn_004</span>
-</pre></div>
-</div>
-</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd>-n, --name_pattern</kbd></td>
-</tr>
-<tr><td>&#160;</td><td><p class="first">Specifies the regex to be used to search for the image to be reviewed.
-Typical options include:</p>
-<blockquote>
-<div><ul class="simple">
-<li><code class="docutils literal"><span class="pre">'bold.nii'</span></code>, when name is common across subjects</li>
-<li><code class="docutils literal"><span class="pre">'*_preproc_*.nii'</span></code>, when filenames have additional info encoded (such as redundant subject ID as in BIDS format)</li>
-</ul>
-<blockquote>
-<div><ul class="simple">
-<li><dl class="first docutils">
-<dt><code class="docutils literal"><span class="pre">'func/sub*_bold_*space-MNI152*_preproc.nii.gz'</span></code> when you need to additional levels deeper (with a / in regex)</dt>
-<dd>or control different versions (atlas space) of the same type of file.</dd>
-</dl>
-</li>
-</ul>
-</div></blockquote>
-</div></blockquote>
-<p>Ensure the regex is <em>tight</em> enough to result in only one file for each ID in the id_list. You can do this by giving it a try in the shell and counting the number of results against the number of IDs in id_list. If you have more results than the IDs, then there are duplicates. You can use <a class="reference external" href="https://regex101.com">https://regex101.com</a> to construct your pattern to tightly match your requirements. If multiple matches are found, the first one will be used.</p>
-<p>Make sure to use single quotes to avoid the shell globbing before visualqc receives it.</p>
-<p class="last">Default: ‘<a href="#id1"><span class="problematic" id="id2">*</span></a>.nii’</p>
-</td></tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="Preprocessing">
-<h2>Preprocessing<a class="headerlink" href="#Preprocessing" title="Permalink to this headline">¶</a></h2>
-<p>options related to preprocessing before review</p>
-<table class="docutils option-list" frame="void" rules="none">
-<col class="option" />
-<col class="description" />
-<tbody valign="top">
-<tr><td class="option-group" colspan="2">
-<kbd>-np, --no_preproc</kbd></td>
-</tr>
-<tr><td>&#160;</td><td><p class="first">Whether to apply basic preprocessing steps (detrend, slice timing correction etc), before building the carpet image.</p>
-<p>If the images are already preprocessed elsewhere, use this flag <code class="docutils literal"><span class="pre">--no_preproc</span></code></p>
-<p class="last">Default is to apply minimal preprocessing (detrending etc) before showing images for review.</p>
-</td></tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="Outlier detection">
-<h2>Outlier detection<a class="headerlink" href="#Outlier detection" title="Permalink to this headline">¶</a></h2>
-<p>options related to automatically detecting possible outliers</p>
-<table class="docutils option-list" frame="void" rules="none">
-<col class="option" />
-<col class="description" />
-<tbody valign="top">
-<tr><td class="option-group" colspan="2">
-<kbd>-olm, --outlier_method</kbd></td>
-</tr>
-<tr><td>&#160;</td><td><p class="first">Method used to detect the outliers.</p>
-<p>For more info, read <a class="reference external" href="http://scikit-learn.org/stable/modules/outlier_detection.html">http://scikit-learn.org/stable/modules/outlier_detection.html</a></p>
-<p class="last">Default: isolation_forest.</p>
-</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd>-olf, --outlier_fraction</kbd></td>
-</tr>
-<tr><td>&#160;</td><td><p class="first">Fraction of outliers expected in the given sample. Must be &gt;= 1/n and &lt;= (n-1)/n,
-where n is the number of samples in the current sample.</p>
-<p>For more info, read <a class="reference external" href="http://scikit-learn.org/stable/modules/outlier_detection.html">http://scikit-learn.org/stable/modules/outlier_detection.html</a></p>
-<p class="last">Default: 0.2.</p>
-</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd>-olt, --outlier_feat_types</kbd></td>
-</tr>
-<tr><td>&#160;</td><td><p class="first">Type of features to be employed in training the outlier detection method.  It could be one of
-‘cortical’ (aparc.stats: mean thickness and other geometrical features from each cortical label),
-‘subcortical’ (aseg.stats: volumes of several subcortical structures),
-or ‘both’ (using both aseg and aparc stats).</p>
-<p class="last">Default: (‘dvars’,).</p>
-</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd>-old, --disable_outlier_detection</kbd></td>
-</tr>
-<tr><td>&#160;</td><td>This flag disables outlier detection and alerts altogether.</td></tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="Layout options">
-<h2>Layout options<a class="headerlink" href="#Layout options" title="Permalink to this headline">¶</a></h2>
-<dl class="docutils">
-<dt>Slice layout arragement when zooming in on a time point,</dt>
-<dd>or show to the std. dev plot.</dd>
-</dl>
-<table class="docutils option-list" frame="void" rules="none">
-<col class="option" />
-<col class="description" />
-<tbody valign="top">
-<tr><td class="option-group">
-<kbd>-w, --views</kbd></td>
-<td>Specifies the set of views to display - could be just 1 view, or 2 or all 3.
-Example: –views 0 (typically sagittal) or –views 1 2 (axial and coronal)
-Default: 0 1 2 (show all the views in the selected segmentation)</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd>-s, --num_slices</kbd></td>
-</tr>
-<tr><td>&#160;</td><td>Specifies the number of slices to display per each view.
-This must be even to facilitate better division.
-Default: 12.</td></tr>
-<tr><td class="option-group">
-<kbd>-r, --num_rows</kbd></td>
-<td>Specifies the number of rows to display per each axis.
-Default: 2.</td></tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="Workflow">
-<h2>Workflow<a class="headerlink" href="#Workflow" title="Permalink to this headline">¶</a></h2>
-<p>Options related to workflow e.g. to pre-compute resource-intensive features, and pre-generate all the visualizations required before bringin up the review interface.</p>
-<table class="docutils option-list" frame="void" rules="none">
-<col class="option" />
-<col class="description" />
-<tbody valign="top">
-<tr><td class="option-group" colspan="2">
-<kbd>-p, --prepare_first</kbd></td>
-</tr>
-<tr><td>&#160;</td><td><p class="first">This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations.</p>
-<p>This makes the switch from one subject to the next, even more seamless (saving few seconds :) ).</p>
-<p class="last">Default: False (required visualizations are generated only on demand, which can take 5-10 seconds for each subject).</p>
-</td></tr>
-</tbody>
-</table>
-</div>
 </div>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -378,7 +191,7 @@ Default: 2.</td></tr>
         <a href="cli_alignment.html" class="btn btn-neutral float-right" title="Command line usage - Alignment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="cli_freesurfer.html" class="btn btn-neutral" title="Command line usage - Freesurfer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="cli_freesurfer.html" class="btn btn-neutral float-left" title="Command line usage - Freesurfer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -387,11 +200,11 @@ Default: 2.</td></tr>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Pradeep Reddy Raamana.
+        &copy; Copyright 2017, Pradeep Reddy Raamana
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -404,37 +217,15 @@ Default: 2.</td></tr>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'0.3.1',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

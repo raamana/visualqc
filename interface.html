@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Review interface &mdash; visualqc 0.3.1 documentation</title>
+  <title>Review interface &mdash; visualqc 0.3.3.3+1.g6f52c67.dirty documentation</title>
   
 
   
@@ -17,44 +17,37 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="visualqc 0.3.1 documentation" href="index.html"/>
-        <link rel="next" title="Gallery - Freesurfer Parcellation" href="gallery_freesurfer.html"/>
-        <link rel="prev" title="Data formats and requirements" href="file_formats.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Gallery - Freesurfer Parcellation" href="gallery_freesurfer.html" />
+    <link rel="prev" title="Data formats and requirements" href="file_formats.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -68,7 +61,7 @@
             
             
               <div class="version">
-                0.3.1
+                0.3.3.3+1.g6f52c67.dirty
               </div>
             
           
@@ -102,7 +95,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Review interface</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#common-elements">Common elements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#review-interface-freesurfer">Review interface - Freesurfer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#review-interface-t1w-mri">Review interface - T1w MRI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#review-interface-anatomical-t1w-mri">Review interface - Anatomical / T1w MRI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#review-interface-registration">Review interface - Registration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#review-interface-functional-mri">Review interface - Functional MRI</a></li>
 </ul>
@@ -137,7 +130,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">visualqc</a>
@@ -145,9 +138,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -196,19 +190,18 @@
 <h2>Common elements<a class="headerlink" href="#common-elements" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li>Double or right click would zoom the data being displayed.</li>
-<li><dl class="first docutils">
-<dt>to rate, click the appropriate button, or press the key corresponding to its letter capitalized</dt>
-<dd><ul class="first last">
-<li>This is usually the first later e.g. <code class="docutils literal"><span class="pre">G</span></code> for <code class="docutils literal"><span class="pre">Good</span></code>, <code class="docutils literal"><span class="pre">s</span></code> for <code class="docutils literal"><span class="pre">Spikes</span></code>, <code class="docutils literal"><span class="pre">R</span></code> for <code class="docutils literal"><span class="pre">Review</span> <span class="pre">later</span></code></li>
-<li>but can also be others (capitalized) if there is overlap with other words: <code class="docutils literal"><span class="pre">M`</span> <span class="pre">for</span> <span class="pre">``i'M</span> <span class="pre">tired</span></code></li>
+<li><p>Double or right click would zoom the data being displayed.</p></li>
+<li><dl class="simple">
+<dt>to rate, click the appropriate button, or press the key corresponding to its letter capitalized</dt><dd><ul>
+<li><p>This is usually the first later e.g. <code class="docutils literal notranslate"><span class="pre">G</span></code> for <code class="docutils literal notranslate"><span class="pre">Good</span></code>, <code class="docutils literal notranslate"><span class="pre">s</span></code> for <code class="docutils literal notranslate"><span class="pre">Spikes</span></code>, <code class="docutils literal notranslate"><span class="pre">R</span></code> for <code class="docutils literal notranslate"><span class="pre">Review</span> <span class="pre">later</span></code></p></li>
+<li><p>but can also be others (capitalized) if there is overlap with other words: <code class="docutils literal notranslate"><span class="pre">M`</span> <span class="pre">for</span> <span class="pre">``i'M</span> <span class="pre">tired</span></code></p></li>
 </ul>
 </dd>
 </dl>
 </li>
-<li>You can not advance to next sbuject/scan/unit without rating the current one. If you are not sure yet about how to rate it, or need additional details or discussion, simply use <code class="docutils literal"><span class="pre">Review</span> <span class="pre">later</span></code> option.</li>
-<li>to advance to next subject, click <code class="docutils literal"><span class="pre">Next</span></code> button.</li>
-<li>to quit the review temporarily, click <code class="docutils literal"><span class="pre">Quit</span></code> button or press <code class="docutils literal"><span class="pre">Ctrl+Q</span></code> keys.</li>
+<li><p>You can not advance to next sbuject/scan/unit without rating the current one. If you are not sure yet about how to rate it, or need additional details or discussion, simply use <code class="docutils literal notranslate"><span class="pre">Review</span> <span class="pre">later</span></code> option.</p></li>
+<li><p>to advance to next subject, click <code class="docutils literal notranslate"><span class="pre">Next</span></code> button.</p></li>
+<li><p>to quit the review temporarily, click <code class="docutils literal notranslate"><span class="pre">Quit</span></code> button or press <code class="docutils literal notranslate"><span class="pre">Ctrl+Q</span></code> keys.</p></li>
 </ul>
 </div></blockquote>
 </div>
@@ -216,19 +209,19 @@
 <h2>Review interface - Freesurfer<a class="headerlink" href="#review-interface-freesurfer" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li>double click in a given slice to zooms it large.</li>
-<li>to toggle the colored overlay, right click or press the key <code class="docutils literal"><span class="pre">t</span></code>. This works even when a slice is zoomed-in.</li>
-<li>slider changes the transparency of the overlay in all slices.</li>
+<li><p>double click in a given slice to zooms it large.</p></li>
+<li><p>to toggle the colored overlay, right click or press the key <code class="docutils literal notranslate"><span class="pre">t</span></code>. This works even when a slice is zoomed-in.</p></li>
+<li><p>slider changes the transparency of the overlay in all slices.</p></li>
 </ul>
 </div></blockquote>
 </div>
-<div class="section" id="review-interface-t1w-mri">
-<h2>Review interface - T1w MRI<a class="headerlink" href="#review-interface-t1w-mri" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="review-interface-anatomical-t1w-mri">
+<h2>Review interface - Anatomical / T1w MRI<a class="headerlink" href="#review-interface-anatomical-t1w-mri" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li>Double click to zoom in on any slice.</li>
-<li>Double click the histogram to zoom the intensity distribution</li>
-<li>keyboard shortcuts (capitalized letters in label) to rate artefacts</li>
+<li><p>Double click to zoom in on any slice.</p></li>
+<li><p>Double click the histogram to zoom the intensity distribution</p></li>
+<li><p>keyboard shortcuts (capitalized letters in label) to rate artefacts</p></li>
 </ul>
 </div></blockquote>
 </div>
@@ -236,12 +229,12 @@
 <h2>Review interface - Registration<a class="headerlink" href="#review-interface-registration" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li>keyboard shortcuts (capitalized letters in label) to rate the quality of alignment</li>
-<li>Double click the histogram to zoom the distribution of voxel-wise differences</li>
-<li>Click on the radio buttons to change the type of blending - Animate or Checkerboard or Edges or Color mix etc.</li>
-<li><code class="docutils literal"><span class="pre">alt+1</span></code> to show only the first image</li>
-<li><code class="docutils literal"><span class="pre">alt+2</span></code> to show only the second image</li>
-<li>Double click to zoom in on any slice.</li>
+<li><p>keyboard shortcuts (capitalized letters in label) to rate the quality of alignment</p></li>
+<li><p>Double click the histogram to zoom the distribution of voxel-wise differences</p></li>
+<li><p>Click on the radio buttons to change the type of blending - Animate or Checkerboard or Edges or Color mix etc.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alt+1</span></code> to show only the first image</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alt+2</span></code> to show only the second image</p></li>
+<li><p>Double click to zoom in on any slice.</p></li>
 </ul>
 </div></blockquote>
 </div>
@@ -249,10 +242,10 @@
 <h2>Review interface - Functional MRI<a class="headerlink" href="#review-interface-functional-mri" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li>Right click to open a given time point (also known as frame)</li>
-<li>Use the arrow keys to traverse in time (right/up keys to increase the frame, and left/down key to decrease it)</li>
-<li>Right click again on slices to zoom them further full-window</li>
-<li>Press <code class="docutils literal"><span class="pre">alt+s</span></code> to show the std. dev map (voxel-wise, over time)</li>
+<li><p>Right click to open a given time point (also known as frame)</p></li>
+<li><p>Use the arrow keys to traverse in time (right/up keys to increase the frame, and left/down key to decrease it)</p></li>
+<li><p>Right click again on slices to zoom them further full-window</p></li>
+<li><p>Press <code class="docutils literal notranslate"><span class="pre">alt+s</span></code> to show the std. dev map (voxel-wise, over time)</p></li>
 <li></li>
 </ul>
 </div></blockquote>
@@ -261,9 +254,7 @@
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -272,7 +263,7 @@
         <a href="gallery_freesurfer.html" class="btn btn-neutral float-right" title="Gallery - Freesurfer Parcellation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="file_formats.html" class="btn btn-neutral" title="Data formats and requirements" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="file_formats.html" class="btn btn-neutral float-left" title="Data formats and requirements" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -281,11 +272,11 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Pradeep Reddy Raamana.
+        &copy; Copyright 2017, Pradeep Reddy Raamana
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -298,37 +289,15 @@
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'0.3.1',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>
