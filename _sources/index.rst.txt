@@ -20,11 +20,13 @@ Contents:
    gallery_segmentation_volumetric
    gallery_t1_mri
    cli_freesurfer
+   cli_defacing
    cli_func_mri
    cli_alignment
    cli_t1_mri
    examples_freesurfer
    examples_freesurfer_generic
+   examples_defacing
    examples_func_mri
    examples_alignment
    examples_t1_mri

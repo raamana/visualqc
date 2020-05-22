@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Command line usage - Freesurfer &mdash; visualqc 0.4.3 documentation</title>
+  <title>Command line usage - Freesurfer &mdash; visualqc 0.4.5 documentation</title>
   
 
   
@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Command line usage - Functional MRI" href="cli_func_mri.html" />
+    <link rel="next" title="Command line usage - Defacing" href="cli_defacing.html" />
     <link rel="prev" title="Gallery - Structural T1w MRI - artefact detection and rating" href="gallery_t1_mri.html" /> 
 </head>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.3
+                0.4.5
               </div>
             
           
@@ -107,11 +107,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#Workflow">Workflow</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="cli_defacing.html">Command line usage - Defacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_func_mri.html">Command line usage - Functional MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_alignment.html">Command line usage - Alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_t1_mri.html">Command line usage - T1w MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_freesurfer.html">Example usage - Freesurfer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_freesurfer_generic.html">Example usage - Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_defacing.html">Example usage - Defacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_func_mri.html">Example usage - Functional MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_alignment.html">Example usage - Alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_t1_mri.html">Example usage - T1w MRI</a></li>
@@ -234,7 +236,8 @@ Make sure to choose the right vis_type.</p>
 </dd>
 <dt><kbd>-l, --labels</kbd></dt>
 <dd><p>Specifies the set of labels to include for overlay.</p>
-<p>Default: None (show all the labels in the selected segmentation)</p>
+<p>Atleast one label must be specified when vis_type is labels_volumetric or labels_contour</p>
+<p>Default: None (show nothing)</p>
 </dd>
 </dl>
 </div>
@@ -324,7 +327,7 @@ Default: 2.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="cli_func_mri.html" class="btn btn-neutral float-right" title="Command line usage - Functional MRI" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="cli_defacing.html" class="btn btn-neutral float-right" title="Command line usage - Defacing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="gallery_t1_mri.html" class="btn btn-neutral float-left" title="Gallery - Structural T1w MRI - artefact detection and rating" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
