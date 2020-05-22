@@ -7,6 +7,7 @@ Once the installation is successful, options for the corresponding usecase could
  - ``visualqc_freesurfer``
  - ``visualqc_func_mri``
  - ``visualqc_anatomical``
+ - ``visualqc_defacing``
 
 Each of them has a shorter name shortcut too to save a bit of typing :):
 
@@ -14,6 +15,7 @@ Each of them has a shorter name shortcut too to save a bit of typing :):
  - ``vqcfs``
  - ``vqcfunc``
  - ``vqcanat``
+ - ``vqcdeface``
 
 
 For example,

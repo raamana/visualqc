@@ -12,7 +12,7 @@ from shutil import copyfile
 from os.path import exists as pexists, join as pjoin
 
 from visualqc import config as cfg
-from visualqc.utils import get_ratings_path_info, load_ratings_csv
+from visualqc.utils import get_ratings_path_info, load_ratings_csv, summarize_ratings
 
 
 class DummyCallable(object):
@@ -35,8 +35,11 @@ class BaseWorkflowVisualQC(ABC):
                  id_list,
                  in_dir,
                  out_dir,
-                 outlier_method, outlier_fraction,
-                 outlier_feat_types, disable_outlier_detection):
+                 outlier_method,
+                 outlier_fraction,
+                 outlier_feat_types,
+                 disable_outlier_detection,
+                 show_unit_id=True):
         """Constructor"""
 
         # super().__init__()
@@ -44,6 +47,7 @@ class BaseWorkflowVisualQC(ABC):
         self.id_list = id_list
         self.in_dir = in_dir
         self.out_dir = out_dir
+        print('Input folder: {}\nOutput folder: {}'.format(self.in_dir, self.out_dir))
 
         self.ratings = dict()
         self.notes = dict()
@@ -52,6 +56,10 @@ class BaseWorkflowVisualQC(ABC):
         self.outlier_fraction = outlier_fraction
         self.outlier_feat_types = outlier_feat_types
         self.disable_outlier_detection = disable_outlier_detection
+
+        # option to hide the ID, which may contain meta data such as site/time
+        # hiding ID reduces bias or batch effects
+        self.show_unit_id = show_unit_id
 
         # following properties must be instantiated
         self.feature_extractor = DummyCallable()
@@ -70,7 +78,7 @@ class BaseWorkflowVisualQC(ABC):
         self.loop_through_units()
         self.cleanup()
 
-        print('Done.\nResults are available in:\n\t{}'.format(self.out_dir))
+        print('\nAll Done - results are available in:\n\t{}'.format(self.out_dir))
 
 
     @abstractmethod
@@ -118,8 +126,8 @@ class BaseWorkflowVisualQC(ABC):
             self.notes = dict()
 
         if len(prev_done) > 0:
-            print('\nRatings for {}/{} subjects '
-                  'were restored.'.format(len(prev_done), len(self.id_list)))
+            print('\nRatings for {}/{} subjects were restored.'
+                  ''.format(len(prev_done), len(self.id_list)))
 
         if len(self.incomplete_list) < 1:
             print('No subjects to review/rate - exiting.')
@@ -150,6 +158,9 @@ class BaseWorkflowVisualQC(ABC):
             raise IOError(
                 'Error in saving ratings to file!!\n'
                 'Backup might be helpful at:\n\t{}'.format(prev_ratings_backup))
+
+        # summarize ratings to stdout and id lists
+        summarize_ratings(ratings_file)
 
 
     @staticmethod
@@ -197,8 +208,13 @@ class BaseWorkflowVisualQC(ABC):
 
         """
 
-        self.UI.add_annot(
-            '{}\n({}/{})'.format(unit_id, counter + 1, self.num_units_to_review))
+        if self.show_unit_id:
+            annot_text = '{}\n({}/{})'.format(unit_id, counter + 1,
+                                              self.num_units_to_review)
+        else:
+            annot_text = '{}/{}'.format(counter+1, self.num_units_to_review)
+
+        self.UI.add_annot(annot_text)
 
 
     def show_fig_and_wait(self):
@@ -218,7 +234,8 @@ class BaseWorkflowVisualQC(ABC):
         Parameters
         ----------
         unit_id : str
-            Identifier to locate the data for the given unit (subject, session or run) in self.in_dir
+            Identifier to locate the data for the given unit in self.in_dir.
+            Unit could be a subject, session or run depending on the task.
 
         Returns
         -------
@@ -237,7 +254,10 @@ class BaseWorkflowVisualQC(ABC):
 
     @abstractmethod
     def add_alerts(self):
-        """Method to appropriately alert the reviewer e.g. when subject was flagged as an outlier"""
+        """
+        Method to appropriately alert the reviewer
+            e.g. when subject was flagged as an outlier
+        """
 
 
     def quit(self, input_event_to_ignore=None):
@@ -360,37 +380,58 @@ class BaseWorkflowVisualQC(ABC):
             return
 
         if len(self.feature_paths) < 1:
-            print(
-                'Features required for outlier detection are not available - skipping it.')
+            print('Features required for outlier detection are not available -'
+                  ' skipping it.')
             return
 
-        from visualqc.outliers import detect_outliers
-        from visualqc.readers import gather_data
-        for feature_type in self.outlier_feat_types:
-            features = gather_data(self.feature_paths[feature_type], self.id_list)
-            if features.shape[0] > self.outlier_fraction * len(self.id_list):
-                print('\nRunning outlier detection based on {} measures:'.format(
-                    feature_type))
-                out_file = pjoin(self.out_dir,
-                                 '{}_{}_{}.txt'.format(cfg.outlier_list_prefix,
-                                                       self.outlier_method, feature_type))
-                self.by_feature[feature_type] = detect_outliers(features, self.id_list,
-                                                                method=self.outlier_method,
-                                                                out_file=out_file,
-                                                                fraction_of_outliers=self.outlier_fraction)
-            else:
-                print('Insufficient number of samples (with features: {}) \n'
-                      ' \t to run outlier detection - skipping it.'.format(feature_type))
+        try:
+            from visualqc.outliers import detect_outliers
+            from visualqc.readers import gather_data
+            for feature_type in self.outlier_feat_types:
 
-        # re-organizing the identified outliers by sample
-        for sid in self.id_list:
-            # each id contains a list of all feature types that flagged it as an outlier
-            self.by_sample[sid] = [feat for feat in self.outlier_feat_types if
-                                   sid in self.by_feature[feat]]
+                if len(self.feature_paths[feature_type]) < 1:
+                    print('{} features for outlier detection are not available ...'
+                          ' '.format(feature_type))
+                    continue
 
-        # dropping the IDs that were not flagged by any feature
-        # so a imple ID in dict would reveal whether it was ever suspected as an outlier
-        self.by_sample = {id: flag_list for id, flag_list in self.by_sample.items() if
-                          flag_list}
+                try:
+                    features = gather_data(self.feature_paths[feature_type], self.id_list)
+                except:
+                    raise IOError('Unable to read/assemble features for outlier '
+                                  'detection. Skipping them!')
+
+                if features.shape[0] > self.outlier_fraction * len(self.id_list):
+                    print('\nRunning outlier detection based on {} measures:'
+                          ''.format(feature_type))
+                    out_file = pjoin(self.out_dir, '{}_{}_{}.txt'.format(
+                        cfg.outlier_list_prefix, self.outlier_method, feature_type))
+                    self.by_feature[feature_type] = \
+                        detect_outliers(features, self.id_list,
+                                        method=self.outlier_method, out_file=out_file,
+                                        fraction_of_outliers=self.outlier_fraction)
+                else:
+                    print('Insufficient number of samples (with features: {}) \n'
+                          ' \t to run outlier detection - skipping it.'
+                          ''.format(feature_type))
+
+            # re-organizing the identified outliers by sample
+            for sid in self.id_list:
+                # each id --> list of all feature types that flagged it as an outlier
+                self.by_sample[sid] = [feat for feat in self.outlier_feat_types
+                                       if sid in self.by_feature[feat]]
+
+            # dropping the IDs that were not flagged by any feature
+            # so a simple ID in dict implies --> it was ever suspected as an outlier
+            self.by_sample = {id_: flag_list
+                              for id_, flag_list in self.by_sample.items()
+                              if flag_list}
+        except:
+            self.disable_outlier_detection = False
+            self.by_feature = dict()
+            self.by_sample = dict()
+            print('Assitance with outlier detection did not succeed.\n'
+                  'Proceeding by disabling it. Stack trace below:\n')
+            import traceback
+            traceback.print_exc()
 
         return

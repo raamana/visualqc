@@ -355,10 +355,14 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # turning off axes, creating image objects
         self.h_images = [None] * len(self.axes)
-        empty_image = np.full((10, 10, 3), 0.0)
+        self.h_slice_numbers = [None] * len(self.axes)
+        empty_image = np.full((100, 100, 3), 0.0)
+        label_x, label_y = 5, 5 # in image space
         for ix, ax in enumerate(self.axes):
             ax.axis('off')
             self.h_images[ix] = ax.imshow(empty_image, **self.display_params)
+            self.h_slice_numbers[ix]= ax.text(label_x, label_y, '',
+                                              **cfg.slice_num_label_properties)
 
         self.fg_annot_h = self.fig.text(cfg.position_annotate_foreground[0],
                                         cfg.position_annotate_foreground[1],
@@ -533,6 +537,7 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
             # mixed_slice is already in RGB mode m x p x 3, so
             #   prev. cmap (gray) has no effect on color_mixed data
             self.h_images[ax_index].set(data=mixed_slice, cmap=self.current_cmap)
+            self.h_slice_numbers[ax_index].set_text(str(slice_index))
 
 
     def show_image(self, img, annot=None):
@@ -575,7 +580,7 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.mixer = partial(mix_slices_in_checkers, checker_size=self.checker_size)
         elif self.vis_type in ['Voxelwise_diff', 'voxelwise_diff', 'vdiff']:
             self.mixer = diff_image
-        elif self.vis_type in ['Edges_Sharp',]:
+        elif self.vis_type in ['Edges_Sharp', 'Edges_Thinner']:
             self.mixer = partial(overlay_edges, sharper=True)
         elif self.vis_type in ['Edges_Diffused', ]:
             self.mixer = partial(overlay_edges, sharper=False)
@@ -621,9 +626,10 @@ def get_parser():
     help_text_in_dir = textwrap.dedent("""
     Absolute path to an input folder containing the MRI scan. 
     Each subject will be queried after its ID in the metadata file, 
-    and is expected to have two  images (as specified ``--image1`` and ``--image2``), in its own folder under --in_dir.
+    and is expected to have the MRI (specified ``--mri_name``), 
+    in its own folder under --user_dir.
 
-    E.g. ``--in_dir /project/images_to_QC``
+    E.g. ``--user_dir /project/images_to_QC``
     \n""")
 
     help_text_id_list = textwrap.dedent("""
@@ -732,8 +738,7 @@ def get_parser():
     in_out.add_argument("-o", "--out_dir", action="store", dest="out_dir",
                         default=None, required=False, help=help_text_out_dir)
 
-    vis = parser.add_argument_group('Visualization',
-                                    'Customize behaviour of comparisons')
+    vis = parser.add_argument_group('Visualization', 'Customize behaviour of comparisons')
 
     vis.add_argument("-dl", "--delay_in_animation", action="store",
                      dest="delay_in_animation",

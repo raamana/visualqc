@@ -18,8 +18,8 @@ from matplotlib import pyplot as plt
 from matplotlib.widgets import CheckButtons, RadioButtons
 from mrivis.utils import crop_image
 from os.path import basename, join as pjoin
-
 from visualqc import config as cfg
+from visualqc.image_utils import dwi_overlay_edges
 from visualqc.readers import diffusion_traverse_bids
 from visualqc.t1_mri import T1MriInterface
 from visualqc.utils import check_bids_dir, check_finite_int, check_image_is_4d, \
@@ -61,6 +61,7 @@ class DiffusionMRIInterface(T1MriInterface):
                  zoom_out_callback=None,
                  right_click_callback=None,
                  show_stdev_callback=None,
+                 scroll_callback=None,
                  alignment_callback=None,
                  show_b0_vol_callback=None,
                  flip_first_last_callback=None,
@@ -89,6 +90,7 @@ class DiffusionMRIInterface(T1MriInterface):
         self.zoom_out_callback = zoom_out_callback
         self.right_arrow_callback = right_arrow_callback
         self.left_arrow_callback = left_arrow_callback
+        self.scroll_callback = scroll_callback,
         self.right_click_callback = right_click_callback
         self.show_stdev_callback = show_stdev_callback
         self.alignment_callback = alignment_callback
@@ -247,7 +249,8 @@ class DiffusionMRIInterface(T1MriInterface):
 
     def on_scroll(self, scroll_event):
         """Implements the scroll callback"""
-        pass
+
+        self.scroll_callback(scroll_event)
 
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
@@ -374,7 +377,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.feature_extractor = diffusion_mri_features
 
         if 'BIDS' in self.in_dir_type.upper():
-            from bids.grabbids import BIDSLayout
+            from bids import BIDSLayout
             self.bids_layout = BIDSLayout(self.in_dir)
             self.units = diffusion_traverse_bids(self.bids_layout)
             # file name of each scan is the unique identifier,
@@ -383,7 +386,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                for _, sub_data in self.units.items()}
             self.id_list = list(self.unit_by_id.keys())
         else:
-            raise NotImplementedError('Only the BIDS format is supported at the moment.')
+            raise NotImplementedError('Only the BIDS format is supported for now!')
 
 
     def open_figure(self):
@@ -395,6 +398,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # empty/dummy data for placeholding
         empty_image = np.full((200, 200), 0.0)
+        label_x, label_y = (5, 5) # x, y in image data space
         empty_vec = np.full((200, 1), 0.0)
         gradients = list(range(200))
 
@@ -455,28 +459,36 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # 3. axes to show slices in foreground when a time point is selected
         matrix_handles = self.fig.subplots(self.num_rows, self.num_cols,
                                            subplot_kw=dict(rasterized=True),
-                                           gridspec_kw=dict(wspace=0.0, hspace=0.0))
+                                           gridspec_kw=dict(wspace=0.01, hspace=0.01))
         self.fg_axes = matrix_handles.flatten()
 
         # vmin/vmax are controlled, because we rescale all to [0, 1]
-        # TODO aspect auto here covers carpet so the user can focus on the frame,
-        #   not accurately representing geometry underneath
-        self.imshow_params_zoomed = dict(interpolation='none', aspect='auto',
-                                         rasterized=True,
-                                         origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
+        self.imshow_params_zoomed = dict(interpolation='none', aspect='equal',
+                                         rasterized=True, origin='lower', cmap='gray',
+                                         vmin=0.0, vmax=1.0)
 
         # images to be shown in the forground
         self.images_fg = [None] * len(self.fg_axes)
+        self.images_fg_label = [None] * len(self.fg_axes)
         for ix, ax in enumerate(self.fg_axes):
             ax.axis('off')
             self.images_fg[ix] = ax.imshow(empty_image, **self.imshow_params_zoomed)
-            ax.set_visible(False)
-            ax.set_zorder(self.layer_order_zoomedin)
+            self.images_fg_label[ix] = ax.text(label_x, label_y, '',
+                                               **cfg.slice_num_label_properties,
+                                               zorder=self.layer_order_zoomedin+1)
+            ax.set(visible=False, zorder=self.layer_order_zoomedin)
 
         self.foreground_h = self.fig.text(cfg.position_zoomed_gradient[0],
                                           cfg.position_zoomed_gradient[1],
                                           ' ', **cfg.annot_gradient)
         self.foreground_h.set_visible(False)
+
+        # identifying axes that could be hidden to avoid confusion
+        self.background_artists = list(self.stats_axes) + [self.ax_carpet, ]
+        self.foreground_artists = list(self.fg_axes) + [self.foreground_h, ]
+
+        # separating the list below to allow for differing x axes, while being background
+        self.axes_common_xaxis = list(self.stats_axes) + [self.ax_carpet, ]
 
         # leaving some space on the right for review elements
         plt.subplots_adjust(**cfg.review_area)
@@ -494,6 +506,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                         right_click_callback=self.zoom_in_on_gradient,
                                         right_arrow_callback=self.show_next,
                                         left_arrow_callback=self.show_prev,
+                                        scroll_callback=self.change_gradient_by_step,
                                         zoom_in_callback=self.zoom_in_on_gradient,
                                         zoom_out_callback=self.zoom_out_callback,
                                         show_stdev_callback=self.show_stdev,
@@ -509,9 +522,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                                         self.UI.on_mouse)
         self.con_id_keybd = self.fig.canvas.mpl_connect('key_press_event',
                                                         self.UI.on_keyboard)
-
-        # TODO implement the scrolling movement to scroll in gradient
-        # con_id_scroll = self.fig.canvas.mpl_connect('scroll_event', self.UI.on_scroll)
+        self.con_id_scroll = self.fig.canvas.mpl_connect('scroll_event',
+                                                         self.UI.on_scroll)
 
         self.fig.set_size_inches(self.figsize)
 
@@ -577,15 +589,17 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.b0_indices = np.flatnonzero(self.b_values_this_unit == 0)
             if len(self.b0_indices) < 1:
                 skip_subject = True
-                raise ValueError('There are no b=0 volumes!')
+                print('There are no b=0 volumes for {}! Skipping it..'.format(unit_id))
                 return skip_subject
 
             if len(self.b0_indices) == 1:
-                self.b0_volume = self.img_this_unit_raw[:, :, :, self.b0_indices]
+                self.b0_volume = self.img_this_unit_raw[..., self.b0_indices].squeeze()
             else:
                 # TODO which is the correct b=0 volumes are available
                 # TODO is there a way to reduce multiple into one
-                self.b0_volume = self.img_this_unit_raw[:,:,:,self.b0_indices[0]]
+                print('Multiple b=0 volumes found for {} '
+                      '- choosing the first!'.format(unit_id))
+                self.b0_volume = self.img_this_unit_raw[..., self.b0_indices[0]].squeeze()
             # need more thorough checks on whether image loaded is indeed DWI
 
             self.dw_indices = np.flatnonzero(self.b_values_this_unit != 0)
@@ -606,8 +620,6 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Adds multi-layered composite."""
 
         # TODO show median signal instead of mean - or option for both?
-        # TODO need separate kbd scut to show B0 volume
-        # TODO keyboard shortcuts to show SD over grad, median, mean etc
         self.stdev_this_unit, self.mean_this_unit = self.stats_over_gradients()
 
         # TODO what about slice timing correction?
@@ -658,11 +670,10 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """
 
         # skipping unnecessary computation
-        if (self.current_grad_index >= self.num_gradients - 1) or \
-            (self.current_grad_index < 0):
+        new_index = self.current_grad_index + step
+        if (new_index > self.num_gradients - 1) or (new_index < 0):
             return
 
-        new_index = self.current_grad_index + step
         # clipping from 0 to num_gradients
         self.current_grad_index = max(0, min(self.num_gradients, new_index))
         self.show_gradient()
@@ -688,9 +699,12 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def _animate_through_gradients(self):
         """Show image 1, wait, show image 2"""
 
+        # fixing the same slices for all gradients
+        slices = pick_slices(self.b0_volume, self.views, self.num_slices_per_view)
+
         for grad_idx in range(self.num_gradients):
             self.show_3dimage(self.dw_volumes[:, :, :, grad_idx].squeeze(),
-                              'zoomed-in gradient {}'.format(grad_idx))
+                              slices=slices, annot='gradient {}'.format(grad_idx))
             plt.pause(0.05)
             time.sleep(self.delay_in_animation)
 
@@ -714,8 +728,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Show first, wait, show last, repeat"""
 
         if first_index_in_b0:
-            _first_vol = self.b0_volume[:, :, :, index_one].squeeze()
-            _id_first = 'b=0 index {}'.format(index_one)
+            _first_vol = self.b0_volume  # [:, :, :, index_one].squeeze()
+            _id_first = 'b=0'  # index {}'.format(index_one)
         else:
             _first_vol = self.dw_volumes[:, :, :, index_one].squeeze()
             _id_first = 'DW gradient {}'.format(index_one)
@@ -734,10 +748,14 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                 time.sleep(self.delay_in_animation)
 
 
-    def alignment_check(self, label):
+    def alignment_check(self, label=None):
         """Chooses between the type of alignment check to show"""
 
-        if label in ['Alignment to b=0', 'Align to b=0']:
+        if label is not None:
+            self.current_alignment_check = label
+
+        if label in ['Align to b=0 (animate)', 'Alignment to b=0', 'Align to b=0',
+                     'Align to b=0 (edges)']:
             self.alignment_to_b0()
         elif label in ['Animate all', 'Flip through all']:
             self.animate_through_gradients()
@@ -751,9 +769,31 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Overlays a given gradient on b0 volume to check for alignment isses"""
 
         self.checking_alignment = True
-        self.flip_between_two(self.b0_indices, self.current_grad_index,
-                              first_index_in_b0=True)
 
+        if self.current_alignment_check in ['Align to b=0 (animate)', 'Align to b=0']:
+            self.flip_between_two(self.b0_indices, self.current_grad_index,
+                                  first_index_in_b0=True)
+        elif self.current_alignment_check in ['Align to b=0 (edges)', ]:
+            self.overlay_dwi_edges()
+
+
+    def overlay_dwi_edges(self):
+
+        # not cropping to help checking align in full FOV
+        overlaid = scale_0to1(self.b0_volume)
+        base_img = scale_0to1(self.dw_volumes[..., self.current_grad_index].squeeze())
+        slices = pick_slices(base_img, self.views, self.num_slices_per_view)
+        for ax_index, (dim_index, slice_index) in enumerate(slices):
+            mixed = dwi_overlay_edges(get_axis(base_img, dim_index, slice_index),
+                                      get_axis(overlaid, dim_index, slice_index))
+            self.images_fg[ax_index].set(data=mixed)
+            self.images_fg_label[ax_index].set_text(str(slice_index))
+
+        # the following needs to be done outside show_image3d, as we need custom mixing
+        self._set_backgrounds_visibility(False)
+        self._set_foregrounds_visibility(True)
+        self._identify_foreground('Alignment check to b=0, '
+                                  'grad index {}'.format(self.current_grad_index))
 
     def stop_animation(self):
         # TODO this not working - run_until_complete() is likely the reason
@@ -781,16 +821,17 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             return  # do nothing
 
         self.current_grad_index = max(self.current_grad_index - 1, 0)
-        self.show_gradient()
+        if self.checking_alignment:
+            self.alignment_to_b0()
+        else:
+            self.show_gradient()
 
 
     def zoom_out_callback(self, event):
         """Hides the zoomed-in axes (showing frame)."""
 
-        for ax in self.fg_axes:
-            ax.set(visible=False, zorder=self.layer_order_to_hide)
-        self.foreground_h.set_visible(False)
-        self.UI.zoomed_in = False
+        self._set_foregrounds_visibility(False)
+        self._set_backgrounds_visibility(True)
 
 
     @staticmethod
@@ -813,13 +854,13 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                           'zoomed-in gradient {}'.format(self.current_grad_index))
 
 
-    def show_3dimage(self, image, annot):
+    def show_3dimage(self, image, annot, slices=None):
         """generic display method."""
 
-        self.attach_image_to_foreground_axes(image)
+        self.attach_image_to_foreground_axes(image, slices=slices)
         self._identify_foreground(annot)
-        # this state flag in important
-        self.UI.zoomed_in = True
+        self._set_backgrounds_visibility(False)
+        self._set_foregrounds_visibility(True)
 
 
     def _identify_foreground(self, text):
@@ -829,12 +870,31 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.foreground_h.set_visible(True)
 
 
+    def _set_backgrounds_visibility(self, visibility=True):
+
+        for ax in self.background_artists:
+            ax.set(visible=visibility)
+
+
+    def _set_foregrounds_visibility(self, visibility=False):
+
+        if visibility:
+            zorder = self.layer_order_zoomedin
+        else:
+            zorder = self.layer_order_to_hide
+
+        for ax in self.foreground_artists:
+            ax.set(visible=visibility, zorder=zorder)
+        # this state flag in important
+        self.UI.zoomed_in = visibility
+
+
     def show_stdev(self):
         """Shows the image of temporal std. dev"""
 
         if self.stdev_this_unit is not None:
             self.attach_image_to_foreground_axes(self.stdev_this_unit,
-                                                 cfg.colormap_stdev_diffusion)
+                                                 cmap=cfg.colormap_stdev_diffusion)
             self._identify_foreground('Std. dev over gradients')
             self.UI.zoomed_in = True
         else:
@@ -842,18 +902,18 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             print('SD for this unit is not available')
 
 
-    def attach_image_to_foreground_axes(self, image3d, cmap='gray'):
+    def attach_image_to_foreground_axes(self, image3d, slices=None, cmap='gray'):
         """Attaches a given image to the foreground axes and bring it forth"""
 
         image3d = crop_image(image3d, self.padding)
         # TODO is it always acceptable to rescale diffusion data?
         image3d = scale_0to1(image3d)
-        slices = pick_slices(image3d, self.views, self.num_slices_per_view)
+        if slices is None:
+            slices = pick_slices(image3d, self.views, self.num_slices_per_view)
         for ax_index, (dim_index, slice_index) in enumerate(slices):
             slice_data = get_axis(image3d, dim_index, slice_index)
             self.images_fg[ax_index].set(data=slice_data, cmap=cmap)
-        for ax in self.fg_axes:
-            ax.set(visible=True, zorder=self.layer_order_zoomedin)
+            self.images_fg_label[ax_index].set_text(str(slice_index))
 
 
     def compute_stats(self):
@@ -938,7 +998,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def update_axes_limits(self, num_gradients, num_voxels_shown):
         """Synchronizes the x-axis limits and updates the carpet image extents"""
 
-        for a in list(self.stats_axes) + [self.ax_carpet, ]:
+        for a in self.axes_common_xaxis:
             a.set_xlim(-0.5, num_gradients - 0.5)
             a.set_ylim(auto=True)
             a.relim()
@@ -979,9 +1039,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # save ratings before exiting
         self.save_ratings()
-
-        self.fig.canvas.mpl_disconnect(self.con_id_click)
-        self.fig.canvas.mpl_disconnect(self.con_id_keybd)
+        for cid in (self.con_id_click, self.con_id_keybd, self.con_id_scroll):
+            self.fig.canvas.mpl_disconnect(cid)
         plt.close('all')
 
         self.anim_loop.run_until_complete(self.anim_loop.shutdown_asyncgens())
@@ -1083,9 +1142,9 @@ def get_parser():
     \n""")
 
     help_text_user_dir = textwrap.dedent("""
-    Absolute path to an input folder containing the MRI scan. 
-    Each subject will be queried after its ID in the metadata file, 
-    and is expected to have a file, uniquely specified ``--name_pattern``), 
+    Absolute path to an input folder containing the MRI scan.
+    Each subject will be queried after its ID in the metadata file,
+    and is expected to have a file, uniquely specified ``--name_pattern``),
     in its own folder under this path ``--user_dir``.
 
     E.g. ``--user_dir /project/images_to_QC``
@@ -1108,12 +1167,12 @@ def get_parser():
 
     help_text_name_pattern = textwrap.dedent("""
     Specifies the regex to be used to search for the image to be reviewed.
-    Typical options include: 
+    Typical options include:
 
         - ``'dwi.nii'``, when name is common across subjects
         - ``'*_preproc_*.nii'``, when filenames have additional info encoded (such as redundant subject ID as in BIDS format)
-         - ``'func/sub*_dwi_*space-MNI152*_preproc.nii.gz'`` when you need to additional levels deeper (with a / in regex) 
-            or control different versions (atlas space) of the same type of file. 
+         - ``'func/sub*_dwi_*space-MNI152*_preproc.nii.gz'`` when you need to additional levels deeper (with a / in regex)
+            or control different versions (atlas space) of the same type of file.
 
     Ensure the regex is *tight* enough to result in only one file for each ID in the id_list. You can do this by giving it a try in the shell and counting the number of results against the number of IDs in id_list. If you have more results than the IDs, then there are duplicates. You can use https://regex101.com to construct your pattern to tightly match your requirements. If multiple matches are found, the first one will be used.
 
@@ -1128,7 +1187,7 @@ def get_parser():
     \n""".format(cfg.default_out_dir_name))
 
     help_text_apply_preproc = textwrap.dedent("""
-    Whether to apply basic preprocessing steps (detrend, slice timing correction etc), before building the carpet image. 
+    Whether to apply basic preprocessing steps (detrend, slice timing correction etc), before building the carpet image.
 
     If the images are already preprocessed elsewhere, use this flag ``--apply_preproc``
 
@@ -1142,13 +1201,13 @@ def get_parser():
     \n""".format(cfg.default_views[0], cfg.default_views[1], cfg.default_views[2]))
 
     help_text_num_slices = textwrap.dedent("""
-    Specifies the number of slices to display per each view. 
+    Specifies the number of slices to display per each view.
     This must be even to facilitate better division.
     Default: {}.
     \n""".format(cfg.default_num_slices))
 
     help_text_num_rows = textwrap.dedent("""
-    Specifies the number of rows to display per each axis. 
+    Specifies the number of rows to display per each axis.
     Default: {}.
     \n""".format(cfg.default_num_rows))
 

@@ -4,36 +4,42 @@ import os
 import sys
 import warnings
 from genericpath import exists as pexists
+from collections import Counter
+from os.path import realpath
 from os import makedirs
 from shutil import copyfile, which
 
 import nibabel as nib
 import numpy as np
 from os.path import basename, join as pjoin, realpath, splitext
-
+from pathlib import Path
 import visualqc.config as cfg
 from visualqc.config import default_out_dir_name, freesurfer_vis_cmd, \
     freesurfer_vis_types, visualization_combination_choices
 
 
-def read_image(img_spec, error_msg='image',
-               num_dims=3):
+def read_image(img_spec,
+               error_msg='image',
+               num_dims=3,
+               reorient_canonical=True):
     """Image reader. Removes stray values close to zero (smaller than 5 %ile)."""
 
     if isinstance(img_spec, str):
         if pexists(realpath(img_spec)):
             hdr = nib.load(img_spec)
             # trying to stick to an orientation
-            hdr = nib.as_closest_canonical(hdr)
+            if reorient_canonical:
+                hdr = nib.as_closest_canonical(hdr)
             img = hdr.get_data()
         else:
-            raise IOError(
-                'Given path to {} does not exist!\n\t{}'.format(error_msg, img_spec))
+            raise IOError('Given path to {} does not exist!\n\t{}'
+                          ''.format(error_msg, img_spec))
     elif isinstance(img_spec, np.ndarray):
         img = img_spec
     else:
         raise ValueError('Invalid input specified! '
-                         'Input either a path to image data, or provide 3d Matrix directly.')
+                         'Input either a path to image data, '
+                         'or provide 3d Matrix directly.')
 
     if num_dims == 3:
         img = check_image_is_3d(img)
@@ -48,12 +54,27 @@ def read_image(img_spec, error_msg='image',
     return img
 
 
-def scale_0to1(image, multiply_factor=1.0):
+def scale_0to1(image_in,
+               exclude_outliers_below=False,
+               exclude_outliers_above=False
+               , multiply_factor=1.0):
     """Scale the two images to [0, 1] based on min/max."""
 
-    min_value = image.min()
-    max_value = image.max()
-    out_image = (image - min_value) / (max_value - min_value)
+    # making a copy to ensure no side-effects
+    out_image = image_in.copy()
+
+    min_value = np.percentile(out_image.flatten(),
+                              float(exclude_outliers_below))
+    max_value = np.percentile(out_image.flatten(),
+                              100-float(exclude_outliers_above))
+
+    if exclude_outliers_below:
+        out_image[out_image < min_value] = min_value
+
+    if exclude_outliers_above:
+        out_image[out_image > max_value] = max_value
+
+    out_image = (out_image - min_value) / (max_value - min_value)
 
     if not np.isclose(multiply_factor, 1.0):
         # makes it go from [0, 1] to [0, multiply_factor]
@@ -64,8 +85,29 @@ def scale_0to1(image, multiply_factor=1.0):
     return out_image
 
 
-def get_label_set(seg, label_set, background=0):
-    """Extracts only the required labels"""
+def saturate_brighter_intensities(img,
+                                  factor=0.1,
+                                  percentile=None):
+    """Sets all the intensities above max_intensity*factor to the max intensity.
+
+    Helpful to detect ghosting.
+    """
+
+    saturated = img.copy()
+    max_value = saturated.max()
+
+    if percentile is None and factor is not None:
+        saturated[saturated>(factor*max_value)] = max_value
+    elif percentile:
+        saturated[saturated > np.percentile(saturated, float(percentile))] = max_value
+    else:
+        raise ValueError('Invalid input specification')
+
+    return saturated
+
+
+def get_label_set(seg, label_set, background=cfg.background_value):
+    """Extracts only the required labels, and remaps the labels from 1 to n"""
 
     if label_set is None:
         out_seg = seg
@@ -75,17 +117,11 @@ def get_label_set(seg, label_set, background=0):
         for label in label_set:
             mask = np.logical_or(mask, seg == label)
 
-        out_seg = np.full_like(seg, background)
-        out_seg[mask] = seg[mask]
+        masked_seg = np.full_like(seg, background)
+        masked_seg[mask] = seg[mask]
 
         # remap labels from arbitrary range to 1:N
-        # helps to facilitate distinguishable colors
-        unique_labels = np.unique(out_seg.flatten())
-        # removing background - 0 stays 0
-        unique_labels = np.setdiff1d(unique_labels, background)
-        for index, label in enumerate(unique_labels):
-            # index=0 would make it background, so using index+1
-            out_seg[out_seg == label] = index + 1
+        out_seg = remap_labels_1toN(masked_seg, background)
 
     roi_set_empty = False
     if np.count_nonzero(out_seg) < 1:
@@ -94,12 +130,34 @@ def get_label_set(seg, label_set, background=0):
     return out_seg, roi_set_empty
 
 
+def remap_labels_1toN(in_seg, background=cfg.background_value):
+    """Remap [arbitrary] labels in a volumetric seg to range from 1 to N."""
+
+    out_seg = np.full_like(in_seg, background)
+
+    # remap labels from arbitrary range to 1:N
+    # helps to facilitate distinguishable colors
+    unique_labels = np.unique(in_seg.flatten())
+    # removing background - 0 stays 0
+    unique_labels = np.setdiff1d(unique_labels, background)
+    for index, label in enumerate(unique_labels):
+        # index=0 would make it background, so using index+1
+        out_seg[in_seg == label] = index + 1
+
+    return out_seg
+
+
 def get_axis(array, axis, slice_num):
     """Returns a fixed axis"""
 
     slice_list = [slice(None)] * array.ndim
     slice_list[axis] = slice_num
-    slice_data = array[slice_list].T  # for proper appearance
+    # handling the FutureWarning:
+    # Using a non-tuple sequence for multidimensional indexing is deprecated;
+    #   use `arr[tuple(seq)]` instead of `arr[seq]`.
+    # In the future this will be interpreted as an array index,
+    #   `arr[np.array(seq)]`, which will result either in an error or a different result.
+    slice_data = array[tuple(slice_list)].T  # for proper appearance
 
     return slice_data
 
@@ -194,17 +252,23 @@ def check_image_is_3d(img):
     return img
 
 
-def check_image_is_4d(img):
+def check_image_is_4d(img, min_num_volumes=1, name='4D image'):
     """Ensures the image loaded is 4d and nothing else."""
 
     if len(img.shape) <= 3:
-        raise ValueError('Input volume must be atleast 4D!')
+        raise ValueError('Input {} must be atleast 4D!'.format(name))
     elif len(img.shape) == 4:
         for dim_size in img.shape:
             if dim_size < 1:
                 raise ValueError('Atleast one slice must exist in each dimension')
+        # atleast one volume existing is already checked in the above loop
+        if min_num_volumes >1 and img.shape[-1]<min_num_volumes:
+            raise ValueError('Given {} has fewer than {} volumes!'.format(name, min_num_volumes))
     elif len(img.shape) > 4:
-        raise ValueError('Invalid shape of image : {}'.format(img.shape))
+        raise ValueError('{} has more than 4 dimensions : {}'.format(name, img.shape))
+
+    if np.count_nonzero(img) == 0:
+        raise ValueError('given image is empty!')
 
     return
 
@@ -345,17 +409,75 @@ def save_ratings_to_disk(ratings, notes, qcw):
     if pexists(ratings_file):
         copyfile(ratings_file, prev_ratings_backup)
 
-    lines = '\n'.join(
-        ['{},{},{}'.format(sid, rating, notes[sid]) for sid, rating in ratings.items()])
+    lines = '\n'.join(['{},{},{}'.format(sid, rating, notes[sid])
+                       for sid, rating in ratings.items()])
     try:
         with open(ratings_file, 'w') as cf:
             cf.write(lines)
     except:
-        raise IOError(
-            'Error in saving ratings to file!!\nBackup might be helpful at:\n\t{}'.format(
-                prev_ratings_backup))
+        raise IOError('Error in saving ratings to file!!\n'
+                      'Backup might be helpful at:\n\t{}'
+                      ''.format(prev_ratings_backup))
 
     return
+
+
+def summarize_ratings(ratings_file, out_dir=None):
+    """
+    Summarizes the counts and ID for different unique ratings
+
+    Returns a counter per rating label as well as list of IDs per each label.
+    """
+
+    ratings_file = Path(ratings_file).resolve()
+    if not pexists(ratings_file):
+        raise IOError('Ratings file does not exist! : {}'.format(ratings_file))
+
+    if out_dir is None:
+        out_dir = ratings_file.parents[0]
+
+    import re
+    clean = lambda lbl: re.sub(r'\W+', '_', lbl.lower())
+
+    rating_dict, notes = load_ratings_csv(ratings_file)
+
+    rating_list = list()
+    uniq_labels = set()
+    all_labels = list()
+    for sid, labels in rating_dict.items():
+        # each ID can have multiple ratings
+        sid_labels = [ clean(lbl) for lbl in labels.split(cfg.rating_joiner) ]
+        for lbl in sid_labels:
+            rating_list.append((sid, lbl))
+            uniq_labels.add(lbl)
+            all_labels.append(lbl)
+
+    counter = Counter(all_labels)
+
+    max_width = 1+max([len(rt) for rt in uniq_labels])
+    print('Ratings summary\n  Counts (note some IDs can have multiple ratings):')
+    id_lists = dict()
+    for label, count in counter.items():
+        print('\t{lbl:>{mw}} : {cnt:>7}'.format(lbl=label, cnt=count, mw=max_width))
+
+    # reorg dict by rating label
+    id_lists = dict()
+    for label in uniq_labels:
+        id_lists[label] = list()
+    for sid, label in rating_list:
+        id_lists[label].append(sid)
+
+    print('\nList of IDs by rating:')
+    for label in uniq_labels:
+        print('  {lbl:>{mw}} (n={cnt:>}) : {lst}'
+              ''.format(lbl=label, cnt=len(id_lists[label]), lst=id_lists[label],
+                        mw=max_width))
+
+        out_path = out_dir.joinpath('id_list_rating_{}.txt'.format(label))
+        with open(out_path, 'w') as of:
+            of.write('\n'.join(id_lists[label]))
+
+    return counter, id_lists
 
 
 def get_ratings_path_info(qcw):
@@ -386,12 +508,12 @@ def check_input_dir(fs_dir, user_dir, vis_type,
             raise ValueError('Only one of --fs_dir or --user_dir can be specified.')
 
         if freesurfer_install_required and not freesurfer_installed():
-            raise EnvironmentError(
-                'Freesurfer functionality is requested(e.g. visualizing annotations), but is not installed!')
+            raise EnvironmentError('Freesurfer functionality is requested (e.g. '
+                                   'visualizing annotations), but is not installed!')
 
     if fs_dir is None and vis_type in freesurfer_vis_types:
-        raise ValueError(
-            'vis_type depending on Freesurfer organization is specified, but --fs_dir is not provided.')
+        raise ValueError('vis_type depending on Freesurfer organization is specified,'
+                         ' but --fs_dir is not provided.')
 
     if user_dir is None:
         if not pexists(fs_dir):
@@ -407,22 +529,33 @@ def check_input_dir(fs_dir, user_dir, vis_type,
             type_of_features = 'generic'
 
     if not pexists(in_dir):
-        raise IOError(
-            'Invalid specification - check proper combination of --fs_dir and --user_dir')
+        raise IOError('Invalid specification - check proper combination '
+                      'of --fs_dir and --user_dir')
 
     return in_dir, type_of_features
 
 
-def check_input_dir_T1(fs_dir, user_dir):
+def check_input_dir_T1(fs_dir, user_dir, bids_dir):
     """Ensures proper input is specified."""
 
-    in_dir = fs_dir
-    if fs_dir is None and user_dir is None:
-        raise ValueError('At least one of --fs_dir or --user_dir must be specified.')
+    if fs_dir is None and user_dir is None and bids_dir is None:
+        raise ValueError('At least one of --bids_dir or --fs_dir or --user_dir must '
+                         'be specified, and only one can be specified.')
+
+    if bids_dir is not None:
+        if fs_dir is not None or user_dir is not None:
+            raise ValueError('fs_dir and user_dir can NOT be specified when '
+                             'specifying BIDS')
+        in_dir = realpath(bids_dir)
+        if not pexists(in_dir):
+            raise IOError('BIDS directory specified does not exist!')
+
+        type_of_features = 'BIDS'
+        return in_dir, type_of_features
 
     if fs_dir is not None:
         if user_dir is not None:
-            raise ValueError('Only one of --fs_dir or --user_dir can be specified.')
+            raise ValueError('--user_dir can not be specified when --fs_dir is ')
 
     if user_dir is None:
         if not pexists(fs_dir):
@@ -438,10 +571,10 @@ def check_input_dir_T1(fs_dir, user_dir):
             type_of_features = 'generic'
 
     if not pexists(in_dir):
-        raise IOError(
-            'Invalid specification - check proper combination of --fs_dir and --user_dir')
+        raise IOError('Invalid specification: check proper combination of '
+                      '--bids_dir, --fs_dir,  --user_dir')
 
-    return in_dir, type_of_features
+    return realpath(in_dir), type_of_features
 
 
 def check_input_dir_alignment(in_dir):
@@ -462,7 +595,8 @@ def check_bids_dir(dir_path):
     descr_path = pjoin(dir_path, descr_file_name)
     if not pexists(descr_path):
         raise ValueError('There is no {} file at the root\n '
-                         'Ensure folder is formatted according to BIDS spec.'.format(descr_file_name))
+                         'Ensure folder is formatted according to BIDS spec.'
+                         ''.format(descr_file_name))
 
     try:
         import json
@@ -490,11 +624,11 @@ def freesurfer_installed():
     return True
 
 
-def check_out_dir(out_dir, fs_dir):
+def check_out_dir(out_dir, base_dir):
     """Creates the output folder."""
 
     if out_dir is None:
-        out_dir = pjoin(fs_dir, default_out_dir_name)
+        out_dir = pjoin(base_dir, default_out_dir_name)
 
     try:
         os.makedirs(out_dir, exist_ok=True)
@@ -507,12 +641,14 @@ def check_out_dir(out_dir, fs_dir):
 def check_id_list(id_list_in, in_dir, vis_type,
                   mri_name, seg_name=None,
                   in_dir_type=None):
-    """Checks to ensure each subject listed has the required files and returns only those that can be processed."""
+    """
+    Checks to ensure each subject listed has the required files
+    and returns only those that can be processed.
+    """
 
     if id_list_in is not None:
         if not pexists(id_list_in):
-            raise IOError('Given ID list does not exist!'
-                          '\n\t {}'.format(id_list_in))
+            raise IOError('Given ID list does not exist!')
 
         try:
             id_list = read_id_list(id_list_in)
@@ -537,7 +673,8 @@ def check_id_list(id_list_in, in_dir, vis_type,
     images_for_id = dict()
 
     for subject_id in id_list:
-        path_list = { img: get_path_for_subject(in_dir, subject_id, name, vis_type, in_dir_type)
+        path_list = { img: get_path_for_subject(in_dir, subject_id, name,
+                                                vis_type, in_dir_type)
                         for img, name in required_files.items()
                     }
         invalid = [pfile for pfile in path_list.values() if
@@ -550,15 +687,15 @@ def check_id_list(id_list_in, in_dir, vis_type,
             images_for_id[subject_id] = path_list
 
     if len(id_list_err) > 0:
-        warnings.warn(
-            'The following subjects do NOT have all the required files or some are empty - skipping them!')
+        warnings.warn('The following subjects do NOT have all the required files'
+                      ' or some are empty - skipping them!')
         print('\n'.join(id_list_err))
-        print('\n\nThe following files do not exist or empty: \n {} \n\n'.format(
-            '\n'.join(invalid_list)))
+        print('\n\nThe following files do not exist or empty:'
+              ' \n {} \n\n'.format('\n'.join(invalid_list)))
 
     if len(id_list_out) < 1:
-        raise ValueError(
-            'All the subject IDs do not have the required files - unable to proceed.')
+        raise ValueError('All the subject IDs do not have the required files'
+                         ' - unable to proceed.')
 
     print('{} subjects are usable for review.'.format(len(id_list_out)))
 
@@ -566,7 +703,10 @@ def check_id_list(id_list_in, in_dir, vis_type,
 
 
 def check_id_list_with_regex(id_list_in, in_dir, name_pattern):
-    """Checks to ensure each subject listed has the required files and returns only those that can be processed."""
+    """
+    Checks to ensure each subject listed has the required files
+    and returns only those that can be processed.
+    """
 
     if id_list_in is not None:
         if not pexists(id_list_in):
@@ -613,10 +753,11 @@ def check_id_list_with_regex(id_list_in, in_dir, name_pattern):
             '\n'.join(invalid_list)))
 
     if len(id_list_out) < 1:
-        raise ValueError(
-            'All the subject IDs do not have the required files - unable to proceed.')
+        raise ValueError('All the subject IDs do not have the required files'
+                         ' - unable to proceed.')
 
-    print('{} subjects/sessions/units are usable for review.'.format(len(id_list_out)))
+    print('{} subjects/sessions/units are usable for review.'
+          ''.format(len(id_list_out)))
 
     return np.array(id_list_out), images_for_id
 
@@ -627,6 +768,19 @@ def read_id_list(id_list_file):
     id_list = np.array([line.strip('\n ') for line in open(id_list_file)])
 
     return id_list
+
+
+def write_id_list(id_list, file_path, delimiter='\n', file_mode='w'):
+    """Writes a list of ids into a file path specified
+        in the mode specified (w for overwrite and a for append),
+        joined a given delimiter.
+
+    """
+
+    with open(realpath(file_path), file_mode) as fp:
+        fp.write(delimiter.join(id_list))
+
+    return
 
 
 def expand_regex_paths(in_dir, subject_id, req_file):
@@ -648,7 +802,7 @@ def expand_regex_paths(in_dir, subject_id, req_file):
 
 
 def get_path_for_subject(in_dir, subject_id, req_file, vis_type, in_dir_type=None):
-    """Constructs the path for the image file based on chosen input and visualization type"""
+    """Constructs the path for the image file based on chosen input and vis type"""
 
     if vis_type is not None and (
         vis_type in freesurfer_vis_types or in_dir_type in ['freesurfer', ]):
@@ -697,17 +851,25 @@ def check_outlier_params(method, fraction, feat_types, disable_outlier_detection
     if type_of_features.lower() == 'freesurfer' and \
         vis_type not in cfg.freesurfer_vis_types:
         raise NotImplementedError(
-            'Outlier detection based on current Freesurfer vis_type is not implemented.\n'
-            'Allowed visualization types: {}'.format(cfg.freesurfer_vis_types))
+            'Outlier detection based on current vis_type is not implemented.'
+            '\nAllowed visualization types: {}'.format(cfg.freesurfer_vis_types))
 
     fraction = np.float64(fraction)
     # not clipping automatically to force the user to think about it.
     # fraction = min(max(1 / ns, fraction), 0.5)
     if id_list is not None:
-        ns = len(id_list)  # number of samples
-        if fraction < 1 / ns:
-            raise ValueError('Invalid fraction of outliers: '
-                             'must be more than 1/n (to enable detection of atleast 1)')
+        num_ids = len(id_list)
+        if num_ids >= cfg.min_num_samples_needed:
+            if fraction < 1 / num_ids:
+                raise ValueError('Invalid fraction of outliers:'
+                                 ' must be more than 1/n ({}) '
+                                 ' (to enable detection of atleast 1 sample)'
+                                 ''.format(1/num_ids))
+        else:
+            print('\nNumber of samples to review = {} < {}: '
+                  ' insufficient for outlier detection, disabling it.\n'
+                  ''.format(num_ids, cfg.min_num_samples_needed))
+            disable_outlier_detection = True
 
     if fraction > 0.5:
         raise ValueError('Invalid fraction of outliers: can not be more than 50%')
@@ -719,13 +881,17 @@ def check_outlier_params(method, fraction, feat_types, disable_outlier_detection
     for feat in feat_types:
         if feat not in cfg.features_outlier_detection:
             raise NotImplementedError('{} features for outlier detection '
-                                      'is not recognized or implemented'.format(feat))
+                                      'is not recognized / implemented'.format(feat))
 
     return method, fraction, feat_types, disable_outlier_detection
 
 
 def check_labels(vis_type, label_set):
-    """Validates the selections."""
+    """
+    Validates the vis type and ensures appropriate labels are specified.
+    Returns a set of unique labels for volumetric visualizations.
+
+    """
 
     vis_type = vis_type.lower()
     if vis_type not in visualization_combination_choices:
@@ -735,9 +901,17 @@ def check_labels(vis_type, label_set):
     if label_set is not None:
         if vis_type not in cfg.label_types:
             raise ValueError(
-                'Invalid selection of vis_type when labels are specifed. Choose --vis_type labels')
+                'Invalid selection of vis_type when labels are specifed. '
+                'Choose one of {} for --vis_type'.format(cfg.label_types))
 
-        label_set = np.array(label_set).astype('int16')
+        label_set = np.unique(np.array(label_set).astype('int16'))
+        if label_set.size < 1:
+            raise ValueError('Atleast one unique label must be supplied!')
+
+    elif vis_type in cfg.label_types:
+        raise ValueError('When vis_type is one of {}, '
+                         'at least one label must be specified!'
+                         ''.format(cfg.label_types))
 
     return vis_type, label_set
 
@@ -760,3 +934,122 @@ def check_views(views):
             'Atleast one valid view must be selected. Choose one or more of 0, 1, 2.')
 
     return out_views
+
+
+def check_string_is_nonempty(string, string_type='string'):
+    """Ensures input is a string of non-zero length"""
+
+    if string is None or \
+        (not isinstance(string, str)) or \
+        len(string) < 1:
+        raise ValueError('name of the {} must not be empty!'
+                         ''.format(string_type))
+
+    return string
+
+
+def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_in):
+    """Validates the integrity of the inputs"""
+
+    in_dir = realpath(in_dir)
+    if not pexists(in_dir):
+        raise ValueError('user_dir does not exist : {}'.format(in_dir))
+
+    defaced_name = check_string_is_nonempty(defaced_name, 'defaced MRI scan')
+    mri_name = check_string_is_nonempty(mri_name, 'original MRI scan')
+    render_name = check_string_is_nonempty(render_name, '3D rendered image')
+
+    if id_list_in is not None:
+        if not pexists(id_list_in):
+            raise IOError('Given ID list does not exist @ \n'
+                          ' {}'.format(id_list_in))
+
+        try:
+            id_list = read_id_list(id_list_in)
+        except:
+            raise IOError('unable to read the ID list @ {}'.format(id_list_in))
+    else:
+        # get all IDs in the given folder
+        id_list = [folder for folder in os.listdir(in_dir) if
+                   os.path.isdir(pjoin(in_dir, folder))]
+
+    required_files = {'original': mri_name,
+                      'defaced': defaced_name} # 'render': render_name
+
+    id_list_out = list()
+    id_list_err = list()
+    invalid_list = list()
+
+    # this dict contains existing files for each ID
+    # useful to open external programs like tkmedit
+    images_for_id = dict()
+
+    for subject_id in id_list:
+        path_list = { img_type: pjoin(in_dir, subject_id, name)
+                        for img_type, name in required_files.items()
+                    }
+
+        # finding all rendered screenshots
+        import fnmatch
+        rendered_images = fnmatch.filter(os.listdir(pjoin(in_dir, subject_id)),
+                                         '{}*'.format(render_name))
+        rendered_images = [pjoin(in_dir, subject_id, img) for img in rendered_images]
+        rendered_images = [ path for path in rendered_images
+                            if pexists(path) and os.path.getsize(path) > 0]
+
+        invalid = [pfile for pfile in path_list.values() if
+                   not pexists(pfile) or os.path.getsize(pfile) <= 0]
+        if len(invalid) > 0:
+            id_list_err.append(subject_id)
+            invalid_list.extend(invalid)
+        else:
+            id_list_out.append(subject_id)
+            if len(rendered_images) < 1:
+                raise ValueError(
+                    'Atleast 1 non-empty rendered image is required!')
+            path_list['render'] = rendered_images
+            images_for_id[subject_id] = path_list
+
+    if len(id_list_err) > 0:
+        warnings.warn('The following subjects do NOT have all the required files, '
+                       'or some are empty - skipping them!')
+        print('\n'.join(id_list_err))
+        print('\n\nThe following files do not exist or empty: \n {} \n\n'.format(
+            '\n'.join(invalid_list)))
+
+    if len(id_list_out) < 1:
+        raise ValueError('All the subject IDs do not have the required files - '
+                          'unable to proceed.')
+
+    print('{} subjects are usable for review.'.format(len(id_list_out)))
+
+    return in_dir, np.array(id_list_out), images_for_id, \
+           defaced_name, mri_name, render_name
+
+
+def compute_cell_extents_grid(bounding_rect=(0.03, 0.03, 0.97, 0.97),
+                               num_rows=2, num_cols=6,
+                               axis_pad=0.01):
+    """
+    Produces array of num_rows*num_cols elements each containing
+    the rectangular extents of the corresponding cell the grid, whose position is
+    within bounding_rect.
+    """
+
+    left, bottom, width, height = bounding_rect
+    height_padding = axis_pad * (num_rows + 1)
+    width_padding = axis_pad * (num_cols + 1)
+    cell_height = float((height - height_padding) / num_rows)
+    cell_width = float((width - width_padding) / num_cols)
+
+    cell_height_padded = cell_height + axis_pad
+    cell_width_padded = cell_width + axis_pad
+
+    extents = list()
+    for row in range(num_rows - 1, -1, -1):
+        for col in range(num_cols):
+            extents.append((left + col * cell_width_padded,
+                            bottom + row * cell_height_padded,
+                            cell_width, cell_height))
+
+    return extents

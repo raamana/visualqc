@@ -328,11 +328,15 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if not freesurfer_installed():  # needs tksurfer
             print('Freesurfer does not seem to be installed '
                   '- skipping surface visualizations.')
-            self.surface_vis_paths = dict()
-            return
+            self._freesurfer_installed = False
+        else:
+            self._freesurfer_installed = True
 
-        self.surface_vis_paths = {sid: make_vis_pial_surface(self.in_dir, sid, self.out_dir) for
-                                      sid in self.id_list}
+        self.surface_vis_paths = dict()
+        for sid in self.id_list:
+            self.surface_vis_paths[sid] = \
+                make_vis_pial_surface(self.in_dir, sid, self.out_dir,
+                                      self._freesurfer_installed)
 
 
     def prepare_UI(self):
@@ -402,14 +406,36 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         fs_cmap = get_freesurfer_cmap(self.vis_type)
         # deciding colors for the whole image
         if self.label_set is not None and self.vis_type in cfg.label_types:
-            unique_labels = np.unique(self.label_set)
-        elif self.vis_type in cfg.cortical_types:
-            # TODO this might become a bug, if the number of cortical labels become more than 34
-            num_cortical_labels = len(fs_cmap.colors)
-            unique_labels = np.arange(num_cortical_labels, dtype='int8')
 
-        normalize_labels = colors.Normalize(vmin=np.min(unique_labels),
-                                            vmax=np.max(unique_labels), clip=True)
+            # re-numbering as remapping happens for each vol. seg via utils.get_label_set()
+            unique_labels = np.arange(self.label_set.size)+1
+
+            # NOTE vmin and vmax can't be the same as Normalize would simply return 0,
+            #   even for nonzero values
+            # NOTE PREV BUG although norm method here is set up to rescale values from
+            #   (np.min(unique_labels), np.max(unique_labels)) to (0, 1)
+            #   it was being applied to values outside this range (typically in [0, 5] range)
+            #   as unique_labels tend be > 10.. so setting it up correctly now
+            #   from 0 to L, L being number of unique labels
+            #   this interacts with utils.get_label_set(), so they need to be handled together
+            normalize_labels = colors.Normalize(vmin=0,
+                                                vmax=unique_labels.size,
+                                                clip=True)
+
+        elif self.vis_type in cfg.cortical_types:
+            # TODO this might become a bug, if num of cortical labels become more than 34
+            num_cortical_labels = len(fs_cmap.colors)
+            if num_cortical_labels < 1:
+                raise ValueError('number of cortical labels seem to be zero:\n'
+                                 ' invalid colormap/labels set for Freesurfer!\n'
+                                 'Must be typically 34 or higher - '
+                                 'report this bug to the developers. Thanks.')
+            unique_labels = np.arange(num_cortical_labels, dtype='int8')
+            # as the cortical labels
+            normalize_labels = colors.Normalize(vmin=0,
+                                                vmax=num_cortical_labels,
+                                                clip=True)
+
         self.seg_mapper = cm.ScalarMappable(norm=normalize_labels, cmap=fs_cmap)
 
         # removing background - 0 stays 0
@@ -465,6 +491,9 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
     def add_histogram_panel(self):
         """Extra axis for histogram of cortical thickness!"""
+
+        if not self.vis_type in cfg.cortical_types:
+            return
 
         self.ax_hist = plt.axes(cfg.position_histogram_freesurfer)
         self.ax_hist.set(xticks=cfg.xticks_histogram_freesurfer,
@@ -542,8 +571,11 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
             temp_seg_uncropped, roi_set_is_empty = void_subcortical_symmetrize_cortical(temp_fs_seg)
         elif self.vis_type in ('labels_volumetric', 'labels_contour'):
             if self.label_set is not None:
+                # TODO same colors for same labels is not guaranteed
+                #   if one subject fewer labels than others
+                #   due to remapping of labels for each subject
                 temp_seg_uncropped, roi_set_is_empty = get_label_set(temp_fs_seg,
-                                                                     self.unique_labels_display)
+                                                                     self.label_set)
             else:
                 raise ValueError('--label_set must be specified for visualization types: '
                                  ' labels_volumetric and labels_contour')
@@ -619,7 +651,9 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
             del slice_seg, slice_mri, mri_rgba
 
-        self.update_histogram()
+        # histogram shown only for cortical parcellation QC
+        if self.vis_type in cfg.cortical_types:
+            self.update_histogram()
 
 
     def plot_contours_in_slice(self, slice_seg, target_axis):
@@ -653,7 +687,9 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.close('all')
 
 
-def make_vis_pial_surface(in_dir, subject_id, out_dir, annot_file='aparc.annot'):
+def make_vis_pial_surface(in_dir, subject_id, out_dir,
+                          FREESURFER_INSTALLED,
+                          annot_file='aparc.annot'):
     """Generate screenshot for the pial surface in different views"""
 
     out_vis_dir = pjoin(out_dir, cfg.annot_vis_dir_name)
@@ -669,7 +705,7 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir, annot_file='aparc.annot')
         try:
             # run the script only if all the visualizations were not generated before
             all_vis_exist = all([pexists(vis_path) for vis_path in vis_files.values()])
-            if not all_vis_exist:
+            if not all_vis_exist and FREESURFER_INSTALLED:
                 _, _ = run_tksurfer_script(in_dir, subject_id, hemi, script_file)
 
             vis_list[hemi_l].update(vis_files)
@@ -807,7 +843,9 @@ def get_parser():
     help_text_label = textwrap.dedent("""
     Specifies the set of labels to include for overlay.
 
-    Default: None (show all the labels in the selected segmentation)
+    Atleast one label must be specified when vis_type is labels_volumetric or labels_contour
+
+    Default: None (show nothing)
     \n""")
 
     help_text_contour_color = textwrap.dedent("""

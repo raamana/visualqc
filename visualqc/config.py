@@ -27,7 +27,8 @@ color_histogram_freesurfer = ('#c9ae74')  # sandstone
 freesurfer_features_outlier_detection = ('cortical', 'subcortical')
 outlier_list_prefix = 'possible_outliers'
 alert_background_color = 'xkcd:coral'
-alert_colors_outlier = dict(cortical='xkcd:hot pink', subcortical='xkcd:periwinkle')
+alert_colors_outlier = dict(cortical='xkcd:hot pink',
+                            subcortical='xkcd:periwinkle')
 
 position_annot_text = (0.990, 0.98)
 annot_text_props = dict(ha='right', va='top', multialignment='left',
@@ -35,6 +36,8 @@ annot_text_props = dict(ha='right', va='top', multialignment='left',
 
 alert_text_props = dict(horizontalalignment='center', fontsize='medium',
                         color='white', backgroundcolor=alert_background_color)
+
+slice_num_label_properties = dict(color='xkcd:beige', ha='left', fontsize='small')
 
 default_outlier_detection_method = 'isolation_forest'
 default_outlier_fraction = 0.2
@@ -45,7 +48,7 @@ avail_OLD_source_of_features = ('freesurfer', 't1_mri', 'func_mri', 'diffusion_m
 default_freesurfer_dir = None
 cortical_types = ('cortical_volumetric', 'cortical_contour')
 label_types = ('labels_volumetric', 'labels_contour')
-freesurfer_vis_types = cortical_types
+freesurfer_vis_types = cortical_types + label_types
 visualization_combination_choices = cortical_types + label_types
 default_vis_type = 'cortical_contour'
 
@@ -71,6 +74,8 @@ max_cmap_range_t1_mri = 1
 mri_zorder_freesurfer = 0
 seg_zorder_freesurfer = 1
 
+background_value = 0 # for segmentations or MRI
+
 default_views = (0, 1, 2)
 default_num_slices = 12
 default_num_rows = 2
@@ -80,18 +85,21 @@ default_review_figsize = [15, 11]
 
 default_navigation_options = ("Next", "Quit")
 # shortcuts L, F, S have actions on matplotlib interface, so choosing other words
-freesurfer_default_rating = 'Review later'
-map_short_rating = OrderedDict(g='Good',
-                               d='Doubtful',
-                               b='Bad',
-                               e='Error',
-                               m="i'M tired",
+freesurfer_default_rating = 'rEVIEW LATER'
+map_short_rating = OrderedDict(g='gOOD',
+                               n='MInOR error',
+                               m='mAJOR error',
+                               a='FaIL',
+                               d="I'M TIREd",
                                r=freesurfer_default_rating)
 default_rating_list = tuple(map_short_rating.values())
 index_freesurfer_default_rating = default_rating_list.index(freesurfer_default_rating)
 default_rating_list_shortform = map_short_rating.keys()
-ratings_not_to_be_recorded = [None, '', 'something else',
-                              "i'm tired", 'review later']
+ratings_not_to_be_recorded = [None,
+                              '',
+                              'something else',
+                              "i'm tired",
+                              'review later']
 
 # for serialization
 delimiter = ','
@@ -131,6 +139,9 @@ annot_gradient = dict(fontsize='medium', color='xkcd:pale orange')
 review_area = dict(left=0.06, right=0.88,
                    bottom=0.06, top=0.98,
                    wspace=0.0, hspace=0.0)
+bounding_box_review = (review_area['left'], review_area['bottom'],
+                     review_area['right']-review_area['left'],
+                     review_area['top']-review_area['bottom'])
 no_blank_area = dict(left=0.01, right=0.99,
                      bottom=0.01, top=0.99,
                      wspace=0.05, hspace=0.02)
@@ -169,9 +180,25 @@ abbreviation_t1_mri_default_issue_list = {'p': t1_mri_pass_indicator,
 t1_mri_default_issue_list = list(abbreviation_t1_mri_default_issue_list.values())
 t1_mri_default_rating_list_shortform = abbreviation_t1_mri_default_issue_list.keys()
 
+bounding_box_full_t1_mri = (0.01, 0.01, 0.88, 0.98)
+bounding_box_main_t1_mri = (0.01, 0.12, 0.88, 0.87)
+bounding_box_suppl_t1_mri = (0.01, 0.01, 0.88, 0.1)
+
+position_checkbox_t1_mri = [0.905, 0.31, 0.09, 0.25]
+position_radio_bt_t1_mri = [0.905, 0.57, 0.09, 0.10]
+position_histogram_t1_mri = [0.905, 0.70, 0.09, 0.1]
+position_outlier_alert_t1_mri = (0.950, 0.85)
+
+processing_choices_t1_mri = ('Saturate',
+                             'Background only',
+                             'Tails_trimmed',
+                             'Original')
+saturate_perc_t1 = 33 # supra-threshold values are saturated.
 num_bins_histogram_intensity_distribution = 100
+num_bins_histogram_contrast_enhancement = 256
 
 # outlier detection (OLD)
+min_num_samples_needed = 10
 t1_mri_features_OLD = ('histogram_whole_scan',)
 checkbox_rect_width = 0.05
 checkbox_rect_height = 0.05
@@ -179,9 +206,7 @@ checkbox_cross_color = 'xkcd:goldenrod'
 checkbox_font_properties = dict(color=text_option_color,
                                 fontweight='normal')  # , fontname='Arial Narrow')
 
-position_histogram_t1_mri = [0.905, 0.7, 0.09, 0.1]
 title_histogram_t1_mri = 'nonzero intensities'
-num_bins_histogram_display = 30
 xticks_histogram_t1_mri = np.arange(0.1, 1.01, 0.2)
 color_histogram_t1_mri = ('#c9ae74')  # sandstone
 
@@ -276,7 +301,8 @@ colormap_stdev_diffusion = 'seismic'
 
 choices_alignment_comparison_diffusion = ('Animate all',
                                           'Flip first & last',
-                                          'Align to b=0')
+                                          'Align to b=0 (animate)',
+                                          'Align to b=0 (edges)')
 
 position_rating_checkbox_diffusion  = [0.899, 0.30, 0.095, 0.35]
 position_alignment_method_diffusion = [0.899, 0.66, 0.095, 0.10]
@@ -291,11 +317,11 @@ alignment_features_OLD = ('MSE', )
 alignment_cmap = OrderedDict(Animate='gray',
                              Checkerboard='gray',
                              Voxelwise_diff='seismic',
-                             Edges_Sharp=None,
+                             Edges_Thinner=None,
                              Edges_Diffused=None,
                              Color_mix=None)
 choices_alignment_comparison = alignment_cmap.keys()
-alignment_default_vis_type = 'Edges_Sharp' # 'Checkerboard' # 'Animate'
+alignment_default_vis_type = 'Edges_Thinner' # 'Checkerboard' # 'Animate'
 
 default_checkerboard_size = None # 25
 edge_threshold_alignment = 0.4
@@ -329,5 +355,54 @@ alpha_background_slice_alignment = 1.0
 alpha_edge_overlay_alignment = 1.0
 
 ## ----------------------------------------------------------------------------
+#          Groupwise comparison of registration/alignment
+## ----------------------------------------------------------------------------
 
+
+alignment_features_groupwise = ('MSE', )
+alignment_cmap_groupwise = 'seismic'
+choices_alignment_comparison_groupwise = ('Std. dev map',
+                                          'Animate through',
+                                          'Animate with ref',
+                                          'show outliers')
+alignment_groupwise_default_vis_type = 'Std. dev map' # 'Checkerboard' # 'Animate'
+
+## ----------------------------------------------------------------------------
+
+outlier_feature_folder_name = 'features_outlier_detection'
 features_outlier_detection = freesurfer_features_outlier_detection + t1_mri_features_OLD + func_mri_features_OLD
+
+
+## ----------------------------------------------------------------------------
+#          defacing MRI scan quality
+## ----------------------------------------------------------------------------
+
+default_defaced_mri_name = 'defaced.nii'
+default_render_name = 'render.png'
+
+defacing_pass_indicator = visual_qc_pass_indicator
+abbreviation_defacing_default_issue_list = {'p': defacing_pass_indicator,
+                                          'f': 'Fail',
+                                          'o': 'Overstripped',
+                                          'u': 'Understripped',
+                                          'e': 'something Else',
+                                          't': "i'm Tired",
+                                          'l': 'reView Later'}
+defacing_default_issue_list = list(abbreviation_defacing_default_issue_list.values())
+defacing_default_rating_list_shortform = abbreviation_defacing_default_issue_list.keys()
+
+bbox_defacing_MRI_review = (0.02, 0.02, 0.88, 0.7)
+bbox_defacing_render_review = (0.02, 0.72, 0.88, 0.3)
+
+defacing_num_rows_renders = 1
+
+defacing_slice_locations = (20, 30, 35, 40, 50, 60, 65, 70, 80)
+defacing_num_slices_per_view = len(defacing_slice_locations)
+defacing_num_rows_per_view = 1
+defacing_view_set = (0, 1, 2)
+
+vis_choices_defacing = ('Defaced only',
+                        'Original only',
+                        'Mixed')
+
+defacing_trim_percentile = 1

@@ -4,12 +4,16 @@ Image processing utilities
 
 """
 
+__all__ = ['background_mask', 'foreground_mask', 'overlay_edges', 'diff_image',
+           'equalize_image_histogram']
+
 from scipy import ndimage
 from visualqc import config as cfg
 from visualqc.utils import scale_0to1
 import numpy as np
 from functools import partial
-from scipy.ndimage import grey_erosion, sobel
+from scipy.ndimage import sobel, binary_closing
+from scipy.ndimage.morphology import binary_fill_holes
 from scipy.ndimage.filters import median_filter, minimum_filter, maximum_filter
 from scipy.signal import medfilt2d
 
@@ -52,11 +56,20 @@ def gradient_magnitude(mri):
     return grad_magnitude
 
 
-def mask_image(input_img, update_factor=0.5, init_percentile=2):
+def mask_image(input_img,
+               update_factor=0.5,
+               init_percentile=2,
+               iterations_closing=5,
+               return_inverse=False,
+               out_dtype=None):
     """
     Estimates the foreground mask for a given image.
-
     Similar to 3dAutoMask from AFNI.
+
+
+    iterations_closing : int
+        Number of iterations of binary_closing to apply at the end.
+
     """
 
     prev_clip_level = np.percentile(input_img, init_percentile)
@@ -75,9 +88,33 @@ def mask_image(input_img, update_factor=0.5, init_percentile=2):
     else:
         raise ValueError('Image must be 2D or 3D')
 
-    mask_img = ndimage.binary_closing(mask_img, se, iterations=3)
+    mask_img = binary_closing(mask_img, se, iterations=iterations_closing)
+    mask_img = binary_fill_holes(mask_img, se)
+
+    if return_inverse:
+        mask_img = np.logical_not(mask_img)
+
+    if out_dtype is not None:
+        mask_img = mask_img.astype(out_dtype)
 
     return mask_img
+
+# alias
+foreground_mask = mask_image
+
+def equalize_image_histogram(image_in, num_bins=cfg.num_bins_histogram_contrast_enhancement,
+                             max_value=255):
+    """Modifies the image to achieve an equalized histogram."""
+
+    image_flat = image_in.flatten()
+    hist_image, bin_edges = np.histogram(image_flat, bins=num_bins, normed=True)
+    cdf = hist_image.cumsum()
+    cdf = max_value * cdf / cdf[-1] # last element is total sum
+
+    # linear interpolation
+    array_equalized = np.interp(image_flat, bin_edges[:-1], cdf)
+
+    return array_equalized.reshape(image_in.shape)
 
 
 def overlay_edges(slice_one, slice_two, sharper=True):
@@ -86,6 +123,10 @@ def overlay_edges(slice_one, slice_two, sharper=True):
 
     It will be in colormapped (RGB format) already.
     """
+
+    if slice_one.shape != slice_two.shape:
+        raise ValueError("slices' dimensions do not match: "
+                         " {} and {} ".format(slice_one.shape, slice_two.shape))
 
     # simple filtering to remove noise, while supposedly keeping edges
     slice_two = medfilt2d(slice_two, kernel_size=cfg.median_filter_size)
@@ -98,6 +139,34 @@ def overlay_edges(slice_one, slice_two, sharper=True):
         edges = med_filter(max_filter(min_filter(edges)))
     else:
         edges = min_filter(min_filter(max_filter(min_filter(edges))))
+    edges_color_mapped = hot_cmap(edges, alpha=cfg.alpha_edge_overlay_alignment)
+    composite = gray_cmap(slice_one, alpha=cfg.alpha_background_slice_alignment)
+
+    composite[edges_color_mapped>0] = edges_color_mapped[edges_color_mapped>0]
+
+    # mask_rgba = np.dstack([edges>0] * 4)
+    # composite[mask_rgba] = edges_color_mapped[mask_rgba]
+
+    return composite
+
+
+def dwi_overlay_edges(slice_one, slice_two):
+    """
+    Makes a composite image with edges from second image overlaid on first.
+
+    It will be in colormapped (RGB format) already.
+    """
+
+    if slice_one.shape != slice_two.shape:
+        raise ValueError("slices' dimensions do not match: "
+                         " {} and {} ".format(slice_one.shape, slice_two.shape))
+
+    # simple filtering to remove noise, while supposedly keeping edges
+    slice_two = medfilt2d(slice_two, kernel_size=cfg.median_filter_size)
+    # extracting edges
+    edges = med_filter(np.hypot(sobel(slice_two, axis=0, mode='constant'),
+                                sobel(slice_two, axis=1, mode='constant')))
+
     edges_color_mapped = hot_cmap(edges, alpha=cfg.alpha_edge_overlay_alignment)
     composite = gray_cmap(slice_one, alpha=cfg.alpha_background_slice_alignment)
 
@@ -213,3 +282,14 @@ def check_patch_size(patch_size):
         patch_size = np.repeat(patch_size, 2).astype('int16')
 
     return patch_size
+
+
+def rescale_without_outliers(img, trim_percentile=1, padding=5):
+    """This utility crops the image first, then trims the outliers, and then
+    rescales it [0, 1]"""
+
+    from mrivis.utils import crop_image
+
+    return scale_0to1(crop_image(img, padding),
+                      exclude_outliers_below=trim_percentile,
+                      exclude_outliers_above=trim_percentile)

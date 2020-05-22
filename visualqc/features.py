@@ -60,20 +60,28 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
 
     feature_type = feature_type.lower()
     basename = lambda name: splitext(name)[0]
-    out_csv_name = '{}_{}_features.csv'.format(basename(wf.mri_name), feature_type)
-    path_to_csv = lambda sid: pjoin(wf.out_dir, sid, out_csv_name)
+    if wf.mri_name is not None:
+        prefix = basename(wf.mri_name)+'_'
+    else:
+        prefix = ''
+    out_csv_name = '{}{}_features.csv'.format(prefix, feature_type)
+
+    feat_dir = pjoin(wf.out_dir, cfg.outlier_feature_folder_name)
+    makedirs(feat_dir, exist_ok=True)
+    path_to_csv = lambda sid: pjoin(feat_dir, sid, out_csv_name)
+
     if feature_type in ['histogram_whole_scan', ]:
         extract_method = t1_histogram_whole_scan
     else:
         raise NotImplementedError('Requested feature type {} not implemented!\n'
-                                  '\tAllowed options : {} '.format(feature_type,
-                                                                   cfg.t1_mri_features_OLD))
+                                  '\tAllowed options : {} '
+                                  ''.format(feature_type, cfg.t1_mri_features_OLD))
 
     feature_paths = dict()
     num_subjects = len(wf.id_list)
     for counter, sid in enumerate(wf.id_list):
         print('{} : {}/{}'.format(sid, counter + 1, num_subjects))
-        makedirs(pjoin(wf.out_dir, sid), exist_ok=True)
+        makedirs(pjoin(feat_dir, sid), exist_ok=True)
         feat_file = path_to_csv(sid)
         if not pexists(feat_file):
             features = extract_method(wf.path_getter_inputs(sid))
@@ -81,8 +89,8 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
                 np.savetxt(feat_file, features, delimiter='\n', header=feature_type)
             except:
                 raise IOError('Unable to save extracted features to disk!')
-        else:
-            feature_paths[sid] = feat_file
+
+        feature_paths[sid] = feat_file
 
     return feature_paths
 
