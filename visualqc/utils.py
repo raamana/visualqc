@@ -452,9 +452,14 @@ def summarize_ratings(ratings_file, out_dir=None):
             uniq_labels.add(lbl)
             all_labels.append(lbl)
 
-    counter = Counter(all_labels)
+    if uniq_labels:
+        max_width = 1+max([len(rt) for rt in uniq_labels])
+    else:
+        # returning empty counter, id_lists
+        print('No ratings to summarize! Returning empty dictionaries.')
+        return dict(), dict()
 
-    max_width = 1+max([len(rt) for rt in uniq_labels])
+    counter = Counter(all_labels)
     print('Ratings summary\n  Counts (note some IDs can have multiple ratings):')
     id_lists = dict()
     for label, count in counter.items():
