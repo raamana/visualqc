@@ -580,7 +580,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
             self.img_this_unit_raw = self.hdr_this_unit.get_data()
             self.b_values_this_unit = np.loadtxt(bval_path).flatten()
-        except:
+        except Exception as exc:
+            print(exc)
             print('Unable to read image at \n\t{}'.format(img_path))
             skip_subject = True
         else:
