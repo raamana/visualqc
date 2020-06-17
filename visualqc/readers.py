@@ -277,8 +277,8 @@ def anatomical_traverse_bids(bids_layout,
             files_by_id[final_sub_id]['params'] = 'None'
 
         # adding the image file
-        files_by_id[final_sub_id]['image'] = temp['.nii'] \
-            if 'nii' in temp else temp['.gz']
+        files_by_id[final_sub_id]['image'] = \
+            temp['.nii'] if '.nii' in temp else temp['.gz']
 
     return files_by_id
 
@@ -469,7 +469,8 @@ def diffusion_traverse_bids(bids_layout,
             files_by_id[final_sub_id]['bvec'] = None
 
         # adding the image file
-        files_by_id[final_sub_id]['image'] = temp['.nii'] if 'nii' in temp else temp['.gz']
+        files_by_id[final_sub_id]['image'] = \
+            temp['.nii'] if '.nii' in temp else temp['.gz']
 
     return files_by_id
 
