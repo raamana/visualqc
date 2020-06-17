@@ -493,7 +493,7 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
 
             ax = self.collage.flat_grid[ax_counter]
             if vis_type in ('mixed', ):
-                #final_slice = mix_color(orig, df)
+                # TODO customizable colors: final_slice = mix_color(orig, df)
                 red = 0.9*orig
                 grn = 1.0*df
                 blu = np.zeros_like(orig)
@@ -509,6 +509,12 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
             ax_counter += 1
 
         self.collage.show()
+
+
+    def mix_images(self, orig, defaced, color_orig, color_defaced):
+        """Mixes the two images with different colors"""
+
+        raise NotImplementedError()
 
 
     def add_alerts(self):
