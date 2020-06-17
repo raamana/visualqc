@@ -341,22 +341,25 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.feature_extractor = functional_mri_features
 
         if 'BIDS' in self.in_dir_type.upper():
-            from bids.grabbids import BIDSLayout
+            from bids import BIDSLayout
             self.bids_layout = BIDSLayout(self.in_dir)
-            self.field_names, self.units = traverse_bids(self.bids_layout,
-                                                         **cfg.func_mri_BIDS_filters)
+            self.units = func_mri_traverse_bids(self.bids_layout,
+                                                **cfg.func_mri_BIDS_filters)
 
-            # file name of each BOLD scan is the unique identifier, as it essentially contains all the key info.
-            self.unit_by_id = {splitext(basename(fpath))[0]: realpath(fpath) for _, fpath
-                               in self.units}
+            # file name of each BOLD scan is the unique identifier,
+            #   as it essentially contains all the key info.
+            self.unit_by_id = {basename(sub_data['image']): sub_data
+                               for _, sub_data in self.units.items()}
             self.id_list = list(self.unit_by_id.keys())
+
         elif 'GENERIC' in self.in_dir_type.upper():
             if self.id_list is None or self.images_for_id is None:
-                raise ValueError('id_list or images_for_id can not be None for generic in_dir')
+                raise ValueError('id_list or images_for_id can not be None '
+                                 'for generic in_dir')
             self.unit_by_id = self.images_for_id.copy()
         else:
-            raise NotImplementedError(
-                'Only two formats are supported: BIDS and GENERIC with regex spec for filenames')
+            raise NotImplementedError('Only two formats are supported: BIDS and ' \
+                                      'GENERIC with regex spec for filenames')
 
 
     def open_figure(self):
@@ -527,7 +530,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def load_unit(self, unit_id):
         """Loads the image data for display."""
 
-        img_path = self.unit_by_id[unit_id]
+        img_path = self.unit_by_id[unit_id]['image']
+        params_path = self.unit_by_id[unit_id]['params']
         try:
             hdr = nib.load(img_path)
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
