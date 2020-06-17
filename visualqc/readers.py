@@ -326,7 +326,7 @@ def func_mri_traverse_bids(bids_layout,
     results = bids_layout.get(**non_empty_types)
     if len(results) < 1:
         print('No results found!')
-        return None, None
+        return None
 
     all_subjects = bids_layout.get_subjects()
     all_sessions = bids_layout.get_sessions()
@@ -413,7 +413,7 @@ def diffusion_traverse_bids(bids_layout,
     results = bids_layout.get(**non_empty_types)
     if len(results) < 1:
         print('No results found!')
-        return None, None
+        return None
 
     all_subjects = bids_layout.get_subjects()
     all_sessions = bids_layout.get_sessions()

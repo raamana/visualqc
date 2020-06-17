@@ -346,6 +346,13 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.units = func_mri_traverse_bids(self.bids_layout,
                                                 **cfg.func_mri_BIDS_filters)
 
+            if self.units is None or len(self.units) < 1:
+                print('No valid subjects are found! Exiting.\n'
+                      'Double check the format and integrity of the dataset '
+                      'if this is unexpected.')
+                import sys
+                sys.exit(1)
+
             # file name of each BOLD scan is the unique identifier,
             #   as it essentially contains all the key info.
             self.unit_by_id = {basename(sub_data['image']): sub_data
