@@ -199,18 +199,18 @@ def gather_data(path_list, id_list):
 
 
 def anatomical_traverse_bids(bids_layout,
-                            modalities='anat',
-                            subjects=None,
-                            sessions=None,
-                            extensions=('nii', 'nii.gz', 'json'),
-                            param_files_required=False,
-                            **kwargs):
+                             modalities='anat',
+                             subjects=None,
+                             sessions=None,
+                             extension=('nii', 'nii.gz', 'json'),
+                             param_files_required=False,
+                             **kwargs):
     """
     Builds a convenient dictionary of usable anatomical subjects/sessions.
     """
 
     meta_types = {'datatype'  : modalities,
-                  'extensions': extensions,
+                  'extension' : extension,
                   'subjects'  : subjects,
                   'sessions'  : sessions}
 
@@ -390,7 +390,7 @@ def diffusion_traverse_bids(bids_layout,
                             modalities='dwi',
                             subjects=None,
                             sessions=None,
-                            extensions=('nii', 'nii.gz',
+                            extension=('nii', 'nii.gz',
                                         'bval', 'bvec', 'json'),
                             param_files_required=False,
                             **kwargs):
@@ -400,7 +400,7 @@ def diffusion_traverse_bids(bids_layout,
     """
 
     meta_types = {'datatype'  : modalities,
-                  'extensions': extensions,
+                  'extension': extension,
                   'subjects'  : subjects,
                   'sessions'  : sessions}
 
