@@ -46,9 +46,26 @@ If you would like many more slices or rows (or fewer), you can control that with
     vqcfs -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour -l 10 11 12 13 --views 0 -w 0 2 -r 3 -s 10
 
 
+Generating and Downloading Required Files from a remote SSH server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+This process consists of few steps:
 
+ - ssh to the remote server, and cd into the Freesurfer subjects directory
+ - tar the required files (see below), to retain the folder structure
+ - download it to your local computer,
+ - untar it while retain the nested folder structure
 
+Sample commands to achieve the above are shown below - please use the appropriate values for the various capitalized/highlighted variables:
+
+.. code-block:: bash
+
+    cd $FS_SUBJECTS_DIR
+    tar -cjvf tar_visualqc_files.tar */mri/{orig,aparc+aseg}.mgz
+    <<logout of ssh>>
+    scp USERNAME@REMOTE.SERVER:$FS_SUBJECTS_DIR/tar_visualqc_files.tar <<LOCAL_FS_DIR>>
+    cd <<LOCAL_FS_DIR>>
+    tar -xjvf tar_visualqc_files.tar
 
 
 
