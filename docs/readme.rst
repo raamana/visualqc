@@ -54,6 +54,14 @@ Each use case aims to offer the following features:
 * Allows to make arbitrary notes on the current review session
 * Allows you to customize the visualizations to your expert preference (such as removing certain overlays, control the transparency, change how two images blended together).
 
+Manual
+--------
+
+A detailed manual is available at the `VisualQC` `repo <https://github.com/raamana/visualqc/blob/master/docs/VisualQC_TrainingManual_v1p4.pdf>`_
+
+If you have any questions, please `open an issue <https://github.com/raamana/visualqc/issues/new/>`_ and we would appreciate your feedback.
+
+
 Galleries
 ----------
 
