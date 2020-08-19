@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Example usage - Freesurfer &mdash; visualqc 0.4.5 documentation</title>
+  <title>Example usage - Freesurfer &mdash; visualqc 0.4.8 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.5
+                0.4.8
               </div>
             
           
@@ -104,7 +104,10 @@
 <li class="toctree-l1"><a class="reference internal" href="cli_func_mri.html">Command line usage - Functional MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_alignment.html">Command line usage - Alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_t1_mri.html">Command line usage - T1w MRI</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Example usage - Freesurfer</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example usage - Freesurfer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#generating-and-downloading-required-files-from-a-remote-ssh-server">Generating and Downloading Required Files from a remote SSH server</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="examples_freesurfer_generic.html">Example usage - Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_defacing.html">Example usage - Defacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_func_mri.html">Example usage - Functional MRI</a></li>
@@ -212,6 +215,27 @@
 <p>If you would like many more slices or rows (or fewer), you can control that with –num_rows and –num_slices. These parameters are applied separately for each view (not the entire layout). So if you choose -r 3 and -s 10 for -w 0 2, then <cite>visualqc</cite> displays 10 slices in 3 rows for each of dimensions 0 and 2 (20 panels in total).</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vqcfs -f /project/freesurfer -i list_hippo.txt --vis_type labels_contour -l <span class="m">10</span> <span class="m">11</span> <span class="m">12</span> <span class="m">13</span> --views <span class="m">0</span> -w <span class="m">0</span> <span class="m">2</span> -r <span class="m">3</span> -s <span class="m">10</span>
 </pre></div>
+</div>
+<div class="section" id="generating-and-downloading-required-files-from-a-remote-ssh-server">
+<h2>Generating and Downloading Required Files from a remote SSH server<a class="headerlink" href="#generating-and-downloading-required-files-from-a-remote-ssh-server" title="Permalink to this headline">¶</a></h2>
+<p>This process consists of few steps:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>ssh to the remote server, and cd into the Freesurfer subjects directory</p></li>
+<li><p>tar the required files (see below), to retain the folder structure</p></li>
+<li><p>download it to your local computer,</p></li>
+<li><p>untar it while retain the nested folder structure</p></li>
+</ul>
+</div></blockquote>
+<p>Sample commands to achieve the above are shown below - please use the appropriate values for the various capitalized/highlighted variables:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> <span class="nv">$FS_SUBJECTS_DIR</span>
+tar -cjvf tar_visualqc_files.tar */mri/<span class="o">{</span>orig,aparc+aseg<span class="o">}</span>.mgz
+<span class="s">&lt;&lt;logout of ssh&gt;&gt;</span>
+<span class="s">scp USERNAME@REMOTE.SERVER:$FS_SUBJECTS_DIR/tar_visual</span>qc_files.tar <span class="s">&lt;&lt;LOCAL_FS_DIR&gt;&gt;</span>
+<span class="s">cd &lt;&lt;LOCAL_FS_DIR</span>&gt;&gt;
+tar -xjvf tar_visualqc_files.tar
+</pre></div>
+</div>
 </div>
 </div>
 
