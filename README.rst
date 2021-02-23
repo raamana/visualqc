@@ -21,7 +21,8 @@ VisualQC : Assistive tool to ease the quality control workflow of neuroimaging d
 Note: VisualQC employs `release early and release often mechanism <https://en.wikipedia.org/wiki/Release_early,_release_often>`_ to seek user feedback and for thorough testing. Hence you might find some rough edges in docs or examples - please let us know if you do.
 
 
-* Documentation: https://raamana.github.io/visualqc
+* Software Documentation: https://raamana.github.io/visualqc
+* `User Manual </docs/VisualQC_TrainingManual_v1p4.pdf>`_
 * Free software: Apache 2.0 license
 * Pure python package (no licensing issues ala matlab, easy to install and update requiring no other external installations or maintenance)
 * Generic design for API that can be adapted for other domains, imaging or medical or otherwise.
