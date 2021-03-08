@@ -6,8 +6,8 @@ Review interface refers to the interactive components (mouse and keyboard shortc
 Common elements
 -----------------------------------
 
- - Double or right click would zoom the data being displayed.
- - to rate, click the appropriate button, or press the key corresponding to its letter capitalized
+ - Double or right click would zoom the data being displayed
+ - to rate, click the appropriate button, or *press the key corresponding to the capitalized letter* for that option
     - This is usually the first later e.g. ``G`` for ``Good``, ``s`` for ``Spikes``, ``R`` for ``Review later``
     - but can also be others (capitalized) if there is overlap with other words: ``M` for ``i'M tired``
  - You can not advance to next sbuject/scan/unit without rating the current one. If you are not sure yet about how to rate it, or need additional details or discussion, simply use ``Review later`` option.
@@ -47,3 +47,10 @@ Review interface - Functional MRI
  - Right click again on slices to zoom them further full-window
  - Press ``alt+s`` to show the std. dev map (voxel-wise, over time)
  -
+
+Review interface - Defacing
+----------------------------------
+ - Right click to open and zoom a given slice for easier review
+ - Use the left and right arrow keys to traverse through the subjects
+ - Press the following keys to switch to different modes: ``alt+b`` to show the defaced image alone, ``alt+o`` to show the original image alone and ``alt+m`` to show the default mixed overlay highlighting the part to be removed.
+
