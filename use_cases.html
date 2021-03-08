@@ -89,9 +89,9 @@
 <li class="toctree-l1"><a class="reference internal" href="readme.html">VisualQC</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Use-cases supported</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#structural-mri-usecases">Structural MRI usecases</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#functional-mri-usecases">Functional MRI usecases</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#registration-alignment-usecases">Registration/Alignment usecases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structural-mri-use-cases">Structural MRI use-cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#functional-mri-use-cases">Functional MRI use-cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#registration-alignment-use-cases">Registration/Alignment use-cases</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="recommended_usage.html">Recommended Usage</a></li>
@@ -102,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="gallery_freesurfer_filled.html">Gallery - Freesurfer (labels filled)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_functional_mri.html">Gallery - Functional MRI scan - artefact detection and rating</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_registration_unimodal.html">Gallery - Registration : comparison of spatial alignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_defacing.html">Gallery - Defacing algorithm accuracy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_segmentation_volumetric.html">Gallery - Segmentation/ROI - anatomical accuracy evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_t1_mri.html">Gallery - Structural T1w MRI - artefact detection and rating</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_freesurfer.html">Command line usage - Freesurfer</a></li>
@@ -191,25 +192,26 @@
 <li><p>Functional MRI scans (focused visual review, with rich and custom-built visualizations)</p></li>
 <li><p>Freesurfer cortical parcellations (accuracy of pial/white surfaces on T1w mri)</p></li>
 <li><p>Structural T1w MRI scans (artefact rating)</p></li>
-<li><p>Volumetric segmenatation accuracy (against T1w MRI)</p></li>
+<li><p>Volumetric segmentation accuracy (against T1w MRI)</p></li>
 <li><p>Registration quality (spatial alignment) within a single modality (multimodal support coming)</p></li>
+<li><p>Defacing accuracy</p></li>
 </ul>
 </div></blockquote>
 <p>More detailed specifics for each modality are noted below:</p>
-<div class="section" id="structural-mri-usecases">
-<h2>Structural MRI usecases<a class="headerlink" href="#structural-mri-usecases" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="structural-mri-use-cases">
+<h2>Structural MRI use-cases<a class="headerlink" href="#structural-mri-use-cases" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><p>Checking the accuracy of white and pial surfaces (from Freesurfer and other algorithms)</p></li>
-<li><p>Evaluate the accuracy of skull-stripping (e.g. from Freesurfer or BET or 3dSkullStrip or SPM)</p></li>
-<li><p>Assess the accuracy of tissue segmentation (gray matter, white matter or CSF masks)</p></li>
+<li><p>Evaluate the accuracy of defacing or skull-stripping</p></li>
+<li><p>Assess the accuracy of voxel-wise ROI or tissue segmentation (subcortical structures, gray matter, white matter or CSF masks)</p></li>
 <li><p>Inspect the quality of raw T1 MRI scan (for motion, ringing, ghosting, or other artefacts)</p></li>
 <li><p>Comparison of the registration quality or accuracy of the spatial alignment.</p></li>
 </ul>
 </div></blockquote>
 </div>
-<div class="section" id="functional-mri-usecases">
-<h2>Functional MRI usecases<a class="headerlink" href="#functional-mri-usecases" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="functional-mri-use-cases">
+<h2>Functional MRI use-cases<a class="headerlink" href="#functional-mri-use-cases" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><p>Visual review of scan quality, identification of artefactual frames (motion, spikes, etc)</p></li>
@@ -217,8 +219,8 @@
 </ul>
 </div></blockquote>
 </div>
-<div class="section" id="registration-alignment-usecases">
-<h2>Registration/Alignment usecases<a class="headerlink" href="#registration-alignment-usecases" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="registration-alignment-use-cases">
+<h2>Registration/Alignment use-cases<a class="headerlink" href="#registration-alignment-use-cases" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><p>Within-modality assessment of the accuracy of the spatial alignment

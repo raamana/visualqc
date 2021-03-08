@@ -97,6 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="gallery_freesurfer_filled.html">Gallery - Freesurfer (labels filled)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_functional_mri.html">Gallery - Functional MRI scan - artefact detection and rating</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_registration_unimodal.html">Gallery - Registration : comparison of spatial alignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_defacing.html">Gallery - Defacing algorithm accuracy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_segmentation_volumetric.html">Gallery - Segmentation/ROI - anatomical accuracy evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_t1_mri.html">Gallery - Structural T1w MRI - artefact detection and rating</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_freesurfer.html">Command line usage - Freesurfer</a></li>
@@ -180,12 +181,17 @@
             
   <div class="section" id="example-usage-defacing">
 <h1>Example usage - Defacing<a class="headerlink" href="#example-usage-defacing" title="Permalink to this headline">¶</a></h1>
-<p>To run <code class="docutils literal notranslate"><span class="pre">vqcdeface</span></code> on a dataset, make sure that each subject has their own folder, containing the original pre-defaced image, the defaced image, and png snapshot(s) of the 3D rendered defaced image. At a minimum, one snapshot of the front of the defaced scan is required, but it is recommended to have a couple of different angles, to capture a more complete image of the scan. All snapshots should have the same prefix to view them at the same time. Note: make sure the prefix is different from all of the mri files in the same folder, e.g. defaced.png and defaced.nii.gz will cause an error but Render_deface.png is fine</p>
+<p>To run <code class="docutils literal notranslate"><span class="pre">vqcdeface</span></code> on a dataset, make sure that each subject has their own folder, containing 1) the original pre-defaced image, 2) the defaced image, and 3) png snapshot(s) of the 3D rendered defaced image. At a minimum, one snapshot of the front of the defaced scan is required, but it is recommended to have a couple of different angles, to capture a more complete image of the scan. All snapshots should have the same prefix to view them at the same time.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>make sure the prefix is different from all of the mri files in the same folder, e.g. defaced.png and defaced.nii.gz in the same folder for one subject will cause an error, but Render_deface.png and defaced.nii.gz will be fine.</p>
+</div>
 <p>A rough example of usage can be:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>visualqc_defacing --user_dir /project/defaced --defaced_name defaced.nii --mri_name orig.mgz  --render_name rendered.png --id_list subject_ids.txt
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>visualqc_defacing --user_dir /project/protect_privacy --defaced_name defaced.nii --mri_name orig.mgz  --render_name rendered.png --id_list subject_ids.txt
 </pre></div>
 </div>
-<p>which searches the specified directory for all subjects (using IDs in <code class="docutils literal notranslate"><span class="pre">subject_ids.txt</span></code>), that has the required files with names as specified above. You can then review these visualizations for one subject at a time, rate their accuracy and move on to the next subject. Use the radio button</p>
+<p>which searches the specified directory <code class="docutils literal notranslate"><span class="pre">/project/protect_privacy</span></code> for all subjects (using one ID at a time read from <code class="docutils literal notranslate"><span class="pre">subject_ids.txt</span></code>), that has the required files with names as specified above i.e. <code class="docutils literal notranslate"><span class="pre">orig.mgz</span></code>, <code class="docutils literal notranslate"><span class="pre">defaced.nii</span></code> and <code class="docutils literal notranslate"><span class="pre">rendered.png</span></code>. You can then review these visualizations for one subject at a time, rate the accuracy of defacing for this subject, and move on to the next subject.</p>
+<p>The default visualization would be composite overlay of 1) what’s been removed in red along with 2) what’s been retained in green to easily emphasize if the defacing algorithm over- or under-stripped. Use the radio button to switch between different types of visualizations to get a better sense of the brain before and after defacing, to be confident in your assessment. You can use the checkboxes and the Notes section to record your ratings and other comments.</p>
 </div>
 
 

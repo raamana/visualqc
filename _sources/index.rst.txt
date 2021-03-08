@@ -17,6 +17,7 @@ Contents:
    gallery_freesurfer_filled
    gallery_functional_mri
    gallery_registration_unimodal
+   gallery_defacing
    gallery_segmentation_volumetric
    gallery_t1_mri
    cli_freesurfer
