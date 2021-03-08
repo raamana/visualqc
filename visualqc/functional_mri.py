@@ -19,7 +19,7 @@ from os.path import basename, join as pjoin, realpath, splitext
 
 from visualqc import config as cfg
 from visualqc.image_utils import mask_image
-from visualqc.readers import traverse_bids
+from visualqc.readers import func_mri_traverse_bids
 from visualqc.t1_mri import T1MriInterface
 from visualqc.utils import check_bids_dir, check_finite_int, check_id_list_with_regex, \
     check_image_is_4d, check_out_dir, check_outlier_params, check_views, get_axis, \
@@ -208,7 +208,7 @@ class FunctionalMRIInterface(T1MriInterface):
         self.fig.canvas.draw_idle()
 
     def reset_figure(self):
-        "Resets the figure to prepare it for display of next subject."
+        """Resets the figure to prepare it for display of next subject."""
 
         self.zoom_out_callback(None)
         self.restore_axis()
@@ -341,22 +341,32 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.feature_extractor = functional_mri_features
 
         if 'BIDS' in self.in_dir_type.upper():
-            from bids.grabbids import BIDSLayout
+            from bids import BIDSLayout
             self.bids_layout = BIDSLayout(self.in_dir)
-            self.field_names, self.units = traverse_bids(self.bids_layout,
-                                                         **cfg.func_mri_BIDS_filters)
+            self.units = func_mri_traverse_bids(self.bids_layout,
+                                                **cfg.func_mri_BIDS_filters)
 
-            # file name of each BOLD scan is the unique identifier, as it essentially contains all the key info.
-            self.unit_by_id = {splitext(basename(fpath))[0]: realpath(fpath) for _, fpath
-                               in self.units}
+            if self.units is None or len(self.units) < 1:
+                print('No valid subjects are found! Exiting.\n'
+                      'Double check the format and integrity of the dataset '
+                      'if this is unexpected.')
+                import sys
+                sys.exit(1)
+
+            # file name of each BOLD scan is the unique identifier,
+            #   as it essentially contains all the key info.
+            self.unit_by_id = {basename(sub_data['image']): sub_data
+                               for _, sub_data in self.units.items()}
             self.id_list = list(self.unit_by_id.keys())
+
         elif 'GENERIC' in self.in_dir_type.upper():
             if self.id_list is None or self.images_for_id is None:
-                raise ValueError('id_list or images_for_id can not be None for generic in_dir')
+                raise ValueError('id_list or images_for_id can not be None '
+                                 'for generic in_dir')
             self.unit_by_id = self.images_for_id.copy()
         else:
-            raise NotImplementedError(
-                'Only two formats are supported: BIDS and GENERIC with regex spec for filenames')
+            raise NotImplementedError('Only two formats are supported: BIDS and ' \
+                                      'GENERIC with regex spec for filenames')
 
 
     def open_figure(self):
@@ -388,7 +398,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.ax_carpet.set_zorder(self.layer_order_carpet)
         #   vmin/vmax are controlled, because we rescale all to [0, 1]
         self.imshow_params_carpet = dict(interpolation='none', aspect='auto',
-                                         origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
+                                         origin='lower', cmap='gray',
+                                         vmin=0.0, vmax=1.0)
 
         self.ax_carpet.yaxis.set_visible(False)
         self.ax_carpet.set_xlabel('time point')
@@ -434,8 +445,9 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # vmin/vmax are controlled, because we rescale all to [0, 1]
         # TODO aspect auto here covers carpet so the user can focus on the frame,
         #   not accurately representing geometry underneath
-        self.imshow_params_zoomed = dict(interpolation='none', aspect='auto', rasterized=True,
-                                         origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
+        self.imshow_params_zoomed = dict(interpolation='none', aspect='auto',
+                                         rasterized=True, origin='lower',
+                                         cmap='gray', vmin=0.0, vmax=1.0)
 
         # images to be shown in the forground
         self.images_fg = [None] * len(self.fg_axes)
@@ -527,12 +539,14 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def load_unit(self, unit_id):
         """Loads the image data for display."""
 
-        img_path = self.unit_by_id[unit_id]
+        img_path = self.unit_by_id[unit_id]['image']
+        params_path = self.unit_by_id[unit_id]['params']
         try:
             hdr = nib.load(img_path)
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
             self.img_this_unit_raw = self.hdr_this_unit.get_data()
-        except:
+        except Exception as exc:
+            print(exc)
             print('Unable to read image at \n\t{}'.format(img_path))
             skip_subject = True
         else:
@@ -631,7 +645,9 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # retrieving the latest transform after to ensure its accurate at click time
         x_in_carpet, _y = self._event_location_in_axis(event, self.ax_carpet)
         # clipping it to [0, T]
-        self.current_time_point = max(0, min(self.img_this_unit.shape[3], int(round(x_in_carpet))))
+        self.current_time_point = max(0,
+                                      min(self.img_this_unit.shape[3],
+                                          int(round(x_in_carpet))))
         self.show_timepoint(self.current_time_point)
 
 
@@ -744,7 +760,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             a.autoscale_view()
         self.carpet_handle.set_extent(
             (-0.5, num_time_points - 0.5, -0.5, num_voxels_shown - 0.5))
-        self.ax_carpet.set_xticks(np.linspace(0, num_time_points-1, num=20, dtype='int'))
+        self.ax_carpet.set_xticks(np.linspace(0, num_time_points-1,
+                                              num=20, dtype='int'))
 
 
     def refresh_layer_order(self):
@@ -875,14 +892,14 @@ def get_parser():
     help_text_bids_dir = textwrap.dedent("""
     Absolute path to the root folder of the dataset formatted with the BIDS spec.
     See bids.neuroimaging.io for more info.
-    
+
     E.g. ``--bids_dir /project/new_big_idea/ds042``
     \n""")
 
     help_text_user_dir = textwrap.dedent("""
-    Absolute path to an input folder containing the MRI scan. 
-    Each subject will be queried after its ID in the metadata file, 
-    and is expected to have a file, uniquely specified ``--name_pattern``), 
+    Absolute path to an input folder containing the MRI scan.
+    Each subject will be queried after its ID in the metadata file,
+    and is expected to have a file, uniquely specified ``--name_pattern``),
     in its own folder under this path ``--user_dir``.
 
     E.g. ``--user_dir /project/images_to_QC``
@@ -905,15 +922,15 @@ def get_parser():
 
     help_text_name_pattern = textwrap.dedent("""
     Specifies the regex to be used to search for the image to be reviewed.
-    Typical options include: 
-    
+    Typical options include:
+
         - ``'bold.nii'``, when name is common across subjects
         - ``'*_preproc_*.nii'``, when filenames have additional info encoded (such as redundant subject ID as in BIDS format)
-         - ``'func/sub*_bold_*space-MNI152*_preproc.nii.gz'`` when you need to additional levels deeper (with a / in regex) 
-            or control different versions (atlas space) of the same type of file. 
-    
+         - ``'func/sub*_bold_*space-MNI152*_preproc.nii.gz'`` when you need to additional levels deeper (with a / in regex)
+            or control different versions (atlas space) of the same type of file.
+
     Ensure the regex is *tight* enough to result in only one file for each ID in the id_list. You can do this by giving it a try in the shell and counting the number of results against the number of IDs in id_list. If you have more results than the IDs, then there are duplicates. You can use https://regex101.com to construct your pattern to tightly match your requirements. If multiple matches are found, the first one will be used.
-        
+
     Make sure to use single quotes to avoid the shell globbing before visualqc receives it.
 
     Default: '{}'
@@ -925,10 +942,10 @@ def get_parser():
     \n""".format(cfg.default_out_dir_name))
 
     help_text_no_preproc = textwrap.dedent("""
-    Whether to apply basic preprocessing steps (detrend, slice timing correction etc), before building the carpet image. 
-       
+    Whether to apply basic preprocessing steps (detrend, slice timing correction etc), before building the carpet image.
+
     If the images are already preprocessed elsewhere, use this flag ``--no_preproc``
-     
+
     Default is to apply minimal preprocessing (detrending etc) before showing images for review.
     \n""")
 
@@ -939,19 +956,19 @@ def get_parser():
     \n""".format(cfg.default_views[0], cfg.default_views[1], cfg.default_views[2]))
 
     help_text_num_slices = textwrap.dedent("""
-    Specifies the number of slices to display per each view. 
+    Specifies the number of slices to display per each view.
     This must be even to facilitate better division.
     Default: {}.
     \n""".format(cfg.default_num_slices))
 
     help_text_num_rows = textwrap.dedent("""
-    Specifies the number of rows to display per each axis. 
+    Specifies the number of rows to display per each axis.
     Default: {}.
     \n""".format(cfg.default_num_rows))
 
     help_text_prepare = textwrap.dedent("""
     This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations.
-     
+
     This makes the switch from one subject to the next, even more seamless (saving few seconds :) ).
 
     Default: False (required visualizations are generated only on demand, which can take 5-10 seconds for each subject).

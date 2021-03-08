@@ -380,6 +380,14 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             from bids import BIDSLayout
             self.bids_layout = BIDSLayout(self.in_dir)
             self.units = diffusion_traverse_bids(self.bids_layout)
+
+            if self.units is None or len(self.units) < 1:
+                print('No valid subjects are found! Exiting.\n'
+                      'Double check the format and integrity of the dataset '
+                      'if this is unexpected.')
+                import sys
+                sys.exit(1)
+
             # file name of each scan is the unique identifier,
             #   as it essentially contains all the key info.
             self.unit_by_id = {basename(sub_data['image']): sub_data
@@ -580,7 +588,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
             self.img_this_unit_raw = self.hdr_this_unit.get_data()
             self.b_values_this_unit = np.loadtxt(bval_path).flatten()
-        except:
+        except Exception as exc:
+            print(exc)
             print('Unable to read image at \n\t{}'.format(img_path))
             skip_subject = True
         else:

@@ -199,18 +199,18 @@ def gather_data(path_list, id_list):
 
 
 def anatomical_traverse_bids(bids_layout,
-                            modalities='anat',
-                            subjects=None,
-                            sessions=None,
-                            extensions=('nii', 'nii.gz', 'json'),
-                            param_files_required=False,
-                            **kwargs):
+                             modalities='anat',
+                             subjects=None,
+                             sessions=None,
+                             extension=('nii', 'nii.gz', 'json'),
+                             param_files_required=False,
+                             **kwargs):
     """
     Builds a convenient dictionary of usable anatomical subjects/sessions.
     """
 
     meta_types = {'datatype'  : modalities,
-                  'extensions': extensions,
+                  'extension' : extension,
                   'subjects'  : subjects,
                   'sessions'  : sessions}
 
@@ -277,8 +277,8 @@ def anatomical_traverse_bids(bids_layout,
             files_by_id[final_sub_id]['params'] = 'None'
 
         # adding the image file
-        files_by_id[final_sub_id]['image'] = temp['.nii'] \
-            if 'nii' in temp else temp['.gz']
+        files_by_id[final_sub_id]['image'] = \
+            temp['.nii'] if '.nii' in temp else temp['.gz']
 
     return files_by_id
 
@@ -298,21 +298,22 @@ def find_anatomical_images_in_BIDS(bids_dir):
     return id_list, images_by_id
 
 
-def diffusion_traverse_bids(bids_layout,
-                            modalities='dwi',
-                            subjects=None,
-                            sessions=None,
-                            extensions=('nii', 'nii.gz',
-                                        'bval', 'bvec', 'json'),
-                            param_files_required=False,
-                            **kwargs):
+def func_mri_traverse_bids(bids_layout,
+                           modalities='func',
+                           subjects=None,
+                           sessions=None,
+                           extension=('nii', 'nii.gz', 'json'),
+                           param_files_required=False,
+                           **kwargs):
     """
     Builds a convenient dictionary of usable DWI subjects/sessions.
 
     """
 
+    modality_identifier = 'func'
+
     meta_types = {'datatype'  : modalities,
-                  'extensions': extensions,
+                  'extension' : extension,
                   'subjects'  : subjects,
                   'sessions'  : sessions}
 
@@ -325,7 +326,94 @@ def diffusion_traverse_bids(bids_layout,
     results = bids_layout.get(**non_empty_types)
     if len(results) < 1:
         print('No results found!')
-        return None, None
+        return None
+
+    all_subjects = bids_layout.get_subjects()
+    all_sessions = bids_layout.get_sessions()
+    if len(all_sessions) > 1:
+        sessions_exist = True
+        combinations = product(all_subjects, all_sessions)
+    else:
+        sessions_exist = False
+        combinations = all_subjects
+
+    reqd_exts_params = ('.tsv', )
+    named_exts_params = ('params', )
+    reqd_exts_images = ('.nii', '.gz')
+    named_exts_images = ('image', 'image')
+
+    files_by_id = dict()
+    for sub in combinations:
+        if sessions_exist:
+            # sub is a tuple of subject,session
+            results = bids_layout.get(subject=sub[0], session=sub[1],
+                                      datatype=modality_identifier)
+            final_sub_id = '_'.join(sub)
+        else:
+            results = bids_layout.get(subject=sub,  datatype=modality_identifier)
+            final_sub_id = sub
+
+        temp = {splitext(file.filename)[-1] : realpath(file.path)
+                for file in results}
+
+        param_files_exist = all([file_ext in temp for file_ext in reqd_exts_params])
+        image_files_exist = any([file_ext in temp for file_ext in reqd_exts_images])
+        if param_files_required and not param_files_exist:
+            print('param files are required, but do not exist for {}'
+                  ' - skipping it.'.format(sub))
+            continue
+
+        if not image_files_exist:
+            print('Image file is required, but does not exist for {}'
+                  ' - skipping it.'.format(sub))
+            continue
+
+        files_by_id[final_sub_id] = dict()
+        # only when all the files required exist, do we include it for review
+        # adding parameter files, only if they exist
+        if param_files_exist:
+            files_by_id[final_sub_id] = { new_ext : temp[old_ext]
+                                 for old_ext, new_ext in zip(reqd_exts_params,
+                                                             named_exts_params)}
+        else:
+            # indicating the absence with None
+            files_by_id[final_sub_id]['params'] = None
+
+        # adding the image file
+        files_by_id[final_sub_id]['image'] = \
+            temp['.nii'] if '.nii' in temp else temp['.gz']
+
+    return files_by_id
+
+
+def diffusion_traverse_bids(bids_layout,
+                            modalities='dwi',
+                            subjects=None,
+                            sessions=None,
+                            extension=('nii', 'nii.gz',
+                                        'bval', 'bvec', 'json'),
+                            param_files_required=False,
+                            **kwargs):
+    """
+    Builds a convenient dictionary of usable DWI subjects/sessions.
+
+    """
+
+    meta_types = {'datatype'  : modalities,
+                  'extension': extension,
+                  'subjects'  : subjects,
+                  'sessions'  : sessions}
+
+    meta_types.update(kwargs)
+    non_empty_types = {type_: values for type_, values in meta_types.items() if values}
+
+    __FIELDS_TO_IGNORE__ = ('filename', 'modality', 'type')
+    __TYPES__ = ['subjects', 'sessions',]
+
+    results = bids_layout.get(**non_empty_types)
+    if len(results) < 1:
+        print('No results found!')
+        return None
 
     all_subjects = bids_layout.get_subjects()
     all_sessions = bids_layout.get_sessions()
@@ -381,7 +469,8 @@ def diffusion_traverse_bids(bids_layout,
             files_by_id[final_sub_id]['bvec'] = None
 
         # adding the image file
-        files_by_id[final_sub_id]['image'] = temp['.nii'] if 'nii' in temp else temp['.gz']
+        files_by_id[final_sub_id]['image'] = \
+            temp['.nii'] if '.nii' in temp else temp['.gz']
 
     return files_by_id
 

@@ -493,7 +493,7 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
 
             ax = self.collage.flat_grid[ax_counter]
             if vis_type in ('mixed', ):
-                #final_slice = mix_color(orig, df)
+                # TODO customizable colors: final_slice = mix_color(orig, df)
                 red = 0.9*orig
                 grn = 1.0*df
                 blu = np.zeros_like(orig)
@@ -509,6 +509,12 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
             ax_counter += 1
 
         self.collage.show()
+
+
+    def mix_images(self, orig, defaced, color_orig, color_defaced):
+        """Mixes the two images with different colors"""
+
+        raise NotImplementedError()
 
 
     def add_alerts(self):
@@ -534,9 +540,9 @@ def get_parser():
                                                  'of defaced MR scan.')
 
     help_text_user_dir = textwrap.dedent("""
-    Absolute path to an input folder containing defaced MRI scans. 
-    Each subject will be queried after its ID , 
-    and is expected to have the MRI (specified ``--mri_name``), 
+    Absolute path to an input folder containing defaced MRI scans.
+    Each subject will be queried after its ID ,
+    and is expected to have the MRI (specified ``--mri_name``),
     in its own folder under --user_dir.
 
     E.g. ``--user_dir /project/images_to_QC``
@@ -564,8 +570,8 @@ def get_parser():
     \n""".format(cfg.default_defaced_mri_name))
 
     help_text_mri_name = textwrap.dedent("""
-    Specifies the name of MRI image that is NOT defaced, to check the accuracy of 
-    the defacing algorithm. 
+    Specifies the name of MRI image that is NOT defaced, to check the accuracy of
+    the defacing algorithm.
 
     Default: {}
     \n""".format(cfg.default_mri_name))

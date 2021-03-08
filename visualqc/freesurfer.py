@@ -701,8 +701,7 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir,
     print('Processing {}'.format(subject_id))
     for hemi, hemi_l in zip(hemis, hemis_long):
         vis_list[hemi_l] = dict()
-        script_file, vis_files = make_tcl_script_vis_annot(subject_id, hemi_l,
-                                                           out_vis_dir, annot_file)
+        script_file, vis_files = make_tcl_script_vis_annot(subject_id, hemi_l, out_vis_dir, annot_file)
         try:
             # run the script only if all the visualizations were not generated before
             all_vis_exist = all([pexists(vis_path) for vis_path in vis_files.values()])
@@ -712,8 +711,7 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir,
             vis_list[hemi_l].update(vis_files)
         except:
             traceback.print_exc()
-            print('unable to generate tksurfer visualizations for {} hemi -'
-                  ' skipping'.format(hemi))
+            print('unable to generate tksurfer visualizations for {} hemi - skipping'.format(hemi))
 
     # flattening it for easier use later on
     out_vis_list = dict()
@@ -765,12 +763,10 @@ def run_tksurfer_script(in_dir, subject_id, hemi, script_file):
     """Runs a given TCL script to generate visualizations"""
 
     try:
-        cmd_args = ['tksurfer', '-sdir', in_dir, subject_id, hemi, 'pial',
-                    '-tcl', script_file]
+        cmd_args = ['tksurfer', '-sdir', in_dir, subject_id, hemi, 'pial', '-tcl', script_file]
         txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
     except subprocess.CalledProcessError as tksurfer_exc:
-        print('Error running tksurfer to generate 3d surface visualizations'
-              ' - skipping them.')
+        print('Error running tksurfer to generate 3d surface visualizations - skipping them.')
         exit_code = tksurfer_exc.returncode
         txt_out = tksurfer_exc.output
     else:
@@ -795,9 +791,9 @@ def get_parser():
     \n""")
 
     help_text_user_dir = textwrap.dedent("""
-    Absolute path to an input folder containing the MRI scan.
-    Each subject will be queried after its ID in the metadata file,
-    and is expected to have the MRI (specified ``--mri_name``),
+    Absolute path to an input folder containing the MRI scan. 
+    Each subject will be queried after its ID in the metadata file, 
+    and is expected to have the MRI (specified ``--mri_name``), 
     in its own folder under --user_dir.
 
     E.g. ``--user_dir /project/images_to_QC``
@@ -828,8 +824,8 @@ def get_parser():
 
     help_text_seg_name = textwrap.dedent("""
     Specifies the name of segmentation image (volumetric) to be overlaid on the MRI.
-    Typical options include aparc+aseg.mgz, aseg.mgz, wmparc.mgz.
-    Make sure to choose the right vis_type.
+    Typical options include aparc+aseg.mgz, aseg.mgz, wmparc.mgz. 
+    Make sure to choose the right vis_type. 
 
     Default: {} (within the mri folder of Freesurfer format).
     \n""".format(cfg.default_seg_name))
@@ -853,14 +849,14 @@ def get_parser():
     \n""")
 
     help_text_contour_color = textwrap.dedent("""
-    Specifies the color to use for the contours overlaid on MRI (when vis_type requested prescribes contours).
+    Specifies the color to use for the contours overlaid on MRI (when vis_type requested prescribes contours). 
     Color can be specified in many ways as documented in https://matplotlib.org/users/colors.html
     Default: {}.
     \n""".format(cfg.default_contour_face_color))
 
     help_text_alphas = textwrap.dedent("""
-    Alpha values to control the transparency of MRI and aseg.
-    This must be a set of two values (between 0 and 1.0) separated by a space e.g. --alphas 0.7 0.5.
+    Alpha values to control the transparency of MRI and aseg. 
+    This must be a set of two values (between 0 and 1.0) separated by a space e.g. --alphas 0.7 0.5. 
 
     Default: {} {}.  Play with these values to find something that works for you and the dataset.
     \n""".format(cfg.default_alpha_mri, cfg.default_alpha_seg))
@@ -872,13 +868,13 @@ def get_parser():
     \n""".format(cfg.default_views[0], cfg.default_views[1], cfg.default_views[2]))
 
     help_text_num_slices = textwrap.dedent("""
-    Specifies the number of slices to display per each view.
+    Specifies the number of slices to display per each view. 
     This must be even to facilitate better division.
     Default: {}.
     \n""".format(cfg.default_num_slices))
 
     help_text_num_rows = textwrap.dedent("""
-    Specifies the number of rows to display per each axis.
+    Specifies the number of rows to display per each axis. 
     Default: {}.
     \n""".format(cfg.default_num_rows))
 
@@ -897,7 +893,7 @@ def get_parser():
     \n""".format(cfg.default_outlier_detection_method))
 
     help_text_outlier_fraction = textwrap.dedent("""
-    Fraction of outliers expected in the given sample. Must be >= 1/n and <= (n-1)/n,
+    Fraction of outliers expected in the given sample. Must be >= 1/n and <= (n-1)/n, 
     where n is the number of samples in the current sample.
 
     For more info, read http://scikit-learn.org/stable/modules/outlier_detection.html
@@ -906,9 +902,9 @@ def get_parser():
     \n""".format(cfg.default_outlier_fraction))
 
     help_text_outlier_feat_types = textwrap.dedent("""
-    Type of features to be employed in training the outlier detection method.  It could be one of
-    'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label),
-    'subcortical' (aseg.stats: volumes of several subcortical structures),
+    Type of features to be employed in training the outlier detection method.  It could be one of  
+    'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label), 
+    'subcortical' (aseg.stats: volumes of several subcortical structures), 
     or 'both' (using both aseg and aparc stats).
 
     Default: {}.
