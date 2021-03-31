@@ -18,11 +18,14 @@ from visualqc.utils import get_ratings_path_info, load_ratings_csv, summarize_ra
 class DummyCallable(object):
     """Class to define placeholder callable. """
 
+
     def __init__(self, *args, **kwargs):
         pass
 
+
     def __call__(self, *args, **kwargs):
-        raise NotImplementedError('This callable must be overridden before being used!')
+        raise NotImplementedError(
+            'This callable must be overridden before being used!')
 
 
 class BaseWorkflowVisualQC(ABC):
@@ -47,7 +50,8 @@ class BaseWorkflowVisualQC(ABC):
         self.id_list = id_list
         self.in_dir = in_dir
         self.out_dir = out_dir
-        print('Input folder: {}\nOutput folder: {}'.format(self.in_dir, self.out_dir))
+        print(
+            'Input folder: {}\nOutput folder: {}'.format(self.in_dir, self.out_dir))
 
         self.ratings = dict()
         self.notes = dict()
@@ -173,7 +177,7 @@ class BaseWorkflowVisualQC(ABC):
 
 
     def loop_through_units(self):
-        """Method to loop through the units (subject, session or run) to make it all work."""
+        """Core loop traversing through the units (subject/session/run) """
 
         for counter, unit_id in enumerate(self.incomplete_list):
 
@@ -190,7 +194,7 @@ class BaseWorkflowVisualQC(ABC):
 
             self.display_unit()
             self.show_fig_and_wait()
-            # TODO save each rating to disk right away to avoid loss of work due to crach etc
+            # TODO save each rating to disk to avoid loss of work due to crach etc
             self.print_rating(unit_id)
 
             if self.quit_now:
@@ -212,7 +216,7 @@ class BaseWorkflowVisualQC(ABC):
             annot_text = '{}\n({}/{})'.format(unit_id, counter + 1,
                                               self.num_units_to_review)
         else:
-            annot_text = '{}/{}'.format(counter+1, self.num_units_to_review)
+            annot_text = '{}/{}'.format(counter + 1, self.num_units_to_review)
 
         self.UI.add_annot(annot_text)
 
@@ -307,7 +311,7 @@ class BaseWorkflowVisualQC(ABC):
             print('    id: {}\n'
                   'rating: {}\n'
                   ' notes: {}'.format(subject_id, self.ratings[subject_id],
-                                    self.notes[subject_id]))
+                                      self.notes[subject_id]))
         else:
             # extra check to ensure subject was properly rate.
             self.ratings.pop(subject_id)
@@ -365,7 +369,7 @@ class BaseWorkflowVisualQC(ABC):
                 self.feature_paths[feat_type] = self.feature_extractor(self, feat_type)
             except:
                 traceback.print_exc()
-                print('Unable to extract {} features - skipping them.'.format(feat_type))
+                print('Unable to extract {} features! skipping..'.format(feat_type))
 
 
     def detect_outliers(self):
@@ -395,7 +399,8 @@ class BaseWorkflowVisualQC(ABC):
                     continue
 
                 try:
-                    features = gather_data(self.feature_paths[feature_type], self.id_list)
+                    features = gather_data(self.feature_paths[feature_type],
+                                           self.id_list)
                 except:
                     raise IOError('Unable to read/assemble features for outlier '
                                   'detection. Skipping them!')
@@ -407,7 +412,8 @@ class BaseWorkflowVisualQC(ABC):
                         cfg.outlier_list_prefix, self.outlier_method, feature_type))
                     self.by_feature[feature_type] = \
                         detect_outliers(features, self.id_list,
-                                        method=self.outlier_method, out_file=out_file,
+                                        method=self.outlier_method,
+                                        out_file=out_file,
                                         fraction_of_outliers=self.outlier_fraction)
                 else:
                     print('Insufficient number of samples (with features: {}) \n'
