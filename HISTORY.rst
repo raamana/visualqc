@@ -3,13 +3,7 @@ History
 =======
 
 
-0.3 (2018-04-02)
+0.5 (2021-03-31)
 ------------------
 
-* Major update with multiple new use cases:
-
-
-0.1 (2018-02-08)
-------------------
-
-* Early access release on PyPI/github.
+* bug fix for defacing - cropping the MRI and defacing images together to avoid differing sizes!
