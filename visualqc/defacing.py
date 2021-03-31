@@ -403,12 +403,13 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                               ''.format(rimg_path))
 
         # crop, trim, and rescale
+        from mrivis.utils import crop_to_extents
+        self.defaced_img, self.orig_img = crop_to_extents(
+            self.defaced_img, self.orig_img, padding=self.padding)
         self.defaced_img = rescale_without_outliers(
-            self.defaced_img, padding=self.padding,
-            trim_percentile=cfg.defacing_trim_percentile)
+            self.defaced_img, trim_percentile=cfg.defacing_trim_percentile)
         self.orig_img = rescale_without_outliers(
-            self.orig_img, padding=self.padding,
-            trim_percentile=cfg.defacing_trim_percentile)
+            self.orig_img, trim_percentile=cfg.defacing_trim_percentile)
         self.currently_showing = None
 
         skip_subject = False
