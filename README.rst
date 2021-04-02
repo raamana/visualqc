@@ -31,6 +31,7 @@ Note: VisualQC employs `release early and release often mechanism <https://en.wi
 Galleries
 ----------
 
+ * NEW: `Defacing QC <https://raamana.github.io/visualqc/gallery_defacing.html>`_
  * `Freesurfer <https://raamana.github.io/visualqc/gallery_freesurfer.html>`_
  * `Functional MRI <https://raamana.github.io/visualqc/gallery_functional_mri.html>`_
  * `Registration/Alignment quality <https://raamana.github.io/visualqc/gallery_registration_unimodal.html>`_
