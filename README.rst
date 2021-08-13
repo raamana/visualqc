@@ -1,8 +1,3 @@
-==========================================================================================
-VisualQC : Assistive tool to ease the quality control workflow of neuroimaging data
-==========================================================================================
-
-.. image:: docs/vqc_logo_small.png
 
 .. image:: https://zenodo.org/badge/105958496.svg
    :target: https://zenodo.org/badge/latestdoi/105958496
@@ -12,9 +7,17 @@ VisualQC : Assistive tool to ease the quality control workflow of neuroimaging d
 
 .. image:: https://api.codacy.com/project/badge/Grade/2da8c2b4dbcd433eb4943eb52f0b00d6
         :target: https://www.codacy.com/app/raamana/visualqc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=raamana/visualqc&amp;utm_campaign=Badge_Grade
+
 .. image:: https://img.shields.io/badge/say-thanks-ff69b4.svg
         :target: https://saythanks.io/to/raamana
 
+==========================================================================================
+VisualQC : Assistive tool to ease the quality control workflow of neuroimaging data
+==========================================================================================
+
+.. image:: docs/vqc_logo_small.png
+
+---
 
 .. image:: docs/visualqc_poster_comprehensive.png
 
