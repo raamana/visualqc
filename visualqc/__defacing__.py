@@ -6,8 +6,9 @@ if version_info.major > 2:
 else:
     raise NotImplementedError('visualqc_defacing requires Python 3 or higher!')
 
+
 def main():
-    "Entry point."
+    """Entry point."""
 
     # disabling all not severe warnings
     with catch_warnings():
@@ -15,6 +16,7 @@ def main():
         filterwarnings("ignore", category=FutureWarning)
 
         defacing.cli_run()
+
 
 if __name__ == '__main__':
     main()
