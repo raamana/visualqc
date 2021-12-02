@@ -34,6 +34,7 @@ _plus_join = lambda label_set: '+'.join(label_set)
 class T1MriInterface(BaseReviewInterface):
     """Custom interface for rating the quality of T1 MRI scan."""
 
+
     def __init__(self,
                  fig,
                  axes,
@@ -55,7 +56,7 @@ class T1MriInterface(BaseReviewInterface):
         self.quit_button_callback = quit_button_callback
         self.processing_choice_callback = processing_choice_callback
         if map_key_to_callback is None:
-            self.map_key_to_callback = {} # empty
+            self.map_key_to_callback = {}  # empty
         elif isinstance(map_key_to_callback, dict):
             self.map_key_to_callback = map_key_to_callback
         else:
@@ -71,6 +72,7 @@ class T1MriInterface(BaseReviewInterface):
         # this list of artists to be populated later
         # makes to handy to clean them all
         self.data_handles = list()
+
 
     def add_checkboxes(self):
         """
@@ -98,13 +100,19 @@ class T1MriInterface(BaseReviewInterface):
             x_line1.set_color(cfg.checkbox_cross_color)
             x_line2.set_color(cfg.checkbox_cross_color)
 
-        self._index_pass = cfg.t1_mri_default_issue_list.index(cfg.t1_mri_pass_indicator)
+        self._index_pass = cfg.t1_mri_default_issue_list.index(
+            cfg.t1_mri_pass_indicator)
+
 
     def add_process_options(self):
+        """
+        options to process the anatomical image in different ways to unearth issues!
+        """
 
         ax_radio = plt.axes(cfg.position_radio_bt_t1_mri,
                             facecolor=cfg.color_rating_axis)
-        self.radio_bt_vis_type = RadioButtons(ax_radio, cfg.processing_choices_t1_mri,
+        self.radio_bt_vis_type = RadioButtons(ax_radio,
+                                              cfg.processing_choices_t1_mri,
                                               active=None, activecolor='orange')
         self.radio_bt_vis_type.on_clicked(self.processing_choice_callback)
         for txt_lbl in self.radio_bt_vis_type.labels:
@@ -113,11 +121,13 @@ class T1MriInterface(BaseReviewInterface):
         for circ in self.radio_bt_vis_type.circles:
             circ.set(radius=0.06)
 
+
     def save_issues(self, label):
         """
         Update the rating
 
-        This function is called whenever set_active() happens on any label, if checkbox.eventson is True.
+        This function is called whenever set_active() happens on any label,
+        if checkbox.eventson is True.
 
         """
 
@@ -127,6 +137,7 @@ class T1MriInterface(BaseReviewInterface):
             self.clear_pass_only_if_on()
 
         self.fig.canvas.draw_idle()
+
 
     def clear_checkboxes(self, except_pass=False):
         """Clears all checkboxes.
@@ -141,8 +152,10 @@ class T1MriInterface(BaseReviewInterface):
                 continue
             # if it was selected already, toggle it.
             if this_cbox_active:
-                # not calling checkbox.set_active() as it calls the callback self.save_issues() each time, if eventson is True
+                # not calling checkbox.set_active() as it calls the callback
+                # self.save_issues() each time, if eventson is True
                 self._toggle_visibility_checkbox(index)
+
 
     def clear_pass_only_if_on(self):
         """Clear pass checkbox only"""
@@ -151,12 +164,14 @@ class T1MriInterface(BaseReviewInterface):
         if cbox_statuses[self._index_pass]:
             self._toggle_visibility_checkbox(self._index_pass)
 
+
     def _toggle_visibility_checkbox(self, index):
         """toggles the visibility of a given checkbox"""
 
         l1, l2 = self.checkbox.lines[index]
         l1.set_visible(not l1.get_visible())
         l2.set_visible(not l2.get_visible())
+
 
     def get_ratings(self):
         """Returns the final set of checked ratings"""
@@ -167,6 +182,7 @@ class T1MriInterface(BaseReviewInterface):
                         enumerate(cbox_statuses) if this_cbox_active]
 
         return user_ratings
+
 
     def allowed_to_advance(self):
         """
@@ -184,6 +200,7 @@ class T1MriInterface(BaseReviewInterface):
 
         return allowed
 
+
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
 
@@ -191,6 +208,7 @@ class T1MriInterface(BaseReviewInterface):
         self.clear_checkboxes()
         self.clear_radio_buttons()
         self.clear_notes_annot()
+
 
     def clear_data(self):
         """clearing all data/image handles"""
@@ -201,12 +219,14 @@ class T1MriInterface(BaseReviewInterface):
             # resetting it
             self.data_handles = list()
 
+
     def clear_notes_annot(self):
         """clearing notes and annotations"""
 
         self.text_box.set_val(cfg.textbox_initial_text)
         # text is matplotlib artist
         self.annot_text.remove()
+
 
     def clear_radio_buttons(self):
         """Clears the radio button"""
@@ -215,9 +235,11 @@ class T1MriInterface(BaseReviewInterface):
         # self.radio_bt_rating.set_active(cfg.index_freesurfer_default_rating)
         for index, label in enumerate(self.radio_bt_vis_type.labels):
             if label.get_text() == self.radio_bt_vis_type.value_selected:
-                self.radio_bt_vis_type.circles[index].set_facecolor(cfg.color_rating_axis)
+                self.radio_bt_vis_type.circles[index].set_facecolor(
+                    cfg.color_rating_axis)
                 break
         self.radio_bt_vis_type.value_selected = None
+
 
     def on_mouse(self, event):
         """Callback for mouse events."""
@@ -245,6 +267,7 @@ class T1MriInterface(BaseReviewInterface):
 
         self.fig.canvas.draw_idle()
 
+
     def on_keyboard(self, key_in):
         """Callback to handle keyboard shortcuts to rate and advance."""
 
@@ -263,7 +286,8 @@ class T1MriInterface(BaseReviewInterface):
             self.map_key_to_callback[key_pressed]()
         else:
             if key_pressed in cfg.abbreviation_t1_mri_default_issue_list:
-                checked_label = cfg.abbreviation_t1_mri_default_issue_list[key_pressed]
+                checked_label = cfg.abbreviation_t1_mri_default_issue_list[
+                    key_pressed]
                 self.checkbox.set_active(
                     cfg.t1_mri_default_issue_list.index(checked_label))
             else:
@@ -276,6 +300,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
     """
     Rating workflow without any overlay.
     """
+
 
     def __init__(self,
                  id_list,
@@ -309,6 +334,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
 
+
     def preprocess(self):
         """
         Preprocess the input data
@@ -324,12 +350,14 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
 
         # no complex vis to generate - skipping
 
+
     def prepare_UI(self):
         """Main method to run the entire workflow"""
 
         self.open_figure()
         self.add_UI()
         self.add_histogram_panel()
+
 
     def init_layout(self, views, num_rows_per_view,
                     num_slices_per_view, padding=cfg.default_padding):
@@ -353,6 +381,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
 
         self.padding = padding
 
+
     def init_getters(self):
         """Initializes the getters methods for input paths and feature readers."""
 
@@ -365,22 +394,25 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
             self.path_getter_inputs = lambda sub_id: realpath(
                 pjoin(self.in_dir, sub_id, 'mri', self.mri_name))
         else:
-            if self.in_dir_type.upper() in ('BIDS', ):
+            if self.in_dir_type.upper() in ('BIDS',):
                 self.path_getter_inputs = lambda sub_id: self.images_for_id[
                     sub_id]['image']
             else:
                 self.path_getter_inputs = lambda sub_id: realpath(
                     pjoin(self.in_dir, sub_id, self.mri_name))
 
+
     def open_figure(self):
         """Creates the master figure to show everything in."""
 
         plt.show(block=False)
 
+
     def add_UI(self):
         """Adds the review UI with defaults"""
 
-        # two keys for same combinations exist to account for time delays in key presses
+        # two keys for same combinations exist to account for time delays in key
+        # presses
         map_key_to_callback = {'alt+s': self.show_saturated,
                                's+alt': self.show_saturated,
                                'alt+b': self.show_background_only,
@@ -401,9 +433,11 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
                                                         self.UI.on_mouse)
         self.con_id_keybd = self.fig.canvas.mpl_connect('key_press_event',
                                                         self.UI.on_keyboard)
-        # con_id_scroll = self.fig.canvas.mpl_connect('scroll_event', self.UI.on_scroll)
+        # con_id_scroll = self.fig.canvas.mpl_connect('scroll_event',
+        # self.UI.on_scroll)
 
         self.fig.set_size_inches(self.figsize)
+
 
     def add_histogram_panel(self):
         """Extra axis for histogram"""
@@ -415,6 +449,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.ax_hist.set_prop_cycle('color', cfg.color_histogram_t1_mri)
         self.ax_hist.set_title(cfg.title_histogram_t1_mri, fontsize='small')
 
+
     def update_histogram(self, img):
         """Updates histogram with current image data"""
 
@@ -425,15 +460,18 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.ax_hist.autoscale_view(scalex=False)  # xlim fixed to [0, 1]
         self.UI.data_handles.extend(patches_hist)
 
+
     def update_alerts(self):
         """Keeps a box, initially invisible."""
 
         if self.current_alert_msg is not None:
             h_alert_text = self.fig.text(cfg.position_outlier_alert_t1_mri[0],
                                          cfg.position_outlier_alert_t1_mri[1],
-                                         self.current_alert_msg, **cfg.alert_text_props)
+                                         self.current_alert_msg,
+                                         **cfg.alert_text_props)
             # adding it to list of elements to cleared when advancing to next subject
             self.UI.data_handles.append(h_alert_text)
+
 
     def add_alerts(self):
         """Brings up an alert if subject id is detected to be an outlier."""
@@ -450,6 +488,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
             self.update_alerts()
         else:
             self.current_alert_msg = None
+
 
     def load_unit(self, unit_id):
         """Loads the image data for display."""
@@ -472,9 +511,11 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
             print('MR image is empty!')
 
         # # where to save the visualization to
-        # out_vis_path = pjoin(self.out_dir, 'visual_qc_{}_{}'.format(self.vis_type, unit_id))
+        # out_vis_path = pjoin(self.out_dir, 'visual_qc_{}_{}'.format(
+        # self.vis_type, unit_id))
 
         return skip_subject
+
 
     def display_unit(self):
         """Adds slice collage to the given axes"""
@@ -483,6 +524,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.collage.attach(self.current_img)
         # updating histogram
         self.update_histogram(self.current_img)
+
 
     def process_and_display(self, user_choice):
         """Updates the display after applying the chosen method."""
@@ -498,6 +540,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         else:
             print('Chosen option seems to be not implemented!')
 
+
     def show_saturated(self, no_toggle=False):
         """Callback for ghosting specific review"""
 
@@ -510,6 +553,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         else:
             self.show_original()
 
+
     def show_background_only(self, no_toggle=False):
         """Callback for ghosting specific review"""
 
@@ -519,6 +563,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
             self.currently_showing = 'Background only'
         else:
             self.show_original()
+
 
     def _compute_background(self):
         """Computes the background image for the current image."""
@@ -531,6 +576,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
             self.background_img = scale_0to1(temp_background_img,
                                              exclude_outliers_below=1,
                                              exclude_outliers_above=1)
+
 
     def show_tails_trimmed(self, no_toggle=False):
         """Callback for ghosting specific review"""
@@ -545,11 +591,13 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         else:
             self.show_original()
 
+
     def show_original(self):
         """Show the original"""
 
         self.collage.attach(self.current_img)
         self.currently_showing = 'original'
+
 
     def cleanup(self):
         """Preparating for exit."""
@@ -567,7 +615,8 @@ def get_parser():
 
     parser = argparse.ArgumentParser(prog="visualqc_t1_mri",
                                      formatter_class=argparse.RawTextHelpFormatter,
-                                     description='visualqc_t1_mri: rate quality of anatomical MR scan.')
+                                     description='visualqc_t1_mri: rate quality of '
+                                                 'anatomical MR scan.')
 
     help_text_bids_dir = textwrap.dedent("""
     Absolute path to the top-level BIDS folder containing the dataset.
@@ -704,11 +753,13 @@ def get_parser():
                         required=False, help=help_text_fs_dir)
 
     outliers = parser.add_argument_group('Outlier detection',
-                                         'options related to automatically detecting '
+                                         'options related to automatically '
+                                         'detecting '
                                          'possible outliers')
     outliers.add_argument("-olm", "--outlier_method", action="store",
                           dest="outlier_method",
-                          default=cfg.default_outlier_detection_method, required=False,
+                          default=cfg.default_outlier_detection_method,
+                          required=False,
                           help=help_text_outlier_detection_method)
 
     outliers.add_argument("-olf", "--outlier_fraction", action="store",
@@ -771,7 +822,7 @@ def make_workflow_from_user_options():
     in_dir, in_dir_type = check_input_dir_T1(user_args.fs_dir, user_args.user_dir,
                                              user_args.bids_dir)
 
-    if in_dir_type.upper() in ('BIDS', ):
+    if in_dir_type.upper() in ('BIDS',):
         mri_name = None
         in_dir, bids_dir_type = check_bids_dir(in_dir)
         id_list, images_for_id = find_anatomical_images_in_BIDS(in_dir)

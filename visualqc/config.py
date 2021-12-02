@@ -273,7 +273,8 @@ abbreviation_diffusion_mri_default_issue_list = OrderedDict(p=diffusion_mri_pass
                                                             e='othEr',
                                                             t="i'm Tired",
                                                             w='revieW later')
-diffusion_mri_default_issue_list = list(abbreviation_diffusion_mri_default_issue_list.values())
+diffusion_mri_default_issue_list = list(
+    abbreviation_diffusion_mri_default_issue_list.values())
 diffusion_mri_default_rating_list_shortform = abbreviation_diffusion_mri_default_issue_list.keys()
 
 diffusion_outlier_features = None

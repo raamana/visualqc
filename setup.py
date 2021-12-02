@@ -20,7 +20,7 @@ requirements = [
     'scikit-learn',
     'pybids',
     'nilearn'
-]
+    ]
 
 setup_requirements = requirements
 
@@ -32,7 +32,7 @@ setup(
     name='visualqc',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description="Assistive tool to improve the quality control workflow of neuroimaging data.",
+    description="Assistive tool for the quality control of neuroimaging data",
     long_description=readme + '\n\n' + history,
     author="Pradeep Reddy Raamana",
     author_email='raamana@gmail.com',
@@ -55,8 +55,8 @@ setup(
             'vqcdwi=visualqc.__diffusion__:main',
             'vqcfs=visualqc.__freesurfer__:main',
             'vqcalign=visualqc.__alignment__:main'
-        ]
-    },
+            ],
+        },
     include_package_data=True,
     install_requires=requirements,
     license="Apache license",
@@ -71,8 +71,8 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
-    ],
+        ],
     test_suite='tests',
     tests_require=test_requirements,
     setup_requires=setup_requirements,
-)
+    )
