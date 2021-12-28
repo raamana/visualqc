@@ -1,9 +1,9 @@
 Citation
 -----------
 
-If you used ``VisualQC`` in your analyses or projects (whether or not it was reported in the main paper), please cite it:
+If you used ``VisualQC`` in your analyses or projects (whether or not it was reported in the main paper), please cite the following paper below, until we will an official DOI from the OHBM Aperture journal (where a software paper is under review and soon to be published):
 
-- Pradeep Reddy Raamana. VisualQC: Assistive tools for easy and rigorous quality control of neuroimaging data. http://doi.org/10.5281/zenodo.1211365
+- Pradeep Reddy Raamana. "VisualQC: Assistive tools for easy and rigorous quality control of neuroimaging data". http://doi.org/10.5281/zenodo.1211365
 
 Bibtex:
 
