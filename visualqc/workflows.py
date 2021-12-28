@@ -130,8 +130,7 @@ class BaseWorkflowVisualQC(ABC):
             self.notes = dict()
 
         if len(prev_done) > 0:
-            print('\nRatings for {}/{} subjects were restored.'
-                  ''.format(len(prev_done), len(self.id_list)))
+            print('\nRatings for {} sessions were restored'.format(len(prev_done)))
 
         if len(self.incomplete_list) < 1:
             print('No subjects to review/rate - exiting.')
