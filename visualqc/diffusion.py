@@ -145,6 +145,8 @@ class DiffusionMRIInterface(T1MriInterface):
         self.radio_bt_vis_type = RadioButtons(ax_radio,
                                               cfg.choices_alignment_comparison_diffusion,
                                               active=None, activecolor='orange')
+        for lbl in self.radio_bt_vis_type.labels:
+            lbl.set_fontsize(cfg.fontsize_radio_button_align_method_diffusion)
         self.radio_bt_vis_type.on_clicked(self.alignment_callback)
         for txt_lbl in self.radio_bt_vis_type.labels:
             txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
