@@ -153,6 +153,10 @@ class DiffusionMRIInterface(T1MriInterface):
             circ.set(radius=0.06)
 
 
+    def add_process_options(self):
+        """redefining it to void it's actions intended for T1w MRI interface"""
+        pass
+
     def maximize_axis(self, ax):
         """zooms a given axes"""
 
