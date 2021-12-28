@@ -440,6 +440,9 @@ def diffusion_traverse_bids(bids_layout,
             results = bids_layout.get(subject=sub,  datatype='dwi')
             final_sub_id = sub
 
+        if len(results) < 1:
+            continue
+
         temp = {splitext(file.filename)[-1] : realpath(file.path)
                 for file in results}
 
