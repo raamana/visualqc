@@ -112,8 +112,9 @@ class DiffusionMRIInterface(T1MriInterface):
 
     def add_checkboxes(self):
         """
-        Checkboxes offer the ability to select multiple tags such as Motion, Ghosting Aliasing etc,
-            instead of one from a list of mutual exclusive rating options (such as Good, Bad, Error etc).
+        Checkboxes offer the ability to select multiple tags such as Motion,
+        Ghosting, Aliasing etc, instead of one from a list of mutual exclusive
+        rating options (such as Good, Bad, Error etc).
 
         """
 
@@ -121,14 +122,15 @@ class DiffusionMRIInterface(T1MriInterface):
                                facecolor=cfg.color_rating_axis)
         # initially de-activating all
         actives = [False] * len(self.issue_list)
-        self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list, actives=actives)
+        self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list,
+                                     actives=actives)
         self.checkbox.on_clicked(self.save_issues)
         for txt_lbl in self.checkbox.labels:
             txt_lbl.set(**cfg.checkbox_font_properties)
 
-        # for rect in self.checkbox.rectangles:
-        #     rect.set_width(cfg.checkbox_rect_width_diffusion)
-        #     rect.set_height(cfg.checkbox_rect_height_diffusion)
+        for rect in self.checkbox.rectangles:
+            rect.set_width(cfg.checkbox_rect_width_diffusion)
+            rect.set_height(cfg.checkbox_rect_height_diffusion)
 
         # lines is a list of n crosses, each cross (x) defined by a tuple of lines
         for x_line1, x_line2 in self.checkbox.lines:

@@ -253,8 +253,8 @@ colormap_stdev_fmri = 'seismic'
 #           Diffusion mri specific
 ## ----------------------------------------------------------------------------
 
-checkbox_rect_width_diffusion = 0.06
-checkbox_rect_height_diffusion = 0.051
+checkbox_rect_width_diffusion = 0.07
+checkbox_rect_height_diffusion = 0.04
 
 diffusion_mri_pass_indicator = visual_qc_pass_indicator
 # f, s, l are matplotlib builtin shortcuts
