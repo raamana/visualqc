@@ -1,7 +1,7 @@
 Gallery - Functional MRI scan - artefact detection and rating
 --------------------------------------------------------------
 
-**This is an early preview of an app in active development - your feedback to improve will be greatly appreciated:** `feedback welcome. <https://github.com/raamana/visualqc/issues/new>`_
+**This app is in continuous development - your feedback to improve will be greatly appreciated:** `feedback welcome. <https://github.com/raamana/visualqc/issues/new>`_
 
 The carpet plot [1]_ can easily reveal abnormal frames (time-points) to the human eye, which is what VisualQC starts with for functional MRI scans - see below. VisualQC also overlay few useful statistics for each frame to further help you decide on the quality of that frame. We currently show 3 stats (mean, SD, and DVARS, but plan to few more such as framewise displacement (FD) and other motion parameters. Your suggestions and contributions are very `welcome <https://github.com/raamana/visualqc/issues/new>`_.
 
