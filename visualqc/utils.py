@@ -21,21 +21,24 @@ from visualqc.config import default_out_dir_name, freesurfer_vis_cmd, \
 def read_image(img_spec,
                error_msg='image',
                num_dims=3,
-               reorient_canonical=True):
+               reorient_canonical=True,
+               return_header=False):
     """Image reader. Removes stray values close to zero (smaller than 5 %ile)."""
 
     if isinstance(img_spec, str):
         if pexists(realpath(img_spec)):
-            hdr = nib.load(img_spec)
+            init_obj = nib.load(img_spec)
+            header = init_obj.header
             # trying to stick to an orientation
             if reorient_canonical:
-                hdr = nib.as_closest_canonical(hdr)
-            img = hdr.get_data()
+                init_obj = nib.as_closest_canonical(init_obj)
+            img = init_obj.get_data()
         else:
             raise IOError('Given path to {} does not exist!\n\t{}'
                           ''.format(error_msg, img_spec))
     elif isinstance(img_spec, np.ndarray):
         img = img_spec
+        header = None
     else:
         raise ValueError('Invalid input specified! '
                          'Input either a path to image data, '
@@ -51,7 +54,10 @@ def read_image(img_spec,
     if not np.issubdtype(img.dtype, np.float64):
         img = img.astype('float32')
 
-    return img
+    if return_header:
+        return img, header
+    else:
+        return img
 
 
 def scale_0to1(image_in,
