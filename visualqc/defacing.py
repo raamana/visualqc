@@ -499,8 +499,8 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         self.collage.clear()
 
         ax_counter = 0
-        for df, orig in self.slice_picker.get_slices_multi([self.defaced_img,
-                                                            self.orig_img]):
+        for dim, slice_num, (defaced, orig) in self.slice_picker.get_slices_multi(
+            [self.defaced_img, self.orig_img], extended=True):
 
             ax = self.collage.flat_grid[ax_counter]
             if vis_type in ('mixed', ):
