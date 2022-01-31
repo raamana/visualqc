@@ -322,8 +322,10 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         plt.style.use('dark_background')
 
         # vmin/vmax are controlled, because we rescale all to [0, 1]
-        self.display_params = dict(interpolation='none', aspect='equal',
-                                   origin='lower', cmap='gray',
+        self.display_params = dict(interpolation='none',
+                                   aspect='auto',
+                                   origin='lower',
+                                   cmap='gray',
                                    vmin=0.0, vmax=1.0)
         self.figsize = cfg.default_review_figsize
 
@@ -517,6 +519,7 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
             else:
                 raise ValueError('Invalid vis_type. Must be either mixed, '
                                  'defaced, or original')
+            ax.set_aspect(slice_aspect_ratio(self.current_pixdim,dim))
             ax_counter += 1
 
         self.collage.show()
