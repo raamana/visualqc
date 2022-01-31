@@ -67,6 +67,24 @@ def pixdim_nifti_header(header):
     return header['pixdim'][1:4]
 
 
+def slice_aspect_ratio(pixel_dim, axis):
+    """computes aspect ratio for the cross-sectional slices of a given dimension"""
+
+    if pixel_dim.size != 3:
+        raise ValueError('pixel_dim must be an array of 3 elements for 3D images')
+
+    if axis == 0:
+        aspect_ratio = pixel_dim[2] / pixel_dim[1]
+    elif axis == 1:
+        aspect_ratio = pixel_dim[2] / pixel_dim[0]
+    elif axis == 2:
+        aspect_ratio = pixel_dim[1] / pixel_dim[0]
+    else:
+        raise ValueError('Axis can only be 0, 1 or 2 for 3D images')
+
+    return aspect_ratio
+
+
 def scale_0to1(image_in,
                exclude_outliers_below=False,
                exclude_outliers_above=False
