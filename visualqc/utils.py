@@ -60,6 +60,13 @@ def read_image(img_spec,
         return img
 
 
+def pixdim_nifti_header(header):
+    """returns the pixcim key from header"""
+
+    # TODO additional checks whether hdr is valid, contains pixdim key or not
+    return header['pixdim'][1:4]
+
+
 def scale_0to1(image_in,
                exclude_outliers_below=False,
                exclude_outliers_above=False
