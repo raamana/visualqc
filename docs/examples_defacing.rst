@@ -3,6 +3,9 @@ Example usage - Defacing
 
 To run ``vqcdeface`` on a dataset, make sure that each subject has their own folder, containing 1) the original pre-defaced image, 2) the defaced image, and 3) png snapshot(s) of the 3D rendered defaced image. At a minimum, one snapshot of the front of the defaced scan is required, but it is recommended to have a couple of different angles, to capture a more complete image of the scan. All snapshots should have the same prefix to view them at the same time.
 
+
+Rendered images of the MRI volume can easily be generated using the ``generate_rendered_images_3Dvolume_deface.m`` in the `VisualQC scripts folder <https://github.com/raamana/visualqc/tree/master/docs>`_. This script requires two Matlab toolboxes including `imResizeN <https://www.mathworks.com/matlabcentral/fileexchange/64516-imresizen-resize-an-n-dimensional-array>`_ and `Viewer3D <https://www.mathworks.com/matlabcentral/fileexchange/21993-viewer3d?s_tid=srchtitle>`_. If you have a better solution/script, ideally in Python, let me know.
+
 .. note::
 
     make sure the prefix is different from all of the mri files in the same folder, e.g. defaced.png and defaced.nii.gz in the same folder for one subject will cause an error, but Render_deface.png and defaced.nii.gz will be fine.
