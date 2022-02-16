@@ -540,6 +540,9 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
             else:
                 raise ValueError('Invalid vis_type. Must be either mixed, '
                                  'defaced, or original')
+            # TODO BUG individual slice-wise axes size is messed up for
+            #   non-isotropic resolutions. Some subtle interaction of setting aspect
+            #   ratio with axes scaling/extents, to be fixed/controlled
             ax.set_aspect(slice_aspect_ratio(self.current_pixdim, dim))
             ax_counter += 1
 
