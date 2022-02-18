@@ -28,7 +28,10 @@ Review interface - Anatomical / T1w MRI
  - Double click to zoom in on any slice.
  - Double click the histogram to zoom the intensity distribution
  - keyboard shortcuts (capitalized letters in label) to rate artefacts
-
+ - ``alt+s`` to show the saturated image
+ - ``alt+b`` to show the background image
+ - ``alt+t`` to show the image after trimming tails in intensity histogram
+ - ``alt+o`` to show the original image
 
 Review interface - Registration
 -------------------------------
@@ -42,11 +45,23 @@ Review interface - Registration
 
 Review interface - Functional MRI
 ----------------------------------
- - Right click to open a given time point (also known as frame)
+ - Right click to open a specific time point (also known as a frame)
  - Use the arrow keys to traverse in time (right/up keys to increase the frame, and left/down key to decrease it)
  - Right click again on slices to zoom them further full-window
  - Press ``alt+s`` to show the std. dev map (voxel-wise, over time)
- -
+ - Press the spacebar to go the next subject
+
+
+Review interface - Diffusion MRI
+----------------------------------
+ - Right click to open a specific gradient
+ - Right click again on slices to zoom them further full-window
+ - Use the arrow keys to traverse across different gradients (right/up keys to move forward to the next gradient, and left/down key to go backwards to the previous gradient)
+ - Press ``alt+s`` to show the std. dev map (voxel-wise, across gradients)
+ - Press ``alt+0`` to show the b=0 volume
+ - Press ``alt+n`` to flip back and forth between the first and last gradients
+ - Press ``space`` to pause the animation through the gradients
+
 
 Review interface - Defacing
 ----------------------------------

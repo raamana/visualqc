@@ -28,6 +28,12 @@ Functional MRI use-cases
  - Visual review of scan quality, identification of artefactual frames (motion, spikes, etc)
  - Quality control of the impact of different pre-processing steps
 
+Diffusion MRI use-cases
+----------------------------
+
+ - Visual review of scan quality, identification of artefactual gradients (motion, spikes, etc)
+ - Quality control of the impact of different pre-processing steps
+
 Registration/Alignment use-cases
 --------------------------------
 
