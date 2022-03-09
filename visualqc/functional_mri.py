@@ -1142,12 +1142,9 @@ def make_workflow_from_user_options():
 def cli_run():
     """Main entry point."""
 
-    from visualqc import __version__
-    print('\nvisualqc version {} for functional MRI'.format(__version__))
-    from datetime import datetime
-    init_time = datetime.now()
-    print('\tTime stamp : {}\n'.format(init_time.strftime('%Y-%m-%d %H:%M:%S')))
-
+    print('\nFunctional MRI module')
+    from visualqc.utils import run_common_utils_before_starting
+    run_common_utils_before_starting()
 
     wf = make_workflow_from_user_options()
     wf.run()
