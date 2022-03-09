@@ -98,10 +98,10 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
 def functional_mri_features(*args):
     """Extractor from functional MRI scan"""
 
-    pass
+    raise NotImplementedError
 
 def diffusion_mri_features(*args):
-    """Extractor from functional MRI scan"""
+    """Extractor from diffusion MRI scan"""
 
     raise NotImplementedError
 
