@@ -1070,6 +1070,14 @@ def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_i
            defaced_name, mri_name, render_name
 
 
+def print_time_stamp():
+    """Prints a time stamp for debugging purposes"""
+
+    from datetime import datetime
+    init_time = datetime.now()
+    print('Time stamp : {}\n'.format(init_time.strftime('%Y-%m-%d %H:%M:%S')))
+
+
 def compute_cell_extents_grid(bounding_rect=(0.03, 0.03, 0.97, 0.97),
                               num_rows=2, num_cols=6,
                               axis_pad=0.01):
