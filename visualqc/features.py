@@ -1,5 +1,5 @@
 """
-Module with algorithms to extract various features of interest for outlier detection methods.
+Algorithms to extract various features of interest for outlier detection methods.
 
 """
 
@@ -15,7 +15,8 @@ from visualqc.utils import read_image, scale_0to1
 def t1_histogram_whole_scan(in_mri_path,
                             num_bins=cfg.num_bins_histogram_intensity_distribution):
     """
-    Computes histogram over the intensity distribution over the entire scan, including brain, skull and background.
+    Computes histogram over the intensity distribution over the entire scan, 
+    including brain, skull and background.
 
     Parameters
     ----------

@@ -1,6 +1,6 @@
 """
 
-Module to present a base neuroimaging scan, currently T1 mri, without any overlay.
+Freesurfer QC module to rate the anatomical accuracy of pial and white surfaces 
 
 """
 
