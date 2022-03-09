@@ -859,6 +859,13 @@ def get_freesurfer_mri_path(in_dir, subject_id, req_file):
     return realpath(pjoin(in_dir, subject_id, 'mri', req_file))
 
 
+def run_common_utils_before_starting():
+    """Run simple utils common to all modules before starting VisualQC"""
+
+    print_time_stamp()
+    print_platform_version_info()
+
+
 def check_time(time_interval, var_name='time interval'):
     """"""
 
