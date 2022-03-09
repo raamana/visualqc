@@ -1096,3 +1096,16 @@ def compute_cell_extents_grid(bounding_rect=(0.03, 0.03, 0.97, 0.97),
                             cell_width, cell_height))
 
     return extents
+
+
+def print_platform_version_info():
+    """Small utility to print all relevant version info for debugging purposes"""
+
+    import scipy
+    import platform
+    import matplotlib
+    from visualqc import __version__
+    print('version info: visualqc {}'.format(__version__))
+    print('numpy {} / scipy {} / matplotlib {}\npython {}'.format(
+        np.__version__, scipy.__version__, matplotlib.__version__, sys.version))
+    print('platform {}\n{}\n\n'.format(platform.platform(), platform.version()))
