@@ -342,6 +342,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
 
+        self.__module_type__ = 'diffusion'
+
 
     def preprocess(self):
         """

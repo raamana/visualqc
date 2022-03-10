@@ -321,6 +321,8 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
 
         self.init_layout()
 
+        self.__module_type__ = 'defacing'
+
 
     def preprocess(self):
         """Preprocessing if necessary."""

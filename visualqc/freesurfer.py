@@ -303,6 +303,8 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         self.source_of_features = source_of_features
         self.init_getters()
+        
+        self.__module_type__ = 'freesurfer'
 
 
     def preprocess(self):
