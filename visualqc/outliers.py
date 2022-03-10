@@ -83,8 +83,11 @@ def detect_outliers(features,
             'Chosen detection method {} not implemented or invalid.'.format(method))
 
     # printing out info on detected outliers
-    print('\nPossible outliers ({} / {}):'.format(len(outlying_ids), len(id_list)))
-    print('\n'.join(outlying_ids))
+    if len(outlying_ids) > 0:
+        print('\nPossible outliers ({} / {}):'.format(len(outlying_ids),len(id_list)))
+        print('\n'.join(outlying_ids))
+    else:
+        print('No outliers were detected!')
 
     # writing out to a file, if requested
     if out_file is not None:
