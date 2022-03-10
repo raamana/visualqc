@@ -24,7 +24,7 @@ xlim_histogram_freesurfer = xlim_histogram_freesurfer_all[statistic_in_histogram
 xticks_histogram_freesurfer = np.arange(1.5, 6.01, 1.0)
 color_histogram_freesurfer = ('#c9ae74')  # sandstone
 
-freesurfer_features_outlier_detection = ('cortical', 'subcortical')
+freesurfer_features_outlier_detection = ('cortical', 'subcortical', 'both', 'whole_brain')
 outlier_list_prefix = 'possible_outliers'
 alert_background_color = 'xkcd:coral'
 alert_colors_outlier = dict(cortical='xkcd:hot pink',
@@ -43,7 +43,7 @@ default_outlier_detection_method = 'isolation_forest'
 default_outlier_fraction = 0.2
 avail_outlier_detection_methods = ('isolation_forest',)
 # OLD -> OutLier Detection
-avail_OLD_source_of_features = ('freesurfer', 't1_mri', 'func_mri', 'diffusion_mri')
+avail_OLD_source_of_features = ('freesurfer', 't1_mri',)
 
 default_freesurfer_dir = None
 cortical_types = ('cortical_volumetric', 'cortical_contour')
@@ -200,6 +200,7 @@ num_bins_histogram_contrast_enhancement = 256
 # outlier detection (OLD)
 min_num_samples_needed = 10
 t1_mri_features_OLD = ('histogram_whole_scan',)
+default_freesurfer_features_OLD = ('both',)
 checkbox_rect_width = 0.05
 checkbox_rect_height = 0.05
 checkbox_cross_color = 'xkcd:goldenrod'

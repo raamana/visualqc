@@ -1,6 +1,6 @@
 """
 
-Freesurfer QC module to rate the anatomical accuracy of pial and white surfaces 
+Freesurfer QC module to rate the anatomical accuracy of pial and white surfaces
 
 """
 
@@ -303,7 +303,7 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         self.source_of_features = source_of_features
         self.init_getters()
-        
+
         self.__module_type__ = 'freesurfer'
 
 
@@ -905,13 +905,15 @@ def get_parser():
     \n""".format(cfg.default_outlier_fraction))
 
     help_text_outlier_feat_types = textwrap.dedent("""
-    Type of features to be employed in training the outlier detection method.  It could be one of
-    'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label),
-    'subcortical' (aseg.stats: volumes of several subcortical structures),
-    or 'both' (using both aseg and aparc stats).
+    Type of features to be employed in training the outlier detection method.
+    It could be one of
+    1) 'cortical' based on aparc.stats (mean thickness and other geometrical
+    features from all cortical labels),
+    2) 'subcortical' based on aseg.stats (volumes of subcortical structures), or
+    3) 'both' (using both aseg and aparc stats).
 
     Default: {}.
-    \n""".format(cfg.t1_mri_features_OLD))
+    \n""".format(cfg.default_freesurfer_features_OLD))
 
     help_text_disable_outlier_detection = textwrap.dedent("""
     This flag disables outlier detection and alerts altogether.

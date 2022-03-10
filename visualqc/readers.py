@@ -174,7 +174,7 @@ def gather_freesurfer_data(qcw,
             [read_aparc_stats_wholebrain(qcw.in_dir, id) for id in qcw.id_list])
     elif feature_type in ['subcortical', ]:
         features = np.vstack([read_aseg_stats(qcw.in_dir, id) for id in qcw.id_list])
-    elif feature_type in ['whole_brain', 'wholebrain']:
+    elif feature_type in ['whole_brain', 'wholebrain', 'both']:
         cortical = np.vstack(
             [read_aparc_stats_wholebrain(qcw.in_dir, id) for id in qcw.id_list])
         sub_ctx = np.vstack([read_aseg_stats(qcw.in_dir, id) for id in qcw.id_list])
