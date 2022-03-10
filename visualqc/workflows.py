@@ -398,8 +398,16 @@ class BaseWorkflowVisualQC(ABC):
                     continue
 
                 try:
-                    features = gather_data(self.feature_paths[feature_type],
-                                           self.id_list)
+                    if self.__module_type__.lower() == 'freesurfer':
+                        # they're already assembled into an array, ordered by id_list
+                        features = self.feature_paths[feature_type]
+                    elif self.__module_type__.lower() == 't1_mri':
+                        # features will be read from filepaths by id
+                        features = gather_data(self.feature_paths[feature_type],
+                                               self.id_list)
+                    else:
+                        raise ValueError('outlier detection not implemented for'
+                                         ' {} module'.format(self.__module_type__))
                 except:
                     raise IOError('Unable to read/assemble features for outlier '
                                   'detection. Skipping them!')
