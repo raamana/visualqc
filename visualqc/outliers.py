@@ -49,11 +49,9 @@ def outlier_advisory(qcw):
         out_file = pjoin(qcw.out_dir, '{}_{}_{}.txt'.format(cfg.outlier_list_prefix,
                                                             qcw.outlier_method,
                                                             feature_type))
-        outliers_by_feature[feature_type] = detect_outliers(features,
-                                                            qcw.id_list,
-                                                            method=qcw.outlier_method,
-                                                            out_file=out_file,
-                                                            fraction_of_outliers=qcw.outlier_fraction)
+        outliers_by_feature[feature_type] = detect_outliers(
+            features, qcw.id_list, method=qcw.outlier_method,
+            out_file=out_file, fraction_of_outliers=qcw.outlier_fraction)
 
     # re-organizing the identified outliers by sample
     for sid in qcw.id_list:
@@ -90,7 +88,7 @@ def detect_outliers(features,
         print('\nPossible outliers ({} / {}):'.format(len(outlying_ids),len(id_list)))
         print('\n'.join(outlying_ids))
     else:
-        print('No outliers were detected!')
+        print('\nNo outliers were detected!\n\n')
 
     # writing out to a file, if requested
     if out_file is not None:
