@@ -19,3 +19,6 @@ Notable flags are
  - ``--no_preproc`` to avoid applying any preprocessing before showing the data
  - ``--name_pattern`` or ``-n`` to specify a regex pattern to limit which sessions/subjects to include for your review.
 
+Note the outlier detection part is not yet fully tested/validated for this module.
+
+As with other modules of ``VisualQC``, you can choose which views, how many slices and rows to display using the Layout command line arguments i.e. ``--views``, ``--num_slices`` and ``--num_rows``.

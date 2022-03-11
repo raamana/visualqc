@@ -21,3 +21,6 @@ which searches the specified directory ``/project/protect_privacy`` for all subj
 
 The default visualization would be composite overlay of 1) what's been removed in red along with 2) what's been retained in green to easily emphasize if the defacing algorithm over- or under-stripped. Use the radio button to switch between different types of visualizations to get a better sense of the brain before and after defacing, to be confident in your assessment. You can use the checkboxes and the Notes section to record your ratings and other comments.
 
+Note the outlier detection part is not yet fully tested/validated for this module.
+
+As with other modules of ``VisualQC``, you can choose which views, how many slices and rows to display using the Layout command line arguments i.e. ``--views``, ``--num_slices`` and ``--num_rows``.

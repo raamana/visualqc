@@ -69,4 +69,5 @@ Sample commands to achieve the above are shown below - please use the appropriat
 
 
 
+As with other modules of ``VisualQC``, you can choose which views, how many slices and rows to display using the Layout command line arguments i.e. ``--views``, ``--num_slices`` and ``--num_rows``.
 
