@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Example usage - T1w MRI &mdash; visualqc 0.4.9 documentation</title>
+  <title>Example usage - T1w MRI &mdash; visualqc 0.4.9+9.gca7197c documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.9
+                0.4.9+9.gca7197c
               </div>
             
           
@@ -96,6 +96,7 @@
 <li class="toctree-l1"><a class="reference internal" href="gallery_freesurfer.html">Gallery - Freesurfer Parcellation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_freesurfer_filled.html">Gallery - Freesurfer (labels filled)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_functional_mri.html">Gallery - Functional MRI scan - artefact detection and rating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_diffusion_mri.html">Gallery - Diffusion MRI artefact detection and rating</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_registration_unimodal.html">Gallery - Registration : comparison of spatial alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_defacing.html">Gallery - Defacing algorithm accuracy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_segmentation_volumetric.html">Gallery - Segmentation/ROI - anatomical accuracy evaluation</a></li>
@@ -103,12 +104,14 @@
 <li class="toctree-l1"><a class="reference internal" href="cli_freesurfer.html">Command line usage - Freesurfer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_defacing.html">Command line usage - Defacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_func_mri.html">Command line usage - Functional MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_diff_mri.html">Command line usage - Diffusion MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_alignment.html">Command line usage - Alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_t1_mri.html">Command line usage - T1w MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_freesurfer.html">Example usage - Freesurfer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_freesurfer_generic.html">Example usage - Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_defacing.html">Example usage - Defacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_func_mri.html">Example usage - Functional MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_diff_mri.html">Example usage - Diffusion MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_alignment.html">Example usage - Alignment</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Example usage - T1w MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
@@ -181,6 +184,20 @@
             
   <div class="section" id="example-usage-t1w-mri">
 <h1>Example usage - T1w MRI<a class="headerlink" href="#example-usage-t1w-mri" title="Permalink to this headline">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">vqcanat</span></code> (short for <code class="docutils literal notranslate"><span class="pre">visualqc_anatomical</span></code>) presents a mosaic or collage of various slices from the 3D volume in different view on the same page for quick inspection and zooming of different slices. The user can then try identify any aretefacts and rate their presence or severity using the checkboxes as well as free form notes.</p>
+<p>To run it on a dataset, you need to choose one of the input format available such as <code class="docutils literal notranslate"><span class="pre">--user_dir</span></code>, <code class="docutils literal notranslate"><span class="pre">--fs_dir</span></code> or <code class="docutils literal notranslate"><span class="pre">--bids_dir</span></code>. When <code class="docutils literal notranslate"><span class="pre">--user_dir</span></code> is chosen, each subject/unit is identified by one line in the <code class="docutils literal notranslate"><span class="pre">--id_list</span></code>, which is expected to be in their own folder, containing an image with the name specified by <code class="docutils literal notranslate"><span class="pre">--mri_name</span></code>. The <code class="docutils literal notranslate"><span class="pre">--fs_dir</span></code>, referring to the Freesurfer’s <code class="docutils literal notranslate"><span class="pre">$SUBJECTS_DIR</span></code>, and <code class="docutils literal notranslate"><span class="pre">--bids_dir</span></code> referring the root path of BIDS dataset, have their own formats that VisualQC can traverse. In all the formats, image to be displayed will be identified by the name specified by <code class="docutils literal notranslate"><span class="pre">--mri_name</span></code>.</p>
+<p>you would like to check alignment against each other. In the command line, they are identified by the <code class="docutils literal notranslate"><span class="pre">-i1</span></code> or <code class="docutils literal notranslate"><span class="pre">--image1</span></code> for the first and by <code class="docutils literal notranslate"><span class="pre">-i2</span></code> or <code class="docutils literal notranslate"><span class="pre">--image2</span></code> for the second.</p>
+<p>A rough example of usage can be:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vqcanat --user_dir /project/morphological  --mri_name T1w.nii --id_list subject_ids.txt
+</pre></div>
+</div>
+<p>which searches the specified directory <code class="docutils literal notranslate"><span class="pre">/project/registration</span></code> for all subjects (using one ID at a time read from <code class="docutils literal notranslate"><span class="pre">subject_ids.txt</span></code>), that has the required image (in this case T1w.nii). You can then review the composite visualization for one subject at a time, rate the quality of image and/or identify any artefacts, and move on to the next subject.</p>
+<p>It is recommended to specify the subject IDs you would like to review to achieve better grouping (by demographics such healthy vs. disease, men vs. women etc), which leads to much better results from the outlier detection module. However, you could choose to omit the <code class="docutils literal notranslate"><span class="pre">id_list</span></code> altogether, whence VisualQC would search for subjects with all the required files, and then present them one by one. So the simpler possibilities include</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vqcanat --fs_dir /project/freesurfer_v6
+vqcanat --bids_dir /project/raw_data_bids
+</pre></div>
+</div>
+<p>As with other modules of <code class="docutils literal notranslate"><span class="pre">VisualQC</span></code>, you can choose which views, how many slices and rows to display using the Layout command line arguments i.e. <code class="docutils literal notranslate"><span class="pre">--views</span></code>, <code class="docutils literal notranslate"><span class="pre">--num_slices</span></code> and <code class="docutils literal notranslate"><span class="pre">--num_rows</span></code>.</p>
 </div>
 
 

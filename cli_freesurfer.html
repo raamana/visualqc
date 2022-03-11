@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Command line usage - Freesurfer &mdash; visualqc 0.4.9 documentation</title>
+  <title>Command line usage - Freesurfer &mdash; visualqc 0.4.9+9.gca7197c documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.9
+                0.4.9+9.gca7197c
               </div>
             
           
@@ -96,6 +96,7 @@
 <li class="toctree-l1"><a class="reference internal" href="gallery_freesurfer.html">Gallery - Freesurfer Parcellation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_freesurfer_filled.html">Gallery - Freesurfer (labels filled)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_functional_mri.html">Gallery - Functional MRI scan - artefact detection and rating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_diffusion_mri.html">Gallery - Diffusion MRI artefact detection and rating</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_registration_unimodal.html">Gallery - Registration : comparison of spatial alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_defacing.html">Gallery - Defacing algorithm accuracy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_segmentation_volumetric.html">Gallery - Segmentation/ROI - anatomical accuracy evaluation</a></li>
@@ -110,12 +111,14 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="cli_defacing.html">Command line usage - Defacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_func_mri.html">Command line usage - Functional MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_diff_mri.html">Command line usage - Diffusion MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_alignment.html">Command line usage - Alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_t1_mri.html">Command line usage - T1w MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_freesurfer.html">Example usage - Freesurfer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_freesurfer_generic.html">Example usage - Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_defacing.html">Example usage - Defacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_func_mri.html">Example usage - Functional MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_diff_mri.html">Example usage - Diffusion MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_alignment.html">Example usage - Alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_t1_mri.html">Example usage - T1w MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
@@ -278,11 +281,13 @@ where n is the number of samples in the current sample.</p>
 <p>Default: 0.2.</p>
 </dd>
 <dt><kbd>-olt, --outlier_feat_types</kbd></dt>
-<dd><p>Type of features to be employed in training the outlier detection method.  It could be one of
-‘cortical’ (aparc.stats: mean thickness and other geometrical features from each cortical label),
-‘subcortical’ (aseg.stats: volumes of several subcortical structures),
-or ‘both’ (using both aseg and aparc stats).</p>
-<p>Default: (‘histogram_whole_scan’,).</p>
+<dd><p>Type of features to be employed in training the outlier detection method.
+It could be one of
+1) ‘cortical’ based on aparc.stats (mean thickness and other geometrical
+features from all cortical labels),
+2) ‘subcortical’ based on aseg.stats (volumes of subcortical structures), or
+3) ‘both’ (using both aseg and aparc stats).</p>
+<p>Default: (‘both’,).</p>
 </dd>
 <dt><kbd>-old, --disable_outlier_detection</kbd></dt>
 <dd><p>This flag disables outlier detection and alerts altogether.</p>

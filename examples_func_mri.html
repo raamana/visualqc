@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Example usage - Functional MRI &mdash; visualqc 0.4.9 documentation</title>
+  <title>Example usage - Functional MRI &mdash; visualqc 0.4.9+9.gca7197c documentation</title>
   
 
   
@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Example usage - Alignment" href="examples_alignment.html" />
+    <link rel="next" title="Example usage - Diffusion MRI" href="examples_diff_mri.html" />
     <link rel="prev" title="Example usage - Defacing" href="examples_defacing.html" /> 
 </head>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.9
+                0.4.9+9.gca7197c
               </div>
             
           
@@ -96,6 +96,7 @@
 <li class="toctree-l1"><a class="reference internal" href="gallery_freesurfer.html">Gallery - Freesurfer Parcellation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_freesurfer_filled.html">Gallery - Freesurfer (labels filled)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_functional_mri.html">Gallery - Functional MRI scan - artefact detection and rating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_diffusion_mri.html">Gallery - Diffusion MRI artefact detection and rating</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_registration_unimodal.html">Gallery - Registration : comparison of spatial alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_defacing.html">Gallery - Defacing algorithm accuracy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_segmentation_volumetric.html">Gallery - Segmentation/ROI - anatomical accuracy evaluation</a></li>
@@ -103,12 +104,14 @@
 <li class="toctree-l1"><a class="reference internal" href="cli_freesurfer.html">Command line usage - Freesurfer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_defacing.html">Command line usage - Defacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_func_mri.html">Command line usage - Functional MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_diff_mri.html">Command line usage - Diffusion MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_alignment.html">Command line usage - Alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_t1_mri.html">Command line usage - T1w MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_freesurfer.html">Example usage - Freesurfer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_freesurfer_generic.html">Example usage - Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_defacing.html">Example usage - Defacing</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Example usage - Functional MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_diff_mri.html">Example usage - Diffusion MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_alignment.html">Example usage - Alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_t1_mri.html">Example usage - T1w MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
@@ -181,6 +184,22 @@
             
   <div class="section" id="example-usage-functional-mri">
 <h1>Example usage - Functional MRI<a class="headerlink" href="#example-usage-functional-mri" title="Permalink to this headline">¶</a></h1>
+<p>The support for the visualQC of fMRI scans is offered for datasets stored in the BIDS format. Usage is as simple as passing on the path to the root folder of the BIDS dataset via the <code class="docutils literal notranslate"><span class="pre">--bids_dir</span></code> or <code class="docutils literal notranslate"><span class="pre">-b</span></code> flag:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>visualqc_func_mri --bids_dir /new_great_project/ds042
+</pre></div>
+</div>
+<p>which searches that dataset to identify various subjects and sessions that have the necessary imaging data ready for inspection. VisualQC shows one session at a time for a given subject.</p>
+<p>The identifying details for that session are shown in the top right corner as usual. The interface allows you to review the data in great detail, either as a carpet plot entirely (all time points/frames at once), or one time-point/frame at a time (by right clicking on a specific time point). You can further zoom into any slice within that time point shown on the screen – please refer to the <a class="reference internal" href="interface.html"><span class="doc">Review interface</span></a> page to learn some shortcuts and tricks to familiarize yourself with the interface.</p>
+<p>Please read the documentation in <a class="reference internal" href="cli_func_mri.html"><span class="doc">Command line usage - Functional MRI</span></a> on the remaining options/flags for this module as they are more or less self-explanatory.</p>
+<p>Notable flags are</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--no_preproc</span></code> to avoid applying any preprocessing before showing the data</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--name_pattern</span></code> or <code class="docutils literal notranslate"><span class="pre">-n</span></code> to specify a regex pattern to limit which sessions/subjects to include for your review.</p></li>
+</ul>
+</div></blockquote>
+<p>Note the outlier detection part is not yet fully tested/validated for this module.</p>
+<p>As with other modules of <code class="docutils literal notranslate"><span class="pre">VisualQC</span></code>, you can choose which views, how many slices and rows to display using the Layout command line arguments i.e. <code class="docutils literal notranslate"><span class="pre">--views</span></code>, <code class="docutils literal notranslate"><span class="pre">--num_slices</span></code> and <code class="docutils literal notranslate"><span class="pre">--num_rows</span></code>.</p>
 </div>
 
 
@@ -191,7 +210,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="examples_alignment.html" class="btn btn-neutral float-right" title="Example usage - Alignment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="examples_diff_mri.html" class="btn btn-neutral float-right" title="Example usage - Diffusion MRI" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="examples_defacing.html" class="btn btn-neutral float-left" title="Example usage - Defacing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

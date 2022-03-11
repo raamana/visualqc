@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Gallery - Functional MRI scan - artefact detection and rating &mdash; visualqc 0.4.9 documentation</title>
+  <title>Gallery - Functional MRI scan - artefact detection and rating &mdash; visualqc 0.4.9+9.gca7197c documentation</title>
   
 
   
@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Gallery - Registration : comparison of spatial alignment" href="gallery_registration_unimodal.html" />
+    <link rel="next" title="Gallery - Diffusion MRI artefact detection and rating" href="gallery_diffusion_mri.html" />
     <link rel="prev" title="Gallery - Freesurfer (labels filled)" href="gallery_freesurfer_filled.html" /> 
 </head>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.9
+                0.4.9+9.gca7197c
               </div>
             
           
@@ -96,6 +96,7 @@
 <li class="toctree-l1"><a class="reference internal" href="gallery_freesurfer.html">Gallery - Freesurfer Parcellation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_freesurfer_filled.html">Gallery - Freesurfer (labels filled)</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Gallery - Functional MRI scan - artefact detection and rating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_diffusion_mri.html">Gallery - Diffusion MRI artefact detection and rating</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_registration_unimodal.html">Gallery - Registration : comparison of spatial alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_defacing.html">Gallery - Defacing algorithm accuracy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_segmentation_volumetric.html">Gallery - Segmentation/ROI - anatomical accuracy evaluation</a></li>
@@ -103,12 +104,14 @@
 <li class="toctree-l1"><a class="reference internal" href="cli_freesurfer.html">Command line usage - Freesurfer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_defacing.html">Command line usage - Defacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_func_mri.html">Command line usage - Functional MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_diff_mri.html">Command line usage - Diffusion MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_alignment.html">Command line usage - Alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_t1_mri.html">Command line usage - T1w MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_freesurfer.html">Example usage - Freesurfer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_freesurfer_generic.html">Example usage - Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_defacing.html">Example usage - Defacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_func_mri.html">Example usage - Functional MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_diff_mri.html">Example usage - Diffusion MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_alignment.html">Example usage - Alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_t1_mri.html">Example usage - T1w MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
@@ -181,7 +184,7 @@
             
   <div class="section" id="gallery-functional-mri-scan-artefact-detection-and-rating">
 <h1>Gallery - Functional MRI scan - artefact detection and rating<a class="headerlink" href="#gallery-functional-mri-scan-artefact-detection-and-rating" title="Permalink to this headline">¶</a></h1>
-<p><strong>This is an early preview of an app in active development - your feedback to improve will be greatly appreciated:</strong> <a class="reference external" href="https://github.com/raamana/visualqc/issues/new">feedback welcome.</a></p>
+<p><strong>This app is in continuous development - your feedback to improve will be greatly appreciated:</strong> <a class="reference external" href="https://github.com/raamana/visualqc/issues/new">feedback welcome.</a></p>
 <p>The carpet plot <a class="footnote-reference brackets" href="#id2" id="id1">1</a> can easily reveal abnormal frames (time-points) to the human eye, which is what VisualQC starts with for functional MRI scans - see below. VisualQC also overlay few useful statistics for each frame to further help you decide on the quality of that frame. We currently show 3 stats (mean, SD, and DVARS, but plan to few more such as framewise displacement (FD) and other motion parameters. Your suggestions and contributions are very <a class="reference external" href="https://github.com/raamana/visualqc/issues/new">welcome</a>.</p>
 <img alt="_images/func_mri1.png" src="_images/func_mri1.png" />
 <p>However, you may wish to dig into these “interesting” frames further to get a full view, so you can see what is going on in that frame. You can do that simply with a right click on any vertical line and VisualQC presents a full view of that frame in different views (each with multiple slices):</p>
@@ -217,7 +220,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="gallery_registration_unimodal.html" class="btn btn-neutral float-right" title="Gallery - Registration : comparison of spatial alignment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="gallery_diffusion_mri.html" class="btn btn-neutral float-right" title="Gallery - Diffusion MRI artefact detection and rating" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="gallery_freesurfer_filled.html" class="btn btn-neutral float-left" title="Gallery - Freesurfer (labels filled)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Review interface &mdash; visualqc 0.4.9 documentation</title>
+  <title>Review interface &mdash; visualqc 0.4.9+9.gca7197c documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.9
+                0.4.9+9.gca7197c
               </div>
             
           
@@ -98,12 +98,14 @@
 <li class="toctree-l2"><a class="reference internal" href="#review-interface-anatomical-t1w-mri">Review interface - Anatomical / T1w MRI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#review-interface-registration">Review interface - Registration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#review-interface-functional-mri">Review interface - Functional MRI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#review-interface-diffusion-mri">Review interface - Diffusion MRI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#review-interface-defacing">Review interface - Defacing</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_freesurfer.html">Gallery - Freesurfer Parcellation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_freesurfer_filled.html">Gallery - Freesurfer (labels filled)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_functional_mri.html">Gallery - Functional MRI scan - artefact detection and rating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_diffusion_mri.html">Gallery - Diffusion MRI artefact detection and rating</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_registration_unimodal.html">Gallery - Registration : comparison of spatial alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_defacing.html">Gallery - Defacing algorithm accuracy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gallery_segmentation_volumetric.html">Gallery - Segmentation/ROI - anatomical accuracy evaluation</a></li>
@@ -111,12 +113,14 @@
 <li class="toctree-l1"><a class="reference internal" href="cli_freesurfer.html">Command line usage - Freesurfer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_defacing.html">Command line usage - Defacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_func_mri.html">Command line usage - Functional MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_diff_mri.html">Command line usage - Diffusion MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_alignment.html">Command line usage - Alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli_t1_mri.html">Command line usage - T1w MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_freesurfer.html">Example usage - Freesurfer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_freesurfer_generic.html">Example usage - Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_defacing.html">Example usage - Defacing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_func_mri.html">Example usage - Functional MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_diff_mri.html">Example usage - Diffusion MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_alignment.html">Example usage - Alignment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples_t1_mri.html">Example usage - T1w MRI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
@@ -226,6 +230,10 @@
 <li><p>Double click to zoom in on any slice.</p></li>
 <li><p>Double click the histogram to zoom the intensity distribution</p></li>
 <li><p>keyboard shortcuts (capitalized letters in label) to rate artefacts</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alt+s</span></code> to show the saturated image</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alt+b</span></code> to show the background image</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alt+t</span></code> to show the image after trimming tails in intensity histogram</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alt+o</span></code> to show the original image</p></li>
 </ul>
 </div></blockquote>
 </div>
@@ -246,11 +254,25 @@
 <h2>Review interface - Functional MRI<a class="headerlink" href="#review-interface-functional-mri" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li><p>Right click to open a given time point (also known as frame)</p></li>
+<li><p>Right click to open a specific time point (also known as a frame)</p></li>
 <li><p>Use the arrow keys to traverse in time (right/up keys to increase the frame, and left/down key to decrease it)</p></li>
 <li><p>Right click again on slices to zoom them further full-window</p></li>
 <li><p>Press <code class="docutils literal notranslate"><span class="pre">alt+s</span></code> to show the std. dev map (voxel-wise, over time)</p></li>
-<li></li>
+<li><p>Press the spacebar to go the next subject</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="review-interface-diffusion-mri">
+<h2>Review interface - Diffusion MRI<a class="headerlink" href="#review-interface-diffusion-mri" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p>Right click to open a specific gradient</p></li>
+<li><p>Right click again on slices to zoom them further full-window</p></li>
+<li><p>Use the arrow keys to traverse across different gradients (right/up keys to move forward to the next gradient, and left/down key to go backwards to the previous gradient)</p></li>
+<li><p>Press <code class="docutils literal notranslate"><span class="pre">alt+s</span></code> to show the std. dev map (voxel-wise, across gradients)</p></li>
+<li><p>Press <code class="docutils literal notranslate"><span class="pre">alt+0</span></code> to show the b=0 volume</p></li>
+<li><p>Press <code class="docutils literal notranslate"><span class="pre">alt+n</span></code> to flip back and forth between the first and last gradients</p></li>
+<li><p>Press <code class="docutils literal notranslate"><span class="pre">space</span></code> to pause the animation through the gradients</p></li>
 </ul>
 </div></blockquote>
 </div>

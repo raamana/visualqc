@@ -16,6 +16,7 @@ Contents:
    gallery_freesurfer
    gallery_freesurfer_filled
    gallery_functional_mri
+   gallery_diffusion_mri
    gallery_registration_unimodal
    gallery_defacing
    gallery_segmentation_volumetric
@@ -23,12 +24,14 @@ Contents:
    cli_freesurfer
    cli_defacing
    cli_func_mri
+   cli_diff_mri
    cli_alignment
    cli_t1_mri
    examples_freesurfer
    examples_freesurfer_generic
    examples_defacing
    examples_func_mri
+   examples_diff_mri
    examples_alignment
    examples_t1_mri
    contributing
