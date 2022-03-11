@@ -173,11 +173,11 @@ def gather_freesurfer_data(qcw,
         features = np.vstack(
             [read_aparc_stats_wholebrain(qcw.in_dir, id) for id in qcw.id_list])
     elif feature_type in ['subcortical', ]:
-        features = np.vstack([read_aseg_stats(qcw.fs_dir, id) for id in qcw.id_list])
-    elif feature_type in ['whole_brain', 'wholebrain']:
+        features = np.vstack([read_aseg_stats(qcw.in_dir, id) for id in qcw.id_list])
+    elif feature_type in ['whole_brain', 'wholebrain', 'both']:
         cortical = np.vstack(
             [read_aparc_stats_wholebrain(qcw.in_dir, id) for id in qcw.id_list])
-        sub_ctx = np.vstack([read_aseg_stats(qcw.fs_dir, id) for id in qcw.id_list])
+        sub_ctx = np.vstack([read_aseg_stats(qcw.in_dir, id) for id in qcw.id_list])
         features = np.hstack((cortical, sub_ctx))
     else:
         raise ValueError('Invalid type of features requested.')
@@ -353,6 +353,9 @@ def func_mri_traverse_bids(bids_layout,
             results = bids_layout.get(subject=sub,  datatype=modality_identifier)
             final_sub_id = sub
 
+        if len(results) < 1:
+            continue
+
         temp = {splitext(file.filename)[-1] : realpath(file.path)
                 for file in results}
 
@@ -439,6 +442,9 @@ def diffusion_traverse_bids(bids_layout,
         else:
             results = bids_layout.get(subject=sub,  datatype='dwi')
             final_sub_id = sub
+
+        if len(results) < 1:
+            continue
 
         temp = {splitext(file.filename)[-1] : realpath(file.path)
                 for file in results}

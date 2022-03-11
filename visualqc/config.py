@@ -24,7 +24,7 @@ xlim_histogram_freesurfer = xlim_histogram_freesurfer_all[statistic_in_histogram
 xticks_histogram_freesurfer = np.arange(1.5, 6.01, 1.0)
 color_histogram_freesurfer = ('#c9ae74')  # sandstone
 
-freesurfer_features_outlier_detection = ('cortical', 'subcortical')
+freesurfer_features_outlier_detection = ('cortical', 'subcortical', 'both', 'whole_brain')
 outlier_list_prefix = 'possible_outliers'
 alert_background_color = 'xkcd:coral'
 alert_colors_outlier = dict(cortical='xkcd:hot pink',
@@ -43,7 +43,7 @@ default_outlier_detection_method = 'isolation_forest'
 default_outlier_fraction = 0.2
 avail_outlier_detection_methods = ('isolation_forest',)
 # OLD -> OutLier Detection
-avail_OLD_source_of_features = ('freesurfer', 't1_mri', 'func_mri', 'diffusion_mri')
+avail_OLD_source_of_features = ('freesurfer', 't1_mri',)
 
 default_freesurfer_dir = None
 cortical_types = ('cortical_volumetric', 'cortical_contour')
@@ -200,6 +200,7 @@ num_bins_histogram_contrast_enhancement = 256
 # outlier detection (OLD)
 min_num_samples_needed = 10
 t1_mri_features_OLD = ('histogram_whole_scan',)
+default_freesurfer_features_OLD = ('both',)
 checkbox_rect_width = 0.05
 checkbox_rect_height = 0.05
 checkbox_cross_color = 'xkcd:goldenrod'
@@ -231,7 +232,7 @@ func_mri_default_rating_list_shortform = abbreviation_func_mri_default_issue_lis
 
 func_outlier_features = None
 
-func_mri_BIDS_filters = dict(modalities='func', types='bold')
+func_mri_BIDS_filters = dict(modalities='func')
 # usually done in analyses to try keep the numbers in numerical calculations away from small values
 # not important here, just for display, doing it anyways.
 scale_factor_BOLD = 1000
@@ -253,8 +254,8 @@ colormap_stdev_fmri = 'seismic'
 #           Diffusion mri specific
 ## ----------------------------------------------------------------------------
 
-checkbox_rect_width_diffusion = 0.06
-checkbox_rect_height_diffusion = 0.051
+checkbox_rect_width_diffusion = 0.07
+checkbox_rect_height_diffusion = 0.04
 
 diffusion_mri_pass_indicator = visual_qc_pass_indicator
 # f, s, l are matplotlib builtin shortcuts
@@ -273,7 +274,8 @@ abbreviation_diffusion_mri_default_issue_list = OrderedDict(p=diffusion_mri_pass
                                                             e='othEr',
                                                             t="i'm Tired",
                                                             w='revieW later')
-diffusion_mri_default_issue_list = list(abbreviation_diffusion_mri_default_issue_list.values())
+diffusion_mri_default_issue_list = list(
+    abbreviation_diffusion_mri_default_issue_list.values())
 diffusion_mri_default_rating_list_shortform = abbreviation_diffusion_mri_default_issue_list.keys()
 
 diffusion_outlier_features = None
@@ -301,8 +303,9 @@ colormap_stdev_diffusion = 'seismic'
 
 choices_alignment_comparison_diffusion = ('Animate all',
                                           'Flip first & last',
-                                          'Align to b=0 (animate)',
-                                          'Align to b=0 (edges)')
+                                          'Align b=0 animate',
+                                          'Align b=0 edges')
+fontsize_radio_button_align_method_diffusion = 8
 
 position_rating_checkbox_diffusion  = [0.899, 0.30, 0.095, 0.35]
 position_alignment_method_diffusion = [0.899, 0.66, 0.095, 0.10]

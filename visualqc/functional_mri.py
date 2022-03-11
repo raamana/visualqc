@@ -298,6 +298,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
 
+        self.__module_type__ = 'functional_mri'
+
 
     def preprocess(self):
         """
@@ -1141,6 +1143,10 @@ def make_workflow_from_user_options():
 
 def cli_run():
     """Main entry point."""
+
+    print('\nFunctional MRI module')
+    from visualqc.utils import run_common_utils_before_starting
+    run_common_utils_before_starting()
 
     wf = make_workflow_from_user_options()
     wf.run()

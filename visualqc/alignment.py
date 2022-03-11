@@ -290,6 +290,8 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
 
+        self.__module_type__ = 'alignment'
+
 
     def preprocess(self):
         """
@@ -624,9 +626,9 @@ def get_parser():
                                      description='visualqc_alignment: rate quality of alignment between two images.')
 
     help_text_in_dir = textwrap.dedent("""
-    Absolute path to an input folder containing the MRI scan. 
-    Each subject will be queried after its ID in the metadata file, 
-    and is expected to have the MRI (specified ``--mri_name``), 
+    Absolute path to an input folder containing the MRI scan.
+    Each subject will be queried after its ID in the metadata file,
+    and is expected to have the MRI (specified ``--mri_name``),
     in its own folder under --user_dir.
 
     E.g. ``--user_dir /project/images_to_QC``
@@ -663,7 +665,7 @@ def get_parser():
 
     help_text_delay_in_animation = textwrap.dedent("""
     Specifies the delay in animation of the display of two images (like in a GIF).
-    
+
     Default: {} (units in seconds).
     \n""".format(cfg.delay_in_animation))
 
@@ -674,19 +676,19 @@ def get_parser():
     \n""".format(cfg.default_views[0], cfg.default_views[1], cfg.default_views[2]))
 
     help_text_num_slices = textwrap.dedent("""
-    Specifies the number of slices to display per each view. 
+    Specifies the number of slices to display per each view.
     This must be even to facilitate better division.
     Default: {}.
     \n""".format(cfg.default_num_slices))
 
     help_text_num_rows = textwrap.dedent("""
-    Specifies the number of rows to display per each axis. 
+    Specifies the number of rows to display per each axis.
     Default: {}.
     \n""".format(cfg.default_num_rows))
 
     help_text_prepare = textwrap.dedent("""
     This flag does the heavy preprocessing first, prior to starting any review and rating operations.
-    Heavy processing can include computation of registration quality metrics and outlier detection etc. 
+    Heavy processing can include computation of registration quality metrics and outlier detection etc.
     This makes the switch from one subject to the next, even more seamless (saving few seconds :) ).
 
     Default: False.
@@ -701,7 +703,7 @@ def get_parser():
     \n""".format(cfg.default_outlier_detection_method))
 
     help_text_outlier_fraction = textwrap.dedent("""
-    Fraction of outliers expected in the given sample. Must be >= 1/n and <= (n-1)/n, 
+    Fraction of outliers expected in the given sample. Must be >= 1/n and <= (n-1)/n,
     where n is the number of samples in the current sample.
 
     For more info, read http://scikit-learn.org/stable/modules/outlier_detection.html
@@ -710,7 +712,7 @@ def get_parser():
     \n""".format(cfg.default_outlier_fraction))
 
     help_text_outlier_feat_types = textwrap.dedent("""
-    Type of features to be employed in training the outlier detection method.  
+    Type of features to be employed in training the outlier detection method.
     It could be one of .
 
     Default: {}.
@@ -851,6 +853,10 @@ def make_workflow_from_user_options():
 
 def cli_run():
     """Main entry point."""
+
+    print('\nAlignment check module')
+    from visualqc.utils import run_common_utils_before_starting
+    run_common_utils_before_starting()
 
     wf = make_workflow_from_user_options()
 

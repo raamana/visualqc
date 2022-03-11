@@ -14,28 +14,31 @@ import numpy as np
 from os.path import basename, join as pjoin, realpath, splitext
 from pathlib import Path
 import visualqc.config as cfg
-from visualqc.config import default_out_dir_name, freesurfer_vis_cmd, \
-    freesurfer_vis_types, visualization_combination_choices
+from visualqc.config import (default_out_dir_name, freesurfer_vis_cmd,
+                             freesurfer_vis_types, visualization_combination_choices)
 
 
 def read_image(img_spec,
                error_msg='image',
                num_dims=3,
-               reorient_canonical=True):
+               reorient_canonical=True,
+               return_header=False):
     """Image reader. Removes stray values close to zero (smaller than 5 %ile)."""
 
     if isinstance(img_spec, str):
         if pexists(realpath(img_spec)):
-            hdr = nib.load(img_spec)
+            init_obj = nib.load(img_spec)
+            header = init_obj.header
             # trying to stick to an orientation
             if reorient_canonical:
-                hdr = nib.as_closest_canonical(hdr)
-            img = hdr.get_data()
+                init_obj = nib.as_closest_canonical(init_obj)
+            img = init_obj.get_data()
         else:
             raise IOError('Given path to {} does not exist!\n\t{}'
                           ''.format(error_msg, img_spec))
     elif isinstance(img_spec, np.ndarray):
         img = img_spec
+        header = None
     else:
         raise ValueError('Invalid input specified! '
                          'Input either a path to image data, '
@@ -51,7 +54,35 @@ def read_image(img_spec,
     if not np.issubdtype(img.dtype, np.float64):
         img = img.astype('float32')
 
-    return img
+    if return_header:
+        return img, header
+    else:
+        return img
+
+
+def pixdim_nifti_header(header):
+    """returns the pixcim key from header"""
+
+    # TODO additional checks whether hdr is valid, contains pixdim key or not
+    return header['pixdim'][1:4]
+
+
+def slice_aspect_ratio(pixel_dim, axis):
+    """computes aspect ratio for the cross-sectional slices of a given dimension"""
+
+    if pixel_dim.size != 3:
+        raise ValueError('pixel_dim must be an array of 3 elements for 3D images')
+
+    if axis == 0:
+        aspect_ratio = pixel_dim[2] / pixel_dim[1]
+    elif axis == 1:
+        aspect_ratio = pixel_dim[2] / pixel_dim[0]
+    elif axis == 2:
+        aspect_ratio = pixel_dim[1] / pixel_dim[0]
+    else:
+        raise ValueError('Axis can only be 0, 1 or 2 for 3D images')
+
+    return aspect_ratio
 
 
 def scale_0to1(image_in,
@@ -66,7 +97,7 @@ def scale_0to1(image_in,
     min_value = np.percentile(out_image.flatten(),
                               float(exclude_outliers_below))
     max_value = np.percentile(out_image.flatten(),
-                              100-float(exclude_outliers_above))
+                              100 - float(exclude_outliers_above))
 
     if exclude_outliers_below:
         out_image[out_image < min_value] = min_value
@@ -97,7 +128,7 @@ def saturate_brighter_intensities(img,
     max_value = saturated.max()
 
     if percentile is None and factor is not None:
-        saturated[saturated>(factor*max_value)] = max_value
+        saturated[saturated > (factor * max_value)] = max_value
     elif percentile:
         saturated[saturated > np.percentile(saturated, float(percentile))] = max_value
     else:
@@ -185,7 +216,8 @@ def pick_slices(img, view_set, num_slices):
 
         # sampling non-empty slices only
         sampled_indices = np.linspace(0, num_non_empty,
-                                      num=min(num_non_empty, num_slices), endpoint=False)
+                                      num=min(num_non_empty, num_slices),
+                                      endpoint=False)
         slices_in_dim = non_empty_slices[np.around(sampled_indices).astype('int64')]
 
         # ensure you do not overshoot
@@ -262,10 +294,12 @@ def check_image_is_4d(img, min_num_volumes=1, name='4D image'):
             if dim_size < 1:
                 raise ValueError('Atleast one slice must exist in each dimension')
         # atleast one volume existing is already checked in the above loop
-        if min_num_volumes >1 and img.shape[-1]<min_num_volumes:
-            raise ValueError('Given {} has fewer than {} volumes!'.format(name, min_num_volumes))
+        if min_num_volumes > 1 and img.shape[-1] < min_num_volumes:
+            raise ValueError(
+                'Given {} has fewer than {} volumes!'.format(name, min_num_volumes))
     elif len(img.shape) > 4:
-        raise ValueError('{} has more than 4 dimensions : {}'.format(name, img.shape))
+        raise ValueError(
+            '{} has more than 4 dimensions : {}'.format(name, img.shape))
 
     if np.count_nonzero(img) == 0:
         raise ValueError('given image is empty!')
@@ -306,7 +340,8 @@ def get_freesurfer_color_LUT():
     Subset of Freesurfer ColorLUT for cortical labels
 
     Original at
-    https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT
+    https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI
+    /FreeSurferColorLUT
     """
 
     LUT = [[25, 5, 25],
@@ -446,14 +481,14 @@ def summarize_ratings(ratings_file, out_dir=None):
     all_labels = list()
     for sid, labels in rating_dict.items():
         # each ID can have multiple ratings
-        sid_labels = [ clean(lbl) for lbl in labels.split(cfg.rating_joiner) ]
+        sid_labels = [clean(lbl) for lbl in labels.split(cfg.rating_joiner)]
         for lbl in sid_labels:
             rating_list.append((sid, lbl))
             uniq_labels.add(lbl)
             all_labels.append(lbl)
 
     if uniq_labels:
-        max_width = 1+max([len(rt) for rt in uniq_labels])
+        max_width = 1 + max([len(rt) for rt in uniq_labels])
     else:
         # returning empty counter, id_lists
         print('No ratings to summarize! Returning empty dictionaries.')
@@ -492,7 +527,8 @@ def get_ratings_path_info(qcw):
     if not pexists(ratings_dir):
         makedirs(ratings_dir)
 
-    file_name_ratings = '{}_{}_{}'.format(qcw.vis_type, qcw.suffix, cfg.file_name_ratings)
+    file_name_ratings = '{}_{}_{}'.format(qcw.vis_type, qcw.suffix,
+                                          cfg.file_name_ratings)
     ratings_file = pjoin(ratings_dir, file_name_ratings)
     prev_ratings_backup = pjoin(ratings_dir,
                                 '{}_{}'.format(cfg.prefix_backup, file_name_ratings))
@@ -517,8 +553,9 @@ def check_input_dir(fs_dir, user_dir, vis_type,
                                    'visualizing annotations), but is not installed!')
 
     if fs_dir is None and vis_type in freesurfer_vis_types:
-        raise ValueError('vis_type depending on Freesurfer organization is specified,'
-                         ' but --fs_dir is not provided.')
+        raise ValueError(
+            'vis_type depending on Freesurfer organization is specified,'
+            ' but --fs_dir is not provided.')
 
     if user_dir is None:
         if not pexists(fs_dir):
@@ -615,7 +652,7 @@ def check_bids_dir(dir_path):
         raise IOError('There is no field {} in \n\t {}'.format(ver_tag, descr_path))
 
     in_dir = realpath(dir_path)
-    dir_type = 'BIDSVersion:'+descr['BIDSVersion']
+    dir_type = 'BIDSVersion:' + descr['BIDSVersion']
 
     return in_dir, dir_type
 
@@ -678,10 +715,10 @@ def check_id_list(id_list_in, in_dir, vis_type,
     images_for_id = dict()
 
     for subject_id in id_list:
-        path_list = { img: get_path_for_subject(in_dir, subject_id, name,
-                                                vis_type, in_dir_type)
-                        for img, name in required_files.items()
-                    }
+        path_list = {img: get_path_for_subject(in_dir, subject_id, name,
+                                               vis_type, in_dir_type)
+                     for img, name in required_files.items()
+                     }
         invalid = [pfile for pfile in path_list.values() if
                    not pexists(pfile) or os.path.getsize(pfile) <= 0]
         if len(invalid) > 0:
@@ -819,8 +856,14 @@ def get_path_for_subject(in_dir, subject_id, req_file, vis_type, in_dir_type=Non
 
 
 def get_freesurfer_mri_path(in_dir, subject_id, req_file):
-
     return realpath(pjoin(in_dir, subject_id, 'mri', req_file))
+
+
+def run_common_utils_before_starting():
+    """Run simple utils common to all modules before starting VisualQC"""
+
+    print_time_stamp()
+    print_platform_version_info()
 
 
 def check_time(time_interval, var_name='time interval'):
@@ -869,7 +912,7 @@ def check_outlier_params(method, fraction, feat_types, disable_outlier_detection
                 raise ValueError('Invalid fraction of outliers:'
                                  ' must be more than 1/n ({}) '
                                  ' (to enable detection of atleast 1 sample)'
-                                 ''.format(1/num_ids))
+                                 ''.format(1 / num_ids))
         else:
             print('\nNumber of samples to review = {} < {}: '
                   ' insufficient for outlier detection, disabling it.\n'
@@ -901,7 +944,8 @@ def check_labels(vis_type, label_set):
     vis_type = vis_type.lower()
     if vis_type not in visualization_combination_choices:
         raise ValueError('Selected visualization type not recognized! '
-                         'Choose one of:\n{}'.format(visualization_combination_choices))
+                         'Choose one of:\n{}'
+                         ''.format(visualization_combination_choices))
 
     if label_set is not None:
         if vis_type not in cfg.label_types:
@@ -936,7 +980,8 @@ def check_views(views):
 
     if len(out_views) < 1:
         raise ValueError(
-            'Atleast one valid view must be selected. Choose one or more of 0, 1, 2.')
+            'Atleast one valid view must be selected. '
+            'Choose one or more of 0, 1, 2.')
 
     return out_views
 
@@ -979,7 +1024,7 @@ def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_i
                    os.path.isdir(pjoin(in_dir, folder))]
 
     required_files = {'original': mri_name,
-                      'defaced': defaced_name} # 'render': render_name
+                      'defaced' : defaced_name}  # 'render': render_name
 
     id_list_out = list()
     id_list_err = list()
@@ -990,17 +1035,17 @@ def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_i
     images_for_id = dict()
 
     for subject_id in id_list:
-        path_list = { img_type: pjoin(in_dir, subject_id, name)
-                        for img_type, name in required_files.items()
-                    }
+        path_list = {img_type: pjoin(in_dir, subject_id, name)
+                     for img_type, name in required_files.items()
+                     }
 
         # finding all rendered screenshots
         import fnmatch
         rendered_images = fnmatch.filter(os.listdir(pjoin(in_dir, subject_id)),
                                          '{}*'.format(render_name))
         rendered_images = [pjoin(in_dir, subject_id, img) for img in rendered_images]
-        rendered_images = [ path for path in rendered_images
-                            if pexists(path) and os.path.getsize(path) > 0]
+        rendered_images = [path for path in rendered_images
+                           if pexists(path) and os.path.getsize(path) > 0]
 
         invalid = [pfile for pfile in path_list.values() if
                    not pexists(pfile) or os.path.getsize(pfile) <= 0]
@@ -1017,14 +1062,14 @@ def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_i
 
     if len(id_list_err) > 0:
         warnings.warn('The following subjects do NOT have all the required files, '
-                       'or some are empty - skipping them!')
+                      'or some are empty - skipping them!')
         print('\n'.join(id_list_err))
-        print('\n\nThe following files do not exist or empty: \n {} \n\n'.format(
-            '\n'.join(invalid_list)))
+        print('\n\nThe following files do not exist or empty: \n {} \n\n'
+              ''.format('\n'.join(invalid_list)))
 
     if len(id_list_out) < 1:
         raise ValueError('All the subject IDs do not have the required files - '
-                          'unable to proceed.')
+                         'unable to proceed.')
 
     print('{} subjects are usable for review.'.format(len(id_list_out)))
 
@@ -1032,9 +1077,17 @@ def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_i
            defaced_name, mri_name, render_name
 
 
+def print_time_stamp():
+    """Prints a time stamp for debugging purposes"""
+
+    from datetime import datetime
+    init_time = datetime.now()
+    print('Time stamp : {}\n'.format(init_time.strftime('%Y-%m-%d %H:%M:%S')))
+
+
 def compute_cell_extents_grid(bounding_rect=(0.03, 0.03, 0.97, 0.97),
-                               num_rows=2, num_cols=6,
-                               axis_pad=0.01):
+                              num_rows=2, num_cols=6,
+                              axis_pad=0.01):
     """
     Produces array of num_rows*num_cols elements each containing
     the rectangular extents of the corresponding cell the grid, whose position is
@@ -1058,3 +1111,16 @@ def compute_cell_extents_grid(bounding_rect=(0.03, 0.03, 0.97, 0.97),
                             cell_width, cell_height))
 
     return extents
+
+
+def print_platform_version_info():
+    """Small utility to print all relevant version info for debugging purposes"""
+
+    import scipy
+    import platform
+    import matplotlib
+    from visualqc import __version__
+    print('version info: visualqc {}'.format(__version__))
+    print('numpy {} / scipy {} / matplotlib {}\npython {}'.format(
+        np.__version__, scipy.__version__, matplotlib.__version__, sys.version))
+    print('platform {}\n{}\n\n'.format(platform.platform(), platform.version()))

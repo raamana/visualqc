@@ -284,12 +284,9 @@ def check_patch_size(patch_size):
     return patch_size
 
 
-def rescale_without_outliers(img, trim_percentile=1, padding=5):
-    """This utility crops the image first, then trims the outliers, and then
-    rescales it [0, 1]"""
+def rescale_without_outliers(img, trim_percentile=1):
+    """This utility trims the outliers first, and then rescales it [0, 1]"""
 
-    from mrivis.utils import crop_image
-
-    return scale_0to1(crop_image(img, padding),
+    return scale_0to1(img,
                       exclude_outliers_below=trim_percentile,
                       exclude_outliers_above=trim_percentile)

@@ -5,10 +5,12 @@ if version_info.major > 2:
 else:
     raise NotImplementedError('visualqc_freesurfer requires Python 3 or higher!')
 
+
 def main():
-    "Entry point."
+    """Entry point."""
 
     freesurfer.cli_run()
+
 
 if __name__ == '__main__':
     main()

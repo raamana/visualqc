@@ -1,6 +1,6 @@
 """
 
-Module to present a base neuroimaging scan, currently T1 mri, without any overlay.
+Freesurfer QC module to rate the anatomical accuracy of pial and white surfaces
 
 """
 
@@ -31,6 +31,7 @@ from visualqc.utils import check_alpha_set, check_finite_int, check_id_list, \
     freesurfer_installed, get_axis, get_freesurfer_mri_path, get_label_set, pick_slices, \
     read_image, scale_0to1, void_subcortical_symmetrize_cortical
 from visualqc.workflows import BaseWorkflowVisualQC
+from visualqc import __version__
 
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
@@ -302,6 +303,8 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         self.source_of_features = source_of_features
         self.init_getters()
+
+        self.__module_type__ = 'freesurfer'
 
 
     def preprocess(self):
@@ -791,9 +794,9 @@ def get_parser():
     \n""")
 
     help_text_user_dir = textwrap.dedent("""
-    Absolute path to an input folder containing the MRI scan. 
-    Each subject will be queried after its ID in the metadata file, 
-    and is expected to have the MRI (specified ``--mri_name``), 
+    Absolute path to an input folder containing the MRI scan.
+    Each subject will be queried after its ID in the metadata file,
+    and is expected to have the MRI (specified ``--mri_name``),
     in its own folder under --user_dir.
 
     E.g. ``--user_dir /project/images_to_QC``
@@ -824,8 +827,8 @@ def get_parser():
 
     help_text_seg_name = textwrap.dedent("""
     Specifies the name of segmentation image (volumetric) to be overlaid on the MRI.
-    Typical options include aparc+aseg.mgz, aseg.mgz, wmparc.mgz. 
-    Make sure to choose the right vis_type. 
+    Typical options include aparc+aseg.mgz, aseg.mgz, wmparc.mgz.
+    Make sure to choose the right vis_type.
 
     Default: {} (within the mri folder of Freesurfer format).
     \n""".format(cfg.default_seg_name))
@@ -849,14 +852,14 @@ def get_parser():
     \n""")
 
     help_text_contour_color = textwrap.dedent("""
-    Specifies the color to use for the contours overlaid on MRI (when vis_type requested prescribes contours). 
+    Specifies the color to use for the contours overlaid on MRI (when vis_type requested prescribes contours).
     Color can be specified in many ways as documented in https://matplotlib.org/users/colors.html
     Default: {}.
     \n""".format(cfg.default_contour_face_color))
 
     help_text_alphas = textwrap.dedent("""
-    Alpha values to control the transparency of MRI and aseg. 
-    This must be a set of two values (between 0 and 1.0) separated by a space e.g. --alphas 0.7 0.5. 
+    Alpha values to control the transparency of MRI and aseg.
+    This must be a set of two values (between 0 and 1.0) separated by a space e.g. --alphas 0.7 0.5.
 
     Default: {} {}.  Play with these values to find something that works for you and the dataset.
     \n""".format(cfg.default_alpha_mri, cfg.default_alpha_seg))
@@ -868,13 +871,13 @@ def get_parser():
     \n""".format(cfg.default_views[0], cfg.default_views[1], cfg.default_views[2]))
 
     help_text_num_slices = textwrap.dedent("""
-    Specifies the number of slices to display per each view. 
+    Specifies the number of slices to display per each view.
     This must be even to facilitate better division.
     Default: {}.
     \n""".format(cfg.default_num_slices))
 
     help_text_num_rows = textwrap.dedent("""
-    Specifies the number of rows to display per each axis. 
+    Specifies the number of rows to display per each axis.
     Default: {}.
     \n""".format(cfg.default_num_rows))
 
@@ -893,7 +896,7 @@ def get_parser():
     \n""".format(cfg.default_outlier_detection_method))
 
     help_text_outlier_fraction = textwrap.dedent("""
-    Fraction of outliers expected in the given sample. Must be >= 1/n and <= (n-1)/n, 
+    Fraction of outliers expected in the given sample. Must be >= 1/n and <= (n-1)/n,
     where n is the number of samples in the current sample.
 
     For more info, read http://scikit-learn.org/stable/modules/outlier_detection.html
@@ -902,13 +905,15 @@ def get_parser():
     \n""".format(cfg.default_outlier_fraction))
 
     help_text_outlier_feat_types = textwrap.dedent("""
-    Type of features to be employed in training the outlier detection method.  It could be one of  
-    'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label), 
-    'subcortical' (aseg.stats: volumes of several subcortical structures), 
-    or 'both' (using both aseg and aparc stats).
+    Type of features to be employed in training the outlier detection method.
+    It could be one of
+    1) 'cortical' based on aparc.stats (mean thickness and other geometrical
+    features from all cortical labels),
+    2) 'subcortical' based on aseg.stats (volumes of subcortical structures), or
+    3) 'both' (using both aseg and aparc stats).
 
     Default: {}.
-    \n""".format(cfg.t1_mri_features_OLD))
+    \n""".format(cfg.default_freesurfer_features_OLD))
 
     help_text_disable_outlier_detection = textwrap.dedent("""
     This flag disables outlier detection and alerts altogether.
@@ -1066,6 +1071,10 @@ def make_workflow_from_user_options():
 
 def cli_run():
     """Main entry point."""
+
+    print('\nFreesurfer QC module')
+    from visualqc.utils import run_common_utils_before_starting
+    run_common_utils_before_starting()
 
     wf = make_workflow_from_user_options()
 

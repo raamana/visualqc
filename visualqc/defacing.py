@@ -19,12 +19,14 @@ from visualqc import config as cfg
 from visualqc.image_utils import rescale_without_outliers
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import (check_inputs_defacing, check_out_dir,
-                            compute_cell_extents_grid, read_image)
+                            compute_cell_extents_grid, read_image,
+                            pixdim_nifti_header, slice_aspect_ratio)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
 class DefacingInterface(BaseReviewInterface):
     """Custom interface to rate the quality of defacing in an MRI scan"""
+
 
     def __init__(self,
                  fig,
@@ -47,7 +49,7 @@ class DefacingInterface(BaseReviewInterface):
         self.quit_button_callback = quit_button_callback
         self.processing_choice_callback = processing_choice_callback
         if map_key_to_callback is None:
-            self.map_key_to_callback = {} # empty
+            self.map_key_to_callback = {}  # empty
         elif isinstance(map_key_to_callback, dict):
             self.map_key_to_callback = map_key_to_callback
         else:
@@ -63,6 +65,7 @@ class DefacingInterface(BaseReviewInterface):
         # this list of artists to be populated later
         # makes to handy to clean them all
         self.data_handles = list()
+
 
     def add_checkboxes(self):
         """
@@ -94,6 +97,7 @@ class DefacingInterface(BaseReviewInterface):
         self._index_pass = cfg.defacing_default_issue_list.index(
             cfg.defacing_pass_indicator)
 
+
     def add_process_options(self):
 
         ax_radio = plt.axes(cfg.position_radio_bt_t1_mri,
@@ -106,6 +110,7 @@ class DefacingInterface(BaseReviewInterface):
 
         for circ in self.radio_bt_vis_type.circles:
             circ.set(radius=0.06)
+
 
     def save_issues(self, label):
         """
@@ -122,6 +127,7 @@ class DefacingInterface(BaseReviewInterface):
             self.clear_pass_only_if_on()
 
         self.fig.canvas.draw_idle()
+
 
     def clear_checkboxes(self, except_pass=False):
         """Clears all checkboxes.
@@ -140,6 +146,7 @@ class DefacingInterface(BaseReviewInterface):
                 #   self.save_issues() each time, if eventson is True
                 self._toggle_visibility_checkbox(index)
 
+
     def clear_pass_only_if_on(self):
         """Clear pass checkbox only"""
 
@@ -147,12 +154,14 @@ class DefacingInterface(BaseReviewInterface):
         if cbox_statuses[self._index_pass]:
             self._toggle_visibility_checkbox(self._index_pass)
 
+
     def _toggle_visibility_checkbox(self, index):
         """toggles the visibility of a given checkbox"""
 
         l1, l2 = self.checkbox.lines[index]
         l1.set_visible(not l1.get_visible())
         l2.set_visible(not l2.get_visible())
+
 
     def get_ratings(self):
         """Returns the final set of checked ratings"""
@@ -163,6 +172,7 @@ class DefacingInterface(BaseReviewInterface):
                         enumerate(cbox_statuses) if this_cbox_active]
 
         return user_ratings
+
 
     def allowed_to_advance(self):
         """
@@ -180,6 +190,7 @@ class DefacingInterface(BaseReviewInterface):
 
         return allowed
 
+
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
 
@@ -187,6 +198,7 @@ class DefacingInterface(BaseReviewInterface):
         self.clear_checkboxes()
         self.clear_radio_buttons()
         self.clear_notes_annot()
+
 
     def clear_data(self):
         """clearing all data/image handles"""
@@ -197,12 +209,14 @@ class DefacingInterface(BaseReviewInterface):
             # resetting it
             self.data_handles = list()
 
+
     def clear_notes_annot(self):
         """clearing notes and annotations"""
 
         self.text_box.set_val(cfg.textbox_initial_text)
         # text is matplotlib artist
         self.annot_text.remove()
+
 
     def clear_radio_buttons(self):
         """Clears the radio button"""
@@ -215,6 +229,7 @@ class DefacingInterface(BaseReviewInterface):
                     cfg.color_rating_axis)
                 break
         self.radio_bt_vis_type.value_selected = None
+
 
     def on_mouse(self, event):
         """Callback for mouse events."""
@@ -242,6 +257,7 @@ class DefacingInterface(BaseReviewInterface):
 
         self.fig.canvas.draw_idle()
 
+
     def on_keyboard(self, key_in):
         """Callback to handle keyboard shortcuts to rate and advance."""
 
@@ -260,7 +276,8 @@ class DefacingInterface(BaseReviewInterface):
             self.map_key_to_callback[key_pressed]()
         else:
             if key_pressed in cfg.abbreviation_t1_mri_default_issue_list:
-                checked_label = cfg.abbreviation_t1_mri_default_issue_list[key_pressed]
+                checked_label = cfg.abbreviation_t1_mri_default_issue_list[
+                    key_pressed]
                 self.checkbox.set_active(
                     cfg.t1_mri_default_issue_list.index(checked_label))
             else:
@@ -269,9 +286,9 @@ class DefacingInterface(BaseReviewInterface):
         self.fig.canvas.draw_idle()
 
 
-
 class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
     """Rating worklfow for defaced MRI scans"""
+
 
     def __init__(self,
                  id_list,
@@ -286,7 +303,7 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         """Constructor"""
 
         super().__init__(id_list, in_dir, out_dir,
-                         show_unit_id=False, # preventing bias/batch-effects
+                         show_unit_id=False,  # preventing bias/batch-effects
                          outlier_method=None, outlier_fraction=None,
                          outlier_feat_types=None,
                          disable_outlier_detection=None)
@@ -303,6 +320,8 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         self.current_alert_msg = None
 
         self.init_layout()
+
+        self.__module_type__ = 'defacing'
 
 
     def preprocess(self):
@@ -321,8 +340,10 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         plt.style.use('dark_background')
 
         # vmin/vmax are controlled, because we rescale all to [0, 1]
-        self.display_params = dict(interpolation='none', aspect='equal',
-                                   origin='lower', cmap='gray',
+        self.display_params = dict(interpolation='none',
+                                   aspect='auto',
+                                   origin='lower',
+                                   cmap='gray',
                                    vmin=0.0, vmax=1.0)
         self.figsize = cfg.default_review_figsize
 
@@ -352,6 +373,7 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
 
         plt.show(block=False)
 
+
     def add_UI(self):
         """Adds the review UI with defaults"""
 
@@ -376,7 +398,8 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                                                         self.UI.on_mouse)
         self.con_id_keybd = self.fig.canvas.mpl_connect('key_press_event',
                                                         self.UI.on_keyboard)
-        # con_id_scroll = self.fig.canvas.mpl_connect('scroll_event', self.UI.on_scroll)
+        # con_id_scroll = self.fig.canvas.mpl_connect('scroll_event',
+        # self.UI.on_scroll)
 
         self.fig.set_size_inches(self.figsize)
 
@@ -389,10 +412,19 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
             if hasattr(self, attr):
                 delattr(self, attr)
 
-        self.defaced_img = read_image(self.images_for_id[unit_id]['defaced'],
-                                      error_msg='defaced mri')
-        self.orig_img = read_image(self.images_for_id[unit_id]['original'],
-                                   error_msg='T1 mri')
+        self.defaced_img, self.defaced_hdr = read_image(
+            self.images_for_id[unit_id]['defaced'], error_msg='defaced mri',
+            return_header=True)
+        self.orig_img, self.orig_hdr = read_image(
+            self.images_for_id[unit_id]['original'], error_msg='T1 mri',
+            return_header=True)
+
+        self.current_pixdim = pixdim_nifti_header(self.orig_hdr)
+        if not np.allclose(self.current_pixdim,
+                           pixdim_nifti_header(self.defaced_hdr)):
+            raise ValueError('pixel dimensions for the original and '
+                             'defaced images do not match! They are: {}, {}'.format(
+                self.current_pixdim, self.pixdim_nifti_header(defaced_hdr)))
 
         self.render_img_list = list()
         for rimg_path in self.images_for_id[unit_id]['render']:
@@ -403,12 +435,13 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                               ''.format(rimg_path))
 
         # crop, trim, and rescale
+        from mrivis.utils import crop_to_extents
+        self.defaced_img, self.orig_img = crop_to_extents(
+            self.defaced_img, self.orig_img, padding=self.padding)
         self.defaced_img = rescale_without_outliers(
-            self.defaced_img, padding=self.padding,
-            trim_percentile=cfg.defacing_trim_percentile)
+            self.defaced_img, trim_percentile=cfg.defacing_trim_percentile)
         self.orig_img = rescale_without_outliers(
-            self.orig_img, padding=self.padding,
-            trim_percentile=cfg.defacing_trim_percentile)
+            self.orig_img, trim_percentile=cfg.defacing_trim_percentile)
         self.currently_showing = None
 
         skip_subject = False
@@ -448,6 +481,7 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         self.show_renders()
         self.show_mr_images()
 
+
     def show_renders(self):
         """Show all the rendered images"""
 
@@ -471,10 +505,12 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
 
         self.show_mr_images(vis_type='defaced')
 
+
     def show_original(self):
         """Show original only"""
 
         self.show_mr_images(vis_type='original')
+
 
     def show_mixed(self):
         """Show mixed"""
@@ -488,24 +524,28 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         self.collage.clear()
 
         ax_counter = 0
-        for df, orig in self.slice_picker.get_slices_multi([self.defaced_img,
-                                                            self.orig_img]):
+        for dim, slice_num, (defaced, orig) in self.slice_picker.get_slices_multi(
+            [self.defaced_img, self.orig_img], extended=True):
 
             ax = self.collage.flat_grid[ax_counter]
-            if vis_type in ('mixed', ):
+            if vis_type in ('mixed',):
                 # TODO customizable colors: final_slice = mix_color(orig, df)
-                red = 0.9*orig
-                grn = 1.0*df
+                red = 0.9 * orig
+                grn = 1.0 * defaced
                 blu = np.zeros_like(orig)
                 ax.imshow(np.stack((red, grn, blu), axis=2),
                           **self.display_params)
-            elif vis_type in ('defaced', ):
-                ax.imshow(df, **self.display_params)
-            elif vis_type in ('original', ):
+            elif vis_type in ('defaced',):
+                ax.imshow(defaced, **self.display_params)
+            elif vis_type in ('original',):
                 ax.imshow(orig, **self.display_params)
             else:
                 raise ValueError('Invalid vis_type. Must be either mixed, '
                                  'defaced, or original')
+            # TODO BUG individual slice-wise axes size is messed up for
+            #   non-isotropic resolutions. Some subtle interaction of setting aspect
+            #   ratio with axes scaling/extents, to be fixed/controlled
+            ax.set_aspect(slice_aspect_ratio(self.current_pixdim, dim))
             ax_counter += 1
 
         self.collage.show()
@@ -519,6 +559,7 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
 
     def add_alerts(self):
         pass
+
 
     def cleanup(self):
         """Cleanup before exit"""
@@ -649,6 +690,10 @@ def make_workflow_from_user_options():
 
 def cli_run():
     """Main entry point."""
+
+    print('\nDefacing module')
+    from visualqc.utils import run_common_utils_before_starting
+    run_common_utils_before_starting()
 
     wf = make_workflow_from_user_options()
 

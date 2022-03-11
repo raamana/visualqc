@@ -24,10 +24,12 @@ def outlier_advisory(qcw):
     Returns
     -------
     outliers_by_sample : dict
-        Keyed in by sample id, each element is a list of features that identified a given ID as a possible outlier.
+        Keyed in by sample id, each element is a list of features that identified
+        a given ID as a possible outlier.
 
     outliers_by_feature : dict
-        Keyed in by feature, each element is a list of IDs that feature identified as possible outliers.
+        Keyed in by feature, each element is a list of IDs that feature identified
+        as possible outliers.
 
     """
 
@@ -47,11 +49,9 @@ def outlier_advisory(qcw):
         out_file = pjoin(qcw.out_dir, '{}_{}_{}.txt'.format(cfg.outlier_list_prefix,
                                                             qcw.outlier_method,
                                                             feature_type))
-        outliers_by_feature[feature_type] = detect_outliers(features,
-                                                            qcw.id_list,
-                                                            method=qcw.outlier_method,
-                                                            out_file=out_file,
-                                                            fraction_of_outliers=qcw.outlier_fraction)
+        outliers_by_feature[feature_type] = detect_outliers(
+            features, qcw.id_list, method=qcw.outlier_method,
+            out_file=out_file, fraction_of_outliers=qcw.outlier_fraction)
 
     # re-organizing the identified outliers by sample
     for sid in qcw.id_list:
@@ -61,8 +61,9 @@ def outlier_advisory(qcw):
 
     # dropping the IDs that were not flagged by any feature
     # so a imple ID in dict would reveal whether it was ever suspected as an outlier
-    outliers_by_sample = {id: flag_list for id, flag_list in outliers_by_sample.items() if
-                          flag_list}
+    outliers_by_sample = {id: flag_list
+                          for id, flag_list in outliers_by_sample.items()
+                          if flag_list}
 
     return outliers_by_sample, outliers_by_feature
 
@@ -72,7 +73,7 @@ def detect_outliers(features,
                     method='isolation_forest',
                     fraction_of_outliers=.3,
                     out_file=None):
-    """Performs outlier detection based on chosen types of features and detection technique."""
+    """Performs outlier detection based on chosen feature type and OD technique."""
 
     method = method.lower()
     if method == 'isolation_forest':
@@ -83,8 +84,11 @@ def detect_outliers(features,
             'Chosen detection method {} not implemented or invalid.'.format(method))
 
     # printing out info on detected outliers
-    print('\nPossible outliers ({} / {}):'.format(len(outlying_ids), len(id_list)))
-    print('\n'.join(outlying_ids))
+    if len(outlying_ids) > 0:
+        print('\nPossible outliers ({} / {}):'.format(len(outlying_ids),len(id_list)))
+        print('\n'.join(outlying_ids))
+    else:
+        print('\nNo outliers were detected!\n\n')
 
     # writing out to a file, if requested
     if out_file is not None:

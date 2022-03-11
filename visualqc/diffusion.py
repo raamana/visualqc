@@ -112,8 +112,9 @@ class DiffusionMRIInterface(T1MriInterface):
 
     def add_checkboxes(self):
         """
-        Checkboxes offer the ability to select multiple tags such as Motion, Ghosting Aliasing etc,
-            instead of one from a list of mutual exclusive rating options (such as Good, Bad, Error etc).
+        Checkboxes offer the ability to select multiple tags such as Motion,
+        Ghosting, Aliasing etc, instead of one from a list of mutual exclusive
+        rating options (such as Good, Bad, Error etc).
 
         """
 
@@ -121,14 +122,15 @@ class DiffusionMRIInterface(T1MriInterface):
                                facecolor=cfg.color_rating_axis)
         # initially de-activating all
         actives = [False] * len(self.issue_list)
-        self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list, actives=actives)
+        self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list,
+                                     actives=actives)
         self.checkbox.on_clicked(self.save_issues)
         for txt_lbl in self.checkbox.labels:
             txt_lbl.set(**cfg.checkbox_font_properties)
 
-        # for rect in self.checkbox.rectangles:
-        #     rect.set_width(cfg.checkbox_rect_width_diffusion)
-        #     rect.set_height(cfg.checkbox_rect_height_diffusion)
+        for rect in self.checkbox.rectangles:
+            rect.set_width(cfg.checkbox_rect_width_diffusion)
+            rect.set_height(cfg.checkbox_rect_height_diffusion)
 
         # lines is a list of n crosses, each cross (x) defined by a tuple of lines
         for x_line1, x_line2 in self.checkbox.lines:
@@ -145,6 +147,8 @@ class DiffusionMRIInterface(T1MriInterface):
         self.radio_bt_vis_type = RadioButtons(ax_radio,
                                               cfg.choices_alignment_comparison_diffusion,
                                               active=None, activecolor='orange')
+        for lbl in self.radio_bt_vis_type.labels:
+            lbl.set_fontsize(cfg.fontsize_radio_button_align_method_diffusion)
         self.radio_bt_vis_type.on_clicked(self.alignment_callback)
         for txt_lbl in self.radio_bt_vis_type.labels:
             txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
@@ -152,6 +156,10 @@ class DiffusionMRIInterface(T1MriInterface):
         for circ in self.radio_bt_vis_type.circles:
             circ.set(radius=0.06)
 
+
+    def add_process_options(self):
+        """redefining it to void it's actions intended for T1w MRI interface"""
+        pass
 
     def maximize_axis(self, ax):
         """zooms a given axes"""
@@ -333,6 +341,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
+
+        self.__module_type__ = 'diffusion'
 
 
     def preprocess(self):
@@ -1417,6 +1427,10 @@ def make_workflow_from_user_options():
 
 def cli_run():
     """Main entry point."""
+
+    print('\nDiffusion MRI module')
+    from visualqc.utils import run_common_utils_before_starting
+    run_common_utils_before_starting()
 
     wf = make_workflow_from_user_options()
     wf.run()
