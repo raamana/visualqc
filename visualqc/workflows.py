@@ -10,7 +10,11 @@ from abc import ABC, abstractmethod
 from shutil import copyfile
 
 from os.path import exists as pexists, join as pjoin
+from pathlib import Path
+from timeit import default_timer as timer
+from datetime import timedelta
 
+import numpy as np
 from visualqc import config as cfg
 from visualqc.utils import get_ratings_path_info, load_ratings_csv, summarize_ratings
 
@@ -55,6 +59,7 @@ class BaseWorkflowVisualQC(ABC):
 
         self.ratings = dict()
         self.notes = dict()
+        self.timer = dict()
 
         self.outlier_method = outlier_method
         self.outlier_fraction = outlier_fraction
@@ -164,6 +169,7 @@ class BaseWorkflowVisualQC(ABC):
 
         # summarize ratings to stdout and id lists
         summarize_ratings(ratings_file)
+        self.save_time_spent()
 
 
     @staticmethod
@@ -173,6 +179,37 @@ class BaseWorkflowVisualQC(ABC):
             return cfg.rating_joiner.join(str_list)
         else:
             return str_list
+
+    def save_time_spent(self):
+        """Saves time spent on each unit"""
+
+        ratings_dir = Path(self.out_dir).resolve() / cfg.suffix_ratings_dir
+        if not ratings_dir.exists():
+            makedirs(ratings_dir)
+
+        timer_file = ratings_dir / '{}_{}_{}'.format(
+            self.vis_type, self.suffix, cfg.file_name_timer)
+
+        lines = '\n'.join(['{},{}'.format(sid, elapsed_time)
+                           for sid, elapsed_time in self.timer.items()])
+
+        # saving to disk
+        try:
+            with open(timer_file, 'w') as tf:
+                tf.write(lines)
+        except:
+            print('Unable to save timer info to disk -- printing them to log:')
+            print(lines)
+            raise IOError('Error in saving timer info to file!')
+
+        # printing summary
+        times = np.array(list(self.timer.values()))
+        if len(times) < 10:
+            print('\n\ntimes spent per subject in seconds:\n{}'.format(lines))
+
+        print('\nMedian time per subject : {} seconds'.format(np.median(times)))
+        print('\t5th and 95th percentile of distribution of times spent '
+              ': {} seconds'.format(np.nanpercentile(times, [5, 95])))
 
 
     def loop_through_units(self):
@@ -192,7 +229,15 @@ class BaseWorkflowVisualQC(ABC):
                 continue
 
             self.display_unit()
+
+            timer_start = timer()
+
+            # this is where all the reviewing/rating/notes happen
             self.show_fig_and_wait()
+
+            # capturing time elapsed by ID, in seconds
+            self.timer[unit_id] = timedelta(seconds=timer() - timer_start).seconds
+
             # TODO save each rating to disk to avoid loss of work due to crach etc
             self.print_rating(unit_id)
 
@@ -318,9 +363,6 @@ class BaseWorkflowVisualQC(ABC):
                   'rating: {}\n'
                   ' notes: {}'.format(subject_id, self.ratings[subject_id],
                                       self.notes[subject_id]))
-        else:
-            # extra check to ensure subject was properly rate.
-            self.ratings.pop(subject_id)
 
 
     @abstractmethod

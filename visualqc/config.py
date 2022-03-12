@@ -145,6 +145,7 @@ no_blank_area = dict(left=0.01, right=0.99,
 
 suffix_ratings_dir = 'ratings'
 file_name_ratings = 'ratings.all.csv'
+file_name_timer = 'time_spent_rating_in_seconds.all.csv'
 prefix_backup = 'backup'
 
 # visualization layout
