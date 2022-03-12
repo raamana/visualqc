@@ -95,10 +95,7 @@ map_short_rating = OrderedDict(g='gOOD',
 default_rating_list = tuple(map_short_rating.values())
 index_freesurfer_default_rating = default_rating_list.index(freesurfer_default_rating)
 default_rating_list_shortform = map_short_rating.keys()
-ratings_not_to_be_recorded = [None,
-                              '',
-                              'something else',
-                              "i'm tired",
+ratings_not_to_be_recorded = ["i'm tired",
                               'review later']
 
 # for serialization
@@ -148,6 +145,7 @@ no_blank_area = dict(left=0.01, right=0.99,
 
 suffix_ratings_dir = 'ratings'
 file_name_ratings = 'ratings.all.csv'
+file_name_timer = 'time_spent_rating_in_seconds.all.csv'
 prefix_backup = 'backup'
 
 # visualization layout

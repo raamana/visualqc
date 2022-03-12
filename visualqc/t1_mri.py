@@ -671,7 +671,7 @@ def get_parser():
 
     help_text_out_dir = textwrap.dedent("""
     Output folder to store the visualizations & ratings.
-    Default: a new folder called ``{}`` will be created inside the ``fs_dir``
+    Default: a new folder called ``{}`` will be created inside the input folder
     \n""".format(cfg.default_out_dir_name))
 
     help_text_views = textwrap.dedent("""
