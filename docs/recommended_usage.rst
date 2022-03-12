@@ -10,6 +10,7 @@ General suggestions:
  - For the best results from outlier detection process, it is recommended to divide list of IDs into known groups (healthy, disease1, disease2, young, old etc) based on non-imaging parameters (such as clinical diagnosis, age etc), to perform the QC process independently on each group.
  - Be generous in the number of slices you use to review in each view (even if they appear small in the collage), as you have the ability to zoom-in anywhere you please for detailed inspection.
  - Routinely toggle overlays to ensure composite overlays are not affecting your perception of GM/WB boundaries in scans with unusual intensity distributions (low or high contrast, dark or too bright etc).
+ - All the commands shown in the documentation are to be started from the command line/terminal/shell, and you need to use the file paths (delimited by quotes) as necessary and appropriate for your platform (Linux, Mac, Windows)
 
 For Freesurfer outputs:
 ------------------------------------
