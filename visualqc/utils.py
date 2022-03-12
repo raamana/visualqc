@@ -856,6 +856,8 @@ def get_path_for_subject(in_dir, subject_id, req_file, vis_type, in_dir_type=Non
 
 
 def get_freesurfer_mri_path(in_dir, subject_id, req_file):
+    """Returns the full path to the MRI file according to Freesurfer format"""
+
     return realpath(pjoin(in_dir, subject_id, 'mri', req_file))
 
 
@@ -867,7 +869,7 @@ def run_common_utils_before_starting():
 
 
 def check_time(time_interval, var_name='time interval'):
-    """"""
+    """Util to ensure the time value specified is non-zero and finite"""
 
     time_interval = np.float(time_interval)
     if not np.isfinite(time_interval) or np.isclose(time_interval, 0.0):
