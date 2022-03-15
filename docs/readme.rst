@@ -35,10 +35,12 @@ Use-cases supported
 
 VisualQC supports the following use cases:
 
- * Functional MRI scans (focused visual review, with rich and custom-built visualizations)
+ * Functional MRI scans
  * Freesurfer cortical parcellations (accuracy of pial/white surfaces on T1w mri)
- * Structural T1w MRI scans (artefact rating)
- * Volumetric segmenation accuracy (on T1w MRI)
+ * Structural T1w MRI scans (artefact identification and rating)
+ * Volumetric/anatomical segmenation accuracy (general as well as Freesurfer)
+ * Defacing algorithm accuracy
+ * Diffusion MRI scans
  * Registration quality (spatial alignment) within a single modality or across different modalities
  * For your own important use case, feel free to `contact me <https://www.crossinvalidation.com>`_
  * Some others are being discussed - might be coming soon.
@@ -50,7 +52,7 @@ Features
 Each use case aims to offer the following features:
 
 * Ability to zoom-in slices displayed to to ensure you won't miss any detail (down to the voxel-level), so you can rate its quality with confidence.
-* Automatically detect and flag outliers during review (multivariate high-dimensional outlier detection)
+* Automatically detect and flag outliers during review (multivariate high-dimensional outlier detection) (available for a few modules only)
 * Display multiple slices in multiple views, and easily navigate all subjects in a dataset
 * Keyboard shortcuts to speed up the process, no need to lift your fingers!
 * Allows to make arbitrary notes on the current review session
@@ -59,7 +61,7 @@ Each use case aims to offer the following features:
 Manual
 --------
 
-A detailed manual is available at the `VisualQC` `repo <https://github.com/raamana/visualqc/blob/master/docs/VisualQC_TrainingManual_v1p4.pdf>`_
+A detailed manual for Freesurfer QC is available at the `VisualQC` `repo <https://github.com/raamana/visualqc/blob/master/docs/VisualQC_TrainingManual_v1p4.pdf>`_
 
 If you have any questions, please `open an issue <https://github.com/raamana/visualqc/issues/new/>`_ and we would appreciate your feedback.
 
@@ -72,8 +74,17 @@ Galleries
  * :doc:`gallery_t1_mri`
  * :doc:`gallery_registration_unimodal`
  * :doc:`gallery_segmentation_volumetric`
+ * :doc:`gallery_defacing`
+ * :doc:`gallery_diffusion_mri`
 
 
-`Contributions are welcome. <CONTRIBUTING.rst>`_
+Contributions
+-------------
 
-`Citation details <citation.rst>`_
+`Contributions are most welcome. <CONTRIBUTING.rst>`_
+
+
+Citations
+---------
+
+`Citation details are available here <citation.rst>`_
