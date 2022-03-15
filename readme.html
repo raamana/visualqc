@@ -91,6 +91,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#manual">Manual</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#galleries">Galleries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#contributions">Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citations">Citations</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -208,10 +210,12 @@
 <p>VisualQC supports the following use cases:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Functional MRI scans (focused visual review, with rich and custom-built visualizations)</p></li>
+<li><p>Functional MRI scans</p></li>
 <li><p>Freesurfer cortical parcellations (accuracy of pial/white surfaces on T1w mri)</p></li>
-<li><p>Structural T1w MRI scans (artefact rating)</p></li>
-<li><p>Volumetric segmenation accuracy (on T1w MRI)</p></li>
+<li><p>Structural T1w MRI scans (artefact identification and rating)</p></li>
+<li><p>Volumetric/anatomical segmenation accuracy (general as well as Freesurfer)</p></li>
+<li><p>Defacing algorithm accuracy</p></li>
+<li><p>Diffusion MRI scans</p></li>
 <li><p>Registration quality (spatial alignment) within a single modality or across different modalities</p></li>
 <li><p>For your own important use case, feel free to <a class="reference external" href="https://www.crossinvalidation.com">contact me</a></p></li>
 <li><p>Some others are being discussed - might be coming soon.</p></li>
@@ -223,7 +227,7 @@
 <p>Each use case aims to offer the following features:</p>
 <ul class="simple">
 <li><p>Ability to zoom-in slices displayed to to ensure you won’t miss any detail (down to the voxel-level), so you can rate its quality with confidence.</p></li>
-<li><p>Automatically detect and flag outliers during review (multivariate high-dimensional outlier detection)</p></li>
+<li><p>Automatically detect and flag outliers during review (multivariate high-dimensional outlier detection) (available for a few modules only)</p></li>
 <li><p>Display multiple slices in multiple views, and easily navigate all subjects in a dataset</p></li>
 <li><p>Keyboard shortcuts to speed up the process, no need to lift your fingers!</p></li>
 <li><p>Allows to make arbitrary notes on the current review session</p></li>
@@ -232,7 +236,7 @@
 </div>
 <div class="section" id="manual">
 <h2>Manual<a class="headerlink" href="#manual" title="Permalink to this headline">¶</a></h2>
-<p>A detailed manual is available at the <cite>VisualQC</cite> <a class="reference external" href="https://github.com/raamana/visualqc/blob/master/docs/VisualQC_TrainingManual_v1p4.pdf">repo</a></p>
+<p>A detailed manual for Freesurfer QC is available at the <cite>VisualQC</cite> <a class="reference external" href="https://github.com/raamana/visualqc/blob/master/docs/VisualQC_TrainingManual_v1p4.pdf">repo</a></p>
 <p>If you have any questions, please <a class="reference external" href="https://github.com/raamana/visualqc/issues/new/">open an issue</a> and we would appreciate your feedback.</p>
 </div>
 <div class="section" id="galleries">
@@ -244,10 +248,18 @@
 <li><p><a class="reference internal" href="gallery_t1_mri.html"><span class="doc">Gallery - Structural T1w MRI - artefact detection and rating</span></a></p></li>
 <li><p><a class="reference internal" href="gallery_registration_unimodal.html"><span class="doc">Gallery - Registration : comparison of spatial alignment</span></a></p></li>
 <li><p><a class="reference internal" href="gallery_segmentation_volumetric.html"><span class="doc">Gallery - Segmentation/ROI - anatomical accuracy evaluation</span></a></p></li>
+<li><p><a class="reference internal" href="gallery_defacing.html"><span class="doc">Gallery - Defacing algorithm accuracy</span></a></p></li>
+<li><p><a class="reference internal" href="gallery_diffusion_mri.html"><span class="doc">Gallery - Diffusion MRI artefact detection and rating</span></a></p></li>
 </ul>
 </div></blockquote>
-<p><a class="reference external" href="CONTRIBUTING.rst">Contributions are welcome.</a></p>
-<p><a class="reference external" href="citation.rst">Citation details</a></p>
+</div>
+<div class="section" id="contributions">
+<h2>Contributions<a class="headerlink" href="#contributions" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="CONTRIBUTING.rst">Contributions are most welcome.</a></p>
+</div>
+<div class="section" id="citations">
+<h2>Citations<a class="headerlink" href="#citations" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="citation.rst">Citation details are available here</a></p>
 </div>
 </div>
 
