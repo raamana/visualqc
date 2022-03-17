@@ -704,7 +704,8 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir,
     print('Processing {}'.format(subject_id))
     for hemi, hemi_l in zip(hemis, hemis_long):
         vis_list[hemi_l] = dict()
-        script_file, vis_files = make_tcl_script_vis_annot(subject_id, hemi_l, out_vis_dir, annot_file)
+        script_file, vis_files = make_tcl_script_vis_annot(subject_id, hemi_l,
+                                                           out_vis_dir, annot_file)
         try:
             # run the script only if all the visualizations were not generated before
             all_vis_exist = all([pexists(vis_path) for vis_path in vis_files.values()])
@@ -714,7 +715,8 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir,
             vis_list[hemi_l].update(vis_files)
         except:
             traceback.print_exc()
-            print('unable to generate tksurfer visualizations for {} hemi - skipping'.format(hemi))
+            print('unable to generate tksurfer visualizations for {} hemi - skipping'
+                  ''.format(hemi))
 
     # flattening it for easier use later on
     out_vis_list = dict()
@@ -766,7 +768,8 @@ def run_tksurfer_script(in_dir, subject_id, hemi, script_file):
     """Runs a given TCL script to generate visualizations"""
 
     try:
-        cmd_args = ['tksurfer', '-sdir', in_dir, subject_id, hemi, 'pial', '-tcl', script_file]
+        cmd_args = ['tksurfer', '-sdir', in_dir, subject_id, hemi, 'pial',
+                    '-tcl', script_file]
         txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
     except subprocess.CalledProcessError as tksurfer_exc:
         print('Error running tksurfer to generate 3d surface visualizations - skipping them.')
