@@ -667,6 +667,29 @@ def freesurfer_installed():
     return True
 
 
+def freesurfer_vis_tool_installed():
+    """Checks if the required Freesurfer visualization tool is installed."""
+
+    if os.getenv('FREESURFER_HOME') is None:
+        print('the environment variable FREESURFER_HOME is not set!')
+        return False, None
+
+    fv_callable = which('freeview') is not None
+    if fv_callable:
+        # preferring freeview going forward as tksurfer is deprecated since FS v7
+        return True, "freeview"
+
+    tks_callable = which('tksurfer') is not None
+    if (not fv_callable) and tks_callable:
+        return True, "tksurfer"
+
+    if (not fv_callable) and (not tks_callable):
+        print('Either freeview or tksurfer is required to generate pial surf vis!')
+        return False, None
+
+    return False
+
+
 def check_out_dir(out_dir, base_dir):
     """Creates the output folder."""
 
