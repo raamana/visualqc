@@ -730,6 +730,47 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir,
     return out_vis_list
 
 
+def make_freeview_script_vis_annot(fs_dir, subject_id, hemi, out_vis_dir,
+                                   annot_file='aparc.annot'):
+    """Generates a tksurfer script to make visualizations"""
+
+    fs_dir = Path(fs_dir).resolve()
+    out_vis_dir = Path(out_vis_dir).resolve()
+
+    surf_path = fs_dir / subject_id / 'surf' / '{}.pial'.format(hemi)
+    annot_path = fs_dir / subject_id / 'label' / '{}.{}'.format(hemi, annot_file)
+    img_format = 'png'
+
+    script_file = out_vis_dir / 'vis_annot_{}.freeview.cmd'.format(hemi)
+    vis_path = dict()
+    for view in cfg.freeview_surface_vis_angles:
+        vis_path[view] = out_vis_dir / '{}_{}_{}.png'.format(subject_id, hemi, view)
+
+    # NOTES reg freeview commands
+    # --screenshot <FILENAME> <MAGIFICATION_FACTOR> <AUTO_TRIM>
+    #   magnification factor: values other than 1 do not work on macos
+
+    common_options = "--layout 1 --viewport 3d --viewsize 1000 1000 --zoom 1.3 "
+
+    cmds = list()
+    # common files, surf and annot, for all the views
+    cmds.append("--surface {}:annot={}".format(surf_path, annot_path))
+
+    for view in cfg.freeview_surface_vis_angles:
+        cmds.append("{} --view {} --screenshot {} 1 autotrim"
+                    "".format(common_options, view, vis_path[view]))
+
+    cmds.append("--quit \n")
+
+    try:
+        with open(script_file, 'w') as sf:
+            sf.write('\n'.join(cmds))
+    except:
+        raise IOError('Unable to write the script file to\n {}'.format(script_file))
+
+    return script_file, vis_path
+
+
 def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir, annot_file='aparc.annot'):
     """Generates a tksurfer script to make visualizations"""
 
