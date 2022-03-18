@@ -786,7 +786,7 @@ def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir, annot_file='aparc.a
 
     script_file = pjoin(out_vis_dir, 'vis_annot_{}.tcl'.format(hemi))
     vis = dict()
-    for view in cfg.surface_view_angles:
+    for view in cfg.tksurfer_surface_vis_angles:
         vis[view] = pjoin(out_vis_dir, '{}_{}_{}.tif'.format(subject_id, hemi, view))
 
     img_format = 'tiff'  # rgb does not work

@@ -55,9 +55,19 @@ default_vis_type = 'cortical_contour'
 # these vis types would need to be identified by more than one label
 vis_types_with_multiple_ROIs = ('labels_volumetric', 'labels_contour')
 
-surface_view_angles = ['lateral', 'medial', 'transverse']
+tksurfer_surface_vis_angles = ('lateral', 'medial', 'transverse')
+freeview_surface_vis_angles = ('lateral', 'medial', 'inferior')
 
-freesurfer_vis_cmd = 'tksurfer'
+freesurfer_vis_cmd = 'freeview'
+
+view_pref_order = {'freeview': [('right', 'lateral'), ('left', 'lateral'),
+                                ('right', 'medial'), ('left', 'medial'),
+                                ('right', 'inferior'), ('left', 'inferior')]
+    ,
+                   'tksurfer': [('right', 'lateral'), ('left', 'lateral'),
+                                ('right', 'medial'), ('left', 'medial'),
+                                ('right', 'transverse'), ('left', 'transverse')]
+                   }
 
 default_label_set = None
 
