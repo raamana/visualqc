@@ -660,7 +660,8 @@ def check_bids_dir(dir_path):
 def freesurfer_installed():
     """Checks whether Freesurfer is installed."""
 
-    if os.getenv('FREESURFER_HOME') is None or which(freesurfer_vis_cmd) is None:
+    if os.getenv('FREESURFER_HOME') is None:
+        print('the environment variable FREESURFER_HOME is not set!')
         return False
 
     return True
