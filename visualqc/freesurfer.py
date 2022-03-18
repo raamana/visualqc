@@ -822,6 +822,22 @@ def run_tksurfer_script(in_dir, subject_id, hemi, script_file):
     return txt_out, exit_code
 
 
+def run_freeview_script(script_file):
+    """Runs a given Freeview script to generate visualizations"""
+
+    try:
+        cmd_args = ['freeview', '--command', script_file]
+        txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
+    except subprocess.CalledProcessError as tksurfer_exc:
+        print('Error running freeview to generate sur visualizations - skipping!')
+        exit_code = tksurfer_exc.returncode
+        txt_out = tksurfer_exc.output
+    else:
+        exit_code = 0
+
+    return txt_out, exit_code
+
+
 def get_parser():
     """Parser to specify arguments and their defaults."""
 
