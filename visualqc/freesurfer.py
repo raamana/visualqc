@@ -13,6 +13,7 @@ import warnings
 from abc import ABC
 from os import makedirs
 from subprocess import check_output
+from pathlib import Path
 
 import matplotlib.image as mpimg
 import numpy as np
@@ -28,8 +29,7 @@ from visualqc.interfaces import BaseReviewInterface
 from visualqc.readers import read_aparc_stats_wholebrain
 from visualqc.utils import check_alpha_set, check_finite_int, check_id_list, \
     check_input_dir, check_labels, check_out_dir, check_outlier_params, check_views, \
-    freesurfer_installed, get_axis, get_freesurfer_mri_path, get_label_set, pick_slices, \
-    read_image, scale_0to1, void_subcortical_symmetrize_cortical
+    freesurfer_vis_tool_installed, get_axis, get_freesurfer_mri_path, get_label_set, pick_slices, read_image, scale_0to1, void_subcortical_symmetrize_cortical
 from visualqc.workflows import BaseWorkflowVisualQC
 from visualqc import __version__
 
@@ -327,19 +327,19 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def generate_surface_vis(self):
         """Generates surface visualizations."""
 
-        print('Attempting to generate the surface visualizations of parcellation ...')
-        if not freesurfer_installed():  # needs tksurfer
+        print('Attempting to generate surface visualizations of parcellation ...')
+        self._freesurfer_installed, self._fs_vis_tool = \
+            freesurfer_vis_tool_installed()
+        if not self._freesurfer_installed:
             print('Freesurfer does not seem to be installed '
                   '- skipping surface visualizations.')
-            self._freesurfer_installed = False
-        else:
-            self._freesurfer_installed = True
 
         self.surface_vis_paths = dict()
         for sid in self.id_list:
             self.surface_vis_paths[sid] = \
                 make_vis_pial_surface(self.in_dir, sid, self.out_dir,
-                                      self._freesurfer_installed)
+                                      self._freesurfer_installed,
+                                      vis_tool=self._fs_vis_tool)
 
 
     def prepare_UI(self):
@@ -692,7 +692,8 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
 def make_vis_pial_surface(in_dir, subject_id, out_dir,
                           FREESURFER_INSTALLED,
-                          annot_file='aparc.annot'):
+                          annot_file='aparc.annot',
+                          vis_tool=cfg.freesurfer_vis_cmd):
     """Generate screenshot for the pial surface in different views"""
 
     out_vis_dir = pjoin(out_dir, cfg.annot_vis_dir_name)
@@ -704,13 +705,25 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir,
     print('Processing {}'.format(subject_id))
     for hemi, hemi_l in zip(hemis, hemis_long):
         vis_list[hemi_l] = dict()
-        script_file, vis_files = make_tcl_script_vis_annot(subject_id, hemi_l,
-                                                           out_vis_dir, annot_file)
+        if vis_tool == "freeview":
+            script_file, vis_files = make_freeview_script_vis_annot(
+                in_dir, subject_id, hemi, out_vis_dir, annot_file)
+        elif vis_tool == "tksurfer":
+            script_file, vis_files = make_tcl_script_vis_annot(
+                subject_id, hemi_l, out_vis_dir, annot_file)
+        else:
+            pass
+
         try:
             # run the script only if all the visualizations were not generated before
             all_vis_exist = all([pexists(vis_path) for vis_path in vis_files.values()])
             if not all_vis_exist and FREESURFER_INSTALLED:
-                _, _ = run_tksurfer_script(in_dir, subject_id, hemi, script_file)
+                if vis_tool == "freeview":
+                    _, _ = run_freeview_script(script_file)
+                elif vis_tool == "tksurfer":
+                    _, _ = run_tksurfer_script(in_dir, subject_id, hemi, script_file)
+                else:
+                    pass
 
             vis_list[hemi_l].update(vis_files)
         except:
@@ -720,10 +733,7 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir,
 
     # flattening it for easier use later on
     out_vis_list = dict()
-    pref_order = [ ('right', 'lateral'), ('left', 'lateral'),
-                   ('right', 'medial'), ('left', 'medial'),
-                   ('right', 'transverse'), ('left', 'transverse')]
-    for hemi_l, view in pref_order:
+    for hemi_l, view in cfg.view_pref_order[vis_tool]:
         if pexists(vis_list[hemi_l][view]):
             out_vis_list[(hemi_l, view)] = vis_list[hemi_l][view]
 
