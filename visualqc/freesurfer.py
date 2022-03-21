@@ -170,6 +170,11 @@ class FreesurferReviewInterface(BaseReviewInterface):
     def on_mouse(self, event):
         """Callback for mouse events."""
 
+        print('MouseEvent: button value {} name {} dblclk:'.format(
+            event.button.value, event.button.name, event.dblclick
+            ))
+
+        # unzoom any zoomed-in axis in case of a mouse event
         if self.prev_axis is not None:
             # include all the non-data axes here (so they wont be zoomed-in)
             if not check_mouse_event_in_axes(event, self.unzoomable_axes):
@@ -330,7 +335,7 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def generate_surface_vis(self):
         """Generates surface visualizations."""
 
-        print('Attempting to generate surface visualizations of parcellation ...')
+        print('\nAttempting to generate surface visualizations of parcellation ...')
         self._freesurfer_installed, self._fs_vis_tool = \
             freesurfer_vis_tool_installed()
         if not self._freesurfer_installed:
