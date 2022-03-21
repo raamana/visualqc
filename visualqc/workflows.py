@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from shutil import copyfile
 
 from os.path import exists as pexists, join as pjoin
+from os import makedirs
 from pathlib import Path
 from timeit import default_timer as timer
 from datetime import timedelta
@@ -185,7 +186,7 @@ class BaseWorkflowVisualQC(ABC):
 
         ratings_dir = Path(self.out_dir).resolve() / cfg.suffix_ratings_dir
         if not ratings_dir.exists():
-            makedirs(ratings_dir)
+            makedirs(ratings_dir, exist_ok=True)
 
         timer_file = ratings_dir / '{}_{}_{}'.format(
             self.vis_type, self.suffix, cfg.file_name_timer)
