@@ -95,7 +95,7 @@ class FreesurferReviewInterface(BaseReviewInterface):
         # alpha slider
         ax_slider = plt.axes(cfg.position_slider_seg_alpha,
                              facecolor=cfg.color_slider_axis)
-        self.slider = Slider(ax_slider, label='transparency',
+        self.slider = Slider(ax_slider, label='contour opacity',
                              valmin=0.0, valmax=1.0, valinit=0.7, valfmt='%1.2f')
         self.slider.label.set_position((0.99, 1.5))
         self.slider.on_changed(self.set_alpha_value)
