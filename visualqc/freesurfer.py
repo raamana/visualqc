@@ -172,7 +172,7 @@ class FreesurferReviewInterface(BaseReviewInterface):
 
         if self.prev_axis is not None:
             # include all the non-data axes here (so they wont be zoomed-in)
-            if event.inaxes not in self.unzoomable_axes:
+            if not check_mouse_event_in_axes(event, self.unzoomable_axes):
                 self.prev_axis.set_position(self.prev_ax_pos)
                 self.prev_axis.set_zorder(0)
                 self.prev_axis.patch.set_alpha(0.5)
@@ -181,9 +181,10 @@ class FreesurferReviewInterface(BaseReviewInterface):
         # right click toggles overlay
         if event.button in [3]:
             self.toggle_overlay()
-        # double click to zoom in to any axis
-        elif event.dblclick and event.inaxes is not None and \
-            event.inaxes not in self.unzoomable_axes:
+        # double click to zoom in to that axis
+        elif ((event.dblclick) and \
+              (event.inaxes is not None) and \
+              (not check_mouse_event_in_axes(event, self.unzoomable_axes))):
             # zoom axes full-screen
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(cfg.zoomed_position)
