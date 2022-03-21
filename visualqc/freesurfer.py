@@ -32,7 +32,7 @@ from visualqc.utils import (check_alpha_set, check_finite_int, check_id_list,
                             freesurfer_vis_tool_installed, get_axis,
                             get_freesurfer_mri_path, get_label_set,
                             pick_slices, read_image, scale_0to1,
-                            void_subcortical_symmetrize_cortical)
+                            void_subcortical_symmetrize_cortical, check_mouse_event_in_axes)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 # each rating is a set of labels, join them with a plus delimiter
@@ -825,9 +825,10 @@ def run_tksurfer_script(in_dir, subject_id, hemi, script_file):
                     '-tcl', script_file]
         txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
     except subprocess.CalledProcessError as tksurfer_exc:
-        print('Error running tksurfer to generate 3d surface visualizations - skipping them.')
         exit_code = tksurfer_exc.returncode
         txt_out = tksurfer_exc.output
+        print('Error running tksurfer to generate 3d surface visualizations - skipping.')
+        print('Issue:\n{}\n'.format(txt_out))
     else:
         exit_code = 0
 
@@ -841,9 +842,10 @@ def run_freeview_script(script_file):
         cmd_args = ['freeview', '--command', script_file]
         txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
     except subprocess.CalledProcessError as tksurfer_exc:
-        print('Error running freeview to generate sur visualizations - skipping!')
         exit_code = tksurfer_exc.returncode
         txt_out = tksurfer_exc.output
+        print('Error running freeview to generate surf visualizations - skipping!')
+        print('Issue:\n{}\n'.format(txt_out))
     else:
         exit_code = 0
 
