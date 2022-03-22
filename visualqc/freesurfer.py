@@ -10,6 +10,7 @@ import sys
 import textwrap
 import traceback
 import warnings
+from warnings import catch_warnings, filterwarnings, warn
 from abc import ABC
 from os import makedirs
 from os.path import exists as pexists, join as pjoin
@@ -1169,8 +1170,8 @@ def cli_run():
 
 if __name__ == '__main__':
     # disabling all not severe warnings
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
-        warnings.filterwarnings("ignore", category=FutureWarning)
+    with catch_warnings():
+        filterwarnings("ignore", category=DeprecationWarning)
+        filterwarnings("ignore", category=FutureWarning)
 
         cli_run()
