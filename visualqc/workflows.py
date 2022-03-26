@@ -258,10 +258,9 @@ class BaseWorkflowVisualQC(ABC):
         """
 
         if self.show_unit_id:
-            annot_text = '{}\n({}/{})'.format(unit_id, counter + 1,
-                                              self.num_units_to_review)
+            annot_text = f'{unit_id}\n({counter + 1}/{self.num_units_to_review})'
         else:
-            annot_text = '{}/{}'.format(counter + 1, self.num_units_to_review)
+            annot_text = f'{counter + 1}/{self.num_units_to_review}'
 
         self.UI.add_annot(annot_text)
 
