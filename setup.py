@@ -14,12 +14,14 @@ with open('HISTORY.rst') as history_file:
 requirements = [
     'scipy',
     'numpy',
-    'matplotlib',
+    'matplotlib>=2.1.1',
     'mrivis',
     'nibabel',
     'scikit-learn',
     'pybids',
-    'nilearn'
+    'nilearn',
+    'pyyaml>=4.2b1',
+    'pillow',
     ]
 
 setup_requirements = requirements
