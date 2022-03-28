@@ -710,7 +710,7 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.close('all')
 
 
-def make_vis_pial_surface(in_dir, subject_id, out_dir,
+def make_vis_pial_surface(fs_dir, subject_id, out_dir,
                           FREESURFER_INSTALLED,
                           annot_file='aparc.annot',
                           vis_tool=cfg.freesurfer_vis_cmd):
@@ -730,7 +730,7 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir,
         vis_list[hemi_l] = dict()
         if vis_tool == "freeview":
             script_file, vis_files = make_freeview_script_vis_annot(
-                in_dir, subject_id, hemi, out_vis_dir, annot_file)
+                fs_dir, subject_id, hemi, out_vis_dir, annot_file)
         elif vis_tool == "tksurfer":
             script_file, vis_files = make_tcl_script_vis_annot(
                 subject_id, hemi_l, out_vis_dir, annot_file)
@@ -754,7 +754,7 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir,
                 if vis_tool == "freeview":
                     _, _ = run_freeview_script(script_file)
                 elif vis_tool == "tksurfer":
-                    _, _ = run_tksurfer_script(in_dir, subject_id, hemi, script_file)
+                    _, _ = run_tksurfer_script(fs_dir, subject_id, hemi, script_file)
                 else:
                     pass
 
@@ -850,11 +850,11 @@ def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir, annot_file='aparc.a
     return script_file, vis
 
 
-def run_tksurfer_script(in_dir, subject_id, hemi, script_file):
+def run_tksurfer_script(fs_dir, subject_id, hemi, script_file):
     """Runs a given TCL script to generate visualizations"""
 
     try:
-        cmd_args = ['tksurfer', '-sdir', in_dir, subject_id, hemi, 'pial',
+        cmd_args = ['tksurfer', '-sdir', fs_dir, subject_id, hemi, 'pial',
                     '-tcl', script_file]
         txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
     except subprocess.CalledProcessError as tksurfer_exc:
