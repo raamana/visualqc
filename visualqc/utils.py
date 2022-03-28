@@ -230,6 +230,10 @@ def pick_slices(img, view_set, num_slices):
 def check_event_in_axes(event, axes):
     """Checks if a mouse or keyboard event occured in one of the axes in a list"""
 
+    from matplotlib.backend_bases import LocationEvent
+    if not isinstance(event, LocationEvent):
+        raise TypeError('Event must be an instance of LocationEvent with x,y coords')
+
     # Axis.contains() method returns a tuple: Bool, Dict; so need [0] to capture Bool
     try:
         return any([ax.contains(event)[0] for ax in axes])
