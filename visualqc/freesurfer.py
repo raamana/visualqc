@@ -197,6 +197,7 @@ class FreesurferReviewInterface(BaseReviewInterface):
             event.inaxes.set_zorder(1)  # bring forth
             event.inaxes.set_facecolor('black')  # black
             event.inaxes.patch.set_alpha(1.0)  # opaque
+            event.inaxes.redraw_in_frame()
             self.zoomed_in = True
             self.prev_axis = event.inaxes
 
@@ -212,7 +213,8 @@ class FreesurferReviewInterface(BaseReviewInterface):
                     self.prev_axis.redraw_in_frame()
                     self.zoomed_in = False
 
-        plt.draw()
+        # refreshes the entire figure (costly but necessary)
+        self.fig.canvas.draw_idle()
 
 
     def on_keyboard(self, key_in):

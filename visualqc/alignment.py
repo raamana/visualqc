@@ -205,7 +205,8 @@ class AlignmentInterface(BaseReviewInterface):
         else:
             pass
 
-        plt.draw()
+        # refreshes the entire figure (costly but necessary)
+        self.fig.canvas.draw_idle()
 
 
     def on_keyboard(self, key_in):
@@ -235,7 +236,8 @@ class AlignmentInterface(BaseReviewInterface):
             else:
                 pass
 
-        plt.draw()
+        # refreshes the entire figure (costly but necessary)
+        self.fig.canvas.draw_idle()
 
 
 class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
