@@ -8,15 +8,13 @@ import argparse
 import subprocess
 import sys
 import textwrap
+import time
 import traceback
-import warnings
-from warnings import catch_warnings, filterwarnings, warn
 from abc import ABC
 from os import makedirs
-from os.path import exists as pexists, join as pjoin
 from pathlib import Path
 from subprocess import check_output
-import time
+from warnings import catch_warnings, filterwarnings
 
 import matplotlib.image as mpimg
 import numpy as np
@@ -25,17 +23,17 @@ from matplotlib.colors import is_color_like
 from matplotlib.widgets import RadioButtons, Slider
 from mrivis.color_maps import get_freesurfer_cmap
 from mrivis.utils import crop_to_seg_extents
+
 from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.readers import read_aparc_stats_wholebrain
-from visualqc.utils import (check_alpha_set, check_finite_int, check_id_list,
-                            check_input_dir, check_labels, check_out_dir,
-                            check_outlier_params, check_views,
+from visualqc.utils import (check_alpha_set, check_event_in_axes, check_finite_int,
+                            check_id_list, check_input_dir, check_labels,
+                            check_out_dir, check_outlier_params, check_views,
                             freesurfer_vis_tool_installed, get_axis,
-                            get_freesurfer_mri_path, get_label_set,
-                            pick_slices, read_image, scale_0to1,
-                            void_subcortical_symmetrize_cortical,
-                            check_event_in_axes)
+                            get_freesurfer_mri_path, get_label_set, pick_slices,
+                            read_image, scale_0to1,
+                            void_subcortical_symmetrize_cortical)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 # each rating is a set of labels, join them with a plus delimiter
@@ -619,9 +617,8 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                                                     temp_seg_uncropped,
                                                                     self.padding)
 
-        out_vis_path = pjoin(self.out_dir,
-                             'visual_qc_{}_{}_{}'.format(self.vis_type, self.suffix,
-                                                         unit_id))
+        out_vis_path = self.out_dir / f'visual_qc' \
+                                      f'_{self.vis_type}_{self.suffix}_{unit_id}'
 
         return skip_subject
 
@@ -716,7 +713,8 @@ def make_vis_pial_surface(fs_dir, subject_id, out_dir,
                           vis_tool=cfg.freesurfer_vis_cmd):
     """Generate screenshot for the pial surface in different views"""
 
-    out_vis_dir = pjoin(out_dir, cfg.annot_vis_dir_name)
+    fs_dir = Path(fs_dir).resolve()
+    out_vis_dir = Path(out_dir).resolve() / cfg.annot_vis_dir_name
     makedirs(out_vis_dir, exist_ok=True)
 
     hemis = ('lh', 'rh')
@@ -749,7 +747,7 @@ def make_vis_pial_surface(fs_dir, subject_id, out_dir,
 
         try:
             # run the script only if all the visualizations were not generated before
-            all_vis_exist = all([pexists(vis_path) for vis_path in vis_files.values()])
+            all_vis_exist = all([vp.exists() for vp in vis_files.values()])
             if not all_vis_exist and FREESURFER_INSTALLED:
                 if vis_tool == "freeview":
                     _, _ = run_freeview_script(script_file)
@@ -811,7 +809,7 @@ def make_freeview_script_vis_annot(fs_dir, subject_id, hemi, out_vis_dir,
         with open(script_file, 'w') as sf:
             sf.write('\n'.join(cmds))
     except:
-        raise IOError('Unable to write the script file to\n {}'.format(script_file))
+        raise IOError(f'Unable to write the script file to\n {script_file}')
 
     return script_file, vis_path
 
@@ -819,10 +817,10 @@ def make_freeview_script_vis_annot(fs_dir, subject_id, hemi, out_vis_dir,
 def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir, annot_file='aparc.annot'):
     """Generates a tksurfer script to make visualizations"""
 
-    script_file = pjoin(out_vis_dir, 'vis_annot_{}.tcl'.format(hemi))
+    script_file = out_vis_dir / f'vis_annot_{hemi}.tcl'
     vis = dict()
     for view in cfg.tksurfer_surface_vis_angles:
-        vis[view] = pjoin(out_vis_dir, '{}_{}_{}.tif'.format(subject_id, hemi, view))
+        vis[view] = out_vis_dir / f'{subject_id}_{hemi}_{view}.tif'
 
     img_format = 'tiff'  # rgb does not work
 
@@ -1130,13 +1128,15 @@ def make_workflow_from_user_options():
     vis_type, label_set = check_labels(user_args.vis_type, user_args.label_set)
     in_dir, source_of_features = check_input_dir(user_args.fs_dir, None, vis_type,
                                                  freesurfer_install_required=False)
+    out_dir = check_out_dir(user_args.out_dir, in_dir)
+
+    in_dir = Path(in_dir).resolve()
+    out_dir = Path(out_dir).resolve()
 
     mri_name = user_args.mri_name
     seg_name = user_args.seg_name
     id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type, mri_name,
                                            seg_name)
-
-    out_dir = check_out_dir(user_args.out_dir, in_dir)
 
     alpha_set = check_alpha_set(user_args.alpha_set)
     views = check_views(user_args.views)
