@@ -227,11 +227,16 @@ def pick_slices(img, view_set, num_slices):
     return slices
 
 
-def check_mouse_event_in_axes(event, axes):
-    """Checks if a mouse event occured in one of the axes in a list"""
+def check_event_in_axes(event, axes):
+    """Checks if a mouse or keyboard event occured in one of the axes in a list"""
 
-    # Axis.contains() method returns a tuple: Bool, Dict
-    return any([ax.contains(event)[0] for ax in axes])
+    # Axis.contains() method returns a tuple: Bool, Dict; so need [0] to capture Bool
+    try:
+        return any([ax.contains(event)[0] for ax in axes])
+    except TypeError: # when it is not a list/iterable of axes
+        return axes.contains(event)[0]
+    except:
+        raise ValueError('Input must be a matplotlib Axis or an Iterable of Axes!')
 
 
 def check_layout(total_num_slices, num_views, num_rows_per_view, num_rows_for_surf_vis):

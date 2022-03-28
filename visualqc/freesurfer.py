@@ -33,7 +33,8 @@ from visualqc.utils import (check_alpha_set, check_finite_int, check_id_list,
                             freesurfer_vis_tool_installed, get_axis,
                             get_freesurfer_mri_path, get_label_set,
                             pick_slices, read_image, scale_0to1,
-                            void_subcortical_symmetrize_cortical, check_mouse_event_in_axes)
+                            void_subcortical_symmetrize_cortical,
+                            check_event_in_axes)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 # each rating is a set of labels, join them with a plus delimiter
@@ -190,7 +191,8 @@ class FreesurferReviewInterface(BaseReviewInterface):
         # double click to zoom in to that axis
         elif ((event.dblclick) and \
               (event.inaxes is not None) and \
-              (not check_mouse_event_in_axes(event, self.unzoomable_axes))):
+              (not check_event_in_axes(event, self.unzoomable_axes))):
+            click_type = 'DOUBLE'
             # zoom axes full-screen
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(cfg.zoomed_position)
@@ -209,8 +211,8 @@ class FreesurferReviewInterface(BaseReviewInterface):
     def on_keyboard(self, key_in):
         """Callback to handle keyboard shortcuts to rate and advance."""
 
-        # ignore keyboard key_in when mouse within Notes textbox
-        if key_in.inaxes == self.text_box.ax or key_in.key is None:
+        # ignore keyboard input when key is None or mouse is within Notes textbox
+        if check_event_in_axes(key_in, self.text_box.ax) or (key_in.key is None):
             return
 
         key_pressed = key_in.key.lower()
