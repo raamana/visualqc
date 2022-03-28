@@ -718,12 +718,15 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir,
 
     out_vis_dir = pjoin(out_dir, cfg.annot_vis_dir_name)
     makedirs(out_vis_dir, exist_ok=True)
+
     hemis = ('lh', 'rh')
     hemis_long = ('left', 'right')
     vis_list = dict()
 
     print('Processing {}'.format(subject_id))
     for hemi, hemi_l in zip(hemis, hemis_long):
+
+        # generating necessary scripts
         vis_list[hemi_l] = dict()
         if vis_tool == "freeview":
             script_file, vis_files = make_freeview_script_vis_annot(
@@ -733,6 +736,16 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir,
                 subject_id, hemi_l, out_vis_dir, annot_file)
         else:
             pass
+
+        # not running the scripts if required files dont exist
+        surf_path = fs_dir / subject_id / 'surf' / '{}.pial'.format(hemi)
+        annot_path = fs_dir / subject_id / 'label' / '{}.{}'.format(hemi, annot_file)
+        if not surf_path.exists():
+            print(f"surface for {subject_id} {hemi_l} doesn't exist @\n {surf_path}")
+            continue
+        if not annot_path.exists():
+            print(f"Annot for {subject_id} {hemi_l} doesn't exist @\n{annot_path}")
+            continue
 
         try:
             # run the script only if all the visualizations were not generated before
@@ -748,14 +761,17 @@ def make_vis_pial_surface(in_dir, subject_id, out_dir,
             vis_list[hemi_l].update(vis_files)
         except:
             traceback.print_exc()
-            print('unable to generate tksurfer visualizations for {} hemi - skipping'
-                  ''.format(hemi))
+            print(f'unable to generate 3D surf vis for {hemi} hemi - skipping')
 
     # flattening it for easier use later on
     out_vis_list = dict()
     for hemi_l, view in cfg.view_pref_order[vis_tool]:
-        if pexists(vis_list[hemi_l][view]):
-            out_vis_list[(hemi_l, view)] = vis_list[hemi_l][view]
+        try:
+            if vis_list[hemi_l][view].exists():
+                out_vis_list[(hemi_l, view)] = vis_list[hemi_l][view]
+        except:
+            # not file hemi/view combinations have files generated
+            pass
 
     return out_vis_list
 
