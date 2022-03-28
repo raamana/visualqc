@@ -16,6 +16,7 @@ from os import makedirs
 from os.path import exists as pexists, join as pjoin
 from pathlib import Path
 from subprocess import check_output
+import time
 
 import matplotlib.image as mpimg
 import numpy as np
@@ -40,6 +41,7 @@ from visualqc.workflows import BaseWorkflowVisualQC
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
 
+next_click = time.monotonic()
 
 class FreesurferReviewInterface(BaseReviewInterface):
     """Custom interface for rating the quality of Freesurfer parcellation."""
@@ -172,24 +174,18 @@ class FreesurferReviewInterface(BaseReviewInterface):
     def on_mouse(self, event):
         """Callback for mouse events."""
 
-        print('MouseEvent: button value {} name {} dblclk:'.format(
-            event.button.value, event.button.name, event.dblclick
-            ))
-
-        # unzoom any zoomed-in axis in case of a mouse event
-        if self.prev_axis is not None:
-            # include all the non-data axes here (so they wont be zoomed-in)
-            if not check_mouse_event_in_axes(event, self.unzoomable_axes):
-                self.prev_axis.set_position(self.prev_ax_pos)
-                self.prev_axis.set_zorder(0)
-                self.prev_axis.patch.set_alpha(0.5)
-                self.zoomed_in = False
+        # single click unzooms any zoomed-in axis in case of a mouse event
+        # NOTE: double click --> 2 single clicks, so not dblclick condition needed
+        global next_click
+        prev_click, next_click = next_click, time.monotonic()
+        delta_time = float(np.round(next_click - prev_click, 2))
+        double_clicked = delta_time < cfg.double_click_time_delta
 
         # right click toggles overlay
         if event.button in [3]:
             self.toggle_overlay()
         # double click to zoom in to that axis
-        elif ((event.dblclick) and \
+        elif ((double_clicked) and \
               (event.inaxes is not None) and \
               (not check_event_in_axes(event, self.unzoomable_axes))):
             click_type = 'DOUBLE'
@@ -255,9 +251,6 @@ class FreesurferReviewInterface(BaseReviewInterface):
 
         for art in self.overlaid_artists:
             art.set_alpha(self.latest_alpha_seg)
-
-        # update figure
-        plt.draw()
 
 
 class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):

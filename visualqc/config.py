@@ -108,6 +108,13 @@ default_rating_list_shortform = map_short_rating.keys()
 ratings_not_to_be_recorded = ["i'm tired",
                               'review later']
 
+# figure gets refreshed every mouse event
+#   due to large amount of panels each with non-trivial graphics rendering,
+#   there is a delay in processing the mouse events
+#   hence we increased delta t for double click from typical defaults of 0.5 sec to 1
+#   this also helps improving accessibility for those who cant click too fast
+double_click_time_delta = 1.1 # seconds
+
 # for serialization
 delimiter = ','
 # when ratings or notes contain the above delimiter, it will be replaced by this
