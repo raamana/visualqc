@@ -240,6 +240,9 @@ class FreesurferReviewInterface(BaseReviewInterface):
             else:
                 pass
 
+        # refreshing the figure
+        self.fig.canvas.draw_idle()
+
 
     def toggle_overlay(self):
         """Toggles the overlay by setting alpha to 0 and back."""
@@ -1167,7 +1170,8 @@ def cli_run():
     wf = make_workflow_from_user_options()
 
     if wf.vis_type is not None:
-        # matplotlib.interactive(True)
+        import matplotlib
+        matplotlib.interactive(True)
         wf.run()
     else:
         raise ValueError('Invalid state for visualQC!\n'

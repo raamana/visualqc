@@ -149,7 +149,7 @@ class BaseWorkflowVisualQC(ABC):
     def save_ratings(self):
         """Saves ratings to disk """
 
-        print('Saving ratings .. \n')
+        print('\nSaving ratings .. \n')
         ratings_file, prev_ratings_backup = get_ratings_path_info(self)
 
         if pexists(ratings_file):
