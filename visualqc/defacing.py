@@ -15,12 +15,13 @@ from matplotlib import pyplot as plt
 from matplotlib.image import imread
 from matplotlib.widgets import CheckButtons, RadioButtons
 from mrivis.base import Collage, SlicePicker
+
 from visualqc import config as cfg
 from visualqc.image_utils import rescale_without_outliers
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import (check_inputs_defacing, check_out_dir,
-                            compute_cell_extents_grid, read_image,
-                            pixdim_nifti_header, slice_aspect_ratio)
+                            compute_cell_extents_grid, pixdim_nifti_header,
+                            read_image, slice_aspect_ratio)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 

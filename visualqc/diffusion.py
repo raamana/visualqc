@@ -22,12 +22,12 @@ from visualqc import config as cfg
 from visualqc.image_utils import dwi_overlay_edges
 from visualqc.readers import diffusion_traverse_bids
 from visualqc.t1_mri import T1MriInterface
-from visualqc.utils import check_bids_dir, check_finite_int, check_image_is_4d, \
-    check_out_dir, check_outlier_params, check_time, check_views, get_axis, pick_slices, \
-    scale_0to1
+from visualqc.utils import (check_bids_dir, check_finite_int, check_image_is_4d,
+                            check_out_dir, check_outlier_params, check_time,
+                            check_views, get_axis,
+                            pick_slices,
+                            scale_0to1)
 from visualqc.workflows import BaseWorkflowVisualQC
-
-_z_score = lambda x: (x - np.mean(x)) / np.std(x)
 
 
 def _prettify(filename, max_width=18):
@@ -161,6 +161,7 @@ class DiffusionMRIInterface(T1MriInterface):
         """redefining it to void it's actions intended for T1w MRI interface"""
         pass
 
+
     def maximize_axis(self, ax):
         """zooms a given axes"""
 
@@ -247,7 +248,8 @@ class DiffusionMRIInterface(T1MriInterface):
             if key_pressed in cfg.abbreviation_diffusion_mri_default_issue_list:
                 checked_label = cfg.abbreviation_diffusion_mri_default_issue_list[
                     key_pressed]
-                # TODO if user chooses a different set of names, keyboard shortcuts might not work
+                # TODO if user chooses a different set of names, keyboard
+                #  shortcuts might not work
                 self.checkbox.set_active(self.issue_list.index(checked_label))
             else:
                 pass
@@ -259,6 +261,7 @@ class DiffusionMRIInterface(T1MriInterface):
         """Implements the scroll callback"""
 
         self.scroll_callback(scroll_event)
+
 
     def reset_figure(self):
         "Resets the figure to prepare it for display of next subject."
@@ -307,10 +310,13 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             Number of frames to drop at the beginning of the time series.
 
         apply_preproc : bool
-            Whether to apply basic preprocessing steps (detrend, slice timing correction etc)
+            Whether to apply basic preprocessing steps (detrend, slice timing
+            correction etc)
                 before building the carpet image.
-                If the images are already preprocessed elsewhere, disable this with apply_preproc=True
-            Default : False, to not apply any preprocessing before display for review.
+                If the images are already preprocessed elsewhere, disable this
+                with apply_preproc=True
+            Default : False, to not apply any preprocessing before display for
+            review.
 
         """
 
@@ -376,7 +382,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.num_slices_per_view = num_slices_per_view
         self.num_rows_per_view = num_rows_per_view
         self.num_rows = len(self.views) * self.num_rows_per_view
-        self.num_cols = int((len(self.views) * self.num_slices_per_view) / self.num_rows)
+        self.num_cols = int(
+            (len(self.views) * self.num_slices_per_view) / self.num_rows)
         self.padding = padding
 
 
@@ -416,7 +423,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # empty/dummy data for placeholding
         empty_image = np.full((200, 200), 0.0)
-        label_x, label_y = (5, 5) # x, y in image data space
+        label_x, label_y = (5, 5)  # x, y in image data space
         empty_vec = np.full((200, 1), 0.0)
         gradients = list(range(200))
 
@@ -437,7 +444,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.ax_carpet.set_zorder(self.layer_order_carpet)
         #   vmin/vmax are controlled, because we rescale all to [0, 1]
         self.imshow_params_carpet = dict(interpolation='none', aspect='auto',
-                                         origin='lower', cmap='gray', vmin=0.0, vmax=1.0)
+                                         origin='lower', cmap='gray', vmin=0.0,
+                                         vmax=1.0)
 
         self.ax_carpet.yaxis.set_visible(False)
         self.ax_carpet.set_xlabel('gradient')
@@ -477,12 +485,14 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # 3. axes to show slices in foreground when a time point is selected
         matrix_handles = self.fig.subplots(self.num_rows, self.num_cols,
                                            subplot_kw=dict(rasterized=True),
-                                           gridspec_kw=dict(wspace=0.01, hspace=0.01))
+                                           gridspec_kw=dict(wspace=0.01,
+                                                            hspace=0.01))
         self.fg_axes = matrix_handles.flatten()
 
         # vmin/vmax are controlled, because we rescale all to [0, 1]
         self.imshow_params_zoomed = dict(interpolation='none', aspect='equal',
-                                         rasterized=True, origin='lower', cmap='gray',
+                                         rasterized=True, origin='lower',
+                                         cmap='gray',
                                          vmin=0.0, vmax=1.0)
 
         # images to be shown in the forground
@@ -493,7 +503,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.images_fg[ix] = ax.imshow(empty_image, **self.imshow_params_zoomed)
             self.images_fg_label[ix] = ax.text(label_x, label_y, '',
                                                **cfg.slice_num_label_properties,
-                                               zorder=self.layer_order_zoomedin+1)
+                                               zorder=self.layer_order_zoomedin + 1)
             ax.set(visible=False, zorder=self.layer_order_zoomedin)
 
         self.foreground_h = self.fig.text(cfg.position_zoomed_gradient[0],
@@ -505,7 +515,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.background_artists = list(self.stats_axes) + [self.ax_carpet, ]
         self.foreground_artists = list(self.fg_axes) + [self.foreground_h, ]
 
-        # separating the list below to allow for differing x axes, while being background
+        # separating the list below to allow for differing x axes, while being
+        # background
         self.axes_common_xaxis = list(self.stats_axes) + [self.ax_carpet, ]
 
         # leaving some space on the right for review elements
@@ -566,7 +577,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if self.current_alert_msg is not None:
             h_alert_text = self.fig.text(cfg.position_outlier_alert[0],
                                          cfg.position_outlier_alert[1],
-                                         self.current_alert_msg, **cfg.alert_text_props)
+                                         self.current_alert_msg,
+                                         **cfg.alert_text_props)
             # adding it to list of elements to cleared when advancing to next subject
             self.UI.data_handles.append(h_alert_text)
 
@@ -578,8 +590,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if flagged_as_outlier:
             alerts_list = self.by_sample.get(self.current_unit_id,
                                              None)  # None, if id not in dict
-            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'.format(
-                '\t'.join(alerts_list)))
+            print('\n\tFlagged as a possible outlier by these measures:'
+                  '\n\t\t{}'.format('\t'.join(alerts_list)))
 
             strings_to_show = ['Flagged as an outlier:', ] + alerts_list
             self.current_alert_msg = '\n'.join(strings_to_show)
@@ -608,11 +620,13 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.b0_indices = np.flatnonzero(self.b_values_this_unit == 0)
             if len(self.b0_indices) < 1:
                 skip_subject = True
-                print('There are no b=0 volumes for {}! Skipping it..'.format(unit_id))
+                print('There are no b=0 volumes for {}! '
+                      'Skipping it..'.format(unit_id))
                 return skip_subject
 
             if len(self.b0_indices) == 1:
-                self.b0_volume = self.img_this_unit_raw[..., self.b0_indices].squeeze()
+                self.b0_volume = self.img_this_unit_raw[
+                    ..., self.b0_indices].squeeze()
             else:
                 # TODO which is the correct b=0 volumes are available
                 # TODO is there a way to reduce multiple into one
@@ -643,7 +657,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # TODO what about slice timing correction?
 
-        num_voxels = np.prod(self.dw_volumes.shape[0:3])
+        # num_voxels = np.prod(self.dw_volumes.shape[0:3])
         # TODO better way to label each gradient would be with unit vector/direction
         gradients = list(range(self.num_gradients))
 
@@ -671,9 +685,11 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if event.x is None:
             return
 
-        self.checking_alignment = False  # to distinguish between no or alignment overlay
+        # to distinguish between no or alignment overlay
+        self.checking_alignment = False
 
-        # computing x in axes data coordinates myself, to avoid overlaps with other axes
+        # computing x in axes data coordinates myself,
+        #   to avoid overlaps with other axes
         # retrieving the latest transform after to ensure its accurate at click time
         x_in_carpet, _y = self._event_location_in_axis(event, self.ax_carpet)
         # clipping it to [0, T]
@@ -701,15 +717,14 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def show_b0_gradient(self):
         """Shows the b=0 volume"""
         # TODO what if more than one b=0 volumees are available
-        if self.current_grad_index == self.b0_indices[0] and \
-            self.UI.zoomed_in:
+        if (self.current_grad_index == self.b0_indices[0]) and self.UI.zoomed_in:
             return  # do nothing
 
         self.show_3dimage(self.b0_volume.squeeze(), 'b=0 volume')
 
 
     def animate_through_gradients(self):
-        """Loops through all the gradients, in mulit-slice view, to help spot artefacts"""
+        """Loops through all gradients, in mulitslice view, to help spot artefacts"""
 
         self.anim_loop.run_until_complete(self._animate_through_gradients())
 
@@ -738,8 +753,9 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def flip_between_two(self, index_one, index_two, first_index_in_b0=False):
         """Flips between first and last volume to identify any pulsation artefacts"""
 
-        self.anim_loop.run_until_complete(self._flip_between_two_nTimes(
-            index_one, index_two, first_index_in_b0=first_index_in_b0))
+        self.anim_loop.run_until_complete(
+            self._flip_between_two_nTimes(index_one, index_two,
+                                          first_index_in_b0=first_index_in_b0))
 
 
     @asyncio.coroutine
@@ -756,7 +772,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         _second_vol = self.dw_volumes[:, :, :, index_two].squeeze()
         if index_two < 0:
             # -1 would be confusing to the user
-            index_two = self.num_gradients+index_two
+            index_two = self.num_gradients + index_two
         _id_second = 'DW gradient {}'.format(index_two)
 
         for _ in range(cfg.num_times_to_animate_diffusion_mri):
@@ -789,7 +805,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         self.checking_alignment = True
 
-        if self.current_alignment_check in ['Align to b=0 (animate)', 'Align to b=0']:
+        if self.current_alignment_check in ['Align to b=0 (animate)',
+                                            'Align to b=0']:
             self.flip_between_two(self.b0_indices, self.current_grad_index,
                                   first_index_in_b0=True)
         elif self.current_alignment_check in ['Align to b=0 (edges)', ]:
@@ -808,11 +825,12 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.images_fg[ax_index].set(data=mixed)
             self.images_fg_label[ax_index].set_text(str(slice_index))
 
-        # the following needs to be done outside show_image3d, as we need custom mixing
+        # this needs to be done outside show_image3d, as we need custom mixing
         self._set_backgrounds_visibility(False)
         self._set_foregrounds_visibility(True)
         self._identify_foreground('Alignment check to b=0, '
                                   'grad index {}'.format(self.current_grad_index))
+
 
     def stop_animation(self):
         # TODO this not working - run_until_complete() is likely the reason
@@ -864,13 +882,14 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def show_gradient(self):
         """Exhibits a selected timepoint on top of stats/carpet"""
 
-        if self.current_grad_index < 0 or self.current_grad_index >= self.num_gradients:
-            print('Requested time point outside '
-                  'range [0, {}]'.format(self.num_gradients))
+        if (self.current_grad_index < 0) or (self.current_grad_index >= self.num_gradients):
+            print('Requested time point outside range [0, {}]'
+                  ''.format(self.num_gradients))
             return
 
-        self.show_3dimage(self.dw_volumes[:, :, :, self.current_grad_index].squeeze(),
-                          'zoomed-in gradient {}'.format(self.current_grad_index))
+        self.show_3dimage(
+            self.dw_volumes[:, :, :, self.current_grad_index].squeeze(),
+            'zoomed-in gradient {}'.format(self.current_grad_index))
 
 
     def show_3dimage(self, image, annot, slices=None):
@@ -1151,22 +1170,14 @@ def get_parser():
 
     parser = argparse.ArgumentParser(prog="visualqc_diffusion",
                                      formatter_class=argparse.RawTextHelpFormatter,
-                                     description='visualqc_diffusion_mri: rate quality of diffusion MR scan.')
+                                     description='visualqc_diffusion_mri: rate '
+                                                 'quality of diffusion MR scan.')
 
     help_text_bids_dir = textwrap.dedent("""
     Absolute path to the root folder of the dataset formatted with the BIDS spec.
     See bids.neuroimaging.io for more info.
 
     E.g. ``--bids_dir /project/new_big_idea/ds042``
-    \n""")
-
-    help_text_user_dir = textwrap.dedent("""
-    Absolute path to an input folder containing the MRI scan.
-    Each subject will be queried after its ID in the metadata file,
-    and is expected to have a file, uniquely specified ``--name_pattern``),
-    in its own folder under this path ``--user_dir``.
-
-    E.g. ``--user_dir /project/images_to_QC``
     \n""")
 
     help_text_id_list = textwrap.dedent("""
@@ -1193,9 +1204,15 @@ def get_parser():
          - ``'func/sub*_dwi_*space-MNI152*_preproc.nii.gz'`` when you need to additional levels deeper (with a / in regex)
             or control different versions (atlas space) of the same type of file.
 
-    Ensure the regex is *tight* enough to result in only one file for each ID in the id_list. You can do this by giving it a try in the shell and counting the number of results against the number of IDs in id_list. If you have more results than the IDs, then there are duplicates. You can use https://regex101.com to construct your pattern to tightly match your requirements. If multiple matches are found, the first one will be used.
+    Ensure the regex is *tight* enough to result in only one file for each ID in
+    the id_list. You can do this by giving it a try in the shell and counting the
+    number of results against the number of IDs in id_list. If you have more
+    results than the IDs, then there are duplicates. You can use
+    https://regex101.com to construct your pattern to tightly match your
+    requirements. If multiple matches are found, the first one will be used.
 
-    Make sure to use single quotes to avoid the shell globbing before visualqc receives it.
+    Make sure to use single quotes to avoid the shell globbing before visualqc
+    receives it.
 
     Default: '{}'
     \n""".format(cfg.default_name_pattern))
@@ -1206,11 +1223,14 @@ def get_parser():
     \n""".format(cfg.default_out_dir_name))
 
     help_text_apply_preproc = textwrap.dedent("""
-    Whether to apply basic preprocessing steps (detrend, slice timing correction etc), before building the carpet image.
+    Whether to apply basic preprocessing steps (detrend, slice timing correction
+    etc), before building the carpet image.
 
-    If the images are already preprocessed elsewhere, use this flag ``--apply_preproc``
+    If the images are already preprocessed elsewhere, use this flag
+    ``--apply_preproc``
 
-    Default is NOT to apply any preprocessing (detrending etc) before showing images for review.
+    Default is NOT to apply any preprocessing (detrending etc) before showing
+    images for review.
     \n""")
 
     help_text_views = textwrap.dedent("""
@@ -1231,11 +1251,14 @@ def get_parser():
     \n""".format(cfg.default_num_rows))
 
     help_text_prepare = textwrap.dedent("""
-    This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations.
+    This flag enables batch-generation of 3d surface visualizations, prior to
+    starting any review and rating operations.
 
-    This makes the switch from one subject to the next, even more seamless (saving few seconds :) ).
+    This makes the switch from one subject to the next, even more seamless (saving
+    few seconds :) ).
 
-    Default: False (required visualizations are generated only on demand, which can take 5-10 seconds for each subject).
+    Default: False (required visualizations are generated only on demand,
+    which can take 5-10 seconds for each subject).
     \n""")
 
     help_text_outlier_detection_method = textwrap.dedent("""
@@ -1256,7 +1279,8 @@ def get_parser():
     \n""".format(cfg.default_outlier_fraction))
 
     help_text_outlier_feat_types = textwrap.dedent("""
-    Type of features to be employed in training the outlier detection method.  It could be one of
+    Type of features to be employed in training the outlier detection method.
+    It could be one of
     'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label),
     'subcortical' (aseg.stats: volumes of several subcortical structures),
     or 'both' (using both aseg and aparc stats).
@@ -1280,10 +1304,6 @@ def get_parser():
                         default=cfg.default_user_dir,
                         required=False, help=help_text_bids_dir)
 
-    # in_out.add_argument("-u", "--user_dir", action="store", dest="user_dir",
-    #                     default=cfg.default_user_dir,
-    #                     required=False, help=help_text_user_dir)
-
     in_out.add_argument("-o", "--out_dir", action="store", dest="out_dir",
                         required=False, help=help_text_out_dir,
                         default=None)
@@ -1295,14 +1315,15 @@ def get_parser():
                         default=cfg.default_name_pattern, required=False,
                         help=help_text_name_pattern)
 
-    preproc = parser.add_argument_group('Preprocessing',
-                                        'options related to preprocessing before review')
+    preproc = parser.add_argument_group(
+        'Preprocessing', 'options related to preprocessing before review')
 
     preproc.add_argument("-ap", "--apply_preproc", action="store_true",
                          dest="apply_preproc",
                          required=False, help=help_text_apply_preproc)
 
-    vis = parser.add_argument_group('Visualization', 'Customize behaviour of comparisons')
+    vis = parser.add_argument_group('Visualization',
+                                    'Customize behaviour of comparisons')
 
     vis.add_argument("-dl", "--delay_in_animation", action="store",
                      dest="delay_in_animation",
@@ -1310,10 +1331,12 @@ def get_parser():
                      help=help_text_delay_in_animation)
 
     outliers = parser.add_argument_group('Outlier detection',
-                                         'options related to automatically detecting possible outliers')
+                                         'options related to automatically '
+                                         'detecting possible outliers')
     outliers.add_argument("-olm", "--outlier_method", action="store",
                           dest="outlier_method",
-                          default=cfg.default_outlier_detection_method, required=False,
+                          default=cfg.default_outlier_detection_method,
+                          required=False,
                           help=help_text_outlier_detection_method)
 
     outliers.add_argument("-olf", "--outlier_fraction", action="store",
@@ -1326,18 +1349,17 @@ def get_parser():
                           default=cfg.diffusion_mri_features_OLD, required=False,
                           help=help_text_outlier_feat_types)
 
-    # outliers.add_argument("-old", "--disable_outlier_detection", action="store_true",
-    #                       dest="disable_outlier_detection",
-    #                       required=False, help=help_text_disable_outlier_detection)
-
     # TODO re-enable it when OLD is ready for DWI
-    outliers.add_argument("-old", "--disable_outlier_detection", action="store_false",
+    outliers.add_argument("-old", "--disable_outlier_detection",
+                          action="store_false",
                           dest="disable_outlier_detection",
                           required=False, help=help_text_disable_outlier_detection)
 
-    layout = parser.add_argument_group('Layout options',
-                                       'Slice layout arragement when zooming in on a time point,\n'
-                                       ' or show to the std. dev plot.')
+    layout = parser.add_argument_group(
+        'Layout options',
+        'Slice layout arrangement when zooming in on a time point,\n'
+        ' or show to the std. dev plot.')
+
     layout.add_argument("-w", "--views", action="store", dest="views",
                         default=cfg.default_views, required=False, nargs='+',
                         help=help_text_views)
@@ -1350,8 +1372,10 @@ def get_parser():
                         default=cfg.default_num_rows, required=False,
                         help=help_text_num_rows)
 
-    _wf_descr = 'Options related to workflow e.g. to pre-compute resource-intensive features,  ' \
-                'and pre-generate all the visualizations required before initiating the review.'
+    _wf_descr = 'Options related to workflow e.g. ' \
+                'to pre-compute resource-intensive features,  ' \
+                'and pre-generate all the visualizations required ' \
+                'before initiating the review.'
     wf_args = parser.add_argument_group('Workflow', _wf_descr)
     wf_args.add_argument("-p", "--prepare_first", action="store_true",
                          dest="prepare_first",
@@ -1380,7 +1404,8 @@ def make_workflow_from_user_options():
     type_of_features = 'diffusion_mri'
 
     if user_args.bids_dir is None:
-        raise ValueError('Invalid args: Only BIDS format input is supported at present.')
+        raise ValueError(
+            'Invalid args: Only BIDS format input is supported at present.')
 
     in_dir, in_dir_type = check_bids_dir(user_args.bids_dir)
     id_list = None
@@ -1391,7 +1416,8 @@ def make_workflow_from_user_options():
     #     name_pattern = user_args.name_pattern
     #     in_dir = realpath(user_args.user_dir)
     #     in_dir_type = 'generic'
-    #     id_list, images_for_id = check_id_list_with_regex(user_args.id_list, in_dir, name_pattern)
+    #     id_list, images_for_id = check_id_list_with_regex(user_args.id_list,
+    #     in_dir, name_pattern)
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
     apply_preproc = user_args.apply_preproc
@@ -1418,8 +1444,10 @@ def make_workflow_from_user_options():
                                  outlier_fraction=outlier_fraction,
                                  outlier_feat_types=outlier_feat_types,
                                  disable_outlier_detection=disable_outlier_detection,
-                                 prepare_first=user_args.prepare_first, vis_type=vis_type,
-                                 views=views, num_slices_per_view=num_slices_per_view,
+                                 prepare_first=user_args.prepare_first,
+                                 vis_type=vis_type,
+                                 views=views,
+                                 num_slices_per_view=num_slices_per_view,
                                  num_rows_per_view=num_rows_per_view)
 
     return wf

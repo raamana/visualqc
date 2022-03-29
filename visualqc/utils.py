@@ -12,6 +12,7 @@ from shutil import copyfile, which
 
 import nibabel as nib
 import numpy as np
+
 import visualqc.config as cfg
 from visualqc.config import (default_out_dir_name, freesurfer_vis_types,
                              visualization_combination_choices)

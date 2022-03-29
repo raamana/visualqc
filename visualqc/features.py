@@ -4,9 +4,9 @@ Algorithms to extract various features of interest for outlier detection methods
 """
 
 from os import makedirs
+from os.path import exists as pexists, join as pjoin, splitext
 
 import numpy as np
-from os.path import exists as pexists, join as pjoin, splitext
 
 from visualqc import config as cfg
 from visualqc.utils import read_image, scale_0to1
@@ -15,7 +15,7 @@ from visualqc.utils import read_image, scale_0to1
 def t1_histogram_whole_scan(in_mri_path,
                             num_bins=cfg.num_bins_histogram_intensity_distribution):
     """
-    Computes histogram over the intensity distribution over the entire scan, 
+    Computes histogram over the intensity distribution over the entire scan,
     including brain, skull and background.
 
     Parameters
@@ -23,6 +23,9 @@ def t1_histogram_whole_scan(in_mri_path,
 
     in_mri_path : str
         Path to an MRI scan readable by Nibabel
+
+    num_bins : int
+        number of bins to use to create histogram
 
     Returns
     -------
@@ -69,7 +72,7 @@ def extract_T1_features(wf, feature_type='histogram_whole_scan'):
 
     feat_dir = pjoin(wf.out_dir, cfg.outlier_feature_folder_name)
     makedirs(feat_dir, exist_ok=True)
-    path_to_csv = lambda sid: pjoin(feat_dir, sid, out_csv_name)
+    path_to_csv = lambda sid_: pjoin(feat_dir, sid_, out_csv_name)
 
     if feature_type in ['histogram_whole_scan', ]:
         extract_method = t1_histogram_whole_scan
@@ -105,4 +108,3 @@ def diffusion_mri_features(*args):
     """Extractor from diffusion MRI scan"""
 
     raise NotImplementedError
-

@@ -895,15 +895,6 @@ def get_parser():
     E.g. ``--fs_dir /project/freesurfer_v5.3``
     \n""")
 
-    help_text_user_dir = textwrap.dedent("""
-    Absolute path to an input folder containing the MRI scan.
-    Each subject will be queried after its ID in the metadata file,
-    and is expected to have the MRI (specified ``--mri_name``),
-    in its own folder under --user_dir.
-
-    E.g. ``--user_dir /project/images_to_QC``
-    \n""")
-
     help_text_id_list = textwrap.dedent("""
     Abs path to file containing list of subject IDs to be processed.
     If not provided, all the subjects with required files will be processed.

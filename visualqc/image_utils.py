@@ -7,17 +7,19 @@ Image processing utilities
 __all__ = ['background_mask', 'foreground_mask', 'overlay_edges', 'diff_image',
            'equalize_image_histogram']
 
-from scipy import ndimage
-from visualqc import config as cfg
-from visualqc.utils import scale_0to1
-import numpy as np
 from functools import partial
-from scipy.ndimage import sobel, binary_closing
-from scipy.ndimage.morphology import binary_fill_holes
-from scipy.ndimage.filters import median_filter, minimum_filter, maximum_filter
-from scipy.signal import medfilt2d
 
 import matplotlib
+import numpy as np
+from scipy import ndimage
+from scipy.ndimage import binary_closing, sobel
+from scipy.ndimage.filters import maximum_filter, median_filter, minimum_filter
+from scipy.ndimage.morphology import binary_fill_holes
+from scipy.signal import medfilt2d
+
+from visualqc import config as cfg
+from visualqc.utils import scale_0to1
+
 matplotlib.interactive(True)
 
 from matplotlib.cm import get_cmap
@@ -28,7 +30,7 @@ hot_cmap = get_cmap('hot')
 filter_params = dict(size=cfg.median_filter_size, mode='constant', cval=0)
 min_filter = partial(minimum_filter, **filter_params)
 max_filter = partial(maximum_filter, **filter_params)
-med_filter = partial(median_filter , **filter_params)
+med_filter = partial(median_filter, **filter_params)
 
 
 def background_mask(mri, thresh_perc=1):
@@ -38,10 +40,10 @@ def background_mask(mri, thresh_perc=1):
     nonzero_grad_mag = grad_magnitude[grad_magnitude > 0]
 
     thresh_val = np.percentile(nonzero_grad_mag.flatten(), thresh_perc)
-    background_mask = grad_magnitude < thresh_val
+    backgrnd_mask = grad_magnitude < thresh_val
 
     se36 = ndimage.generate_binary_structure(3, 6)
-    closed = ndimage.binary_closing(background_mask, se36, iterations=6)
+    closed = ndimage.binary_closing(backgrnd_mask, se36, iterations=6)
     final_mask = ndimage.binary_erosion(closed, se36, iterations=5)
 
     return final_mask
@@ -99,17 +101,20 @@ def mask_image(input_img,
 
     return mask_img
 
+
 # alias
 foreground_mask = mask_image
 
-def equalize_image_histogram(image_in, num_bins=cfg.num_bins_histogram_contrast_enhancement,
+
+def equalize_image_histogram(image_in,
+                             num_bins=cfg.num_bins_histogram_contrast_enhancement,
                              max_value=255):
     """Modifies the image to achieve an equalized histogram."""
 
     image_flat = image_in.flatten()
     hist_image, bin_edges = np.histogram(image_flat, bins=num_bins, normed=True)
     cdf = hist_image.cumsum()
-    cdf = max_value * cdf / cdf[-1] # last element is total sum
+    cdf = max_value * cdf / cdf[-1]  # last element is total sum
 
     # linear interpolation
     array_equalized = np.interp(image_flat, bin_edges[:-1], cdf)
@@ -135,14 +140,14 @@ def overlay_edges(slice_one, slice_two, sharper=True):
                      sobel(slice_two, axis=1, mode='constant'))
 
     # trying to remove weak edges
-    if not sharper: # level of removal
+    if not sharper:  # level of removal
         edges = med_filter(max_filter(min_filter(edges)))
     else:
         edges = min_filter(min_filter(max_filter(min_filter(edges))))
     edges_color_mapped = hot_cmap(edges, alpha=cfg.alpha_edge_overlay_alignment)
     composite = gray_cmap(slice_one, alpha=cfg.alpha_background_slice_alignment)
 
-    composite[edges_color_mapped>0] = edges_color_mapped[edges_color_mapped>0]
+    composite[edges_color_mapped > 0] = edges_color_mapped[edges_color_mapped > 0]
 
     # mask_rgba = np.dstack([edges>0] * 4)
     # composite[mask_rgba] = edges_color_mapped[mask_rgba]
@@ -170,7 +175,7 @@ def dwi_overlay_edges(slice_one, slice_two):
     edges_color_mapped = hot_cmap(edges, alpha=cfg.alpha_edge_overlay_alignment)
     composite = gray_cmap(slice_one, alpha=cfg.alpha_background_slice_alignment)
 
-    composite[edges_color_mapped>0] = edges_color_mapped[edges_color_mapped>0]
+    composite[edges_color_mapped > 0] = edges_color_mapped[edges_color_mapped > 0]
 
     # mask_rgba = np.dstack([edges>0] * 4)
     # composite[mask_rgba] = edges_color_mapped[mask_rgba]
@@ -221,10 +226,10 @@ def mix_color(slice1, slice2,
     slice1 = scale_0to1(slice1)
     slice2 = scale_0to1(slice2)
 
-    # masking background
-    combined_distr = np.concatenate((slice1.flatten(), slice2.flatten()))
-    image_eps = np.percentile(combined_distr, 5)
-    background = np.logical_or(slice1 <= image_eps, slice2 <= image_eps)
+    # # masking background
+    # combined_distr = np.concatenate((slice1.flatten(), slice2.flatten()))
+    # image_eps = np.percentile(combined_distr, 5)
+    # background = np.logical_or(slice1 <= image_eps, slice2 <= image_eps)
 
     if color_space.lower() in ['rgb']:
 
@@ -240,7 +245,8 @@ def mix_color(slice1, slice2,
     elif color_space.lower() in ['hsv']:
 
         raise NotImplementedError(
-            'This method (color_space="hsv") is yet to fully conceptualized and implemented.')
+            'This method (color_space="hsv") is '
+            'yet to be fully conceptualized and implemented.')
 
     # ensuring all values are clipped to [0, 1]
     mixed[mixed <= 0.0] = 0.0

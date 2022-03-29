@@ -7,15 +7,15 @@ Module to define base classes.
 import sys
 import traceback
 from abc import ABC, abstractmethod
-from shutil import copyfile
-
-from os.path import exists as pexists, join as pjoin
-from os import makedirs
-from pathlib import Path
-from timeit import default_timer as timer
 from datetime import timedelta
+from os import makedirs
+from os.path import exists as pexists, join as pjoin
+from pathlib import Path
+from shutil import copyfile
+from timeit import default_timer as timer
 
 import numpy as np
+
 from visualqc import config as cfg
 from visualqc.utils import get_ratings_path_info, load_ratings_csv, summarize_ratings
 
@@ -109,7 +109,6 @@ class BaseWorkflowVisualQC(ABC):
         - must save the figure handle to self.fig
         - add :class:BaseReviewInterface and save handle to self.UI
         - add additional ones on top the base review interface.
-
 
         """
 
@@ -308,7 +307,7 @@ class BaseWorkflowVisualQC(ABC):
 
 
     def quit(self, input_event_to_ignore=None):
-        "terminator"
+        """terminator"""
 
         if self.UI.allowed_to_advance():
             self.prepare_to_advance()
@@ -320,7 +319,7 @@ class BaseWorkflowVisualQC(ABC):
 
 
     def next(self, input_event_to_ignore=None):
-        "advancer"
+        """advancer"""
 
         if self.UI.allowed_to_advance():
             self.prepare_to_advance()

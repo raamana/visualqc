@@ -11,18 +11,14 @@ import textwrap
 import time
 import warnings
 from abc import ABC
-import numpy as np
 from functools import partial
-from scipy.ndimage import grey_erosion, sobel, \
-    grey_opening, binary_opening
-from scipy.ndimage.filters import median_filter, minimum_filter, maximum_filter
-from scipy.signal import medfilt2d, medfilt
 
 import matplotlib
+import numpy as np
+
 matplotlib.interactive(True)
 
 from matplotlib import pyplot as plt
-from matplotlib.cm import get_cmap
 from matplotlib.widgets import RadioButtons
 from mrivis.utils import crop_to_seg_extents
 from os.path import join as pjoin, realpath
@@ -860,7 +856,6 @@ def cli_run():
     wf = make_workflow_from_user_options()
 
     if wf.vis_type is not None:
-        # matplotlib.interactive(True)
         wf.run()
     else:
         raise ValueError('Invalid state for visualQC!\n'
