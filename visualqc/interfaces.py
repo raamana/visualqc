@@ -5,8 +5,9 @@ Module defining base interfaces.
 
 from abc import ABC, abstractmethod
 
-from matplotlib.widgets import Button, TextBox
 from matplotlib import pyplot as plt
+from matplotlib.widgets import Button, TextBox
+
 from visualqc import config as cfg
 
 
@@ -53,9 +54,9 @@ class BaseReviewInterface(ABC):
         """Navigation elements"""
 
         ax_bt_quit = self.fig.add_axes(cfg.position_quit_button,
-                              facecolor=cfg.color_quit_axis, aspect='equal')
+                                       facecolor=cfg.color_quit_axis, aspect='equal')
         ax_bt_next = self.fig.add_axes(cfg.position_next_button,
-                              facecolor=cfg.color_quit_axis, aspect='equal')
+                                       facecolor=cfg.color_quit_axis, aspect='equal')
         self.bt_quit = Button(ax_bt_quit, 'Quit', hovercolor='red')
         self.bt_next = Button(ax_bt_next, 'Next', hovercolor='xkcd:greenish')
         #
@@ -139,4 +140,3 @@ class BaseReviewInterface(ABC):
     @abstractmethod
     def reset_figure(self):
         """ Resets the state of UI and clears the axes. """
-

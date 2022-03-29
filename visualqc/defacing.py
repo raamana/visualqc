@@ -15,12 +15,13 @@ from matplotlib import pyplot as plt
 from matplotlib.image import imread
 from matplotlib.widgets import CheckButtons, RadioButtons
 from mrivis.base import Collage, SlicePicker
+
 from visualqc import config as cfg
 from visualqc.image_utils import rescale_without_outliers
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import (check_inputs_defacing, check_out_dir,
-                            compute_cell_extents_grid, read_image,
-                            pixdim_nifti_header, slice_aspect_ratio)
+                            compute_cell_extents_grid, pixdim_nifti_header,
+                            read_image, slice_aspect_ratio)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -422,9 +423,10 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         self.current_pixdim = pixdim_nifti_header(self.orig_hdr)
         if not np.allclose(self.current_pixdim,
                            pixdim_nifti_header(self.defaced_hdr)):
-            raise ValueError('pixel dimensions for the original and '
-                             'defaced images do not match! They are: {}, {}'.format(
-                self.current_pixdim, self.pixdim_nifti_header(defaced_hdr)))
+            raise ValueError(
+                'pixel dimensions for the original and defaced images do not match! '
+                'They are: {}, {}'.format(
+                self.current_pixdim, self.pixdim_nifti_header(self.defaced_hdr)))
 
         self.render_img_list = list()
         for rimg_path in self.images_for_id[unit_id]['render']:
@@ -454,10 +456,6 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                                         view_set=self.collage.view_set,
                                         num_slices=self.collage.num_slices,
                                         sampler=cfg.defacing_slice_locations)
-
-        # # where to save the visualization to
-        # out_vis_path = pjoin(self.out_dir,
-        #   'visual_qc_{}_{}'.format(self.vis_type, unit_id))
 
         return skip_subject
 

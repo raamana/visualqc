@@ -3,19 +3,19 @@ __all__ = ['read_image', 'check_image_is_3d', 'check_bids_dir']
 import os
 import sys
 import warnings
-from genericpath import exists as pexists
 from collections import Counter
-from os.path import realpath
+from genericpath import exists as pexists
 from os import makedirs
+from os.path import basename, join as pjoin, realpath, splitext
+from pathlib import Path
 from shutil import copyfile, which
 
 import nibabel as nib
 import numpy as np
-from os.path import basename, join as pjoin, realpath, splitext
-from pathlib import Path
+
 import visualqc.config as cfg
-from visualqc.config import (default_out_dir_name, freesurfer_vis_cmd,
-                             freesurfer_vis_types, visualization_combination_choices)
+from visualqc.config import (default_out_dir_name, freesurfer_vis_types,
+                             visualization_combination_choices)
 
 
 def read_image(img_spec,
@@ -226,6 +226,22 @@ def pick_slices(img, view_set, num_slices):
         slices.extend([(view, slice) for slice in slices_in_dim])
 
     return slices
+
+
+def check_event_in_axes(event, axes):
+    """Checks if a mouse or keyboard event occured in one of the axes in a list"""
+
+    from matplotlib.backend_bases import LocationEvent
+    if not isinstance(event, LocationEvent):
+        raise TypeError('Event must be an instance of LocationEvent with x,y coords')
+
+    # Axis.contains() method returns a tuple: Bool, Dict; so need [0] to capture Bool
+    try:
+        return any([ax.contains(event)[0] for ax in axes])
+    except TypeError: # when it is not a list/iterable of axes
+        return axes.contains(event)[0]
+    except:
+        raise ValueError('Input must be a matplotlib Axis or an Iterable of Axes!')
 
 
 def check_layout(total_num_slices, num_views, num_rows_per_view, num_rows_for_surf_vis):
@@ -660,10 +676,34 @@ def check_bids_dir(dir_path):
 def freesurfer_installed():
     """Checks whether Freesurfer is installed."""
 
-    if os.getenv('FREESURFER_HOME') is None or which(freesurfer_vis_cmd) is None:
+    if os.getenv('FREESURFER_HOME') is None:
+        print('the environment variable FREESURFER_HOME is not set!')
         return False
 
     return True
+
+
+def freesurfer_vis_tool_installed():
+    """Checks if the required Freesurfer visualization tool is installed."""
+
+    if os.getenv('FREESURFER_HOME') is None:
+        print('the environment variable FREESURFER_HOME is not set!')
+        return False, None
+
+    fv_callable = which('freeview') is not None
+    if fv_callable:
+        # preferring freeview going forward as tksurfer is deprecated since FS v7
+        return True, "freeview"
+
+    tks_callable = which('tksurfer') is not None
+    if (not fv_callable) and tks_callable:
+        return True, "tksurfer"
+
+    if (not fv_callable) and (not tks_callable):
+        print('Either freeview or tksurfer is required to generate pial surf vis!')
+        return False, None
+
+    return False
 
 
 def check_out_dir(out_dir, base_dir):

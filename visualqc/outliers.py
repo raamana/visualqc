@@ -7,9 +7,9 @@ __all__ = ['outlier_advisory']
 
 from genericpath import exists as pexists
 from os import makedirs
+from os.path import join as pjoin
 
 import numpy as np
-from os.path import join as pjoin
 from scipy import stats
 from sklearn.ensemble import IsolationForest
 
@@ -60,9 +60,9 @@ def outlier_advisory(qcw):
                                    sid in outliers_by_feature[feat]]
 
     # dropping the IDs that were not flagged by any feature
-    # so a imple ID in dict would reveal whether it was ever suspected as an outlier
-    outliers_by_sample = {id: flag_list
-                          for id, flag_list in outliers_by_sample.items()
+    # so a simple ID in dict would reveal whether it was ever suspected as an outlier
+    outliers_by_sample = {id_: flag_list
+                          for id_, flag_list in outliers_by_sample.items()
                           if flag_list}
 
     return outliers_by_sample, outliers_by_feature
@@ -85,7 +85,7 @@ def detect_outliers(features,
 
     # printing out info on detected outliers
     if len(outlying_ids) > 0:
-        print('\nPossible outliers ({} / {}):'.format(len(outlying_ids),len(id_list)))
+        print(f'\nPossible outliers ({len(outlying_ids)} / {len(id_list)}):')
         print('\n'.join(outlying_ids))
     else:
         print('\nNo outliers were detected!\n\n')

@@ -8,11 +8,13 @@ import argparse
 import subprocess
 import sys
 import textwrap
+import time
 import traceback
-import warnings
 from abc import ABC
 from os import makedirs
+from pathlib import Path
 from subprocess import check_output
+from warnings import catch_warnings, filterwarnings
 
 import matplotlib.image as mpimg
 import numpy as np
@@ -21,21 +23,23 @@ from matplotlib.colors import is_color_like
 from matplotlib.widgets import RadioButtons, Slider
 from mrivis.color_maps import get_freesurfer_cmap
 from mrivis.utils import crop_to_seg_extents
-from os.path import exists as pexists, join as pjoin
 
 from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.readers import read_aparc_stats_wholebrain
-from visualqc.utils import check_alpha_set, check_finite_int, check_id_list, \
-    check_input_dir, check_labels, check_out_dir, check_outlier_params, check_views, \
-    freesurfer_installed, get_axis, get_freesurfer_mri_path, get_label_set, pick_slices, \
-    read_image, scale_0to1, void_subcortical_symmetrize_cortical
+from visualqc.utils import (check_alpha_set, check_event_in_axes, check_finite_int,
+                            check_id_list, check_input_dir, check_labels,
+                            check_out_dir, check_outlier_params, check_views,
+                            freesurfer_vis_tool_installed, get_axis,
+                            get_freesurfer_mri_path, get_label_set, pick_slices,
+                            read_image, scale_0to1,
+                            void_subcortical_symmetrize_cortical)
 from visualqc.workflows import BaseWorkflowVisualQC
-from visualqc import __version__
 
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
 
+next_click = time.monotonic()
 
 class FreesurferReviewInterface(BaseReviewInterface):
     """Custom interface for rating the quality of Freesurfer parcellation."""
@@ -93,7 +97,7 @@ class FreesurferReviewInterface(BaseReviewInterface):
         # alpha slider
         ax_slider = plt.axes(cfg.position_slider_seg_alpha,
                              facecolor=cfg.color_slider_axis)
-        self.slider = Slider(ax_slider, label='transparency',
+        self.slider = Slider(ax_slider, label='contour opacity',
                              valmin=0.0, valmax=1.0, valinit=0.7, valfmt='%1.2f')
         self.slider.label.set_position((0.99, 1.5))
         self.slider.on_changed(self.set_alpha_value)
@@ -168,40 +172,54 @@ class FreesurferReviewInterface(BaseReviewInterface):
     def on_mouse(self, event):
         """Callback for mouse events."""
 
-        if self.prev_axis is not None:
-            # include all the non-data axes here (so they wont be zoomed-in)
-            if event.inaxes not in self.unzoomable_axes:
-                self.prev_axis.set_position(self.prev_ax_pos)
-                self.prev_axis.set_zorder(0)
-                self.prev_axis.patch.set_alpha(0.5)
-                self.zoomed_in = False
+        # single click unzooms any zoomed-in axis in case of a mouse event
+        # NOTE: double click --> 2 single clicks, so not dblclick condition needed
+        global next_click
+        prev_click, next_click = next_click, time.monotonic()
+        delta_time = float(np.round(next_click - prev_click, 2))
+        double_clicked = delta_time < cfg.double_click_time_delta
 
         # right click toggles overlay
         if event.button in [3]:
+            # click_type = 'RIGHT'
             self.toggle_overlay()
-        # double click to zoom in to any axis
-        elif event.dblclick and event.inaxes is not None and \
-            event.inaxes not in self.unzoomable_axes:
+
+        # double click to zoom in to that axis
+        elif ((double_clicked) and \
+              (event.inaxes is not None) and \
+              (not check_event_in_axes(event, self.unzoomable_axes))):
+            # click_type = 'DOUBLE'
             # zoom axes full-screen
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(cfg.zoomed_position)
             event.inaxes.set_zorder(1)  # bring forth
             event.inaxes.set_facecolor('black')  # black
             event.inaxes.patch.set_alpha(1.0)  # opaque
+            event.inaxes.redraw_in_frame()
             self.zoomed_in = True
             self.prev_axis = event.inaxes
 
         else:
-            pass
+            # click_type = 'SINGLE/other'
+            # unzoom any zoomed-in axis in case of a mouse event
+            if (self.prev_axis is not None):
+                # include all the non-data axes here (so they wont be zoomed-in)
+                if not check_event_in_axes(event, self.unzoomable_axes):
+                    self.prev_axis.set_position(self.prev_ax_pos)
+                    self.prev_axis.set_zorder(0)
+                    self.prev_axis.patch.set_alpha(0.5)
+                    self.prev_axis.redraw_in_frame()
+                    self.zoomed_in = False
 
-        plt.draw()
+        # refreshes the entire figure (costly but necessary)
+        self.fig.canvas.draw_idle()
 
 
     def on_keyboard(self, key_in):
         """Callback to handle keyboard shortcuts to rate and advance."""
 
-        # ignore keyboard key_in when mouse within Notes textbox
-        if key_in.inaxes == self.text_box.ax or key_in.key is None:
+        # ignore keyboard input when key is None or mouse is within Notes textbox
+        if check_event_in_axes(key_in, self.text_box.ax) or (key_in.key is None):
             return
 
         key_pressed = key_in.key.lower()
@@ -219,6 +237,9 @@ class FreesurferReviewInterface(BaseReviewInterface):
                 self.toggle_overlay()
             else:
                 pass
+
+        # refreshing the figure
+        self.fig.canvas.draw_idle()
 
 
     def toggle_overlay(self):
@@ -244,9 +265,6 @@ class FreesurferReviewInterface(BaseReviewInterface):
 
         for art in self.overlaid_artists:
             art.set_alpha(self.latest_alpha_seg)
-
-        # update figure
-        plt.draw()
 
 
 class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
@@ -327,19 +345,19 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def generate_surface_vis(self):
         """Generates surface visualizations."""
 
-        print('Attempting to generate the surface visualizations of parcellation ...')
-        if not freesurfer_installed():  # needs tksurfer
+        print('\nAttempting to generate surface visualizations of parcellation ...')
+        self._freesurfer_installed, self._fs_vis_tool = \
+            freesurfer_vis_tool_installed()
+        if not self._freesurfer_installed:
             print('Freesurfer does not seem to be installed '
                   '- skipping surface visualizations.')
-            self._freesurfer_installed = False
-        else:
-            self._freesurfer_installed = True
 
         self.surface_vis_paths = dict()
         for sid in self.id_list:
             self.surface_vis_paths[sid] = \
                 make_vis_pial_surface(self.in_dir, sid, self.out_dir,
-                                      self._freesurfer_installed)
+                                      self._freesurfer_installed,
+                                      vis_tool=self._fs_vis_tool)
 
 
     def prepare_UI(self):
@@ -599,10 +617,6 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                                                     temp_seg_uncropped,
                                                                     self.padding)
 
-        out_vis_path = pjoin(self.out_dir,
-                             'visual_qc_{}_{}_{}'.format(self.vis_type, self.suffix,
-                                                         unit_id))
-
         return skip_subject
 
 
@@ -690,51 +704,120 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.close('all')
 
 
-def make_vis_pial_surface(in_dir, subject_id, out_dir,
+def make_vis_pial_surface(fs_dir, subject_id, out_dir,
                           FREESURFER_INSTALLED,
-                          annot_file='aparc.annot'):
+                          annot_file='aparc.annot',
+                          vis_tool=cfg.freesurfer_vis_cmd):
     """Generate screenshot for the pial surface in different views"""
 
-    out_vis_dir = pjoin(out_dir, cfg.annot_vis_dir_name)
+    fs_dir = Path(fs_dir).resolve()
+    out_vis_dir = Path(out_dir).resolve() / cfg.annot_vis_dir_name
     makedirs(out_vis_dir, exist_ok=True)
+
     hemis = ('lh', 'rh')
     hemis_long = ('left', 'right')
     vis_list = dict()
 
     print('Processing {}'.format(subject_id))
     for hemi, hemi_l in zip(hemis, hemis_long):
+
+        # generating necessary scripts
         vis_list[hemi_l] = dict()
-        script_file, vis_files = make_tcl_script_vis_annot(subject_id, hemi_l, out_vis_dir, annot_file)
+        if vis_tool == "freeview":
+            script_file, vis_files = make_freeview_script_vis_annot(
+                fs_dir, subject_id, hemi, out_vis_dir, annot_file)
+        elif vis_tool == "tksurfer":
+            script_file, vis_files = make_tcl_script_vis_annot(
+                subject_id, hemi_l, out_vis_dir, annot_file)
+        else:
+            pass
+
+        # not running the scripts if required files dont exist
+        surf_path = fs_dir / subject_id / 'surf' / '{}.pial'.format(hemi)
+        annot_path = fs_dir / subject_id / 'label' / '{}.{}'.format(hemi, annot_file)
+        if not surf_path.exists():
+            print(f"surface for {subject_id} {hemi_l} doesn't exist @\n {surf_path}")
+            continue
+        if not annot_path.exists():
+            print(f"Annot for {subject_id} {hemi_l} doesn't exist @\n{annot_path}")
+            continue
+
         try:
             # run the script only if all the visualizations were not generated before
-            all_vis_exist = all([pexists(vis_path) for vis_path in vis_files.values()])
+            all_vis_exist = all([vp.exists() for vp in vis_files.values()])
             if not all_vis_exist and FREESURFER_INSTALLED:
-                _, _ = run_tksurfer_script(in_dir, subject_id, hemi, script_file)
+                if vis_tool == "freeview":
+                    _, _ = run_freeview_script(script_file)
+                elif vis_tool == "tksurfer":
+                    _, _ = run_tksurfer_script(fs_dir, subject_id, hemi, script_file)
+                else:
+                    pass
 
             vis_list[hemi_l].update(vis_files)
         except:
             traceback.print_exc()
-            print('unable to generate tksurfer visualizations for {} hemi - skipping'.format(hemi))
+            print(f'unable to generate 3D surf vis for {hemi} hemi - skipping')
 
     # flattening it for easier use later on
     out_vis_list = dict()
-    pref_order = [ ('right', 'lateral'), ('left', 'lateral'),
-                   ('right', 'medial'), ('left', 'medial'),
-                   ('right', 'transverse'), ('left', 'transverse')]
-    for hemi_l, view in pref_order:
-        if pexists(vis_list[hemi_l][view]):
-            out_vis_list[(hemi_l, view)] = vis_list[hemi_l][view]
+    for hemi_l, view in cfg.view_pref_order[vis_tool]:
+        try:
+            if vis_list[hemi_l][view].exists():
+                out_vis_list[(hemi_l, view)] = vis_list[hemi_l][view]
+        except:
+            # not file hemi/view combinations have files generated
+            pass
 
     return out_vis_list
+
+
+def make_freeview_script_vis_annot(fs_dir, subject_id, hemi, out_vis_dir,
+                                   annot_file='aparc.annot'):
+    """Generates a tksurfer script to make visualizations"""
+
+    fs_dir = Path(fs_dir).resolve()
+    out_vis_dir = Path(out_vis_dir).resolve()
+
+    surf_path = fs_dir / subject_id / 'surf' / '{}.pial'.format(hemi)
+    annot_path = fs_dir / subject_id / 'label' / '{}.{}'.format(hemi, annot_file)
+
+    script_file = out_vis_dir / 'vis_annot_{}.freeview.cmd'.format(hemi)
+    vis_path = dict()
+    for view in cfg.freeview_surface_vis_angles:
+        vis_path[view] = out_vis_dir / '{}_{}_{}.png'.format(subject_id, hemi, view)
+
+    # NOTES reg freeview commands
+    # --screenshot <FILENAME> <MAGIFICATION_FACTOR> <AUTO_TRIM>
+    #   magnification factor: values other than 1 do not work on macos
+
+    common_options = "--layout 1 --viewport 3d --viewsize 1000 1000 --zoom 1.3 "
+
+    cmds = list()
+    # common files, surf and annot, for all the views
+    cmds.append("--surface {}:annot={}".format(surf_path, annot_path))
+
+    for view in cfg.freeview_surface_vis_angles:
+        cmds.append("{} --view {} --screenshot {} 1 autotrim"
+                    "".format(common_options, view, vis_path[view]))
+
+    cmds.append("--quit \n")
+
+    try:
+        with open(script_file, 'w') as sf:
+            sf.write('\n'.join(cmds))
+    except:
+        raise IOError(f'Unable to write the script file to\n {script_file}')
+
+    return script_file, vis_path
 
 
 def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir, annot_file='aparc.annot'):
     """Generates a tksurfer script to make visualizations"""
 
-    script_file = pjoin(out_vis_dir, 'vis_annot_{}.tcl'.format(hemi))
+    script_file = out_vis_dir / f'vis_annot_{hemi}.tcl'
     vis = dict()
-    for view in cfg.surface_view_angles:
-        vis[view] = pjoin(out_vis_dir, '{}_{}_{}.tif'.format(subject_id, hemi, view))
+    for view in cfg.tksurfer_surface_vis_angles:
+        vis[view] = out_vis_dir / f'{subject_id}_{hemi}_{view}.tif'
 
     img_format = 'tiff'  # rgb does not work
 
@@ -762,16 +845,35 @@ def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir, annot_file='aparc.a
     return script_file, vis
 
 
-def run_tksurfer_script(in_dir, subject_id, hemi, script_file):
+def run_tksurfer_script(fs_dir, subject_id, hemi, script_file):
     """Runs a given TCL script to generate visualizations"""
 
     try:
-        cmd_args = ['tksurfer', '-sdir', in_dir, subject_id, hemi, 'pial', '-tcl', script_file]
+        cmd_args = ['tksurfer', '-sdir', fs_dir, subject_id, hemi, 'pial',
+                    '-tcl', script_file]
         txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
     except subprocess.CalledProcessError as tksurfer_exc:
-        print('Error running tksurfer to generate 3d surface visualizations - skipping them.')
         exit_code = tksurfer_exc.returncode
         txt_out = tksurfer_exc.output
+        print('Error running tksurfer to generate 3d surface visualizations - skipping.')
+        print('Issue:\n{}\n'.format(txt_out))
+    else:
+        exit_code = 0
+
+    return txt_out, exit_code
+
+
+def run_freeview_script(script_file):
+    """Runs a given Freeview script to generate visualizations"""
+
+    try:
+        cmd_args = ['freeview', '--command', script_file]
+        txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
+    except subprocess.CalledProcessError as tksurfer_exc:
+        exit_code = tksurfer_exc.returncode
+        txt_out = tksurfer_exc.output
+        print('Error running freeview to generate surf visualizations - skipping!')
+        print('Issue:\n{}\n'.format(txt_out))
     else:
         exit_code = 0
 
@@ -791,15 +893,6 @@ def get_parser():
     Each subject will be queried after its ID in the metadata file.
 
     E.g. ``--fs_dir /project/freesurfer_v5.3``
-    \n""")
-
-    help_text_user_dir = textwrap.dedent("""
-    Absolute path to an input folder containing the MRI scan.
-    Each subject will be queried after its ID in the metadata file,
-    and is expected to have the MRI (specified ``--mri_name``),
-    in its own folder under --user_dir.
-
-    E.g. ``--user_dir /project/images_to_QC``
     \n""")
 
     help_text_id_list = textwrap.dedent("""
@@ -1023,13 +1116,15 @@ def make_workflow_from_user_options():
     vis_type, label_set = check_labels(user_args.vis_type, user_args.label_set)
     in_dir, source_of_features = check_input_dir(user_args.fs_dir, None, vis_type,
                                                  freesurfer_install_required=False)
+    out_dir = check_out_dir(user_args.out_dir, in_dir)
+
+    in_dir = Path(in_dir).resolve()
+    out_dir = Path(out_dir).resolve()
 
     mri_name = user_args.mri_name
     seg_name = user_args.seg_name
     id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type, mri_name,
                                            seg_name)
-
-    out_dir = check_out_dir(user_args.out_dir, in_dir)
 
     alpha_set = check_alpha_set(user_args.alpha_set)
     views = check_views(user_args.views)
@@ -1079,7 +1174,8 @@ def cli_run():
     wf = make_workflow_from_user_options()
 
     if wf.vis_type is not None:
-        # matplotlib.interactive(True)
+        import matplotlib
+        matplotlib.interactive(True)
         wf.run()
     else:
         raise ValueError('Invalid state for visualQC!\n'
@@ -1090,8 +1186,8 @@ def cli_run():
 
 if __name__ == '__main__':
     # disabling all not severe warnings
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
-        warnings.filterwarnings("ignore", category=FutureWarning)
+    with catch_warnings():
+        filterwarnings("ignore", category=DeprecationWarning)
+        filterwarnings("ignore", category=FutureWarning)
 
         cli_run()
