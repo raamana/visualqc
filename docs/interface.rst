@@ -18,9 +18,9 @@ Common elements
 Review interface - Freesurfer
 -------------------------------
 
- - double click in a given slice to zooms it large.
- - to toggle the colored overlay, right click or press the key ``t``. This works even when a slice is zoomed-in.
- - slider changes the transparency of the overlay in all slices.
+ - double click any panel (MR slice or surf vis) to zoom it large. Single click anywhere to unzoom
+ - to toggle the colored contour overlay, right click or press the key ``t``. This works even when a slice is zoomed-in or not. Toggling the contour back and forth helps decide whether it follows the tissue boundaries accurately or not
+ - slider changes the opacity of the contour overlay in all slices.
 
 
 Review interface - Anatomical / T1w MRI
