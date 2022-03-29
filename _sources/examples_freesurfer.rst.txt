@@ -10,8 +10,8 @@ A rough example of usage can be:
 which searches the specified directory for all subjects with successfully completed runs of Freesurfer and presents with cortical parcellation in all the three views, along with surface rendering (annotated with cortical ROIs). You can then review these visualizations for one subject at a time, rate their accuracy and move on to the next subject.
 
 Note:
- - right click toggles the overlay
- - slider changes the transparency of the overlay in all slices
+ - right click toggles the overlay as well as pressing key `t`
+ - slider changes the opacity of the contour overlay in all slices
  - double click in a given slice zooms it full-window
 
 You can choose to work on pre-selected list of subjects, as you choose:

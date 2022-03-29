@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Command line usage - Diffusion MRI &mdash; visualqc 0.5.4 documentation</title>
+  <title>Command line usage - Diffusion MRI &mdash; visualqc 0.6 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.5.4
+                0.6
               </div>
             
           
@@ -243,8 +243,14 @@ Typical options include:</p>
 </ul>
 </div></blockquote>
 </div></blockquote>
-<p>Ensure the regex is <em>tight</em> enough to result in only one file for each ID in the id_list. You can do this by giving it a try in the shell and counting the number of results against the number of IDs in id_list. If you have more results than the IDs, then there are duplicates. You can use <a class="reference external" href="https://regex101.com">https://regex101.com</a> to construct your pattern to tightly match your requirements. If multiple matches are found, the first one will be used.</p>
-<p>Make sure to use single quotes to avoid the shell globbing before visualqc receives it.</p>
+<p>Ensure the regex is <em>tight</em> enough to result in only one file for each ID in
+the id_list. You can do this by giving it a try in the shell and counting the
+number of results against the number of IDs in id_list. If you have more
+results than the IDs, then there are duplicates. You can use
+<a class="reference external" href="https://regex101.com">https://regex101.com</a> to construct your pattern to tightly match your
+requirements. If multiple matches are found, the first one will be used.</p>
+<p>Make sure to use single quotes to avoid the shell globbing before visualqc
+receives it.</p>
 <p>Default: ‘<a href="#id1"><span class="problematic" id="id2">*</span></a>.nii’</p>
 </dd>
 </dl>
@@ -254,9 +260,12 @@ Typical options include:</p>
 <p>options related to preprocessing before review</p>
 <dl class="option-list">
 <dt><kbd>-ap, --apply_preproc</kbd></dt>
-<dd><p>Whether to apply basic preprocessing steps (detrend, slice timing correction etc), before building the carpet image.</p>
-<p>If the images are already preprocessed elsewhere, use this flag <code class="docutils literal notranslate"><span class="pre">--apply_preproc</span></code></p>
-<p>Default is NOT to apply any preprocessing (detrending etc) before showing images for review.</p>
+<dd><p>Whether to apply basic preprocessing steps (detrend, slice timing correction
+etc), before building the carpet image.</p>
+<p>If the images are already preprocessed elsewhere, use this flag
+<code class="docutils literal notranslate"><span class="pre">--apply_preproc</span></code></p>
+<p>Default is NOT to apply any preprocessing (detrending etc) before showing
+images for review.</p>
 </dd>
 </dl>
 </div>
@@ -286,7 +295,8 @@ where n is the number of samples in the current sample.</p>
 <p>Default: 0.2.</p>
 </dd>
 <dt><kbd>-olt, --outlier_feat_types</kbd></dt>
-<dd><p>Type of features to be employed in training the outlier detection method.  It could be one of
+<dd><p>Type of features to be employed in training the outlier detection method.
+It could be one of
 ‘cortical’ (aparc.stats: mean thickness and other geometrical features from each cortical label),
 ‘subcortical’ (aseg.stats: volumes of several subcortical structures),
 or ‘both’ (using both aseg and aparc stats).</p>
@@ -300,7 +310,7 @@ or ‘both’ (using both aseg and aparc stats).</p>
 <div class="section" id="Layout options">
 <h2>Layout options<a class="headerlink" href="#Layout options" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
-<dt>Slice layout arragement when zooming in on a time point,</dt><dd><p>or show to the std. dev plot.</p>
+<dt>Slice layout arrangement when zooming in on a time point,</dt><dd><p>or show to the std. dev plot.</p>
 </dd>
 </dl>
 <dl class="option-list">
@@ -325,9 +335,12 @@ Default: 2.</p>
 <p>Options related to workflow e.g. to pre-compute resource-intensive features,  and pre-generate all the visualizations required before initiating the review.</p>
 <dl class="option-list">
 <dt><kbd>-p, --prepare_first</kbd></dt>
-<dd><p>This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations.</p>
-<p>This makes the switch from one subject to the next, even more seamless (saving few seconds :) ).</p>
-<p>Default: False (required visualizations are generated only on demand, which can take 5-10 seconds for each subject).</p>
+<dd><p>This flag enables batch-generation of 3d surface visualizations, prior to
+starting any review and rating operations.</p>
+<p>This makes the switch from one subject to the next, even more seamless (saving
+few seconds :) ).</p>
+<p>Default: False (required visualizations are generated only on demand,
+which can take 5-10 seconds for each subject).</p>
 </dd>
 </dl>
 </div>
