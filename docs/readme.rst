@@ -8,8 +8,8 @@ VisualQC
 .. image:: https://img.shields.io/pypi/v/visualqc.svg
         :target: https://pypi.python.org/pypi/visualqc
 
-.. image:: https://api.codacy.com/project/badge/Grade/2da8c2b4dbcd433eb4943eb52f0b00d6
-        :target: https://www.codacy.com/app/raamana/visualqc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=raamana/visualqc&amp;utm_campaign=Badge_Grade
+.. image:: https://app.codacy.com/project/badge/Grade/c67fbfc899d04f5aacd7a0070aeb704d
+        :target: https://www.codacy.com/gh/raamana/visualqc/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=raamana/visualqc&amp;utm_campaign=Badge_Grade
 
 
 VisualQC : assistive tool to improve the quality control workflow of neuroimaging data.
