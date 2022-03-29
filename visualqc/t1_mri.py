@@ -514,10 +514,6 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
             skip_subject = True
             print('MR image is empty!')
 
-        # # where to save the visualization to
-        # out_vis_path = pjoin(self.out_dir, 'visual_qc_{}_{}'.format(
-        # self.vis_type, unit_id))
-
         return skip_subject
 
 

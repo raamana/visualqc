@@ -181,14 +181,14 @@ class FreesurferReviewInterface(BaseReviewInterface):
 
         # right click toggles overlay
         if event.button in [3]:
-            click_type = 'RIGHT'
+            # click_type = 'RIGHT'
             self.toggle_overlay()
 
         # double click to zoom in to that axis
         elif ((double_clicked) and \
               (event.inaxes is not None) and \
               (not check_event_in_axes(event, self.unzoomable_axes))):
-            click_type = 'DOUBLE'
+            # click_type = 'DOUBLE'
             # zoom axes full-screen
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(cfg.zoomed_position)
@@ -200,7 +200,7 @@ class FreesurferReviewInterface(BaseReviewInterface):
             self.prev_axis = event.inaxes
 
         else:
-            click_type = 'SINGLE/other'
+            # click_type = 'SINGLE/other'
             # unzoom any zoomed-in axis in case of a mouse event
             if (self.prev_axis is not None):
                 # include all the non-data axes here (so they wont be zoomed-in)
@@ -616,9 +616,6 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.current_t1_mri, self.current_seg = crop_to_seg_extents(rescaled_t1_mri,
                                                                     temp_seg_uncropped,
                                                                     self.padding)
-
-        out_vis_path = self.out_dir / f'visual_qc' \
-                                      f'_{self.vis_type}_{self.suffix}_{unit_id}'
 
         return skip_subject
 

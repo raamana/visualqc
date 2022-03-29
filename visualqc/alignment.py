@@ -486,9 +486,6 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
             # flag to keep track of whether data has been changed.
             self._histogram_updated = False
 
-        # # where to save the visualization to
-        # out_vis_path = pjoin(self.out_dir, 'visual_qc_{}_{}'.format(self.vis_type, unit_id))
-
         return skip_subject
 
 

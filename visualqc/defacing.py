@@ -455,10 +455,6 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                                         num_slices=self.collage.num_slices,
                                         sampler=cfg.defacing_slice_locations)
 
-        # # where to save the visualization to
-        # out_vis_path = pjoin(self.out_dir,
-        #   'visual_qc_{}_{}'.format(self.vis_type, unit_id))
-
         return skip_subject
 
 
