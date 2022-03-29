@@ -23,7 +23,7 @@ This is the preferred method to install ``visualqc``, as it will always install 
 
  It must be noted I/O speed would be lower over SSH relative to your local computation. In addition, there might be other difficulties to maintain a stable SSH connection for hours, it is a very risky choice to use VisualQC over SSH. You could lose hours and days of hardwork for multiple reasons nothing to do with you, such as wifi dropping out, laptop dying etc. Hence, *for small datasets (n<200)*, I discourage the usage of VisualQC over SSH. Please download the required data to your laptop/desktop, and run VisualQC locally.
 
- For larger datasets, it may not be possible to download the entire dataset locally, for lack of sufficient storage and/or skills to manage such a large transfer. Then you can attempt to get VisualQC's pre-processing done over SSH (generating the surface visualizations, feature extraction for outlier detection etc) on the remote server itself. This would produce various subfolders in the chosen output folder,such as `annot_visualizations` and others. Then you can download this output folder locally along with `mri/{orig,aparc+aseg}.mgz` for each subject (you won't need anything else), and you would be ready to run it locally. Check the end of :doc:`examples_freesurfer` for more instructions and scripts to limit the amount of data you need to download, to save time and speed.
+ For larger datasets, it may not be possible to download the entire dataset locally, for lack of sufficient storage and/or skills to manage such a large transfer. Then you can attempt to get VisualQC's pre-processing done over SSH (generating the surface visualizations, feature extraction for outlier detection etc) on the remote server itself. This would produce various subfolders in the chosen output folder,such as `annot_visualizations` for the Freesufer module and some others for other modules. Then you can download this output folder locally along with any required input files (e.g. `mri/{orig,aparc+aseg}.mgz` for the Freesurfer module) for each subject, and you would be ready to run it locally. Check the end of :doc:`examples_freesurfer` and relevant documentation for other modules for more instructions and scripts to limit the amount of data you need to download, to save time and speed.
 
  If you are still confused, please `open an issue <https://github.com/raamana/visualqc/issues/new/>`_ at the `visualqc` repo.
 
@@ -36,7 +36,7 @@ If you don't have `Python`_ or `pip`_ installed, follow the following guides:
 Requirements
 -------------
 
- - Python version 3 or higher is required. I strongly recommend upgrading to python 3 if possible. If not, I recommend `conda to manage different versions of python in a separate virtual environment <https://conda.io/docs/user-guide/tasks/manage-python.html>`_.
+ - Python version 3.6 or higher is required. I strongly recommend upgrading to python 3 if possible. I recommend `conda to manage different versions of python in a separate virtual environment <https://conda.io/docs/user-guide/tasks/manage-python.html>`_.
 
  - The following python packages are required, which will be automatically installed when you issue the above command `pip install -U visualqc`:
 
