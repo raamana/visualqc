@@ -23,6 +23,11 @@ def read_aseg_stats(fs_dir, subject_id, include_global_areas=False):
     subject_id : str
         String identifying a given subject
 
+    include_global_areas : bool
+        flag to request values for global areas such as the ICV,
+        Left/Right hemisphere cortical gray/white matter volume,
+        Subcortical gray matter volume and Supratentorial volume
+
     """
 
     seg_stats_file = realpath(pjoin(fs_dir, subject_id, 'stats', 'aseg.stats'))
@@ -165,19 +170,19 @@ def gather_freesurfer_data(qcw,
 
     if qcw.source_of_features not in cfg.avail_OLD_source_of_features:
         raise NotImplementedError('Reader for the given source of features ({}) '
-                                  'is currently not implemented.'.format(
-            qcw.source_of_features))
+                                  'is currently not implemented.'
+                                  ''.format(qcw.source_of_features))
 
     feature_type = feature_type.lower()
     if feature_type in ['cortical', ]:
         features = np.vstack(
-            [read_aparc_stats_wholebrain(qcw.in_dir, id) for id in qcw.id_list])
+            [read_aparc_stats_wholebrain(qcw.in_dir, id_) for id_ in qcw.id_list])
     elif feature_type in ['subcortical', ]:
-        features = np.vstack([read_aseg_stats(qcw.in_dir, id) for id in qcw.id_list])
+        features = np.vstack([read_aseg_stats(qcw.in_dir, id_) for id_ in qcw.id_list])
     elif feature_type in ['whole_brain', 'wholebrain', 'both']:
         cortical = np.vstack(
-            [read_aparc_stats_wholebrain(qcw.in_dir, id) for id in qcw.id_list])
-        sub_ctx = np.vstack([read_aseg_stats(qcw.in_dir, id) for id in qcw.id_list])
+            [read_aparc_stats_wholebrain(qcw.in_dir, id_) for id_ in qcw.id_list])
+        sub_ctx = np.vstack([read_aseg_stats(qcw.in_dir, id_) for id_ in qcw.id_list])
         features = np.hstack((cortical, sub_ctx))
     else:
         raise ValueError('Invalid type of features requested.')
@@ -217,8 +222,8 @@ def anatomical_traverse_bids(bids_layout,
     meta_types.update(kwargs)
     non_empty_types = {type_: values for type_, values in meta_types.items() if values}
 
-    __FIELDS_TO_IGNORE__ = ('filename', 'modality', 'type')
-    __TYPES__ = ['subjects', 'sessions',]
+    # __FIELDS_TO_IGNORE__ = ('filename', 'modality', 'type')
+    # __TYPES__ = ['subjects', 'sessions',]
 
     results = bids_layout.get(**non_empty_types)
     if len(results) < 1:
@@ -238,7 +243,7 @@ def anatomical_traverse_bids(bids_layout,
     reqd_exts_params = ('.json', )
     named_exts_params = ('params', )
     reqd_exts_images = ('.nii', '.gz')
-    named_exts_images = ('image', 'image')
+    # named_exts_images = ('image', 'image')
 
     files_by_id = dict()
     for sub in combinations:
@@ -320,8 +325,8 @@ def func_mri_traverse_bids(bids_layout,
     meta_types.update(kwargs)
     non_empty_types = {type_: values for type_, values in meta_types.items() if values}
 
-    __FIELDS_TO_IGNORE__ = ('filename', 'modality', 'type')
-    __TYPES__ = ['subjects', 'sessions',]
+    # __FIELDS_TO_IGNORE__ = ('filename', 'modality', 'type')
+    # __TYPES__ = ['subjects', 'sessions',]
 
     results = bids_layout.get(**non_empty_types)
     if len(results) < 1:
@@ -340,7 +345,7 @@ def func_mri_traverse_bids(bids_layout,
     reqd_exts_params = ('.tsv', )
     named_exts_params = ('params', )
     reqd_exts_images = ('.nii', '.gz')
-    named_exts_images = ('image', 'image')
+    # named_exts_images = ('image', 'image')
 
     files_by_id = dict()
     for sub in combinations:
@@ -410,8 +415,8 @@ def diffusion_traverse_bids(bids_layout,
     meta_types.update(kwargs)
     non_empty_types = {type_: values for type_, values in meta_types.items() if values}
 
-    __FIELDS_TO_IGNORE__ = ('filename', 'modality', 'type')
-    __TYPES__ = ['subjects', 'sessions',]
+    # __FIELDS_TO_IGNORE__ = ('filename', 'modality', 'type')
+    # __TYPES__ = ['subjects', 'sessions',]
 
     results = bids_layout.get(**non_empty_types)
     if len(results) < 1:
@@ -431,7 +436,7 @@ def diffusion_traverse_bids(bids_layout,
     reqd_exts_params = ('.bval', '.bvec', '.json')
     named_exts_params = ('bval', 'bvec', 'params')
     reqd_exts_images = ('.nii', '.gz')
-    named_exts_images = ('image', 'image')
+    # named_exts_images = ('image', 'image')
 
     files_by_id = dict()
     for sub in combinations:
@@ -487,19 +492,6 @@ def traverse_bids(bids_layout, modalities='func', types='bold',
                   **kwargs):
     """
     Dataset traverser.
-
-    Args:
-        subjects: list of subjects
-        sessions: list of sessions
-        runs: list of runs
-        ...
-        kwargs : values for the particular type chosen.
-
-    Returns:
-        tuple of existing combinations
-            first item: list of type names identifying the file
-            second item: path to the file identified by the above types.
-
     """
 
     meta_types = {'modality'  : modalities,
@@ -514,7 +506,7 @@ def traverse_bids(bids_layout, modalities='func', types='bold',
     non_empty_types = {type_: values for type_, values in meta_types.items() if values}
 
     __FIELDS_TO_IGNORE__ = ('filename', 'modality', 'type')
-    __TYPES__ = ['subjects', 'sessions', 'tasks', 'runs', 'events']
+    # __TYPES__ = ['subjects', 'sessions', 'tasks', 'runs', 'events']
 
     results = bids_layout.get(**non_empty_types)
     if len(results) < 1:
@@ -527,8 +519,10 @@ def traverse_bids(bids_layout, modalities='func', types='bold',
             _field_set = _unique_in_order(res._fields)
             common_field_set = [ff for ff in common_field_set if ff in _field_set]
 
-    final_fields = [unit for unit in common_field_set if unit not in __FIELDS_TO_IGNORE__]
-    # TODO final_fields can still have duplicates like: ( 'acquisition', 'acq'); handle it.
+    final_fields = [unit for unit in common_field_set
+                    if unit not in __FIELDS_TO_IGNORE__]
+    # TODO final_fields can still have duplicates
+    #  like: ('acquisition', 'acq'); handle it.
 
     if len(final_fields) < 1:
         return None, None

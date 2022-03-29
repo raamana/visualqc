@@ -7,14 +7,15 @@ Module to define base classes.
 import sys
 import traceback
 from abc import ABC, abstractmethod
-from shutil import copyfile
-
+from datetime import timedelta
+from os import makedirs
 from os.path import exists as pexists, join as pjoin
 from pathlib import Path
+from shutil import copyfile
 from timeit import default_timer as timer
-from datetime import timedelta
 
 import numpy as np
+
 from visualqc import config as cfg
 from visualqc.utils import get_ratings_path_info, load_ratings_csv, summarize_ratings
 
@@ -54,8 +55,7 @@ class BaseWorkflowVisualQC(ABC):
         self.id_list = id_list
         self.in_dir = in_dir
         self.out_dir = out_dir
-        print(
-            'Input folder: {}\nOutput folder: {}'.format(self.in_dir, self.out_dir))
+        print(f'Input folder: {self.in_dir}\nOutput folder: {self.out_dir}')
 
         self.ratings = dict()
         self.notes = dict()
@@ -110,7 +110,6 @@ class BaseWorkflowVisualQC(ABC):
         - add :class:BaseReviewInterface and save handle to self.UI
         - add additional ones on top the base review interface.
 
-
         """
 
 
@@ -148,7 +147,7 @@ class BaseWorkflowVisualQC(ABC):
     def save_ratings(self):
         """Saves ratings to disk """
 
-        print('Saving ratings .. \n')
+        print('\nSaving ratings .. \n')
         ratings_file, prev_ratings_backup = get_ratings_path_info(self)
 
         if pexists(ratings_file):
@@ -185,7 +184,7 @@ class BaseWorkflowVisualQC(ABC):
 
         ratings_dir = Path(self.out_dir).resolve() / cfg.suffix_ratings_dir
         if not ratings_dir.exists():
-            makedirs(ratings_dir)
+            makedirs(ratings_dir, exist_ok=True)
 
         timer_file = ratings_dir / '{}_{}_{}'.format(
             self.vis_type, self.suffix, cfg.file_name_timer)
@@ -257,10 +256,9 @@ class BaseWorkflowVisualQC(ABC):
         """
 
         if self.show_unit_id:
-            annot_text = '{}\n({}/{})'.format(unit_id, counter + 1,
-                                              self.num_units_to_review)
+            annot_text = f'{unit_id}\n({counter + 1}/{self.num_units_to_review})'
         else:
-            annot_text = '{}/{}'.format(counter + 1, self.num_units_to_review)
+            annot_text = f'{counter + 1}/{self.num_units_to_review}'
 
         self.UI.add_annot(annot_text)
 
@@ -309,7 +307,7 @@ class BaseWorkflowVisualQC(ABC):
 
 
     def quit(self, input_event_to_ignore=None):
-        "terminator"
+        """terminator"""
 
         if self.UI.allowed_to_advance():
             self.prepare_to_advance()
@@ -321,7 +319,7 @@ class BaseWorkflowVisualQC(ABC):
 
 
     def next(self, input_event_to_ignore=None):
-        "advancer"
+        """advancer"""
 
         if self.UI.allowed_to_advance():
             self.prepare_to_advance()
@@ -351,18 +349,21 @@ class BaseWorkflowVisualQC(ABC):
     def print_rating(self, subject_id):
         """Method to print the rating recorded for the current subject."""
 
-        # checking if "i'm tired" or 'review later' appear in ratings
-        do_not_save = any([ rt.lower() in cfg.ratings_not_to_be_recorded
-              for rt in self.ratings[subject_id]])
+        if subject_id in self.ratings:
+            # checking if "i'm tired" or 'review later' appear in ratings
+            do_not_save = any([ rt.lower() in cfg.ratings_not_to_be_recorded
+                  for rt in self.ratings[subject_id]])
 
-        # not saving ratings meant not to be saved!
-        if do_not_save:
-            self.ratings.pop(subject_id)
+            # not saving ratings meant not to be saved!
+            if do_not_save:
+                self.ratings.pop(subject_id)
+            else:
+                print('    id: {}\n'
+                      'rating: {}\n'
+                      ' notes: {}'.format(subject_id, self.ratings[subject_id],
+                                          self.notes[subject_id]))
         else:
-            print('    id: {}\n'
-                  'rating: {}\n'
-                  ' notes: {}'.format(subject_id, self.ratings[subject_id],
-                                      self.notes[subject_id]))
+            print(f'rating for {subject_id} has not been recorded!')
 
 
     @abstractmethod

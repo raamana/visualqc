@@ -8,6 +8,7 @@ import sys
 import textwrap
 import warnings
 from abc import ABC
+from os.path import basename, join as pjoin, realpath
 from textwrap import wrap
 
 import nibabel as nib
@@ -15,31 +16,32 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import CheckButtons
 from mrivis.utils import crop_image
-from os.path import basename, join as pjoin, realpath, splitext
 
 from visualqc import config as cfg
 from visualqc.image_utils import mask_image
 from visualqc.readers import func_mri_traverse_bids
 from visualqc.t1_mri import T1MriInterface
-from visualqc.utils import check_bids_dir, check_finite_int, check_id_list_with_regex, \
-    check_image_is_4d, check_out_dir, check_outlier_params, check_views, get_axis, \
-    pick_slices, scale_0to1
+from visualqc.utils import (check_bids_dir, check_finite_int,
+                            check_id_list_with_regex,
+                            check_image_is_4d, check_out_dir, check_outlier_params,
+                            check_views, get_axis,
+                            pick_slices, scale_0to1)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
-def _unbidsify(filename, max_width = 18):
+def _unbidsify(filename, max_width=18):
     """Returns a easily displayable and readable multiline string"""
 
     parts = [s.replace('-', ' ') for s in filename.split('_')]
     fixed_width = list()
     for p in parts:
         if len(p) > max_width:
-            # indenting by two spaace
-            fixed_width.extend([' -'+s for s in wrap(p,max_width-2)])
+            # indenting by two spaces
+            fixed_width.extend([' -'+s for s in wrap(p, max_width-2)])
         else:
             fixed_width.append(p)
 
-    return  '\n'.join(fixed_width)
+    return '\n'.join(fixed_width)
 
 _z_score = lambda x: (x - np.mean(x)) / np.std(x)
 
@@ -189,7 +191,7 @@ class FunctionalMRIInterface(T1MriInterface):
         # print(key_pressed)
         if key_pressed in ['right', 'up']:
             self.right_arrow_callback()
-        elif key_pressed in ['left', 'down' ]:
+        elif key_pressed in ['left', 'down']:
             self.left_arrow_callback()
         elif key_pressed in [' ', 'space']:
             self.next_button_callback()
@@ -367,7 +369,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                  'for generic in_dir')
             self.unit_by_id = self.images_for_id.copy()
         else:
-            raise NotImplementedError('Only two formats are supported: BIDS and ' \
+            raise NotImplementedError('Only two formats are supported: BIDS and '
                                       'GENERIC with regex spec for filenames')
 
 
@@ -542,7 +544,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Loads the image data for display."""
 
         img_path = self.unit_by_id[unit_id]['image']
-        params_path = self.unit_by_id[unit_id]['params']
+        # params_path = self.unit_by_id[unit_id]['params']
         try:
             hdr = nib.load(img_path)
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
@@ -575,7 +577,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # TODO should we perform head motion correction before any display at all?
         # TODO what about slice timing correction?
 
-        num_voxels = np.prod(self.img_this_unit.shape[0:3])
+        #num_voxels = np.prod(self.img_this_unit.shape[0:3])
         num_time_points = self.img_this_unit.shape[3]
         time_points = list(range(num_time_points))
 
@@ -602,15 +604,6 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def make_carpet(self, mask, row_order=None):
         """
         Makes the carpet image
-
-
-        Parameters
-        ----------
-        func_img
-
-        Returns
-        -------
-
         """
 
         carpet = self.img_this_unit.reshape(-1, self.img_this_unit.shape[3])
