@@ -553,10 +553,6 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         raise NotImplementedError()
 
 
-    def add_alerts(self):
-        pass
-
-
     def cleanup(self):
         """Cleanup before exit"""
 

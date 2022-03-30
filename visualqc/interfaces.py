@@ -18,7 +18,7 @@ class BaseReviewInterface(ABC):
     def __init__(self, fig, axes,
                  next_button_callback=None,
                  quit_button_callback=None):
-        "Constructor."
+        """Constructor."""
 
         self.fig = fig
         self.axes = axes
@@ -114,7 +114,7 @@ class BaseReviewInterface(ABC):
 
 
     def builtin_quit(self, input_event_to_ignore=None):
-        "terminator"
+        """terminator"""
 
         if not self.allowed_to_advance():
             print('You have not rated the current subject! '
@@ -126,7 +126,7 @@ class BaseReviewInterface(ABC):
 
 
     def builtin_next(self, input_event_to_ignore=None):
-        "advancer"
+        """advancer"""
 
         if not self.allowed_to_advance():
             print('You have not rated the current subject! '

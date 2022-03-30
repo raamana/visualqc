@@ -42,8 +42,6 @@ def _unbidsify(filename, max_width=18):
 
     return '\n'.join(fixed_width)
 
-_z_score = lambda x: (x - np.mean(x)) / np.std(x)
-
 
 class FunctionalMRIInterface(T1MriInterface):
     """Interface for the review of fMRI images."""
@@ -99,10 +97,9 @@ class FunctionalMRIInterface(T1MriInterface):
 
 
     def add_checkboxes(self):
-        """
-        Checkboxes offer the ability to select multiple tags such as Motion, Ghosting Aliasing etc,
-            instead of one from a list of mutual exclusive rating options (such as Good, Bad, Error etc).
-
+        """Checkboxes offer the ability to select multiple tags such as Motion,
+        Ghosting Aliasing etc, instead of one from a list of mutual exclusive
+        rating options (such as Good, Bad, Error etc).
         """
 
         ax_checkbox = plt.axes(cfg.position_checkbox, facecolor=cfg.color_rating_axis)
@@ -810,8 +807,8 @@ def compute_DVARS(func_img, mean_img=None, mask=None, apply_mask=False):
     num_time_points = func_img.shape[3]
 
     RMS_diff = lambda img2, img1: np.sqrt(np.mean(np.square(img2 - img1)))
-    DVARS_1_to_N = [RMS_diff(func_img[:, :, :, t], func_img[:, :, :, t - 1]) for t in
-                    range(1, num_time_points)]
+    DVARS_1_to_N = [RMS_diff(func_img[:, :, :, t], func_img[:, :, :, t - 1])
+                    for t in range(1, num_time_points)]
 
     DVARS = np.full(num_time_points, np.nan)
     # dvars value at time point 0 is set to 0
@@ -831,7 +828,10 @@ def temporal_stats(func_img):
 
 
 def spatial_stats(func_img):
-    """Computes volume-wise spatial average of functional data --> single vector over time."""
+    """
+    Computes volume-wise spatial average of functional data
+         --> single vector over time.
+     """
 
     num_time_points = func_img.shape[3]
     mean_signal = np.array(
@@ -851,7 +851,7 @@ def _rescale_over_time(matrix):
 
     if matrix.shape[0] <= matrix.shape[1]:
         raise ValueError('Number of voxels is less than the number of time points!! '
-                      'Are you sure data is reshaped correctly?')
+                         'Are you sure data is reshaped correctly?')
 
     min_ = matrix.min(axis=1)
     range_ = matrix.ptp(axis=1)  # ptp : peak to peak, max-min

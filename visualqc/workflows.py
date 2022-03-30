@@ -492,7 +492,7 @@ class BaseWorkflowVisualQC(ABC):
             self.disable_outlier_detection = False
             self.by_feature = dict()
             self.by_sample = dict()
-            print('Assitance with outlier detection did not succeed.\n'
+            print('Assistance with outlier detection did not succeed.\n'
                   'Proceeding by disabling it. Stack trace below:\n')
             import traceback
             traceback.print_exc()

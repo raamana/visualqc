@@ -239,7 +239,6 @@ def anatomical_traverse_bids(bids_layout,
         sessions_exist = False
         combinations = all_subjects
 
-
     reqd_exts_params = ('.json', )
     named_exts_params = ('params', )
     reqd_exts_images = ('.nii', '.gz')
@@ -275,9 +274,9 @@ def anatomical_traverse_bids(bids_layout,
         # only when all the files required exist, do we include it for review
         # adding parameter files, only if they exist
         if param_files_exist:
-            files_by_id[final_sub_id] = { new_ext : temp[old_ext]
-                                 for old_ext, new_ext in zip(reqd_exts_params,
-                                                             named_exts_params)}
+            files_by_id[final_sub_id] = {new_ext: temp[old_ext]
+                                         for old_ext, new_ext in
+                                         zip(reqd_exts_params, named_exts_params)}
         else:
             files_by_id[final_sub_id]['params'] = 'None'
 
@@ -297,7 +296,7 @@ def find_anatomical_images_in_BIDS(bids_dir):
     # file name of each scan is the unique identifier,
     #   as it essentially contains all the key info.
     images_by_id = {basename(sub_data['image']): sub_data
-                       for _, sub_data in images.items()}
+                    for _, sub_data in images.items()}
     id_list = np.array(list(images_by_id.keys()))
 
     return id_list, images_by_id
@@ -380,9 +379,9 @@ def func_mri_traverse_bids(bids_layout,
         # only when all the files required exist, do we include it for review
         # adding parameter files, only if they exist
         if param_files_exist:
-            files_by_id[final_sub_id] = { new_ext : temp[old_ext]
-                                 for old_ext, new_ext in zip(reqd_exts_params,
-                                                             named_exts_params)}
+            files_by_id[final_sub_id] = {new_ext: temp[old_ext]
+                                         for old_ext, new_ext in
+                                         zip(reqd_exts_params, named_exts_params)}
         else:
             # indicating the absence with None
             files_by_id[final_sub_id]['params'] = None
@@ -399,7 +398,7 @@ def diffusion_traverse_bids(bids_layout,
                             subjects=None,
                             sessions=None,
                             extension=('nii', 'nii.gz',
-                                        'bval', 'bvec', 'json'),
+                                       'bval', 'bvec', 'json'),
                             param_files_required=False,
                             **kwargs):
     """
@@ -431,7 +430,6 @@ def diffusion_traverse_bids(bids_layout,
     else:
         sessions_exist = False
         combinations = all_subjects
-
 
     reqd_exts_params = ('.bval', '.bvec', '.json')
     named_exts_params = ('bval', 'bvec', 'params')
@@ -470,9 +468,9 @@ def diffusion_traverse_bids(bids_layout,
         # only when all the files required exist, do we include it for review
         # adding parameter files, only if they exist
         if param_files_exist:
-            files_by_id[final_sub_id] = { new_ext : temp[old_ext]
-                                 for old_ext, new_ext in zip(reqd_exts_params,
-                                                             named_exts_params)}
+            files_by_id[final_sub_id] = {new_ext: temp[old_ext]
+                                         for old_ext, new_ext in
+                                         zip(reqd_exts_params, named_exts_params)}
         else:
             # assuming the first volume is b=0
             files_by_id[final_sub_id]['bval'] = 'assume_first'

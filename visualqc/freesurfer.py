@@ -36,9 +36,6 @@ from visualqc.utils import (check_alpha_set, check_event_in_axes, check_finite_i
                             void_subcortical_symmetrize_cortical)
 from visualqc.workflows import BaseWorkflowVisualQC
 
-# each rating is a set of labels, join them with a plus delimiter
-_plus_join = lambda label_set: '+'.join(label_set)
-
 next_click = time.monotonic()
 
 class FreesurferReviewInterface(BaseReviewInterface):
@@ -129,7 +126,7 @@ class FreesurferReviewInterface(BaseReviewInterface):
 
 
     def reset_figure(self):
-        "Resets the figure to prepare it for display of next subject."
+        """Resets the figure to prepare it for display of next subject."""
 
         self.clear_data()
         self.clear_radio_buttons()
@@ -185,8 +182,8 @@ class FreesurferReviewInterface(BaseReviewInterface):
             self.toggle_overlay()
 
         # double click to zoom in to that axis
-        elif ((double_clicked) and \
-              (event.inaxes is not None) and \
+        elif (double_clicked and
+              (event.inaxes is not None) and
               (not check_event_in_axes(event, self.unzoomable_axes))):
             # click_type = 'DOUBLE'
             # zoom axes full-screen
@@ -202,7 +199,7 @@ class FreesurferReviewInterface(BaseReviewInterface):
         else:
             # click_type = 'SINGLE/other'
             # unzoom any zoomed-in axis in case of a mouse event
-            if (self.prev_axis is not None):
+            if self.prev_axis is not None:
                 # include all the non-data axes here (so they wont be zoomed-in)
                 if not check_event_in_axes(event, self.unzoomable_axes):
                     self.prev_axis.set_position(self.prev_ax_pos)

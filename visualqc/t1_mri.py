@@ -27,9 +27,6 @@ from visualqc.utils import (check_bids_dir, check_finite_int, check_id_list,
                             scale_0to1)
 from visualqc.workflows import BaseWorkflowVisualQC
 
-# each rating is a set of labels, join them with a plus delimiter
-_plus_join = lambda label_set: '+'.join(label_set)
-
 
 class T1MriInterface(BaseReviewInterface):
     """Custom interface for rating the quality of T1 MRI scan."""
@@ -204,7 +201,7 @@ class T1MriInterface(BaseReviewInterface):
 
 
     def reset_figure(self):
-        "Resets the figure to prepare it for display of next subject."
+        """Resets the figure to prepare it for display of next subject."""
 
         self.clear_data()
         self.clear_checkboxes()
@@ -255,8 +252,8 @@ class T1MriInterface(BaseReviewInterface):
 
         # right or double click to zoom in to any axis
         if (event.button in [3] or event.dblclick) and \
-            (event.inaxes is not None) and \
-            (event.inaxes not in self.unzoomable_axes):
+                (event.inaxes is not None) and \
+                (event.inaxes not in self.unzoomable_axes):
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(cfg.zoomed_position)
             event.inaxes.set_zorder(1)  # bring forth
@@ -392,18 +389,18 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         from visualqc.features import extract_T1_features
         self.feature_extractor = extract_T1_features
 
-        if self.vis_type is not None and (
-            self.vis_type in cfg.freesurfer_vis_types or self.in_dir_type in [
-            'freesurfer', ]):
-            self.path_getter_inputs = lambda sub_id: realpath(
-                pjoin(self.in_dir, sub_id, 'mri', self.mri_name))
+        if (self.vis_type is not None) and \
+                ((self.vis_type in cfg.freesurfer_vis_types) or
+                 (self.in_dir_type in ['freesurfer', ])):
+            self.path_getter_inputs = lambda sub_id: \
+                realpath(pjoin(self.in_dir, sub_id, 'mri', self.mri_name))
         else:
             if self.in_dir_type.upper() in ('BIDS',):
-                self.path_getter_inputs = lambda sub_id: self.images_for_id[
-                    sub_id]['image']
+                self.path_getter_inputs = \
+                    lambda sub_id: self.images_for_id[sub_id]['image']
             else:
-                self.path_getter_inputs = lambda sub_id: realpath(
-                    pjoin(self.in_dir, sub_id, self.mri_name))
+                self.path_getter_inputs = lambda sub_id: \
+                    realpath(pjoin(self.in_dir, sub_id, self.mri_name))
 
 
     def open_figure(self):
@@ -838,19 +835,17 @@ def make_workflow_from_user_options():
     num_slices_per_view, num_rows_per_view = check_finite_int(user_args.num_slices,
                                                               user_args.num_rows)
 
-    outlier_method, outlier_fraction, \
-    outlier_feat_types, disable_outlier_detection = check_outlier_params(
-        user_args.outlier_method,
-        user_args.outlier_fraction,
-        user_args.outlier_feat_types,
-        user_args.disable_outlier_detection,
-        id_list, vis_type, type_of_features)
+    outlier_method, outlier_fraction, outlier_feat_types, disable_outlier_detect = \
+        check_outlier_params(
+            user_args.outlier_method, user_args.outlier_fraction,
+            user_args.outlier_feat_types, user_args.disable_outlier_detection,
+            id_list, vis_type, type_of_features)
 
     wf = RatingWorkflowT1(id_list, in_dir, out_dir,
                           cfg.t1_mri_default_issue_list,
                           mri_name, in_dir_type, images_for_id,
                           outlier_method, outlier_fraction,
-                          outlier_feat_types, disable_outlier_detection,
+                          outlier_feat_types, disable_outlier_detect,
                           user_args.prepare_first,
                           vis_type,
                           views, num_slices_per_view, num_rows_per_view)

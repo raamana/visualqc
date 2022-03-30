@@ -187,7 +187,8 @@ def get_axis(array, axis, slice_num):
     # Using a non-tuple sequence for multidimensional indexing is deprecated;
     #   use `arr[tuple(seq)]` instead of `arr[seq]`.
     # In the future this will be interpreted as an array index,
-    #   `arr[np.array(seq)]`, which will result either in an error or a different result.
+    #   `arr[np.array(seq)]`, which will result either in an error or a different
+    #   result.
     slice_data = array[tuple(slice_list)].T  # for proper appearance
 
     return slice_data
@@ -221,7 +222,8 @@ def pick_slices(img, view_set, num_slices):
         slices_in_dim = non_empty_slices[np.around(sampled_indices).astype('int64')]
 
         # ensure you do not overshoot
-        slices_in_dim = [sn for sn in slices_in_dim if sn >= 0 or sn <= num_non_empty]
+        slices_in_dim = [sn for sn in slices_in_dim if
+                         sn >= 0 or sn <= num_non_empty]
         # adding view and slice # at the same time.
         slices.extend([(view, slice) for slice in slices_in_dim])
 
@@ -238,17 +240,19 @@ def check_event_in_axes(event, axes):
     # Axis.contains() method returns a tuple: Bool, Dict; so need [0] to capture Bool
     try:
         return any([ax.contains(event)[0] for ax in axes])
-    except TypeError: # when it is not a list/iterable of axes
+    except TypeError:  # when it is not a list/iterable of axes
         return axes.contains(event)[0]
     except:
         raise ValueError('Input must be a matplotlib Axis or an Iterable of Axes!')
 
 
-def check_layout(total_num_slices, num_views, num_rows_per_view, num_rows_for_surf_vis):
+def check_layout(total_num_slices, num_views, num_rows_per_view,
+                 num_rows_for_surf_vis):
     """Ensures all odd cases are dealt with"""
 
     num_cols = int(np.ceil(
-        total_num_slices / ((num_views * num_rows_per_view) + num_rows_for_surf_vis)))
+        total_num_slices / (
+            (num_views * num_rows_per_view) + num_rows_for_surf_vis)))
 
     return num_cols
 
@@ -512,7 +516,6 @@ def summarize_ratings(ratings_file, out_dir=None):
 
     counter = Counter(all_labels)
     print('Ratings summary\n  Counts (note some IDs can have multiple ratings):')
-    id_lists = dict()
     for label, count in counter.items():
         print('\t{lbl:>{mw}} : {cnt:>7}'.format(lbl=label, cnt=count, mw=max_width))
 
@@ -886,8 +889,9 @@ def expand_regex_paths(in_dir, subject_id, req_file):
 def get_path_for_subject(in_dir, subject_id, req_file, vis_type, in_dir_type=None):
     """Constructs the path for the image file based on chosen input and vis type"""
 
-    if vis_type is not None and (
-        vis_type in freesurfer_vis_types or in_dir_type in ['freesurfer', ]):
+    if (vis_type is not None) and \
+        ((vis_type in freesurfer_vis_types) or
+         (in_dir_type in ['freesurfer', ])):
         out_path = get_freesurfer_mri_path(in_dir, subject_id, req_file)
     else:
         out_path = realpath(pjoin(in_dir, subject_id, req_file))
@@ -939,7 +943,7 @@ def check_outlier_params(method, fraction, feat_types, disable_outlier_detection
             ' '.format(type_of_features, cfg.avail_OLD_source_of_features))
 
     if type_of_features.lower() == 'freesurfer' and \
-        vis_type not in cfg.freesurfer_vis_types:
+            vis_type not in cfg.freesurfer_vis_types:
         raise NotImplementedError(
             'Outlier detection based on current vis_type is not implemented.'
             '\nAllowed visualization types: {}'.format(cfg.freesurfer_vis_types))
@@ -1031,9 +1035,9 @@ def check_views(views):
 def check_string_is_nonempty(string, string_type='string'):
     """Ensures input is a string of non-zero length"""
 
-    if string is None or \
-        (not isinstance(string, str)) or \
-        len(string) < 1:
+    if (string is None) or \
+            (not isinstance(string, str)) or \
+            (len(string) < 1):
         raise ValueError('name of the {} must not be empty!'
                          ''.format(string_type))
 

@@ -264,7 +264,7 @@ class DiffusionMRIInterface(T1MriInterface):
 
 
     def reset_figure(self):
-        "Resets the figure to prepare it for display of next subject."
+        """Resets the figure to prepare it for display of next subject."""
 
         self.zoom_out_callback(None)
         self.restore_axis()
@@ -300,24 +300,6 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  num_rows_per_view=cfg.default_num_rows_diffusion):
         """
         Constructor.
-
-        Parameters
-        ----------
-        in_dir : path
-            must be a path to BIDS directory
-
-        drop_start : int
-            Number of frames to drop at the beginning of the time series.
-
-        apply_preproc : bool
-            Whether to apply basic preprocessing steps (detrend, slice timing
-            correction etc)
-                before building the carpet image.
-                If the images are already preprocessed elsewhere, disable this
-                with apply_preproc=True
-            Default : False, to not apply any preprocessing before display for
-            review.
-
         """
 
         if id_list is None and 'BIDS' in in_dir_type:
@@ -1427,11 +1409,11 @@ def make_workflow_from_user_options():
     num_slices_per_view, num_rows_per_view = check_finite_int(user_args.num_slices,
                                                               user_args.num_rows)
 
-    outlier_method, outlier_fraction, \
-    outlier_feat_types, disable_outlier_detection = check_outlier_params(
-        user_args.outlier_method, user_args.outlier_fraction,
-        user_args.outlier_feat_types, user_args.disable_outlier_detection,
-        id_list, vis_type, type_of_features)
+    outlier_method, outlier_fraction, outlier_feat_types, \
+        disable_outlier_detection = check_outlier_params(
+            user_args.outlier_method, user_args.outlier_fraction,
+            user_args.outlier_feat_types, user_args.disable_outlier_detection,
+            id_list, vis_type, type_of_features)
 
     wf = DiffusionRatingWorkflow(in_dir, out_dir,
                                  id_list=id_list,
