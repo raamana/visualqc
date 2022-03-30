@@ -403,6 +403,11 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         self.fig.set_size_inches(self.figsize)
 
 
+    def add_alerts(self):
+        """Brings up an alert if subject id is detected to be an outlier."""
+        pass
+
+
     def load_unit(self, unit_id):
         """Loads the image data for display."""
 
