@@ -193,7 +193,7 @@ class DefacingInterface(BaseReviewInterface):
 
 
     def reset_figure(self):
-        "Resets the figure to prepare it for display of next subject."
+        """Resets the figure to prepare it for display of next subject."""
 
         self.clear_data()
         self.clear_checkboxes()
@@ -288,7 +288,7 @@ class DefacingInterface(BaseReviewInterface):
 
 
 class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
-    """Rating worklfow for defaced MRI scans"""
+    """Rating workflow for defaced MRI scans"""
 
 
     def __init__(self,
@@ -386,13 +386,11 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                                'alt+m': self.show_mixed,
                                'm+alt': self.show_mixed,
                                }
-        self.UI = DefacingInterface(self.collage.fig,
-                                    self.collage.flat_grid,
-                                    self.issue_list,
-                                    next_button_callback=self.next,
-                                    quit_button_callback=self.quit,
-                                    processing_choice_callback=self.process_and_display,
-                                    map_key_to_callback=map_key_to_callback)
+        self.UI = DefacingInterface(
+            self.collage.fig, self.collage.flat_grid, self.issue_list,
+            next_button_callback=self.next, quit_button_callback=self.quit,
+            processing_choice_callback=self.process_and_display,
+            map_key_to_callback=map_key_to_callback)
 
         # connecting callbacks
         self.con_id_click = self.fig.canvas.mpl_connect('button_press_event',
@@ -448,7 +446,7 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
 
         skip_subject = False
         if np.count_nonzero(self.defaced_img) == 0 or \
-            np.count_nonzero(self.orig_img) == 0:
+                np.count_nonzero(self.orig_img) == 0:
             skip_subject = True
             print('Defaced or original MR image is empty!')
 
@@ -523,7 +521,7 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
 
         ax_counter = 0
         for dim, slice_num, (defaced, orig) in self.slice_picker.get_slices_multi(
-            [self.defaced_img, self.orig_img], extended=True):
+                [self.defaced_img, self.orig_img], extended=True):
 
             ax = self.collage.flat_grid[ax_counter]
             if vis_type in ('mixed',):
