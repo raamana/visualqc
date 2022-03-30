@@ -21,11 +21,10 @@ from visualqc import config as cfg
 from visualqc.image_utils import mask_image
 from visualqc.readers import func_mri_traverse_bids
 from visualqc.t1_mri import T1MriInterface
-from visualqc.utils import (check_bids_dir, check_finite_int,
+from visualqc.utils import (check_bids_dir, check_event_in_axes, check_finite_int,
                             check_id_list_with_regex,
                             check_image_is_4d, check_out_dir, check_outlier_params,
-                            check_views, get_axis,
-                            pick_slices, scale_0to1)
+                            check_views, get_axis, pick_slices, scale_0to1)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -91,6 +90,9 @@ class FunctionalMRIInterface(T1MriInterface):
 
         self.add_checkboxes()
 
+        self.unzoomable_axes = [self.checkbox.ax, self.text_box.ax,
+                                self.bt_next.ax, self.bt_quit.ax]
+
         # this list of artists to be populated later
         # makes to handy to clean them all
         self.data_handles = list()
@@ -150,16 +152,14 @@ class FunctionalMRIInterface(T1MriInterface):
         """Callback for mouse events."""
 
         # if event occurs in non-data areas, do nothing
-        if event.inaxes in [self.checkbox.ax, self.text_box.ax,
-                            self.bt_next.ax, self.bt_quit.ax]:
+        if check_event_in_axes(event, self.unzoomable_axes):
             return
 
         if self.zoomed_in:
-            # include all the non-data axes here (so they wont be zoomed-in)
-            if event.inaxes not in [self.checkbox.ax, self.text_box.ax,
-                                    self.bt_next.ax, self.bt_quit.ax]:
-                if event.dblclick or event.button in [3]:
-                    if event.inaxes in self.axes_to_zoom:
+            # include all the non-data axes here (so they won't be zoomed-in)
+            if not check_event_in_axes(event, self.unzoomable_axes):
+                if event.dblclick or (event.button in [3]):
+                    if check_event_in_axes(event, self.axes_to_zoom):
                         self.maximize_axis(event.inaxes)
                     else:
                         self.zoom_out_callback(event)
@@ -577,7 +577,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # TODO should we perform head motion correction before any display at all?
         # TODO what about slice timing correction?
 
-        #num_voxels = np.prod(self.img_this_unit.shape[0:3])
+        # num_voxels = np.prod(self.img_this_unit.shape[0:3])
         num_time_points = self.img_this_unit.shape[3]
         time_points = list(range(num_time_points))
 
