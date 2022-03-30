@@ -426,7 +426,7 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
             raise ValueError(
                 'pixel dimensions for the original and defaced images do not match! '
                 'They are: {}, {}'.format(
-                self.current_pixdim, self.pixdim_nifti_header(self.defaced_hdr)))
+                    self.current_pixdim, pixdim_nifti_header(self.defaced_hdr)))
 
         self.render_img_list = list()
         for rimg_path in self.images_for_id[unit_id]['render']:
