@@ -580,9 +580,8 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         if temp_t1_mri.shape != temp_fs_seg.shape:
             raise ValueError('size mismatch! MRI: {} Seg: {}\n'
-                             'Size must match in all dimensions.'.format(
-                self.current_t1_mri.shape,
-                temp_fs_seg.shape))
+                             'Size must match in all dimensions.'
+                             ''.format(temp_t1_mri.shape, temp_fs_seg.shape))
 
         skip_subject = False
         if self.vis_type in ('cortical_volumetric', 'cortical_contour'):
