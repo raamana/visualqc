@@ -24,7 +24,7 @@ from visualqc.readers import find_anatomical_images_in_BIDS
 from visualqc.utils import (check_bids_dir, check_finite_int, check_id_list,
                             check_input_dir_T1, check_out_dir, check_outlier_params,
                             check_views, read_image, saturate_brighter_intensities,
-                            scale_0to1)
+                            scale_0to1, set_fig_window_title)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -377,8 +377,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
                                bounding_rect=cfg.bounding_box_review,
                                figsize=self.figsize)
         self.fig = self.collage.fig
-        self.fig.canvas.set_window_title('VisualQC T1 MRI : {} {} '
-                                         ''.format(self.in_dir, self.mri_name))
+        set_fig_window_title(
+            self.fig, f'VisualQC T1w MRI : {self.in_dir} {self.mri_name}')
 
         self.padding = padding
 

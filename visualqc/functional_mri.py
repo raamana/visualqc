@@ -22,9 +22,9 @@ from visualqc.image_utils import mask_image
 from visualqc.readers import func_mri_traverse_bids
 from visualqc.t1_mri import T1MriInterface
 from visualqc.utils import (check_bids_dir, check_event_in_axes, check_finite_int,
-                            check_id_list_with_regex,
-                            check_image_is_4d, check_out_dir, check_outlier_params,
-                            check_views, get_axis, pick_slices, scale_0to1)
+                            check_id_list_with_regex, check_image_is_4d,
+                            check_out_dir, check_outlier_params, check_views,
+                            get_axis, pick_slices, scale_0to1, set_fig_window_title)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -393,8 +393,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # 1. main carpet, in the background
         self.fig, self.ax_carpet = plt.subplots(1, 1, figsize=self.figsize)
-        self.fig.canvas.set_window_title('VisualQC Functional MRI :'
-                                         ' {}'.format(self.in_dir))
+        set_fig_window_title(self.fig, f'VisualQC Functional MRI : {self.in_dir}')
 
         self.ax_carpet.set_zorder(self.layer_order_carpet)
         #   vmin/vmax are controlled, because we rescale all to [0, 1]

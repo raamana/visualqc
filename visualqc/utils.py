@@ -67,6 +67,15 @@ def pixdim_nifti_header(header):
     return header['pixdim'][1:4]
 
 
+def set_fig_window_title(fig, text):
+    """Sets the title of the given figure"""
+
+    try:
+        fig.canvas.manager.set_window_title(text)
+    except:  # not all backends support this, so quietly ignoring it
+        pass
+
+
 def slice_aspect_ratio(pixel_dim, axis):
     """computes aspect ratio for the cross-sectional slices of a given dimension"""
 

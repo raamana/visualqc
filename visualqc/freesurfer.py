@@ -32,7 +32,7 @@ from visualqc.utils import (check_alpha_set, check_event_in_axes, check_finite_i
                             check_out_dir, check_outlier_params, check_views,
                             freesurfer_vis_tool_installed, get_axis,
                             get_freesurfer_mri_path, get_label_set, pick_slices,
-                            read_image, scale_0to1,
+                            read_image, scale_0to1, set_fig_window_title,
                             void_subcortical_symmetrize_cortical)
 from visualqc.workflows import BaseWorkflowVisualQC
 
@@ -407,8 +407,9 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.fig, self.axes = plt.subplots(self.num_rows_total, self.num_cols_final,
                                            figsize=self.figsize)
         self.axes = self.axes.flatten()
-        self.fig.canvas.set_window_title('VisualQC {} {} : {}'
-                                         ' '.format(self.vis_type, self.seg_name, self.in_dir))
+        set_fig_window_title(self.fig,
+                             'VisualQC {} {} : {} '
+                             ''.format(self.vis_type, self.seg_name, self.in_dir))
 
         self.display_params_mri = dict(interpolation='none', aspect='equal',
                                        origin='lower',

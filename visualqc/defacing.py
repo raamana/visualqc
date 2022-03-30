@@ -19,9 +19,10 @@ from mrivis.base import Collage, SlicePicker
 from visualqc import config as cfg
 from visualqc.image_utils import rescale_without_outliers
 from visualqc.interfaces import BaseReviewInterface
-from visualqc.utils import (check_inputs_defacing, check_out_dir,
-                            compute_cell_extents_grid, pixdim_nifti_header,
-                            read_image, slice_aspect_ratio, check_event_in_axes)
+from visualqc.utils import (check_event_in_axes, check_inputs_defacing,
+                            check_out_dir, compute_cell_extents_grid,
+                            pixdim_nifti_header, read_image, set_fig_window_title,
+                            slice_aspect_ratio)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -355,9 +356,8 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                                bounding_rect=cfg.bbox_defacing_MRI_review,
                                figsize=self.figsize)
         self.fig = self.collage.fig
-        self.fig.canvas.set_window_title('VisualQC defacing : {} {} '
-                                         ''.format(self.in_dir,
-                                                   self.defaced_name))
+        set_fig_window_title(
+            self.fig, f'VisualQC defacing : {self.in_dir} {self.defaced_name} ')
 
         self.padding = padding
 

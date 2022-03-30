@@ -26,7 +26,7 @@ from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import check_finite_int, check_id_list, check_input_dir_alignment, \
     check_out_dir, check_outlier_params, check_views, get_axis, pick_slices, read_image, \
-    scale_0to1, check_time
+    scale_0to1, check_time, set_fig_window_title
 from visualqc.workflows import BaseWorkflowVisualQC
 from visualqc.image_utils import overlay_edges, mix_color, diff_image, mix_slices_in_checkers
 
@@ -345,9 +345,9 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.fig, self.axes = plt.subplots(self.num_rows, self.num_cols,
                                            figsize=self.figsize)
         self.axes = self.axes.flatten()
-
-        self.fig.canvas.set_window_title('VisualQC Alignment : {} {} {} '
-                                         ''.format(self.in_dir, self.image1_name, self.image2_name))
+        set_fig_window_title(
+            self.fig, 'VisualQC Alignment : {} {} {} '
+                      ''.format(self.in_dir, self.image1_name, self.image2_name))
 
         # vmin/vmax are controlled, because we rescale all to [0, 1]
         self.display_params = dict(interpolation='none', aspect='equal', origin='lower',
