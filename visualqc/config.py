@@ -405,7 +405,7 @@ abbreviation_defacing_default_issue_list = {'p': defacing_pass_indicator,
                                           'u': 'Understripped',
                                           'e': 'something Else',
                                           't': "i'm Tired",
-                                          'l': 'reView Later'}
+                                          'l': 'review Later'}
 defacing_default_issue_list = list(abbreviation_defacing_default_issue_list.values())
 defacing_default_rating_list_shortform = abbreviation_defacing_default_issue_list.keys()
 

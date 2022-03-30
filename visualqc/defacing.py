@@ -276,11 +276,11 @@ class DefacingInterface(BaseReviewInterface):
             # notice parentheses at the end
             self.map_key_to_callback[key_pressed]()
         else:
-            if key_pressed in cfg.abbreviation_t1_mri_default_issue_list:
-                checked_label = cfg.abbreviation_t1_mri_default_issue_list[
+            if key_pressed in cfg.abbreviation_defacing_default_issue_list:
+                checked_label = cfg.abbreviation_defacing_default_issue_list[
                     key_pressed]
                 self.checkbox.set_active(
-                    cfg.t1_mri_default_issue_list.index(checked_label))
+                    cfg.defacing_default_issue_list.index(checked_label))
             else:
                 pass
 
