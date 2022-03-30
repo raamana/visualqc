@@ -21,7 +21,7 @@ from visualqc.image_utils import rescale_without_outliers
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import (check_inputs_defacing, check_out_dir,
                             compute_cell_extents_grid, pixdim_nifti_header,
-                            read_image, slice_aspect_ratio)
+                            read_image, slice_aspect_ratio, check_event_in_axes)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -61,7 +61,7 @@ class DefacingInterface(BaseReviewInterface):
         # include all the non-data axes here (so they wont be zoomed-in)
         self.unzoomable_axes = [self.checkbox.ax, self.text_box.ax,
                                 self.bt_next.ax, self.bt_quit.ax,
-                                self.radio_bt_vis_type]
+                                self.radio_bt_vis_type.ax]
 
         # this list of artists to be populated later
         # makes to handy to clean them all
@@ -236,7 +236,7 @@ class DefacingInterface(BaseReviewInterface):
         """Callback for mouse events."""
 
         if self.prev_axis is not None:
-            if event.inaxes not in self.unzoomable_axes:
+            if not check_event_in_axes(event, self.unzoomable_axes):
                 self.prev_axis.set_position(self.prev_ax_pos)
                 self.prev_axis.set_zorder(0)
                 self.prev_axis.patch.set_alpha(0.5)
@@ -244,8 +244,8 @@ class DefacingInterface(BaseReviewInterface):
 
         # right or double click to zoom in to any axis
         if (event.button in [3] or event.dblclick) and \
-            (event.inaxes is not None) and \
-            event.inaxes not in self.unzoomable_axes:
+                (event.inaxes is not None) and \
+                (not check_event_in_axes(event, self.unzoomable_axes)):
             self.prev_ax_pos = event.inaxes.get_position()
             event.inaxes.set_position(cfg.zoomed_position)
             event.inaxes.set_zorder(1)  # bring forth
