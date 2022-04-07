@@ -1020,6 +1020,17 @@ def check_labels(vis_type, label_set):
     return vis_type, label_set
 
 
+def check_slice_locations_percent(slice_loc):
+    """Checks they are numbers between 0 and 100 inclusive"""
+
+    slice_loc = [float(sl) for sl in slice_loc]
+    if any([sl < 1 or sl > 100 for sl in slice_loc]):
+        raise ValueError('One or more slice locations specified is invalid. '
+                         'They must be between 1 and 100.')
+
+    return slice_loc
+
+
 def check_views(views):
     """Checks which views were selected."""
 
@@ -1053,7 +1064,8 @@ def check_string_is_nonempty(string, string_type='string'):
     return string
 
 
-def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_in):
+def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_in,
+                          slice_loc):
     """Validates the integrity of the inputs"""
 
     in_dir = realpath(in_dir)
@@ -1063,6 +1075,8 @@ def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_i
     defaced_name = check_string_is_nonempty(defaced_name, 'defaced MRI scan')
     mri_name = check_string_is_nonempty(mri_name, 'original MRI scan')
     render_name = check_string_is_nonempty(render_name, '3D rendered image')
+
+    slice_loc = check_slice_locations_percent(slice_loc)
 
     if id_list_in is not None:
         if not pexists(id_list_in):
@@ -1129,7 +1143,7 @@ def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_i
     print('{} subjects are usable for review.'.format(len(id_list_out)))
 
     return in_dir, np.array(id_list_out), images_for_id, \
-           defaced_name, mri_name, render_name
+           defaced_name, mri_name, render_name, slice_loc
 
 
 def print_time_stamp():
