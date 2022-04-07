@@ -300,6 +300,7 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                  defaced_name,
                  mri_name,
                  render_name,
+                 slice_loc,
                  issue_list=cfg.defacing_default_issue_list,
                  vis_type='defacing'):
         """Constructor"""
@@ -315,13 +316,14 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         self.defaced_name = defaced_name
         self.mri_name = mri_name
         self.render_name = render_name
+        self.slice_loc = slice_loc
         self.images_for_id = images_for_id
 
         self.expt_id = 'rate_defaced_mri_{}'.format(self.defaced_name)
         self.suffix = self.expt_id
         self.current_alert_msg = None
 
-        self.init_layout()
+        self.init_layout(num_slices_per_view=len(self.slice_loc))
 
         self.__module_type__ = 'defacing'
 
@@ -458,7 +460,7 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         self.slice_picker = SlicePicker(self.orig_img,
                                         view_set=self.collage.view_set,
                                         num_slices=self.collage.num_slices,
-                                        sampler=cfg.defacing_slice_locations)
+                                        sampler=self.slice_loc)
 
         return skip_subject
 
