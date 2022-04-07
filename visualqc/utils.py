@@ -234,7 +234,7 @@ def pick_slices(img, view_set, num_slices):
         slices_in_dim = [sn for sn in slices_in_dim if
                          sn >= 0 or sn <= num_non_empty]
         # adding view and slice # at the same time.
-        slices.extend([(view, slice) for slice in slices_in_dim])
+        slices.extend([(view, slice_) for slice_ in slices_in_dim])
 
     return slices
 
@@ -421,7 +421,7 @@ def restore_previous_ratings(qcw):
     incomplete_list = list(qcw.id_list)
     prev_done = []  # empty list
 
-    ratings_file, backup_name_ratings = get_ratings_path_info(qcw)
+    ratings_file, _ = get_ratings_path_info(qcw)
 
     if pexists(ratings_file):
         ratings, notes = load_ratings_csv(ratings_file)
@@ -433,8 +433,7 @@ def restore_previous_ratings(qcw):
         notes = dict()
 
     if len(prev_done) > 0:
-        print('\nRatings for {}/{} subjects were restored.'.format(len(prev_done),
-                                                                   len(qcw.id_list)))
+        print(f'\nRestored {len(prev_done)}/{len(qcw.id_list)} previous ratings')
 
     if len(incomplete_list) < 1:
         print('No subjects to review/rate - exiting.')
@@ -503,7 +502,7 @@ def summarize_ratings(ratings_file, out_dir=None):
     import re
     clean = lambda lbl: re.sub(r'\W+', '_', lbl.lower())
 
-    rating_dict, notes = load_ratings_csv(ratings_file)
+    rating_dict, _ = load_ratings_csv(ratings_file)
 
     rating_list = list()
     uniq_labels = set()

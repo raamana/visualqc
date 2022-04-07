@@ -314,8 +314,7 @@ class BaseWorkflowVisualQC(ABC):
             self.quit_now = True
         else:
             print('You have not rated the current subject! '
-                  'Please rate it before you can advance '
-                  'to next subject, or to quit..')
+                  'Rate it before you can quit.')
 
 
     def next(self, input_event_to_ignore=None):
@@ -326,8 +325,7 @@ class BaseWorkflowVisualQC(ABC):
             self.quit_now = False
         else:
             print('You have not rated the current subject! '
-                  'Please rate it before you can advance '
-                  'to next subject, or to quit..')
+                  'Rate it before you can advance to the next subject.')
 
 
     def prepare_to_advance(self):
