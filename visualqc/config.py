@@ -407,15 +407,18 @@ default_defaced_mri_name = 'defaced.nii'
 default_render_name = 'render.png'
 
 defacing_pass_indicator = visual_qc_pass_indicator
-abbreviation_defacing_default_issue_list = {'p': defacing_pass_indicator,
-                                          'f': 'Fail',
-                                          'o': 'Overstripped',
-                                          'u': 'Understripped',
-                                          'e': 'something Else',
-                                          't': "i'm Tired",
-                                          'l': 'review Later'}
-defacing_default_issue_list = list(abbreviation_defacing_default_issue_list.values())
-defacing_default_rating_list_shortform = abbreviation_defacing_default_issue_list.keys()
+abbrev_defacing_default_issue_list = {'p': defacing_pass_indicator,
+                                      'f': 'Fail',
+                                      'b': 'Brain removed',
+                                      'c': 'faCial features',
+                                      'y': 'eYes visible',
+                                      'r': 'eaRs visible',
+                                      'u': 'Unique mark(s)',
+                                      'e': 'something Else',
+                                      't': "i'm Tired",
+                                      'l': 'review Later'}
+defacing_default_issue_list = list(abbrev_defacing_default_issue_list.values())
+defacing_default_rating_list_shortform = abbrev_defacing_default_issue_list.keys()
 
 bbox_defacing_MRI_review = (0.02, 0.02, 0.88, 0.7)
 bbox_defacing_render_review = (0.02, 0.72, 0.88, 0.3)
