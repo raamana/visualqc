@@ -625,6 +625,14 @@ def get_parser():
     Default: a new folder called ``{}`` will be created inside the input folder
     \n""".format(cfg.default_out_dir_name))
 
+    help_text_slice_locations = textwrap.dedent("""
+    Specifies the locations to slice the MRI volumes at, in percentage of depth
+    from one end to the other i.e. 1 indicates the first non-zero slice in that
+    view (coronal, sagittal etc), 50 would be in the middle, and 100 would be the
+    other end.
+    Default: {}.
+    \n""".format(cfg.defacing_slice_locations))
+
     in_out = parser.add_argument_group('Input and output', ' ')
 
     in_out.add_argument("-u", "--user_dir", action="store", dest="user_dir",
@@ -650,6 +658,12 @@ def get_parser():
     in_out.add_argument("-i", "--id_list", action="store", dest="id_list",
                         default=None, required=False, help=help_text_id_list)
 
+    layout = parser.add_argument_group('Layout options', ' ')
+
+    layout.add_argument("-s", "--slice_locations", action="store", dest="slice_loc",
+                        default=cfg.defacing_slice_locations, required=False,
+                        nargs='+', help=help_text_slice_locations)
+
     return parser
 
 
@@ -671,15 +685,15 @@ def make_workflow_from_user_options():
 
     vis_type = 'defacing'
 
-    user_dir, id_list, images_for_id, defaced_name, mri_name, render_name \
-        = check_inputs_defacing(user_args.user_dir, user_args.defaced_name,
-                                user_args.mri_name, user_args.render_name,
-                                user_args.id_list)
+    user_dir, id_list, images_for_id, defaced_name, mri_name, render_name, \
+    slice_loc = check_inputs_defacing(
+        user_args.user_dir, user_args.defaced_name, user_args.mri_name,
+        user_args.render_name, user_args.id_list, user_args.slice_loc)
 
     out_dir = check_out_dir(user_args.out_dir, user_dir)
 
     wf = RatingWorkflowDefacing(id_list, images_for_id, user_dir, out_dir,
-                                defaced_name, mri_name, render_name,
+                                defaced_name, mri_name, render_name, slice_loc,
                                 cfg.defacing_default_issue_list, vis_type)
 
     return wf
