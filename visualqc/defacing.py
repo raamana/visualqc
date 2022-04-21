@@ -688,7 +688,7 @@ def make_workflow_from_user_options():
     vis_type = 'defacing'
 
     user_dir, id_list, images_for_id, defaced_name, mri_name, render_name, \
-    slice_loc = check_inputs_defacing(
+        slice_loc = check_inputs_defacing(
         user_args.user_dir, user_args.defaced_name, user_args.mri_name,
         user_args.render_name, user_args.id_list, user_args.slice_loc)
 

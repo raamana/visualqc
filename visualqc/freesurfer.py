@@ -38,6 +38,7 @@ from visualqc.workflows import BaseWorkflowVisualQC
 
 next_click = time.monotonic()
 
+
 class FreesurferReviewInterface(BaseReviewInterface):
     """Custom interface for rating the quality of Freesurfer parcellation."""
 
@@ -525,16 +526,17 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def update_histogram(self):
         """Updates histogram with current image data"""
 
-        # to update thickness histogram, you need access to full FS output or aparc.stats
+        # to update thickness histogram, we need access to full FS output/aparc.stats
         try:
-            distribution_to_show = read_aparc_stats_wholebrain(self.in_dir, self.current_unit_id,
-                                                   subset=(cfg.statistic_in_histogram_freesurfer,))
+            distrib_to_show = read_aparc_stats_wholebrain(
+                self.in_dir, self.current_unit_id,
+                subset=(cfg.statistic_in_histogram_freesurfer,))
         except:
             # do nothing
             return
 
-        # number of vertices is too high - so presenting mean ROI thickness is smarter!
-        _, _, patches_hist = self.ax_hist.hist(distribution_to_show, density=True,
+        # number of vertices is too high so presenting mean ROI thickness is smarter!
+        _, _, patches_hist = self.ax_hist.hist(distrib_to_show, density=True,
                                                bins=cfg.num_bins_histogram_display)
         self.ax_hist.set_xlim(cfg.xlim_histogram_freesurfer)
         self.ax_hist.relim(visible_only=True)
@@ -560,8 +562,8 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if flagged_as_outlier:
             alerts_list = self.by_sample.get(self.current_unit_id,
                                              None)  # None, if id not in dict
-            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'.format(
-                '\t'.join(alerts_list)))
+            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'
+                  ''.format('\t'.join(alerts_list)))
 
             strings_to_show = ['Flagged as an outlier:', ] + alerts_list
             self.current_alert_msg = '\n'.join(strings_to_show)
@@ -586,7 +588,8 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         skip_subject = False
         if self.vis_type in ('cortical_volumetric', 'cortical_contour'):
-            temp_seg_uncropped, roi_set_is_empty = void_subcortical_symmetrize_cortical(temp_fs_seg)
+            temp_seg_uncropped, roi_set_is_empty = \
+                void_subcortical_symmetrize_cortical(temp_fs_seg)
         elif self.vis_type in ('labels_volumetric', 'labels_contour'):
             if self.label_set is not None:
                 # TODO same colors for same labels is not guaranteed
@@ -595,7 +598,7 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
                 temp_seg_uncropped, roi_set_is_empty = get_label_set(temp_fs_seg,
                                                                      self.label_set)
             else:
-                raise ValueError('--label_set must be specified for visualization types: '
+                raise ValueError('--label_set must be specified for vis types: '
                                  ' labels_volumetric and labels_contour')
         else:
             raise NotImplementedError('Invalid visualization type - '
@@ -848,7 +851,8 @@ def run_tksurfer_script(fs_dir, subject_id, hemi, script_file):
     try:
         cmd_args = ['tksurfer', '-sdir', fs_dir, subject_id, hemi, 'pial',
                     '-tcl', script_file]
-        txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
+        txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT,
+                               universal_newlines=True)
     except subprocess.CalledProcessError as tksurfer_exc:
         exit_code = tksurfer_exc.returncode
         txt_out = tksurfer_exc.output
@@ -865,7 +869,8 @@ def run_freeview_script(script_file):
 
     try:
         cmd_args = ['freeview', '--command', script_file]
-        txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
+        txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT,
+                               universal_newlines=True)
     except subprocess.CalledProcessError as tksurfer_exc:
         exit_code = tksurfer_exc.returncode
         txt_out = tksurfer_exc.output
@@ -886,7 +891,7 @@ def get_parser():
                                                  'of Freesurfer reconstruction.')
 
     help_text_fs_dir = textwrap.dedent("""
-    Absolute path to ``SUBJECTS_DIR`` containing the finished runs of Freesurfer parcellation
+    Absolute path to ``SUBJECTS_DIR`` containing the finished Freesurfer processing.
     Each subject will be queried after its ID in the metadata file.
 
     E.g. ``--fs_dir /project/freesurfer_v5.3``
@@ -934,24 +939,26 @@ def get_parser():
     \n""".format(cfg.default_vis_type))
 
     help_text_label = textwrap.dedent("""
-    Specifies the set of labels to include for overlay.
-
-    Atleast one label must be specified when vis_type is labels_volumetric or labels_contour
+    Specifies the set of labels to include for overlay. Atleast one label must be
+    specified when vis_type is labels_volumetric or labels_contour
 
     Default: None (show nothing)
     \n""")
 
     help_text_contour_color = textwrap.dedent("""
-    Specifies the color to use for the contours overlaid on MRI (when vis_type requested prescribes contours).
-    Color can be specified in many ways as documented in https://matplotlib.org/users/colors.html
+    Specifies the color to use for the contours overlaid on MRI, when vis_type
+      requested prescribes contours). Color can be specified in many ways
+      as documented in https://matplotlib.org/users/colors.html
     Default: {}.
     \n""".format(cfg.default_contour_face_color))
 
     help_text_alphas = textwrap.dedent("""
     Alpha values to control the transparency of MRI and aseg.
-    This must be a set of two values (between 0 and 1.0) separated by a space e.g. --alphas 0.7 0.5.
+    This must be a set of two values (between 0 and 1.0) separated by a space
+    e.g. --alphas 0.7 0.5.
 
-    Default: {} {}.  Play with these values to find something that works for you and the dataset.
+    Default: {} {}.
+    Play with these values to find something that works for you and the dataset.
     \n""".format(cfg.default_alpha_mri, cfg.default_alpha_seg))
 
     help_text_views = textwrap.dedent("""
@@ -972,9 +979,13 @@ def get_parser():
     \n""".format(cfg.default_num_rows))
 
     help_text_no_surface_vis = textwrap.dedent("""
-    This flag disables batch-generation of 3d surface visualizations, which are shown along with cross-sectional overlays. This is not recommended, but could be used in situations where you do not have Freesurfer installed or want to focus solely on cross-sectional views.
+    This flag disables batch-generation of 3d surface visualizations, which are shown
+    along with cross-sectional overlays. This is not recommended, but could be used
+    in situations where you do not have Freesurfer installed, or want to focus
+    solely on cross-sectional views.
 
-    Default: False (required visualizations are generated at the beginning, which can take 5-10 seconds for each subject).
+    Default: False (required visualizations are generated at the beginning,
+        which can take 5-10 seconds for each subject).
     \n""")
 
     help_text_outlier_detection_method = textwrap.dedent("""
@@ -1051,7 +1062,8 @@ def get_parser():
                           required=False, help=help_text_alphas)
 
     outliers = parser.add_argument_group('Outlier detection',
-                                         'options related to automatically detecting possible outliers')
+                                         'options related to automatically detecting '
+                                         'possible outliers')
     outliers.add_argument("-olm", "--outlier_method", action="store",
                           dest="outlier_method",
                           default=cfg.default_outlier_detection_method, required=False,
@@ -1084,9 +1096,10 @@ def get_parser():
                         default=cfg.default_num_rows, required=False,
                         help=help_text_num_rows)
 
-    wf_args = parser.add_argument_group('Workflow', 'Options related to workflow '
-                                                    'e.g. to pre-compute resource-intensive features, '
-                                                    'and pre-generate all the visualizations required')
+    wf_args = parser.add_argument_group(
+        'Workflow', 'Options related to workflow e.g. to pre-compute '
+                    'resource-intensive features, and pre-generate all the '
+                    'visualizations required')
 
     wf_args.add_argument("-ns", "--no_surface_vis", action="store_true",
                          dest="no_surface_vis", help=help_text_no_surface_vis)

@@ -179,6 +179,7 @@ class BaseWorkflowVisualQC(ABC):
         else:
             return str_list
 
+
     def save_time_spent(self):
         """Saves time spent on each unit"""
 
@@ -349,8 +350,8 @@ class BaseWorkflowVisualQC(ABC):
 
         if subject_id in self.ratings:
             # checking if "i'm tired" or 'review later' appear in ratings
-            do_not_save = any([ rt.lower() in cfg.ratings_not_to_be_recorded
-                  for rt in self.ratings[subject_id]])
+            do_not_save = any([rt.lower() in cfg.ratings_not_to_be_recorded
+                               for rt in self.ratings[subject_id]])
 
             # not saving ratings meant not to be saved!
             if do_not_save:
