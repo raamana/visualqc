@@ -238,7 +238,7 @@ func_mri_pass_indicator = visual_qc_pass_indicator
 abbreviation_func_mri_default_issue_list = OrderedDict(p=func_mri_pass_indicator,
                                                        m='Motion',
                                                        r='Ringing',
-                                                       s='Spikes',
+                                                       k='spiKes',
                                                        g='Ghosting',
                                                        o='Orient/FOV',
                                                        w='Weird',
