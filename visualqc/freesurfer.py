@@ -346,9 +346,6 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         print('\nAttempting to generate surface visualizations of parcellation ...')
         self._freesurfer_installed, self._fs_vis_tool = \
             freesurfer_vis_tool_installed()
-        if not self._freesurfer_installed:
-            print('Freesurfer does not seem to be installed '
-                  '- skipping surface visualizations.')
 
         self.surface_vis_paths = dict()
         for sid in self.id_list:
@@ -704,7 +701,7 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.close('all')
 
 
-def make_vis_pial_surface(fs_dir, subject_id, out_dir,
+def make_vis_pial_surface(fs_dir, subj_id, out_dir,
                           FREESURFER_INSTALLED,
                           annot_file='aparc.annot',
                           vis_tool=cfg.freesurfer_vis_cmd):
@@ -718,57 +715,84 @@ def make_vis_pial_surface(fs_dir, subject_id, out_dir,
     hemis_long = ('left', 'right')
     vis_list = dict()
 
-    print('Processing {}'.format(subject_id))
+    print('Processing {}'.format(subj_id))
     for hemi, hemi_l in zip(hemis, hemis_long):
 
-        # generating necessary scripts
         vis_list[hemi_l] = dict()
-        if vis_tool == "freeview":
-            script_file, vis_files = make_freeview_script_vis_annot(
-                fs_dir, subject_id, hemi, out_vis_dir, annot_file)
-        elif vis_tool == "tksurfer":
-            script_file, vis_files = make_tcl_script_vis_annot(
-                subject_id, hemi_l, out_vis_dir, annot_file)
-        else:
-            pass
+        vis_list[hemi_l] = make_vis_paths(subj_id, hemi, out_vis_dir, vis_tool)
+        all_vis_exist = all([vp.exists() for vp in vis_list[hemi_l].values()])
+        if not all_vis_exist:
+            # generating necessary scripts
+            if vis_tool == "freeview":
+                script_file, vis_files = make_freeview_script_vis_annot(
+                    fs_dir, subj_id, hemi, out_vis_dir, annot_file)
+            elif vis_tool == "tksurfer":
+                script_file, vis_files = make_tcl_script_vis_annot(
+                    subj_id, hemi_l, out_vis_dir, annot_file)
+            else: # when freesurfer is not installed or not in path
+                vis_files = make_vis_paths(subj_id, hemi, out_vis_dir)
 
-        # not running the scripts if required files dont exist
-        surf_path = fs_dir / subject_id / 'surf' / '{}.pial'.format(hemi)
-        annot_path = fs_dir / subject_id / 'label' / '{}.{}'.format(hemi, annot_file)
-        if not surf_path.exists():
-            print(f"surface for {subject_id} {hemi_l} doesn't exist @\n {surf_path}")
-            continue
-        if not annot_path.exists():
-            print(f"Annot for {subject_id} {hemi_l} doesn't exist @\n{annot_path}")
-            continue
+            # not running the scripts if required files don't exist
+            surf_path = fs_dir / subj_id / 'surf' / f'{hemi}.pial'
+            annot_path = fs_dir / subj_id / 'label' / f'{hemi}.{annot_file}'
 
-        try:
-            # run the script only if all the visualizations were not generated before
-            all_vis_exist = all([vp.exists() for vp in vis_files.values()])
-            if not all_vis_exist and FREESURFER_INSTALLED:
-                if vis_tool == "freeview":
-                    _, _ = run_freeview_script(script_file)
-                elif vis_tool == "tksurfer":
-                    _, _ = run_tksurfer_script(fs_dir, subject_id, hemi, script_file)
-                else:
-                    pass
+            if surf_path.exists() and annot_path.exists():
+                try:
+                    # run script only if all vis were not generated before
+                    if FREESURFER_INSTALLED:
+                        if vis_tool == "freeview":
+                            _, _ = run_freeview_script(script_file)
+                        elif vis_tool == "tksurfer":
+                            _, _ = run_tksurfer_script(fs_dir, subj_id, hemi, script_file)
+                        else:
+                            pass
 
-            vis_list[hemi_l].update(vis_files)
-        except:
-            traceback.print_exc()
-            print(f'unable to generate 3D surf vis for {hemi} hemi - skipping')
+                    vis_list[hemi_l].update(vis_files)
+                except:
+                    traceback.print_exc()
+                    print(f'unable to generate 3D surf vis for {hemi} hemi. '
+                          f'skipping')
+            else:
+                if not surf_path.exists():
+                    print(f"surface for {subj_id} {hemi_l} doesn't exist @"
+                          f"\n {surf_path}")
+                if not annot_path.exists():
+                    print(f"Annot for {subj_id} {hemi_l} doesn't exist @"
+                          f"\n{annot_path}")
 
-    # flattening it for easier use later on
+    # flattening / reordering it for easier use later on
     out_vis_list = dict()
     for hemi_l, view in cfg.view_pref_order[vis_tool]:
         try:
             if vis_list[hemi_l][view].exists():
                 out_vis_list[(hemi_l, view)] = vis_list[hemi_l][view]
+            else:
+                print(f'no surf vis for {subj_id} {hemi_l} {view}')
         except:
-            # not file hemi/view combinations have files generated
+            # not all hemi/view combinations have vis files generated
             pass
 
     return out_vis_list
+
+
+def make_vis_paths(subject_id, hemi, out_vis_dir, vis_tool='freeview'):
+    """util to make output paths to store visualizations"""
+
+    vis_path = dict()
+    vis_tool = vis_tool.lower()
+    if vis_tool == 'freeview':
+        img_ext = 'png'
+        angles = cfg.freeview_surface_vis_angles
+    elif vis_tool == 'tksurfer':
+        img_ext = 'tif'
+        angles = cfg.tksurfer_surface_vis_angles
+    else:
+        raise ValueError('Invalid vis_tool, it must be freeview or tksurfer')
+
+    for view in angles:
+        vis_path[view] = out_vis_dir / f'{subject_id}_{hemi}_{view}.{img_ext}'
+
+    return vis_path
 
 
 def make_freeview_script_vis_annot(fs_dir, subject_id, hemi, out_vis_dir,
@@ -778,13 +802,12 @@ def make_freeview_script_vis_annot(fs_dir, subject_id, hemi, out_vis_dir,
     fs_dir = Path(fs_dir).resolve()
     out_vis_dir = Path(out_vis_dir).resolve()
 
+    vis_path = make_vis_paths(subject_id, hemi, out_vis_dir, vis_tool='freeview')
+
     surf_path = fs_dir / subject_id / 'surf' / '{}.pial'.format(hemi)
     annot_path = fs_dir / subject_id / 'label' / '{}.{}'.format(hemi, annot_file)
 
     script_file = out_vis_dir / 'vis_annot_{}.freeview.cmd'.format(hemi)
-    vis_path = dict()
-    for view in cfg.freeview_surface_vis_angles:
-        vis_path[view] = out_vis_dir / '{}_{}_{}.png'.format(subject_id, hemi, view)
 
     # NOTES reg freeview commands
     # --screenshot <FILENAME> <MAGIFICATION_FACTOR> <AUTO_TRIM>
@@ -814,10 +837,7 @@ def make_freeview_script_vis_annot(fs_dir, subject_id, hemi, out_vis_dir,
 def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir, annot_file='aparc.annot'):
     """Generates a tksurfer script to make visualizations"""
 
-    script_file = out_vis_dir / f'vis_annot_{hemi}.tcl'
-    vis = dict()
-    for view in cfg.tksurfer_surface_vis_angles:
-        vis[view] = out_vis_dir / f'{subject_id}_{hemi}_{view}.tif'
+    vis_path = make_vis_paths(subject_id, hemi, out_vis_dir, vis_tool='tksurfer')
 
     img_format = 'tiff'  # rgb does not work
 
@@ -826,23 +846,24 @@ def make_tcl_script_vis_annot(subject_id, hemi, out_vis_dir, annot_file='aparc.a
     cmds.append("labl_import_annotation {}".format(annot_file))
     cmds.append("scale_brain 1.37")
     cmds.append("redraw")
-    cmds.append("save_{} {}".format(img_format, vis['lateral']))
+    cmds.append("save_{} {}".format(img_format, vis_path['lateral']))
     cmds.append("rotate_brain_y 180.0")
     cmds.append("redraw")
-    cmds.append("save_{} {}".format(img_format, vis['medial']))
+    cmds.append("save_{} {}".format(img_format, vis_path['medial']))
     cmds.append("rotate_brain_z -90.0")
     cmds.append("rotate_brain_y 135.0")
     cmds.append("redraw")
-    cmds.append("save_{} {}".format(img_format, vis['transverse']))
+    cmds.append("save_{} {}".format(img_format, vis_path['transverse']))
     cmds.append("exit 0")
 
+    script_file = out_vis_dir / f'vis_annot_{hemi}.tcl'
     try:
         with open(script_file, 'w') as sf:
             sf.write('\n'.join(cmds))
     except:
         raise IOError('Unable to write the script file to\n {}'.format(script_file))
 
-    return script_file, vis
+    return script_file, vis_path
 
 
 def run_tksurfer_script(fs_dir, subject_id, hemi, script_file):

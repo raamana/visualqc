@@ -699,7 +699,8 @@ def freesurfer_vis_tool_installed():
 
     if os.getenv('FREESURFER_HOME') is None:
         print('the environment variable FREESURFER_HOME is not set!')
-        return False, None
+        # using freeview here instead of None to recognize existing visualizations
+        return False, "freeview"
 
     fv_callable = which('freeview') is not None
     if fv_callable:
