@@ -1,6 +1,4 @@
 
-.. image:: https://zenodo.org/badge/105958496.svg
-   :target: https://zenodo.org/badge/latestdoi/105958496
 
 .. image:: https://img.shields.io/pypi/v/visualqc.svg
         :target: https://pypi.python.org/pypi/visualqc
@@ -12,17 +10,18 @@
         :target: https://saythanks.io/to/raamana
 
 ==========================================================================================
-VisualQC : VisualQC: software development kit for medical and neuroimaging quality control
+VisualQC : software development kit for medical and neuroimaging quality control
 ==========================================================================================
 
 .. image:: docs/vqc_logo_small.png
 
----
+
 
 .. image:: docs/visualqc_poster_comprehensive.png
 
-Note: VisualQC employs `release early and release often mechanism <https://en.wikipedia.org/wiki/Release_early,_release_often>`_ to seek user feedback and for thorough testing. Hence you might find some rough edges in docs or examples - please let us know if you do.
 
+Links
+-------
 
 * Software Documentation: https://raamana.github.io/visualqc
 * `User Manual </docs/VisualQC_TrainingManual_v1p4.pdf>`_
