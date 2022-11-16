@@ -12,7 +12,7 @@
         :target: https://saythanks.io/to/raamana
 
 ==========================================================================================
-VisualQC : Assistive tool to ease the quality control workflow of neuroimaging data
+VisualQC : VisualQC: software development kit for medical and neuroimaging quality control
 ==========================================================================================
 
 .. image:: docs/vqc_logo_small.png
@@ -51,7 +51,27 @@ Contributions
 Citation
 --------------
 
-`Citation details are here <docs/citation.rst>`_
+If you used ``VisualQC`` in your analyses or projects, whether or not it was reported in the main paper, please consider citing the paper below:
+
+- Pradeep Reddy Raamana (2022), "VisualQC: software development kit for medical and neuroimaging quality control and assurance". OHBM Aperture Neuro journal, DOI: 10.52294/ApertureNeuro.2022.2.DXYR5548
+
+
+Bibtex:
+
+.. code-block:: tex
+
+    @misc{Raamana_2022_VisualQCSoftware,
+      author       = {Pradeep Reddy Raamana},
+      title        = {{VisualQC: software development kit for medical and neuroimaging quality control and assurance}},
+      month        = Aug,
+      year         = 2022,
+      doi          = {10.52294/ApertureNeuro.2022.2.DXYR5548},
+      url          = {https://doi.org/10.5281/zenodo.1211365}
+    }
+
+
+
+More details at `<docs/citation.rst>`_
 
 ---
 
