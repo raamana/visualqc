@@ -435,3 +435,5 @@ vis_choices_defacing = ('Defaced only',
                         'Mixed')
 
 defacing_trim_percentile = 1
+
+defacing_render_vis_angles = (-45, -22, 0, 22, 45)

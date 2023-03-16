@@ -718,6 +718,16 @@ def freesurfer_vis_tool_installed():
     return False
 
 
+def rendering_tool_installed():
+    """checks if the tool to generate 3D renderings of MRI volumes is installed"""
+
+    fe_callable = which('fsleyes') is not None
+    if fe_callable:
+        return True, "fsleyes"
+    else:
+        return False, None
+
+
 def check_out_dir(out_dir, base_dir):
     """Creates the output folder."""
 
