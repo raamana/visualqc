@@ -236,6 +236,13 @@ class AlignmentInterface(BaseReviewInterface):
         self.fig.canvas.draw_idle()
 
 
+    def remove_UI_local(self):
+        """Removes module specific UI elements for cleaner screenshots"""
+
+        self.radio_bt_vis_type.ax.remove()
+        self.radio_bt_rating.ax.remove()
+
+
 class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
     """Rating workflow to evaluate quality of alignment."""
 

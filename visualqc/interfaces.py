@@ -137,6 +137,20 @@ class BaseReviewInterface(ABC):
             self.reset_figure()
 
 
+    def remove_UI(self):
+        """Removes some UI elements to accommodate cleaner export of screenshots"""
+
+        self.text_box.ax.remove()
+        self.bt_next.ax.remove()
+        self.bt_quit.ax.remove()
+        self.remove_UI_local()
+
+
+    @abstractmethod
+    def remove_UI_local(self):
+        """Removes module specific UI elements for cleaner screenshots"""
+
+
     @abstractmethod
     def reset_figure(self):
         """ Resets the state of UI and clears the axes. """

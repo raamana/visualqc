@@ -239,6 +239,9 @@ class BaseWorkflowVisualQC(ABC):
     def loop_through_units(self):
         """Core loop traversing through the units (subject/session/run) """
 
+        if self.screenshot_only:
+            self.UI.remove_UI()
+
         self.num_units_to_review = len(self.incomplete_list)
         for counter, unit_id in enumerate(self.incomplete_list):
 
@@ -274,6 +277,8 @@ class BaseWorkflowVisualQC(ABC):
                     break
             else:
                 self.export_screenshot()
+                # annot text is unit specific
+                self.UI.annot_text.remove()
 
 
     def identify_unit(self, unit_id, counter):
