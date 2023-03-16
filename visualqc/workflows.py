@@ -334,6 +334,15 @@ class BaseWorkflowVisualQC(ABC):
         """Display routine."""
 
 
+    def export_screenshot(self):
+        """Exports the screenshot of current visualization to disk"""
+
+        print("exporting screenshot for {}".format(self.current_unit_id))
+        ss_out_file = self.screenshot_dir / "{}_{}.{}".format(
+            self.current_unit_id, cfg.screenshot_suffix, cfg.screenshot_format_ext)
+        self.fig.savefig(ss_out_file, bbox_inches='tight', dpi=cfg.dpi_export_fig)
+
+
     @abstractmethod
     def add_alerts(self):
         """
