@@ -2,6 +2,7 @@
 Central place to store the config info
 
 """
+import textwrap
 from collections import OrderedDict
 
 import numpy as np
@@ -19,12 +20,14 @@ position_histogram_freesurfer = [0.905, 0.7, 0.09, 0.1]
 statistic_in_histogram_freesurfer = 'ThickAvg'
 title_histogram_freesurfer = 'mean thickness (label-wise)'
 num_bins_histogram_display = 30
-xlim_histogram_freesurfer_all = { 'ThickAvg' : [1.0, 6.0], }
-xlim_histogram_freesurfer = xlim_histogram_freesurfer_all[statistic_in_histogram_freesurfer]
+xlim_histogram_freesurfer_all = {'ThickAvg': [1.0, 6.0], }
+xlim_histogram_freesurfer = xlim_histogram_freesurfer_all[
+    statistic_in_histogram_freesurfer]
 xticks_histogram_freesurfer = np.arange(1.5, 6.01, 1.0)
 color_histogram_freesurfer = ('#c9ae74')  # sandstone
 
-freesurfer_features_outlier_detection = ('cortical', 'subcortical', 'both', 'whole_brain')
+freesurfer_features_outlier_detection = (
+'cortical', 'subcortical', 'both', 'whole_brain')
 outlier_list_prefix = 'possible_outliers'
 alert_background_color = 'xkcd:coral'
 alert_colors_outlier = dict(cortical='xkcd:hot pink',
@@ -84,7 +87,7 @@ max_cmap_range_t1_mri = 1
 mri_zorder_freesurfer = 0
 seg_zorder_freesurfer = 1
 
-background_value = 0 # for segmentations or MRI
+background_value = 0  # for segmentations or MRI
 
 default_views = (0, 1, 2)
 default_num_slices = 12
@@ -103,7 +106,8 @@ map_short_rating = OrderedDict(g='gOOD',
                                d="I'M TIREd",
                                r=freesurfer_default_rating)
 default_rating_list = tuple(map_short_rating.values())
-index_freesurfer_default_rating = default_rating_list.index(freesurfer_default_rating)
+index_freesurfer_default_rating = default_rating_list.index(
+    freesurfer_default_rating)
 default_rating_list_shortform = map_short_rating.keys()
 ratings_not_to_be_recorded = ["i'm tired",
                               'review later']
@@ -113,13 +117,14 @@ ratings_not_to_be_recorded = ["i'm tired",
 #   there is a delay in processing the mouse events
 #   hence we increased delta t for double click from typical defaults of 0.5 sec to 1
 #   this also helps improving accessibility for those who cant click too fast
-double_click_time_delta = 1.1 # seconds
+double_click_time_delta = 1.1  # seconds
 
 # for serialization
 delimiter = ','
 # when ratings or notes contain the above delimiter, it will be replaced by this
 delimiter_replacement = ';'
-# when ratings are multiple (in some use cases), how to concat them into a single string without a delimiter
+# when ratings are multiple (in some use cases), how to concat them into a single
+# string without a delimiter
 rating_joiner = '+'
 
 textbox_title = ''
@@ -154,8 +159,8 @@ review_area = dict(left=0.06, right=0.88,
                    bottom=0.06, top=0.98,
                    wspace=0.0, hspace=0.0)
 bounding_box_review = (review_area['left'], review_area['bottom'],
-                     review_area['right']-review_area['left'],
-                     review_area['top']-review_area['bottom'])
+                       review_area['right'] - review_area['left'],
+                       review_area['top'] - review_area['bottom'])
 no_blank_area = dict(left=0.01, right=0.99,
                      bottom=0.01, top=0.99,
                      wspace=0.05, hspace=0.02)
@@ -208,7 +213,7 @@ processing_choices_t1_mri = ('Saturate',
                              'Background only',
                              'Tails_trimmed',
                              'Original')
-saturate_perc_t1 = 33 # supra-threshold values are saturated.
+saturate_perc_t1 = 33  # supra-threshold values are saturated.
 num_bins_histogram_intensity_distribution = 100
 num_bins_histogram_contrast_enhancement = 256
 
@@ -243,12 +248,14 @@ abbreviation_func_mri_default_issue_list = OrderedDict(p=func_mri_pass_indicator
                                                        t="i'm Tired",
                                                        v='reView later')
 func_mri_default_issue_list = list(abbreviation_func_mri_default_issue_list.values())
-func_mri_default_rating_list_shortform = abbreviation_func_mri_default_issue_list.keys()
+func_mri_default_rating_list_shortform = \
+    abbreviation_func_mri_default_issue_list.keys()
 
 func_outlier_features = None
 
 func_mri_BIDS_filters = dict(modalities='func')
-# usually done in analyses to try keep the numbers in numerical calculations away from small values
+# usually done in analyses to try keep the numbers in numerical calculations away
+# from small values
 # not important here, just for display, doing it anyways.
 scale_factor_BOLD = 1000
 
@@ -274,29 +281,32 @@ checkbox_rect_height_diffusion = 0.04
 
 diffusion_mri_pass_indicator = visual_qc_pass_indicator
 # f, s, l are matplotlib builtin shortcuts
-abbreviation_diffusion_mri_default_issue_list = OrderedDict(p=diffusion_mri_pass_indicator,
-                                                            m='Motion',
-                                                            d='Dropout',
-                                                            v='Vibration',
-                                                            r='Ringing',
-                                                            s='Spikes',
-                                                            f='driFt (scanner)',
-                                                            l='puLsation',
-                                                            g='Geometric',
-                                                            h='gHosting',
-                                                            o='Orient/FOV',
-                                                            i='Implausible',
-                                                            e='othEr',
-                                                            t="i'm Tired",
-                                                            w='revieW later')
+abbreviation_diffusion_mri_default_issue_list = OrderedDict(
+    p=diffusion_mri_pass_indicator,
+    m='Motion',
+    d='Dropout',
+    v='Vibration',
+    r='Ringing',
+    s='Spikes',
+    f='driFt (scanner)',
+    l='puLsation',
+    g='Geometric',
+    h='gHosting',
+    o='Orient/FOV',
+    i='Implausible',
+    e='othEr',
+    t="i'm Tired",
+    w='revieW later')
 diffusion_mri_default_issue_list = list(
     abbreviation_diffusion_mri_default_issue_list.values())
-diffusion_mri_default_rating_list_shortform = abbreviation_diffusion_mri_default_issue_list.keys()
+diffusion_mri_default_rating_list_shortform = \
+    abbreviation_diffusion_mri_default_issue_list.keys()
 
 diffusion_outlier_features = None
 
 diffusion_mri_BIDS_filters = dict(modalities='dwi', types='dwi')
-# usually done in analyses to try keep the numbers in numerical calculations away from small values
+# usually done in analyses to try keep the numbers in numerical calculations away
+# from small values
 # not important here, just for display, doing it anyways.
 scale_factor_diffusion = 1000
 
@@ -322,7 +332,7 @@ choices_alignment_comparison_diffusion = ('Animate all',
                                           'Align b=0 edges')
 fontsize_radio_button_align_method_diffusion = 8
 
-position_rating_checkbox_diffusion  = [0.899, 0.30, 0.095, 0.35]
+position_rating_checkbox_diffusion = [0.899, 0.30, 0.095, 0.35]
 position_alignment_method_diffusion = [0.899, 0.66, 0.095, 0.10]
 ## ----------------------------------------------------------------------------
 
@@ -331,23 +341,24 @@ position_alignment_method_diffusion = [0.899, 0.66, 0.095, 0.10]
 #           Registration and alignment specific
 ## ----------------------------------------------------------------------------
 
-alignment_features_OLD = ('MSE', )
+alignment_features_OLD = ('MSE',)
 alignment_cmap = OrderedDict(Animate='gray',
                              Checkerboard='gray',
                              Voxelwise_diff='seismic',
                              Edges_Thinner=None,
                              Edges_Diffused=None,
                              Color_mix=None)
-choices_alignment_comparison = alignment_cmap.keys()
-alignment_default_vis_type = 'Edges_Thinner' # 'Checkerboard' # 'Animate'
+alignment_comparison_choices = set(alignment_cmap.keys())
+alignment_screenshot_vis_types = alignment_comparison_choices - {'Animate', }
+alignment_default_vis_type = 'Edges_Thinner'
 
-default_checkerboard_size = None # 25
+default_checkerboard_size = None  # 25
 edge_threshold_alignment = 0.4
 default_color_mix_alphas = (1, 1)
 
 position_alignment_radio_button_method = [0.895, 0.45, 0.1, 0.19]
 position_alignment_radio_button_rating = [0.895, 0.25, 0.1, 0.25]
-position_text_input_alignment  = [0.900, 0.20, 0.09, 0.1]
+position_text_input_alignment = [0.900, 0.20, 0.09, 0.1]
 position_next_button_alignment = [0.905, 0.10, 0.07, 0.03]
 position_quit_button_alignment = [0.905, 0.03, 0.07, 0.03]
 position_toggle_animation = [0.925, 0.63, 0.07, 0.05]
@@ -356,16 +367,16 @@ position_annotate_foreground = [0.7, 0.02]
 annotate_foreground_properties = dict(fontsize='medium', color='xkcd:pale orange')
 
 position_histogram_alignment = [0.905, 0.7, 0.09, 0.1]
-title_histogram_alignment  = 'voxel-wise diff'
+title_histogram_alignment = 'voxel-wise diff'
 num_bins_histogram_alignment = 20
 xticks_histogram_alignment = np.arange(0.1, 1.01, 0.2)
-color_histogram_alignment  = ('#c9ae74')  # sandstone
+color_histogram_alignment = ('#c9ae74')  # sandstone
 
 delay_in_animation = 0.5
 num_times_to_animate = 5
 
 # edge detection and filtering
-weak_edge_threshold = 60 # percentile: must be integer >1 and < 100
+weak_edge_threshold = 60  # percentile: must be integer >1 and < 100
 num_iter_weak_edge_removal = 10
 median_filter_size = 3
 
@@ -377,19 +388,19 @@ alpha_edge_overlay_alignment = 1.0
 ## ----------------------------------------------------------------------------
 
 
-alignment_features_groupwise = ('MSE', )
+alignment_features_groupwise = ('MSE',)
 alignment_cmap_groupwise = 'seismic'
 choices_alignment_comparison_groupwise = ('Std. dev map',
                                           'Animate through',
                                           'Animate with ref',
                                           'show outliers')
-alignment_groupwise_default_vis_type = 'Std. dev map' # 'Checkerboard' # 'Animate'
+alignment_groupwise_default_vis_type = 'Std. dev map'  # 'Checkerboard' # 'Animate'
 
 ## ----------------------------------------------------------------------------
 
 outlier_feature_folder_name = 'features_outlier_detection'
-features_outlier_detection = freesurfer_features_outlier_detection + t1_mri_features_OLD + func_mri_features_OLD
-
+features_outlier_detection = freesurfer_features_outlier_detection + \
+                             t1_mri_features_OLD + func_mri_features_OLD
 
 ## ----------------------------------------------------------------------------
 #          defacing MRI scan quality
@@ -400,14 +411,15 @@ default_render_name = 'render.png'
 
 defacing_pass_indicator = visual_qc_pass_indicator
 abbreviation_defacing_default_issue_list = {'p': defacing_pass_indicator,
-                                          'f': 'Fail',
-                                          'o': 'Overstripped',
-                                          'u': 'Understripped',
-                                          'e': 'something Else',
-                                          't': "i'm Tired",
-                                          'l': 'review Later'}
+                                            'f': 'Fail',
+                                            'o': 'Overstripped',
+                                            'u': 'Understripped',
+                                            'e': 'something Else',
+                                            't': "i'm Tired",
+                                            'l': 'review Later'}
 defacing_default_issue_list = list(abbreviation_defacing_default_issue_list.values())
-defacing_default_rating_list_shortform = abbreviation_defacing_default_issue_list.keys()
+defacing_default_rating_list_shortform = \
+    abbreviation_defacing_default_issue_list.keys()
 
 bbox_defacing_MRI_review = (0.02, 0.02, 0.88, 0.7)
 bbox_defacing_render_review = (0.02, 0.72, 0.88, 0.3)
