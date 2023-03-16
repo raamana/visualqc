@@ -13,7 +13,7 @@ from os.path import exists as pexists, join as pjoin
 from pathlib import Path
 from shutil import copyfile
 from timeit import default_timer as timer
-
+from pathlib import Path
 import numpy as np
 
 from visualqc import config as cfg
@@ -47,14 +47,15 @@ class BaseWorkflowVisualQC(ABC):
                  outlier_fraction,
                  outlier_feat_types,
                  disable_outlier_detection,
-                 show_unit_id=True):
+                 show_unit_id=True,
+                 screenshot_only=False):
         """Constructor"""
 
         # super().__init__()
 
         self.id_list = id_list
-        self.in_dir = in_dir
-        self.out_dir = out_dir
+        self.in_dir = Path(in_dir).resolve()
+        self.out_dir = Path(out_dir).resolve()
         print(f'Input folder: {self.in_dir}\nOutput folder: {self.out_dir}')
 
         self.ratings = dict()
@@ -65,6 +66,12 @@ class BaseWorkflowVisualQC(ABC):
         self.outlier_fraction = outlier_fraction
         self.outlier_feat_types = outlier_feat_types
         self.disable_outlier_detection = disable_outlier_detection
+
+        self.screenshot_only = screenshot_only
+        if self.screenshot_only:
+            self.screenshot_dir = self.out_dir / cfg.screenshot_out_dir_name
+            if not self.screenshot_dir.exists():
+                self.screenshot_dir.mkdir(exist_ok=True)
 
         # option to hide the ID, which may contain meta data such as site/time
         # hiding ID reduces bias or batch effects
@@ -130,10 +137,14 @@ class BaseWorkflowVisualQC(ABC):
     def restore_ratings(self):
         """Method to restore ratings from previous sessions, if any."""
 
-        print('Restoring ratings from previous session(s), if they exist ..')
-
         # making a copy
         self.incomplete_list = list(self.id_list)
+
+        if self.screenshot_only:
+            # processing every available subject
+            return
+
+        print('\nRestoring ratings from previous session(s), if they exist ..')
         prev_done = []  # empty list
 
         ratings_file, backup_name_ratings = get_ratings_path_info(self)
@@ -228,9 +239,9 @@ class BaseWorkflowVisualQC(ABC):
     def loop_through_units(self):
         """Core loop traversing through the units (subject/session/run) """
 
+        self.num_units_to_review = len(self.incomplete_list)
         for counter, unit_id in enumerate(self.incomplete_list):
 
-            print('\nReviewing {}'.format(unit_id))
             self.current_unit_id = unit_id
             self.identify_unit(unit_id, counter)
             self.add_alerts()
@@ -243,20 +254,26 @@ class BaseWorkflowVisualQC(ABC):
 
             self.display_unit()
 
-            timer_start = timer()
+            # checking if batch generation of screenshots is requested
+            if not self.screenshot_only:
 
-            # this is where all the reviewing/rating/notes happen
-            self.show_fig_and_wait()
+                print('\nReviewing {}'.format(unit_id))
+                timer_start = timer()
 
-            # capturing time elapsed by ID, in seconds
-            self.timer[unit_id] = timedelta(seconds=timer() - timer_start).seconds
+                # this is where all the reviewing/rating/notes happen
+                self.show_fig_and_wait()
 
-            # TODO save each rating to disk to avoid loss of work due to crach etc
-            self.print_rating(unit_id)
+                # capturing time elapsed by ID, in seconds
+                self.timer[unit_id] = timedelta(seconds=timer() - timer_start).seconds
 
-            if self.quit_now:
-                print('\nUser chosen to quit..')
-                break
+                # TODO save each rating to disk to avoid loss of work due to crach etc
+                self.print_rating(unit_id)
+
+                if self.quit_now:
+                    print('\nUser chosen to quit..')
+                    break
+            else:
+                self.export_screenshot()
 
 
     def identify_unit(self, unit_id, counter):
@@ -378,15 +395,6 @@ class BaseWorkflowVisualQC(ABC):
                                           self.notes[subject_id]))
         else:
             print(f'rating for {subject_id} has not been recorded!')
-
-
-    @abstractmethod
-    def cleanup(self):
-        """
-        Clean up routine to
-        1) save ratings,
-        2) close all callbacks and figures etc.
-        """
 
 
     def save_cmd(self):
