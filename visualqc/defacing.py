@@ -558,11 +558,10 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         raise NotImplementedError()
 
 
-    def cleanup(self):
-        """Cleanup before exit"""
-
-        # save ratings
-        self.save_ratings()
+    def close_UI(self):
+        """
+        Method to close all figures and UI elements
+        """
 
         self.fig.canvas.mpl_disconnect(self.con_id_click)
         self.fig.canvas.mpl_disconnect(self.con_id_keybd)

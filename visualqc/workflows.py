@@ -90,6 +90,15 @@ class BaseWorkflowVisualQC(ABC):
         print('\nAll Done - results are available in:\n\t{}'.format(self.out_dir))
 
 
+    def cleanup(self):
+        """Cleanup before exit"""
+
+        if not self.screenshot_only:
+            self.save_ratings()
+
+        self.close_UI()
+
+
     @abstractmethod
     def preprocess(self):
         """
@@ -111,6 +120,11 @@ class BaseWorkflowVisualQC(ABC):
         - add additional ones on top the base review interface.
 
         """
+
+
+    @abstractmethod
+    def close_UI(self):
+        """Method to close all figures and UI elements."""
 
 
     def restore_ratings(self):

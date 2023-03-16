@@ -1053,11 +1053,9 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                            id_with_counter, **cfg.annot_text_props)
 
 
-    def cleanup(self):
-        """Preparing for exit."""
+    def close_UI(self):
+        """Method to close all figures and UI elements."""
 
-        # save ratings before exiting
-        self.save_ratings()
         for cid in (self.con_id_click, self.con_id_keybd, self.con_id_scroll):
             self.fig.canvas.mpl_disconnect(cid)
         plt.close('all')

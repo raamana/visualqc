@@ -690,11 +690,8 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         return contour_handles
 
 
-    def cleanup(self):
-        """Preparating for exit."""
-
-        # save ratings before exiting
-        self.save_ratings()
+    def close_UI(self):
+        """Method to close all figures and UI elements."""
 
         self.fig.canvas.mpl_disconnect(self.con_id_click)
         self.fig.canvas.mpl_disconnect(self.con_id_keybd)
