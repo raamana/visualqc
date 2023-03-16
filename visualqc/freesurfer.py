@@ -1006,7 +1006,7 @@ def get_parser():
     solely on cross-sectional views.
 
     Default: False (required visualizations are generated at the beginning,
-        which can take 5-10 seconds for each subject).
+    if they don't exist already, which can take 5-10 seconds for each subject).
     \n""")
 
     help_text_outlier_detection_method = textwrap.dedent("""
@@ -1122,8 +1122,9 @@ def get_parser():
                     'resource-intensive features, and pre-generate all the '
                     'visualizations required')
 
-    wf_args.add_argument("-ns", "--no_surface_vis", action="store_true",
-                         dest="no_surface_vis", help=help_text_no_surface_vis)
+    wf_args.add_argument("-ns", "--no_surface_vis", dest="no_surface_vis",
+                         action="store_true", default=False,
+                         help=help_text_no_surface_vis)
 
     return parser
 
