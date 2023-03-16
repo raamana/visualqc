@@ -26,7 +26,7 @@ from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import check_finite_int, check_id_list, check_input_dir_alignment, \
     check_out_dir, check_outlier_params, check_views, get_axis, pick_slices, read_image, \
-    scale_0to1, check_time, set_fig_window_title
+    scale_0to1, check_time, set_fig_window_title, check_screenshot_params
 from visualqc.workflows import BaseWorkflowVisualQC
 from visualqc.image_utils import overlay_edges, mix_color, diff_image, mix_slices_in_checkers
 
@@ -86,7 +86,7 @@ class AlignmentInterface(BaseReviewInterface):
 
         ax_radio = plt.axes(cfg.position_alignment_radio_button_method,
                             facecolor=cfg.color_rating_axis, aspect='equal')
-        self.radio_bt_vis_type = RadioButtons(ax_radio, cfg.choices_alignment_comparison,
+        self.radio_bt_vis_type = RadioButtons(ax_radio, cfg.alignment_comparison_choices,
                                               active=None, activecolor='orange')
         self.radio_bt_vis_type.on_clicked(self.change_vis_type_callback)
         for txt_lbl in self.radio_bt_vis_type.labels:
@@ -237,9 +237,7 @@ class AlignmentInterface(BaseReviewInterface):
 
 
 class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
-    """
-    Rating workflow without any overlay.
-    """
+    """Rating workflow to evaluate quality of alignment."""
 
 
     def __init__(self,
@@ -260,12 +258,14 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  views=cfg.default_views,
                  num_slices_per_view=cfg.default_num_slices,
                  num_rows_per_view=cfg.default_num_rows,
+                 screenshot_only=cfg.default_screenshot_only
                  ):
         """Constructor"""
 
         super().__init__(id_list, in_dir, out_dir,
                          outlier_method, outlier_fraction,
-                         outlier_feat_types, disable_outlier_detection)
+                         outlier_feat_types, disable_outlier_detection,
+                         screenshot_only=screenshot_only)
 
         self.vis_type = vis_type
         self.current_cmap = cfg.alignment_cmap[self.vis_type]
@@ -656,6 +656,13 @@ def get_parser():
     Default: a new folder called ``{}`` will be created inside the input folder
     \n""".format(cfg.default_out_dir_name))
 
+    help_text_vis_type = textwrap.dedent("""
+    Specifies the visualiztion type to start with. You can change this via radio
+    buttons as you go along.
+
+    Default: {}.
+    \n""".format(cfg.alignment_default_vis_type))
+
     help_text_delay_in_animation = textwrap.dedent("""
     Specifies the delay in animation of the display of two images (like in a GIF).
 
@@ -735,6 +742,11 @@ def get_parser():
 
     vis = parser.add_argument_group('Visualization', 'Customize behaviour of comparisons')
 
+    vis.add_argument("-vt", "--vis_type", action="store",
+                     dest="vis_type", choices=cfg.alignment_comparison_choices,
+                     default=cfg.alignment_default_vis_type, required=False,
+                     help=help_text_delay_in_animation)
+
     vis.add_argument("-dl", "--delay_in_animation", action="store",
                      dest="delay_in_animation",
                      default=cfg.delay_in_animation, required=False,
@@ -774,9 +786,16 @@ def get_parser():
                         default=cfg.default_num_rows, required=False,
                         help=help_text_num_rows)
 
-    wf_args = parser.add_argument_group('Workflow', 'Options related to workflow '
-                                                    'e.g. to pre-compute resource-intensive features, '
-                                                    'and pre-generate all the visualizations required')
+    wf_args = parser.add_argument_group('Workflow',
+                                        'Options related to workflow e.g. to ' \
+                                        'pre-compute resource-intensive features, '
+                                        'and pre-generate all the visualizations '
+                                        'required')
+
+    wf_args.add_argument("-so", "--screenshot_only", dest="screenshot_only",
+                         action="store_true",
+                         help=cfg.help_text_screenshot_only)
+
     wf_args.add_argument("-p", "--prepare_first", action="store_true",
                          dest="prepare_first",
                          help=help_text_prepare)
@@ -800,13 +819,15 @@ def make_workflow_from_user_options():
     except:
         parser.exit(1)
 
-    vis_type = cfg.alignment_default_vis_type
     type_of_features = 'alignment'
     in_dir, in_dir_type = check_input_dir_alignment(user_args.in_dir)
 
+    if user_args.screenshot_only:
+        check_screenshot_params(user_args.vis_type, cfg.alignment_screenshot_vis_types)
+
     image1 = user_args.image1
     image2 = user_args.image2
-    id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type,
+    id_list, images_for_id = check_id_list(user_args.id_list, in_dir, user_args.vis_type,
                                            image1, image2, in_dir_type=in_dir_type)
 
     delay_in_animation = check_time(user_args.delay_in_animation, var_name='Delay')
@@ -822,7 +843,7 @@ def make_workflow_from_user_options():
         user_args.outlier_fraction,
         user_args.outlier_feat_types,
         user_args.disable_outlier_detection,
-        id_list, vis_type, type_of_features)
+        id_list, user_args.vis_type, type_of_features)
 
     wf = AlignmentRatingWorkflow(id_list,
                                  in_dir,
@@ -831,7 +852,7 @@ def make_workflow_from_user_options():
                                  out_dir=out_dir,
                                  in_dir_type=in_dir_type,
                                  prepare_first=user_args.prepare_first,
-                                 vis_type=vis_type,
+                                 vis_type=user_args.vis_type,
                                  delay_in_animation=delay_in_animation,
                                  outlier_method=outlier_method,
                                  outlier_fraction=outlier_fraction,
@@ -839,7 +860,8 @@ def make_workflow_from_user_options():
                                  disable_outlier_detection=disable_outlier_detection,
                                  views=views,
                                  num_slices_per_view=num_slices_per_view,
-                                 num_rows_per_view=num_rows_per_view)
+                                 num_rows_per_view=num_rows_per_view,
+                                 screenshot_only=user_args.screenshot_only)
 
     return wf
 

@@ -1041,6 +1041,14 @@ def check_views(views):
     return out_views
 
 
+def check_screenshot_params(vis_type, allowed_types):
+    """Validation of parameters related to batch generation of screenshots"""
+
+    if vis_type not in allowed_types:
+        raise ValueError('Screenshot can not be generated for {} vis_type.'
+                         'Choose one of {}'.format(vis_type, allowed_types))
+
+
 def check_string_is_nonempty(string, string_type='string'):
     """Ensures input is a string of non-zero length"""
 

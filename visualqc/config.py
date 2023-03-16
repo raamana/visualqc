@@ -424,3 +424,24 @@ vis_choices_defacing = ('Defaced only',
                         'Mixed')
 
 defacing_trim_percentile = 1
+
+## ----------------------------------------------------------------------------
+#          common help text
+## ----------------------------------------------------------------------------
+
+help_text_screenshot_only = textwrap.dedent("""
+This flag enables the batch generation of screenshots of the visualizations
+generated, for archival purposes. This would skip the interactive and deeper
+review of the  visualizations, and directly saves the screenshots to the
+output folder. Hence, only some static options would work, and dynamic
+animations would not. This is NOT recommended as a QC procedure as the
+generated screenshots can become out of sync with the actual data for a number
+of reasons, and for reliable and accurate QC, we recommend interactive review
+which presents fresh visualizations based on latest version of data on disk.
+\n""")
+
+default_screenshot_only = False
+screenshot_out_dir_name = 'Screenshots_VisualQC'
+screenshot_suffix = 'screenshot_VQC'
+screenshot_format_ext = 'png'
+dpi_export_fig = 300
