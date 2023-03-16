@@ -22,7 +22,7 @@ from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import (check_event_in_axes, check_inputs_defacing,
                             check_out_dir, compute_cell_extents_grid,
                             pixdim_nifti_header, read_image, set_fig_window_title,
-                            slice_aspect_ratio)
+                            slice_aspect_ratio, rendering_tool_installed)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -277,8 +277,8 @@ class DefacingInterface(BaseReviewInterface):
             # notice parentheses at the end
             self.map_key_to_callback[key_pressed]()
         else:
-            if key_pressed in cfg.abbreviation_defacing_default_issue_list:
-                checked_label = cfg.abbreviation_defacing_default_issue_list[
+            if key_pressed in cfg.abbrev_defacing_default_issue_list:
+                checked_label = cfg.abbrev_defacing_default_issue_list[
                     key_pressed]
                 self.checkbox.set_active(
                     cfg.defacing_default_issue_list.index(checked_label))
@@ -300,7 +300,9 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                  defaced_name,
                  mri_name,
                  render_name,
+                 slice_loc,
                  issue_list=cfg.defacing_default_issue_list,
+                 disable_3d_renderings=False,
                  vis_type='defacing'):
         """Constructor"""
 
@@ -310,18 +312,21 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                          outlier_feat_types=None,
                          disable_outlier_detection=None)
 
-        self.vis_type = vis_type
         self.issue_list = issue_list
         self.defaced_name = defaced_name
         self.mri_name = mri_name
         self.render_name = render_name
+        self.slice_loc = slice_loc
         self.images_for_id = images_for_id
 
         self.expt_id = 'rate_defaced_mri_{}'.format(self.defaced_name)
         self.suffix = self.expt_id
         self.current_alert_msg = None
 
-        self.init_layout()
+        self.vis_type = vis_type
+        self.disable_3d_renderings = disable_3d_renderings
+
+        self.init_layout(num_slices_per_view=len(self.slice_loc))
 
         self.__module_type__ = 'defacing'
 
@@ -329,7 +334,8 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
     def preprocess(self):
         """Preprocessing if necessary."""
 
-        pass
+        if not self.disable_3d_renderings:
+            self.generate_3d_renderings()
 
 
     def init_layout(self,
@@ -360,6 +366,20 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
             self.fig, f'VisualQC defacing : {self.in_dir} {self.defaced_name} ')
 
         self.padding = padding
+
+
+    def generate_3d_renderings(self):
+        """batch generation of 3D renderings of the MRI volumes prior to review"""
+
+        print('\nAttempting to generate surface visualizations of parcellation ...')
+        self._rendering_tool_installed, self._rendering_tool = \
+            rendering_tool_installed()
+
+        self.render_vis_paths = dict()
+        for sid in self.id_list:
+            self.render_vis_paths[sid] = \
+                make_3d_render(self.images_for_id[sid]['original'], self.out_dir,
+                               self._rendering_tool_installed, self._rendering_tool)
 
 
     def prepare_UI(self):
@@ -458,7 +478,7 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         self.slice_picker = SlicePicker(self.orig_img,
                                         view_set=self.collage.view_set,
                                         num_slices=self.collage.num_slices,
-                                        sampler=cfg.defacing_slice_locations)
+                                        sampler=self.slice_loc)
 
         return skip_subject
 
@@ -569,6 +589,16 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         plt.close('all')
 
 
+def make_3d_render(mri_path, out_dir, too_exists_flag, tool_path):
+    """generates 3D render of an MRI volume in different angles"""
+
+    vis_paths = list()  # list of paths to renderings at different angles
+
+    # fsleyes render --scene 3d -rot 45 0 -30 -dr 30 250 -cr 30 500
+    #   -in spline -bf 0.225 -r 100 -ns 500 --outfile img_render.png orig.nii.gz
+    return vis_paths
+
+
 def get_parser():
     """Parser to specify arguments and their defaults."""
 
@@ -625,6 +655,25 @@ def get_parser():
     Default: a new folder called ``{}`` will be created inside the input folder
     \n""".format(cfg.default_out_dir_name))
 
+    help_text_slice_locations = textwrap.dedent("""
+    Specifies the locations to slice the MRI volumes at, in percentage of depth
+    from one end to the other i.e. 1 indicates the first non-zero slice in that
+    view (coronal, sagittal etc), 50 would be in the middle, and 100 would be the
+    other end.
+    Default: {}.
+    \n""".format(cfg.defacing_slice_locations))
+
+    help_text_no_3d_renderings = textwrap.dedent("""
+    This flag disables batch-generation of 3d rendering of the MRI volume, which are
+    shown along with cross-sectional overlays. This is not recommended, but could
+    be used in situations where you can not generate them, or want to
+    focus solely on cross-sectional views.
+
+    Default: False (required visualizations are generated at the beginning,
+    if they don't exist already, which can take 5-10 seconds for each subject).
+    \n""")
+
+
     in_out = parser.add_argument_group('Input and output', ' ')
 
     in_out.add_argument("-u", "--user_dir", action="store", dest="user_dir",
@@ -650,7 +699,42 @@ def get_parser():
     in_out.add_argument("-i", "--id_list", action="store", dest="id_list",
                         default=None, required=False, help=help_text_id_list)
 
+    layout = parser.add_argument_group('Layout options', ' ')
+
+    layout.add_argument("-s", "--slice_locations", action="store", dest="slice_loc",
+                        default=cfg.defacing_slice_locations, required=False,
+                        nargs='+', help=help_text_slice_locations)
+
+    wf_args = parser.add_argument_group(
+        'Workflow', 'Options related to workflow e.g. to pre-compute '
+                    'resource-intensive features, and pre-generate all the '
+                    'visualizations required')
+
+    wf_args.add_argument("-nr", "--no_3d_renderings", dest="disable_3d_renderings",
+                         action="store_true", default=False,
+                         help=help_text_no_3d_renderings)
+
     return parser
+
+
+def make_vis_paths(subject_id, out_vis_dir, vis_tool='fsleyes'):
+    """util to make output paths to store visualizations"""
+
+    vis_path = dict()
+    vis_tool = vis_tool.lower()
+    if vis_tool == 'fsleyes':
+        img_ext = 'png'
+        angles = cfg.freeview_surface_vis_angles
+    elif vis_tool == 'tksurfer':
+        img_ext = 'tif'
+        angles = cfg.tksurfer_surface_vis_angles
+    else:
+        raise ValueError('Invalid vis_tool, it must be freeview or tksurfer')
+
+    for view in angles:
+        vis_path[view] = out_vis_dir / f'{subject_id}_{hemi}_{view}.{img_ext}'
+
+    return vis_path
 
 
 def make_workflow_from_user_options():
@@ -671,16 +755,17 @@ def make_workflow_from_user_options():
 
     vis_type = 'defacing'
 
-    user_dir, id_list, images_for_id, defaced_name, mri_name, render_name \
-        = check_inputs_defacing(user_args.user_dir, user_args.defaced_name,
-                                user_args.mri_name, user_args.render_name,
-                                user_args.id_list)
+    user_dir, id_list, images_for_id, defaced_name, mri_name, render_name, \
+        slice_loc = check_inputs_defacing(
+        user_args.user_dir, user_args.defaced_name, user_args.mri_name,
+        user_args.render_name, user_args.id_list, user_args.slice_loc)
 
     out_dir = check_out_dir(user_args.out_dir, user_dir)
 
     wf = RatingWorkflowDefacing(id_list, images_for_id, user_dir, out_dir,
-                                defaced_name, mri_name, render_name,
-                                cfg.defacing_default_issue_list, vis_type)
+                                defaced_name, mri_name, render_name, slice_loc,
+                                cfg.defacing_default_issue_list,
+                                user_args.disable_3d_renderings, vis_type)
 
     return wf
 

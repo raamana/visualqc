@@ -234,7 +234,7 @@ def pick_slices(img, view_set, num_slices):
         slices_in_dim = [sn for sn in slices_in_dim if
                          sn >= 0 or sn <= num_non_empty]
         # adding view and slice # at the same time.
-        slices.extend([(view, slice) for slice in slices_in_dim])
+        slices.extend([(view, slice_) for slice_ in slices_in_dim])
 
     return slices
 
@@ -421,7 +421,7 @@ def restore_previous_ratings(qcw):
     incomplete_list = list(qcw.id_list)
     prev_done = []  # empty list
 
-    ratings_file, backup_name_ratings = get_ratings_path_info(qcw)
+    ratings_file, _ = get_ratings_path_info(qcw)
 
     if pexists(ratings_file):
         ratings, notes = load_ratings_csv(ratings_file)
@@ -433,8 +433,7 @@ def restore_previous_ratings(qcw):
         notes = dict()
 
     if len(prev_done) > 0:
-        print('\nRatings for {}/{} subjects were restored.'.format(len(prev_done),
-                                                                   len(qcw.id_list)))
+        print(f'\nRestored {len(prev_done)}/{len(qcw.id_list)} previous ratings')
 
     if len(incomplete_list) < 1:
         print('No subjects to review/rate - exiting.')
@@ -503,7 +502,7 @@ def summarize_ratings(ratings_file, out_dir=None):
     import re
     clean = lambda lbl: re.sub(r'\W+', '_', lbl.lower())
 
-    rating_dict, notes = load_ratings_csv(ratings_file)
+    rating_dict, _ = load_ratings_csv(ratings_file)
 
     rating_list = list()
     uniq_labels = set()
@@ -700,7 +699,8 @@ def freesurfer_vis_tool_installed():
 
     if os.getenv('FREESURFER_HOME') is None:
         print('the environment variable FREESURFER_HOME is not set!')
-        return False, None
+        # using freeview here instead of None to recognize existing visualizations
+        return False, "freeview"
 
     fv_callable = which('freeview') is not None
     if fv_callable:
@@ -716,6 +716,16 @@ def freesurfer_vis_tool_installed():
         return False, None
 
     return False
+
+
+def rendering_tool_installed():
+    """checks if the tool to generate 3D renderings of MRI volumes is installed"""
+
+    fe_callable = which('fsleyes') is not None
+    if fe_callable:
+        return True, "fsleyes"
+    else:
+        return False, None
 
 
 def check_out_dir(out_dir, base_dir):
@@ -1020,6 +1030,17 @@ def check_labels(vis_type, label_set):
     return vis_type, label_set
 
 
+def check_slice_locations_percent(slice_loc):
+    """Checks they are numbers between 0 and 100 inclusive"""
+
+    slice_loc = [float(sl) for sl in slice_loc]
+    if any([sl < 1 or sl > 100 for sl in slice_loc]):
+        raise ValueError('One or more slice locations specified is invalid. '
+                         'They must be between 1 and 100.')
+
+    return slice_loc
+
+
 def check_views(views):
     """Checks which views were selected."""
 
@@ -1053,7 +1074,8 @@ def check_string_is_nonempty(string, string_type='string'):
     return string
 
 
-def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_in):
+def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_in,
+                          slice_loc):
     """Validates the integrity of the inputs"""
 
     in_dir = realpath(in_dir)
@@ -1063,6 +1085,8 @@ def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_i
     defaced_name = check_string_is_nonempty(defaced_name, 'defaced MRI scan')
     mri_name = check_string_is_nonempty(mri_name, 'original MRI scan')
     render_name = check_string_is_nonempty(render_name, '3D rendered image')
+
+    slice_loc = check_slice_locations_percent(slice_loc)
 
     if id_list_in is not None:
         if not pexists(id_list_in):
@@ -1129,7 +1153,7 @@ def check_inputs_defacing(in_dir, defaced_name, mri_name, render_name, id_list_i
     print('{} subjects are usable for review.'.format(len(id_list_out)))
 
     return in_dir, np.array(id_list_out), images_for_id, \
-           defaced_name, mri_name, render_name
+           defaced_name, mri_name, render_name, slice_loc
 
 
 def print_time_stamp():

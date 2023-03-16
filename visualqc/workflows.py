@@ -179,6 +179,7 @@ class BaseWorkflowVisualQC(ABC):
         else:
             return str_list
 
+
     def save_time_spent(self):
         """Saves time spent on each unit"""
 
@@ -314,8 +315,7 @@ class BaseWorkflowVisualQC(ABC):
             self.quit_now = True
         else:
             print('You have not rated the current subject! '
-                  'Please rate it before you can advance '
-                  'to next subject, or to quit..')
+                  'Rate it before you can quit.')
 
 
     def next(self, input_event_to_ignore=None):
@@ -326,8 +326,7 @@ class BaseWorkflowVisualQC(ABC):
             self.quit_now = False
         else:
             print('You have not rated the current subject! '
-                  'Please rate it before you can advance '
-                  'to next subject, or to quit..')
+                  'Rate it before you can advance to the next subject.')
 
 
     def prepare_to_advance(self):
@@ -351,8 +350,8 @@ class BaseWorkflowVisualQC(ABC):
 
         if subject_id in self.ratings:
             # checking if "i'm tired" or 'review later' appear in ratings
-            do_not_save = any([ rt.lower() in cfg.ratings_not_to_be_recorded
-                  for rt in self.ratings[subject_id]])
+            do_not_save = any([rt.lower() in cfg.ratings_not_to_be_recorded
+                               for rt in self.ratings[subject_id]])
 
             # not saving ratings meant not to be saved!
             if do_not_save:
