@@ -288,6 +288,13 @@ class DefacingInterface(BaseReviewInterface):
         self.fig.canvas.draw_idle()
 
 
+    def remove_UI_local(self):
+        """Removes module specific UI elements for cleaner screenshots"""
+
+        self.radio_bt_vis_type.ax.remove()
+        self.checkbox.ax.remove()
+
+
 class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
     """Rating workflow for defaced MRI scans"""
 
@@ -301,14 +308,16 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                  mri_name,
                  render_name,
                  issue_list=cfg.defacing_default_issue_list,
-                 vis_type='defacing'):
+                 vis_type='defacing',
+                 screenshot_only=cfg.default_screenshot_only):
         """Constructor"""
 
         super().__init__(id_list, in_dir, out_dir,
                          show_unit_id=False,  # preventing bias/batch-effects
                          outlier_method=None, outlier_fraction=None,
                          outlier_feat_types=None,
-                         disable_outlier_detection=None)
+                         disable_outlier_detection=None,
+                         screenshot_only=screenshot_only)
 
         self.vis_type = vis_type
         self.issue_list = issue_list
@@ -649,6 +658,9 @@ def get_parser():
     in_out.add_argument("-i", "--id_list", action="store", dest="id_list",
                         default=None, required=False, help=help_text_id_list)
 
+    in_out.add_argument("-so", "--screenshot_only", dest="screenshot_only",
+                        action="store_true",
+                        help=cfg.help_text_screenshot_only)
     return parser
 
 
@@ -679,7 +691,8 @@ def make_workflow_from_user_options():
 
     wf = RatingWorkflowDefacing(id_list, images_for_id, user_dir, out_dir,
                                 defaced_name, mri_name, render_name,
-                                cfg.defacing_default_issue_list, vis_type)
+                                cfg.defacing_default_issue_list, vis_type,
+                                screenshot_only=user_args.screenshot_only)
 
     return wf
 
