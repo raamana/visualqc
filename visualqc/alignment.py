@@ -757,7 +757,7 @@ def get_parser():
     vis.add_argument("-vt", "--vis_type", action="store",
                      dest="vis_type", choices=cfg.alignment_comparison_choices,
                      default=cfg.alignment_default_vis_type, required=False,
-                     help=help_text_delay_in_animation)
+                     help=help_text_vis_type)
 
     vis.add_argument("-dl", "--delay_in_animation", action="store",
                      dest="delay_in_animation",
