@@ -154,3 +154,22 @@ class BaseReviewInterface(ABC):
     @abstractmethod
     def reset_figure(self):
         """ Resets the state of UI and clears the axes. """
+
+
+    @staticmethod
+    def _is_checkbox_ticked(cbox):
+        """Checks if the one of the buttons in checkbox is ticked"""
+
+        if any(cbox.get_status()):
+            allowed = True
+        else:
+            allowed = False
+
+        return allowed
+
+
+    @staticmethod
+    def _is_radiobutton_selected(radio_button):
+        """Checks if the one of the options in radio button is ticked"""
+
+        return radio_button.value_selected is not None
