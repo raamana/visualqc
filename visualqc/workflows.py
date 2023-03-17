@@ -337,9 +337,15 @@ class BaseWorkflowVisualQC(ABC):
     def export_screenshot(self):
         """Exports the screenshot of current visualization to disk"""
 
+        if self.vis_type is None or len(self.vis_type) < 1:
+            vis_type_suffix = ''
+        else:
+            vis_type_suffix = self.vis_type
+
         print("exporting screenshot for {}".format(self.current_unit_id))
-        ss_out_file = self.screenshot_dir / "{}_{}.{}".format(
-            self.current_unit_id, cfg.screenshot_suffix, cfg.screenshot_format_ext)
+        ss_out_file = self.screenshot_dir / "{}_{}_{}.{}".format(
+            self.current_unit_id, vis_type_suffix,
+            cfg.screenshot_suffix, cfg.screenshot_format_ext)
         self.fig.savefig(ss_out_file, bbox_inches='tight', dpi=cfg.dpi_export_fig)
 
 
