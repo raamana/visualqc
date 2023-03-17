@@ -397,9 +397,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         from visualqc.features import extract_T1_features
         self.feature_extractor = extract_T1_features
 
-        if (self.vis_type is not None) and \
-                ((self.vis_type in cfg.freesurfer_vis_types) or
-                 (self.in_dir_type in ['freesurfer', ])):
+        if self.in_dir_type.lower() in ('freesurfer', ):
             self.path_getter_inputs = lambda sub_id: \
                 realpath(pjoin(self.in_dir, sub_id, 'mri', self.mri_name))
         else:
