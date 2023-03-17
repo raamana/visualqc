@@ -20,7 +20,7 @@ from mrivis.utils import crop_image
 from visualqc import config as cfg
 from visualqc.image_utils import mask_image
 from visualqc.readers import func_mri_traverse_bids
-from visualqc.t1_mri import T1MriInterface
+from visualqc.t1_mri import BaseReviewInterface
 from visualqc.utils import (check_bids_dir, check_event_in_axes, check_finite_int,
                             check_id_list_with_regex, check_image_is_4d,
                             check_out_dir, check_outlier_params, check_views,
@@ -43,7 +43,7 @@ def _unbidsify(filename, max_width=18):
     return '\n'.join(fixed_width)
 
 
-class FunctionalMRIInterface(T1MriInterface):
+class FunctionalMRIInterface(BaseReviewInterface):
     """Interface for the review of fMRI images."""
 
 
@@ -63,9 +63,7 @@ class FunctionalMRIInterface(T1MriInterface):
                  total_num_layers=5):
         """Constructor"""
 
-        super().__init__(fig, axes, issue_list,
-                         next_button_callback,
-                         quit_button_callback)
+        super().__init__(fig, axes, next_button_callback, quit_button_callback)
         self.issue_list = issue_list
 
         self.prev_axis = None
@@ -120,6 +118,49 @@ class FunctionalMRIInterface(T1MriInterface):
             x_line2.set_color(cfg.checkbox_cross_color)
 
         self._index_pass = self.issue_list.index(cfg.func_mri_pass_indicator)
+
+
+    def save_issues(self, label):
+        """
+        Update the rating
+
+        This function is called whenever set_active() happens on any label,
+        if checkbox.eventson is True.
+
+        """
+
+        if label == cfg.visual_qc_pass_indicator:
+            self.clear_checkboxes(except_pass=True)
+        else:
+            self.clear_pass_only_if_on()
+
+        self.fig.canvas.draw_idle()
+
+
+    def clear_checkboxes(self, except_pass=False):
+        """Clears all checkboxes.
+
+        if except_pass=True,
+            does not clear checkbox corresponding to cfg.t1_mri_pass_indicator
+        """
+
+        cbox_statuses = self.checkbox.get_status()
+        for index, this_cbox_active in enumerate(cbox_statuses):
+            if except_pass and index == self._index_pass:
+                continue
+            # if it was selected already, toggle it.
+            if this_cbox_active:
+                # not calling checkbox.set_active() as it calls the callback
+                # self.save_issues() each time, if eventson is True
+                self._toggle_visibility_checkbox(index)
+
+
+    def clear_pass_only_if_on(self):
+        """Clear pass checkbox only"""
+
+        cbox_statuses = self.checkbox.get_status()
+        if cbox_statuses[self._index_pass]:
+            self._toggle_visibility_checkbox(self._index_pass)
 
 
     def maximize_axis(self, ax):
@@ -205,6 +246,19 @@ class FunctionalMRIInterface(T1MriInterface):
                 pass
 
         self.fig.canvas.draw_idle()
+
+
+    def allowed_to_advance(self):
+        """
+        Method to ensure work is done for current iteration,
+        before allowing the user to advance to next subject.
+
+        Returns False if atleast one of the following conditions are not met:
+            Atleast Checkbox is checked
+        """
+
+        return self._is_checkbox_ticked(self.checkbox)
+
 
     def reset_figure(self):
         """Resets the figure to prepare it for display of next subject."""
