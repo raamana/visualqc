@@ -63,15 +63,15 @@ class T1MriInterface(BaseReviewInterface):
 
         self.add_checkboxes()
         self.add_process_options()
-        # include all the non-data axes here (so they wont be zoomed-in)
+
+        # include all the non-data axes here (so they won't be zoomed-in)
         self.unzoomable_axes = [self.checkbox.ax, self.text_box.ax,
                                 self.bt_next.ax, self.bt_quit.ax]
         # radio buttons may not exist in all interfaces
         if hasattr(self, 'radio_bt_vis_type'):
             self.unzoomable_axes.append(self.radio_bt_vis_type)
 
-        # this list of artists to be populated later
-        # makes to handy to clean them all
+        # this list of artists is to be populated later; handy to clear them all
         self.data_handles = list()
 
 

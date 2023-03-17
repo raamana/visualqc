@@ -671,14 +671,14 @@ def check_input_dir_alignment(in_dir):
 
 
 def check_bids_dir(dir_path):
-    """Checks if its a BIDS folder or not"""
+    """Checks if input is a valid BIDS folder"""
 
     descr_file_name = 'dataset_description.json'
     descr_path = pjoin(dir_path, descr_file_name)
     if not pexists(descr_path):
-        raise ValueError('There is no {} file at the root\n '
+        raise ValueError('There is no {} file at the root\n {}\n'
                          'Ensure folder is formatted according to BIDS spec.'
-                         ''.format(descr_file_name))
+                         ''.format(descr_file_name, dir_path))
 
     try:
         import json

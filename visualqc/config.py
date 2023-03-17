@@ -255,9 +255,8 @@ func_mri_default_rating_list_shortform = \
 func_outlier_features = None
 
 func_mri_BIDS_filters = dict(modalities='func')
-# usually done in analyses to try keep the numbers in numerical calculations away
-# from small values
-# not important here, just for display, doing it anyways.
+# usually done in analyses to try to keep the numbers in numerical calculations away
+# from small values; not important here, just for display, doing it anyway.
 scale_factor_BOLD = 1000
 
 alpha_stats_overlay = 0.5

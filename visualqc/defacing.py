@@ -64,18 +64,12 @@ class DefacingInterface(BaseReviewInterface):
                                 self.bt_next.ax, self.bt_quit.ax,
                                 self.radio_bt_vis_type.ax]
 
-        # this list of artists to be populated later
-        # makes to handy to clean them all
+        # this list of artists is to be populated later; handy to clear them all
         self.data_handles = list()
 
 
     def add_checkboxes(self):
-        """
-        Checkboxes offer the ability to select multiple tags such as Motion,
-        Ghosting Aliasing etc, instead of one from a list of mutual exclusive
-        rating options (such as Good, Bad, Error etc).
-
-        """
+        """Checkboxes offer the ability to select multiple tags"""
 
         ax_checkbox = plt.axes(cfg.position_checkbox_t1_mri,
                                facecolor=cfg.color_rating_axis)
