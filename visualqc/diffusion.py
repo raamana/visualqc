@@ -590,7 +590,24 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             hdr = nib.load(img_path)
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
             self.img_this_unit_raw = self.hdr_this_unit.get_data()
-            self.b_values_this_unit = np.loadtxt(bval_path).flatten()
+
+            num_dwi_volumes = self.img_this_unit_raw.shape[-1]
+            if (not pexists(bval_path)) or (bval_path.lower() == 'assume_first'):
+                self.b_values_this_unit = None # to indicate we have no info
+
+                self.b0_indices = [False, ]*num_dwi_volumes
+                self.b0_indices[0] = True # assume first volume is b=0
+
+                # do the opposite with dw volumes
+                self.dw_indices = [True, ] * num_dwi_volumes
+                self.dw_indices[0] = False
+
+                self.b0_indices = np.flatnonzero(self.b0_indices)
+                self.dw_indices = np.flatnonzero(self.dw_indices)
+            else:
+                self.b_values_this_unit = np.loadtxt(bval_path).flatten()
+                self.b0_indices = np.flatnonzero(self.b_values_this_unit == 0)
+                self.dw_indices = np.flatnonzero(self.b_values_this_unit != 0)
         except Exception as exc:
             print(exc)
             print('Unable to read image at \n\t{}'.format(img_path))
