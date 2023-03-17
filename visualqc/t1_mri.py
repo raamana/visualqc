@@ -311,9 +311,9 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
                  images_for_id,
                  outlier_method, outlier_fraction,
                  outlier_feat_types, disable_outlier_detection,
-                 prepare_first,
-                 vis_type,
-                 views, num_slices_per_view, num_rows_per_view):
+                 vis_type, saturate_perc,
+                 views, num_slices_per_view, num_rows_per_view,
+                 screenshot_only=cfg.default_screenshot_only):
         """Constructor"""
 
         super().__init__(id_list, in_dir, out_dir,
@@ -328,7 +328,6 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.expt_id = 'rate_mri_{}'.format(self.mri_name)
         self.suffix = self.expt_id
         self.current_alert_msg = None
-        self.prepare_first = prepare_first
 
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
@@ -843,9 +842,9 @@ def make_workflow_from_user_options():
                           mri_name, in_dir_type, images_for_id,
                           outlier_method, outlier_fraction,
                           outlier_feat_types, disable_outlier_detect,
-                          user_args.prepare_first,
-                          vis_type,
-                          views, num_slices_per_view, num_rows_per_view)
+                          vis_type, saturate_perc,
+                          views, num_slices_per_view, num_rows_per_view,
+                          screenshot_only=user_args.screenshot_only)
 
     return wf
 
