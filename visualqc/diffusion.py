@@ -26,7 +26,8 @@ from visualqc.t1_mri import BaseReviewInterface
 from visualqc.utils import (check_bids_dir, check_finite_int, check_image_is_4d,
                             check_out_dir, check_outlier_params, check_time,
                             check_views, get_axis, pick_slices, scale_0to1,
-                            set_fig_window_title)
+                            set_fig_window_title, check_screenshot_params,
+                            remove_matplotlib_axes)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -326,6 +327,12 @@ class DiffusionMRIInterface(BaseReviewInterface):
         self.clear_notes_annot()
 
 
+    def remove_UI_local(self):
+        """Removes module specific UI elements for cleaner screenshots"""
+
+        remove_matplotlib_axes([self.checkbox, self.radio_bt_vis_type])
+
+
 class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     """
     Rating workflow for BOLD fMRI.
@@ -350,7 +357,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  vis_type=None,
                  views=cfg.default_views_diffusion,
                  num_slices_per_view=cfg.default_num_slices_diffusion,
-                 num_rows_per_view=cfg.default_num_rows_diffusion):
+                 num_rows_per_view=cfg.default_num_rows_diffusion,
+                 screenshot_only=cfg.default_screenshot_only):
         """
         Constructor.
         """
@@ -360,7 +368,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         super().__init__(id_list, in_dir, out_dir,
                          outlier_method, outlier_fraction,
-                         outlier_feat_types, disable_outlier_detection)
+                         outlier_feat_types, disable_outlier_detection,
+                         screenshot_only=screenshot_only)
 
         # basic cleaning before display
         # whether to remove and detrend before making carpet plot
@@ -669,7 +678,6 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         else:
             check_image_is_4d(self.img_this_unit_raw)
 
-            self.b0_indices = np.flatnonzero(self.b_values_this_unit == 0)
             if len(self.b0_indices) < 1:
                 skip_subject = True
                 print('There are no b=0 volumes for {}! '
@@ -687,7 +695,6 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                 self.b0_volume = self.img_this_unit_raw[..., self.b0_indices[0]].squeeze()
             # need more thorough checks on whether image loaded is indeed DWI
 
-            self.dw_indices = np.flatnonzero(self.b_values_this_unit != 0)
             self.dw_volumes = self.img_this_unit_raw[:, :, :, self.dw_indices]
             self.num_gradients = self.dw_volumes.shape[3]
             # to check alignment
@@ -1444,6 +1451,9 @@ def get_parser():
                          dest="prepare_first",
                          help=help_text_prepare)
 
+    wf_args.add_argument("-so", "--screenshot_only", dest="screenshot_only",
+                         action="store_true",
+                         help=cfg.help_text_screenshot_only)
     return parser
 
 
@@ -1475,14 +1485,11 @@ def make_workflow_from_user_options():
     name_pattern = None
     images_for_id = None
 
-    # elif user_args.bids_dir is None and user_args.user_dir is not None:
-    #     name_pattern = user_args.name_pattern
-    #     in_dir = realpath(user_args.user_dir)
-    #     in_dir_type = 'generic'
-    #     id_list, images_for_id = check_id_list_with_regex(user_args.id_list,
-    #     in_dir, name_pattern)
-
     out_dir = check_out_dir(user_args.out_dir, in_dir)
+
+    if user_args.screenshot_only:
+        check_screenshot_params(user_args.vis_type,
+                                cfg.diffusion_screenshot_vis_types)
     apply_preproc = user_args.apply_preproc
     delay_in_animation = check_time(user_args.delay_in_animation, var_name='Delay')
 
@@ -1511,7 +1518,8 @@ def make_workflow_from_user_options():
                                  vis_type=vis_type,
                                  views=views,
                                  num_slices_per_view=num_slices_per_view,
-                                 num_rows_per_view=num_rows_per_view)
+                                 num_rows_per_view=num_rows_per_view,
+                                 screenshot_only=user_args.screenshot_only)
 
     return wf
 
