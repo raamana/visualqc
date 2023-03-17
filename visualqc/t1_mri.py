@@ -534,7 +534,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
 
         if user_choice in ('Saturate',):
             self.show_saturated(no_toggle=True)
-        elif user_choice in ('Background only',):
+        elif user_choice in ('Background_only',):
             self.show_background_only(no_toggle=True)
         elif user_choice in ('Tails_trimmed', 'Tails trimmed'):
             self.show_tails_trimmed(no_toggle=True)
@@ -560,10 +560,10 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
     def show_background_only(self, no_toggle=False):
         """Callback for ghosting specific review"""
 
-        if not self.currently_showing in ['Background only', ] or no_toggle:
+        if not self.currently_showing in ['Background_only', ] or no_toggle:
             self._compute_background()
             self.collage.attach(self.background_img)
-            self.currently_showing = 'Background only'
+            self.currently_showing = 'Background_only'
         else:
             self.show_original()
 
@@ -785,8 +785,8 @@ def get_parser():
 
     outliers = parser.add_argument_group('Outlier detection',
                                          'options related to automatically '
-                                         'detecting '
-                                         'possible outliers')
+                                         'detecting possible outliers')
+
     outliers.add_argument("-olm", "--outlier_method", action="store",
                           dest="outlier_method",
                           default=cfg.default_outlier_detection_method,
