@@ -326,7 +326,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
 
         super().__init__(id_list, in_dir, out_dir,
                          outlier_method, outlier_fraction,
-                         outlier_feat_types, disable_outlier_detection)
+                         outlier_feat_types, disable_outlier_detection,
+                         screenshot_only=screenshot_only)
 
         self.vis_type = vis_type
         self.saturate_perc = saturate_perc
@@ -823,11 +824,11 @@ def get_parser():
     wf_args = parser.add_argument_group('Workflow',
                                         'Options related to workflow e.g. to '
                                         'pre-compute resource-intensive features, '
-                                        'and pre-generate all the visualizations '
-                                        'required')
-    wf_args.add_argument("-p", "--prepare_first", action="store_true",
-                         dest="prepare_first",
-                         help=help_text_prepare)
+                                        'or generate screenshots only')
+
+    wf_args.add_argument("-so", "--screenshot_only", dest="screenshot_only",
+                         action="store_true",
+                         help=cfg.help_text_screenshot_only)
 
     return parser
 
