@@ -46,7 +46,7 @@ default_outlier_detection_method = 'isolation_forest'
 default_outlier_fraction = 0.2
 avail_outlier_detection_methods = ('isolation_forest',)
 # OLD -> OutLier Detection
-avail_OLD_source_of_features = ('freesurfer', 't1_mri',)
+avail_OLD_source_of_features = ('freesurfer', 't1_mri', 'dvars')
 
 default_freesurfer_dir = None
 cortical_types = ('cortical_volumetric', 'cortical_contour')
@@ -328,8 +328,12 @@ colormap_stdev_diffusion = 'seismic'
 
 choices_alignment_comparison_diffusion = ('Animate all',
                                           'Flip first & last',
-                                          'Align b=0 animate',
-                                          'Align b=0 edges')
+                                          'Align b0 animate',
+                                          'Align b0 edges')
+
+diffusion_screenshot_vis_types = ('Align_b0_edges', )
+default_diffusion_vis_type = diffusion_screenshot_vis_types[0]
+
 fontsize_radio_button_align_method_diffusion = 8
 
 position_rating_checkbox_diffusion = [0.899, 0.30, 0.095, 0.35]

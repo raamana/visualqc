@@ -1342,6 +1342,14 @@ def get_parser():
     This flag disables outlier detection and alerts altogether.
     \n""")
 
+    help_text_vis_type = textwrap.dedent("""
+    Type of visualization to start review with, or for screenshots.
+    Allowed options: {}
+
+    Default: {}.
+    \n""".format(cfg.diffusion_screenshot_vis_types,
+                 cfg.default_diffusion_vis_type))
+
     help_text_delay_in_animation = textwrap.dedent("""
     Specifies the delay in animation of the display of two images (like in a GIF).
 
@@ -1379,6 +1387,11 @@ def get_parser():
                      dest="delay_in_animation",
                      default=cfg.delay_in_animation, required=False,
                      help=help_text_delay_in_animation)
+
+    vis.add_argument("-vt", "--vis_type", action="store",
+                     dest="vis_type", choices=cfg.diffusion_screenshot_vis_types,
+                     default=cfg.default_diffusion_vis_type, required=False,
+                     help=help_text_vis_type)
 
     outliers = parser.add_argument_group('Outlier detection',
                                          'options related to automatically '
