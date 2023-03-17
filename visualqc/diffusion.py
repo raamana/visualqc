@@ -10,7 +10,7 @@ import textwrap
 import time
 import warnings
 from abc import ABC
-from os.path import basename, join as pjoin
+from os.path import basename, join as pjoin, exists as pexists
 from textwrap import wrap
 
 import nibabel as nib
@@ -429,7 +429,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.feature_extractor = diffusion_mri_features
 
         if 'BIDS' in self.in_dir_type.upper():
-            from bids import BIDSLayout
+            from bids import BIDSLayout, config as bids_config
+            bids_config.set_option('extension_initial_dot', True)
             self.bids_layout = BIDSLayout(self.in_dir)
             self.units = diffusion_traverse_bids(self.bids_layout)
 
@@ -1400,7 +1401,7 @@ def get_parser():
 
     # TODO re-enable it when OLD is ready for DWI
     outliers.add_argument("-old", "--disable_outlier_detection",
-                          action="store_false",
+                          action="store_true",
                           dest="disable_outlier_detection",
                           required=False, help=help_text_disable_outlier_detection)
 
