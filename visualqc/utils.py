@@ -281,6 +281,18 @@ def check_finite_int(num_slices, num_rows):
     return num_slices, num_rows
 
 
+def check_numerical_limits(values, name, lower_limit, upper_limit):
+    """Ensure given variable values are within limits specified."""
+
+    values = np.array(values).astype('float16').ravel()
+
+    if any(values < lower_limit) or any(values > upper_limit):
+        raise ValueError("{} out of range - must be within [{}, {}]"
+                         "".format(name, lower_limit, upper_limit))
+
+    return values
+
+
 def check_alpha_set(alpha_set):
     """Ensure given alphas are valid."""
 
@@ -1187,3 +1199,10 @@ def print_platform_version_info():
     print('numpy {} / scipy {} / matplotlib {}\npython {}'.format(
         np.__version__, scipy.__version__, matplotlib.__version__, sys.version))
     print('platform {}\n{}\n\n'.format(platform.platform(), platform.version()))
+
+
+def remove_matplotlib_axes(mpl_objects):
+    """Calls the .ax.remove() method on all the objects"""
+
+    for artist in mpl_objects:
+        artist.ax.remove()

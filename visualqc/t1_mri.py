@@ -22,9 +22,11 @@ from visualqc.image_utils import mask_image
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.readers import find_anatomical_images_in_BIDS
 from visualqc.utils import (check_bids_dir, check_finite_int, check_id_list,
-                            check_input_dir_T1, check_out_dir, check_outlier_params,
-                            check_views, read_image, saturate_brighter_intensities,
-                            scale_0to1, set_fig_window_title)
+                            check_input_dir_T1, check_numerical_limits,
+                            check_out_dir, check_outlier_params, check_views,
+                            read_image, remove_matplotlib_axes,
+                            saturate_brighter_intensities, scale_0to1,
+                            set_fig_window_title)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -207,6 +209,12 @@ class T1MriInterface(BaseReviewInterface):
         self.clear_checkboxes()
         self.clear_radio_buttons()
         self.clear_notes_annot()
+
+
+    def remove_UI_local(self):
+        """Removes module specific UI elements for cleaner screenshots"""
+
+        remove_matplotlib_axes([self.checkbox, self.radio_bt_vis_type])
 
 
     def clear_data(self):

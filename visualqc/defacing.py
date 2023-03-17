@@ -22,7 +22,7 @@ from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import (check_event_in_axes, check_inputs_defacing,
                             check_out_dir, compute_cell_extents_grid,
                             pixdim_nifti_header, read_image, set_fig_window_title,
-                            slice_aspect_ratio)
+                            slice_aspect_ratio, remove_matplotlib_axes)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -291,8 +291,7 @@ class DefacingInterface(BaseReviewInterface):
     def remove_UI_local(self):
         """Removes module specific UI elements for cleaner screenshots"""
 
-        self.radio_bt_vis_type.ax.remove()
-        self.checkbox.ax.remove()
+        remove_matplotlib_axes([self.checkbox, self.radio_bt_vis_type])
 
 
 class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):

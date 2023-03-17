@@ -24,11 +24,17 @@ from mrivis.utils import crop_to_seg_extents
 from os.path import join as pjoin, realpath
 from visualqc import config as cfg
 from visualqc.interfaces import BaseReviewInterface
-from visualqc.utils import check_finite_int, check_id_list, check_input_dir_alignment, \
-    check_out_dir, check_outlier_params, check_views, get_axis, pick_slices, read_image, \
-    scale_0to1, check_time, set_fig_window_title, check_screenshot_params
+from visualqc.utils import (check_finite_int, check_id_list,
+                            check_input_dir_alignment,
+                            check_out_dir, check_outlier_params, check_views,
+                            get_axis, pick_slices,
+                            read_image,
+                            scale_0to1, check_time, set_fig_window_title,
+                            check_screenshot_params,
+                            remove_matplotlib_axes)
 from visualqc.workflows import BaseWorkflowVisualQC
-from visualqc.image_utils import overlay_edges, mix_color, diff_image, mix_slices_in_checkers
+from visualqc.image_utils import (overlay_edges, mix_color, diff_image,
+                                  mix_slices_in_checkers)
 
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
@@ -239,8 +245,7 @@ class AlignmentInterface(BaseReviewInterface):
     def remove_UI_local(self):
         """Removes module specific UI elements for cleaner screenshots"""
 
-        self.radio_bt_vis_type.ax.remove()
-        self.radio_bt_rating.ax.remove()
+        remove_matplotlib_axes([self.radio_bt_rating, self.radio_bt_vis_type])
 
 
 class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
