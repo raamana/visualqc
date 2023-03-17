@@ -329,6 +329,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
                          outlier_feat_types, disable_outlier_detection)
 
         self.vis_type = vis_type
+        self.saturate_perc = saturate_perc
         self.issue_list = issue_list
         self.mri_name = mri_name
         self.in_dir_type = in_dir_type
@@ -551,7 +552,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         if not self.currently_showing in ['saturated', ] or no_toggle:
             if not hasattr(self, 'saturated_img'):
                 self.saturated_img = saturate_brighter_intensities(
-                    self.current_img, percentile=cfg.saturate_perc_t1)
+                    self.current_img, percentile=self.saturate_perc)
             self.collage.attach(self.saturated_img)
             self.currently_showing = 'saturated'
         else:
@@ -671,6 +672,25 @@ def get_parser():
     Default: a new folder called ``{}`` will be created inside the input folder
     \n""".format(cfg.default_out_dir_name))
 
+    help_text_vis_type = textwrap.dedent("""
+    Type of visualization/processed image to start review with.
+    Allowed options: {}
+
+    Default: {}.
+    \n""".format(cfg.processing_choices_t1_mri,
+                 cfg.default_processing_choice_t1_mri))
+
+    help_text_saturate_perc_t1 = textwrap.dedent("""
+    Sets all intensities in the image above this percentile to max intensity.
+    This is helpful to reveal and detect any ghosting.
+
+    Specific formula used to compute threshold:
+    threshold = numpy.percentile(image, saturate_perc)
+    image[image > threshold] = max_value
+
+    Default: {}. It must be within [1, 99]
+    """.format(cfg.saturate_perc_max_intensity))
+
     help_text_views = textwrap.dedent("""
     Specifies the set of views to display - could be just 1 view, or 2 or all 3.
     Example: --views 0 (typically sagittal) or --views 1 2 (axial and coronal)
@@ -753,6 +773,18 @@ def get_parser():
                         default=cfg.default_freesurfer_dir,
                         required=False, help=help_text_fs_dir)
 
+    vis = parser.add_argument_group('Visualization', '')
+
+    vis.add_argument("-vt", "--vis_type", action="store",
+                     dest="vis_type", choices=cfg.processing_choices_t1_mri,
+                     default=cfg.default_processing_choice_t1_mri, required=False,
+                     help=help_text_vis_type)
+
+    vis.add_argument("-sp", "--saturate_perc", action="store",
+                     dest="saturate_perc",
+                     default=cfg.saturate_perc_max_intensity, required=False,
+                     help=help_text_saturate_perc_t1)
+
     outliers = parser.add_argument_group('Outlier detection',
                                          'options related to automatically '
                                          'detecting '
@@ -818,7 +850,11 @@ def make_workflow_from_user_options():
     except:
         parser.exit(1)
 
-    vis_type = 'collage_t1_mri'
+    vis_type = user_args.vis_type
+    if vis_type.lower() not in [pc.lower() for pc in cfg.processing_choices_t1_mri]:
+        raise ValueError('Invalid vis_type - choose one of {}'
+                         ''.format(cfg.processing_choices_t1_mri))
+
     type_of_features = 't1_mri'
     in_dir, in_dir_type = check_input_dir_T1(user_args.fs_dir, user_args.user_dir,
                                              user_args.bids_dir)
@@ -838,6 +874,9 @@ def make_workflow_from_user_options():
 
     num_slices_per_view, num_rows_per_view = check_finite_int(user_args.num_slices,
                                                               user_args.num_rows)
+
+    saturate_perc = check_numerical_limits(user_args.saturate_perc, 'saturate_perc',
+                                           1, 99)[0]  # return type array
 
     outlier_method, outlier_fraction, outlier_feat_types, disable_outlier_detect = \
         check_outlier_params(
