@@ -282,7 +282,7 @@ class FunctionalMRIInterface(BaseReviewInterface):
     def remove_UI_local(self):
         """Removes module specific UI elements for cleaner screenshots"""
 
-        remove_matplotlib_axes([self.checkbox,])
+        remove_matplotlib_axes([self.checkbox, ])
 
 
 class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):

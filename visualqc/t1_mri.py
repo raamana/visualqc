@@ -707,15 +707,6 @@ def get_parser():
     Default: {}.
     \n""".format(cfg.default_num_rows))
 
-    help_text_prepare = textwrap.dedent("""
-    This flag enables batch-generation of 3d surface visualizations,
-    prior to starting any review and rating operations. This makes the switch
-    from one subject to the next, even more seamless (saving few seconds :) ).
-
-    Default: False  (required visualizations are generated only on demand,
-    which can take 5-10 seconds for each subject).
-    \n""")
-
     help_text_outlier_detection_method = textwrap.dedent("""
     Method used to detect the outliers.
 

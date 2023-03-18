@@ -13,7 +13,7 @@ from os.path import exists as pexists, join as pjoin
 from pathlib import Path
 from shutil import copyfile
 from timeit import default_timer as timer
-from pathlib import Path
+
 import numpy as np
 
 from visualqc import config as cfg

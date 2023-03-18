@@ -839,8 +839,8 @@ def make_workflow_from_user_options():
 
     image1 = user_args.image1
     image2 = user_args.image2
-    id_list, images_for_id = check_id_list(user_args.id_list, in_dir, user_args.vis_type,
-                                           image1, image2, in_dir_type=in_dir_type)
+    id_list, _ = check_id_list(user_args.id_list, in_dir, user_args.vis_type,
+                               image1, image2, in_dir_type=in_dir_type)
 
     delay_in_animation = check_time(user_args.delay_in_animation, var_name='Delay')
 

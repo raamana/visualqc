@@ -1,4 +1,3 @@
-__all__ = ['read_image', 'check_image_is_3d', 'check_bids_dir']
 
 import os
 import sys

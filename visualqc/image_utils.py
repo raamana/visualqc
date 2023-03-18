@@ -4,9 +4,6 @@ Image processing utilities
 
 """
 
-__all__ = ['background_mask', 'foreground_mask', 'overlay_edges', 'diff_image',
-           'equalize_image_histogram']
-
 from functools import partial
 
 import matplotlib
