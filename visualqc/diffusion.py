@@ -317,6 +317,14 @@ class DiffusionMRIInterface(BaseReviewInterface):
             self._toggle_visibility_checkbox(self._index_pass)
 
 
+    def _toggle_visibility_checkbox(self, index):
+        """toggles the visibility of a given checkbox"""
+
+        l1, l2 = self.checkbox.lines[index]
+        l1.set_visible(not l1.get_visible())
+        l2.set_visible(not l2.get_visible())
+
+
     def reset_figure(self):
         """Resets the figure to prepare it for display of next subject."""
 
