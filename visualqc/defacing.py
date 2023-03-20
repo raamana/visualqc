@@ -59,7 +59,7 @@ class DefacingInterface(BaseReviewInterface):
 
         self.add_checkboxes()
         self.add_process_options()
-        # include all the non-data axes here (so they wont be zoomed-in)
+        # include all the non-data axes here (so they won't be zoomed-in)
         self.unzoomable_axes = [self.checkbox.ax, self.text_box.ax,
                                 self.bt_next.ax, self.bt_quit.ax,
                                 self.radio_bt_vis_type.ax]
