@@ -106,7 +106,7 @@ e.g., either for future reference or to reuse them in a presentation or another 
 This can be easily be achieved by adding the <code class="docutils literal notranslate"><span class="pre">--screenshot_only</span></code> flag to the command line to any of the QC modules
 offered by VisualQC. With this flag, VisualQC would disable interactive elements, enter a batch mode and
 saves the screenshots of the complex visualizations for each subject to the output folder.
-You can customize these visualizations with different visualization type or layouts via other CLI args.</p>
+You can customize these visualizations with different visualization type or layouts via other CLI args. Examples screenshots generated for a few modules are shown at the end of this page.</p>
 <p>Please note <strong>we</strong> <em>strongly</em> <strong>discourage</strong> any ideas of using these static screenshots for QC purposes</p>
 <ul class="simple">
 <li>screenshots can and do become out of sync with data on disk</li>
@@ -116,6 +116,14 @@ You can customize these visualizations with different visualization type or layo
 <p>Hence, please carefully consider the tradeoffs in how you choose to implement the QC procedure for your use-case,
 as it would be quite disheartening to lose the effort put in towards or having to redo it again
 because QCing static screenshots wasn’t considered sufficient by reviewers.</p>
+<p>Volumetric segmentation QC (contours):</p>
+<img alt="_images/id_001_labels_contour_screenshot_VQC.png" src="_images/id_001_labels_contour_screenshot_VQC.png" />
+<p>Volumetric segmentation QC (filled labels):</p>
+<img alt="_images/id_002_labels_volumetric_screenshot_VQC.png" src="_images/id_002_labels_volumetric_screenshot_VQC.png" />
+<p>Diffusion MRI:</p>
+<img alt="_images/sub-01_dwi.nii.gz_diffusion_mri_screenshot_VQC.png" src="_images/sub-01_dwi.nii.gz_diffusion_mri_screenshot_VQC.png" />
+<p>Functional MRI:</p>
+<img alt="_images/sub-02_task-linebisection_bold.nii_func_mri_screenshot_VQC.png" src="_images/sub-02_task-linebisection_bold.nii_func_mri_screenshot_VQC.png" />
 </div>
 
 
