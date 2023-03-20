@@ -258,6 +258,17 @@ class DiffusionMRIInterface(BaseReviewInterface):
         self.scroll_callback(scroll_event)
 
 
+    def get_ratings(self):
+        """Returns the final set of checked ratings"""
+
+        cbox_statuses = self.checkbox.get_status()
+        user_ratings = [self.checkbox.labels[idx].get_text()
+                        for idx, this_cbox_active in
+                        enumerate(cbox_statuses) if this_cbox_active]
+
+        return user_ratings
+
+
     def allowed_to_advance(self):
         """
         Method to ensure work is done for current iteration,
