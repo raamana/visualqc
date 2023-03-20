@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html class="writer-html4" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generating Screenshots &mdash; visualqc 0.6.3 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/theme_overrides.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Example usage - Freesurfer" href="examples_freesurfer.html" />
+    <link rel="prev" title="Command line usage - T1w MRI" href="cli_t1_mri.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> visualqc
+          </a>
+              <div class="version">
+                0.6.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">VisualQC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use_cases.html">Use-cases supported</a></li>
+<li class="toctree-l1"><a class="reference internal" href="recommended_usage.html">Recommended Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage_all.html">Command line usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="file_formats.html">Data formats and requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interface.html">Review interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_freesurfer.html">Gallery - Freesurfer Parcellation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_freesurfer_filled.html">Gallery - Freesurfer (labels filled)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_functional_mri.html">Gallery - Functional MRI scan - artefact detection and rating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_diffusion_mri.html">Gallery - Diffusion MRI artefact detection and rating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_registration_unimodal.html">Gallery - Registration : comparison of spatial alignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_defacing.html">Gallery - Defacing algorithm accuracy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_segmentation_volumetric.html">Gallery - Segmentation/ROI - anatomical accuracy evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery_t1_mri.html">Gallery - Structural T1w MRI - artefact detection and rating</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_freesurfer.html">Command line usage - Freesurfer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_defacing.html">Command line usage - Defacing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_func_mri.html">Command line usage - Functional MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_diff_mri.html">Command line usage - Diffusion MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_alignment.html">Command line usage - Alignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_t1_mri.html">Command line usage - T1w MRI</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Generating Screenshots</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_freesurfer.html">Example usage - Freesurfer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_freesurfer_generic.html">Example usage - Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_defacing.html">Example usage - Defacing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_func_mri.html">Example usage - Functional MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_diff_mri.html">Example usage - Diffusion MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_alignment.html">Example usage - Alignment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples_t1_mri.html">Example usage - T1w MRI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">visualqc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Generating Screenshots</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cli_screenshots.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="generating-screenshots">
+<h1>Generating Screenshots<a class="headerlink" href="#generating-screenshots" title="Permalink to this headline">¶</a></h1>
+<p>In some scenarios, you may want to save take a screenshot of the advanced visualizations generated by VisualQC,
+e.g., either for future reference or to reuse them in a presentation or another way you desire.
+This can be easily be achieved by adding the <code class="docutils literal notranslate"><span class="pre">--screenshot_only</span></code> flag to the command line to any of the QC modules
+offered by VisualQC. With this flag, VisualQC would disable interactive elements, enter a batch mode and
+saves the screenshots of the complex visualizations for each subject to the output folder.
+You can customize these visualizations with different visualization type or layouts via other CLI args.</p>
+<p>Please note <strong>we</strong> <em>strongly</em> <strong>discourage</strong> any ideas of using these static screenshots for QC purposes</p>
+<ul class="simple">
+<li>screenshots can and do become out of sync with data on disk</li>
+<li>screenshots are static and do not allow zooming-in or proper review of different types of data</li>
+<li>VisualQC rendering is so blazing fast in most cases, that you can always fire it up if you need to show any subject or data to colleagues, and have the full power and capability of VisualQC while doing so.</li>
+</ul>
+<p>Hence, please carefully consider the tradeoffs in how you choose to implement the QC procedure for your use-case,
+as it would be quite disheartening to lose the effort put in towards or having to redo it again
+because QCing static screenshots wasn’t considered sufficient by reviewers.</p>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cli_t1_mri.html" class="btn btn-neutral float-left" title="Command line usage - T1w MRI" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples_freesurfer.html" class="btn btn-neutral float-right" title="Example usage - Freesurfer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2017, Pradeep Reddy Raamana.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
