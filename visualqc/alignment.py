@@ -80,10 +80,6 @@ class AlignmentInterface(BaseReviewInterface):
         self.add_radio_buttons_rating()
         self.add_radio_buttons_comparison_method()
 
-        # this list of artists to be populated later
-        # makes to handy to clean them all
-        self.data_handles = list()
-
         self.unzoomable_axes = [self.radio_bt_rating.ax, self.radio_bt_vis_type.ax,
                                 self.text_box.ax, self.bt_next.ax, self.bt_quit.ax, ]
 

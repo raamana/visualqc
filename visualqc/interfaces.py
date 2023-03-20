@@ -31,6 +31,9 @@ class BaseReviewInterface(ABC):
         self.prev_axis = None
         self.prev_ax_pos = None
 
+        # list of artists is to be populated later; handy to clear/reset them all
+        self.data_handles = list()
+
         self.add_annot()
         self.add_navigation(next_button_callback, quit_button_callback)
         self.add_notes_input()
@@ -135,6 +138,24 @@ class BaseReviewInterface(ABC):
         else:
             self.quit_now = False
             self.reset_figure()
+
+
+    def clear_data(self):
+        """clearing all data/image handles"""
+
+        if self.data_handles:
+            for artist in self.data_handles:
+                artist.remove()
+            # resetting it
+            self.data_handles = list()
+
+
+    def clear_notes_annot(self):
+        """clearing notes and annotations"""
+
+        self.text_box.set_val(cfg.textbox_initial_text)
+        # text is matplotlib artist
+        self.annot_text.remove()
 
 
     def remove_UI(self):

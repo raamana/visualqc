@@ -67,10 +67,6 @@ class FreesurferReviewInterface(BaseReviewInterface):
         self.next_button_callback = next_button_callback
         self.quit_button_callback = quit_button_callback
 
-        # this list of artists to be populated later
-        #   makes it handy to clear them all at once
-        self.data_handles = list()
-
         self.unzoomable_axes = [self.radio_bt_rating.ax, self.text_box.ax,
                                 self.bt_next.ax, self.bt_quit.ax]
 

@@ -64,9 +64,6 @@ class DefacingInterface(BaseReviewInterface):
                                 self.bt_next.ax, self.bt_quit.ax,
                                 self.radio_bt_vis_type.ax]
 
-        # this list of artists is to be populated later; handy to clear them all
-        self.data_handles = list()
-
 
     def add_checkboxes(self):
         """Checkboxes offer the ability to select multiple tags"""

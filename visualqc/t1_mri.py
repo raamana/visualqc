@@ -71,9 +71,6 @@ class T1MriInterface(BaseReviewInterface):
         if hasattr(self, 'radio_bt_vis_type'):
             self.unzoomable_axes.append(self.radio_bt_vis_type)
 
-        # this list of artists is to be populated later; handy to clear them all
-        self.data_handles = list()
-
 
     def add_checkboxes(self):
         """
@@ -215,16 +212,6 @@ class T1MriInterface(BaseReviewInterface):
         """Removes module specific UI elements for cleaner screenshots"""
 
         remove_matplotlib_axes([self.checkbox, self.radio_bt_vis_type])
-
-
-    def clear_data(self):
-        """clearing all data/image handles"""
-
-        if self.data_handles:
-            for artist in self.data_handles:
-                artist.remove()
-            # resetting it
-            self.data_handles = list()
 
 
     def clear_notes_annot(self):

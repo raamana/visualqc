@@ -90,9 +90,6 @@ class FunctionalMRIInterface(BaseReviewInterface):
         self.unzoomable_axes = [self.checkbox.ax, self.text_box.ax,
                                 self.bt_next.ax, self.bt_quit.ax]
 
-        # this list of artists is to be populated later; handy to clear them all
-        self.data_handles = list()
-
 
     def add_checkboxes(self):
         """Checkboxes offer the ability to select multiple tags such as Motion,
