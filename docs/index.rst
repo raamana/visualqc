@@ -27,6 +27,7 @@ Contents:
    cli_diff_mri
    cli_alignment
    cli_t1_mri
+   cli_screenshots
    examples_freesurfer
    examples_freesurfer_generic
    examples_defacing
