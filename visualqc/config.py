@@ -328,8 +328,8 @@ colormap_stdev_diffusion = 'seismic'
 
 choices_alignment_comparison_diffusion = ('Animate all',
                                           'Flip first & last',
-                                          'Align b0 animate',
-                                          'Align b0 edges')
+                                          'Align to b0 animate',
+                                          'Align to b0 edges')
 
 diffusion_screenshot_vis_types = ('Align_b0_edges', )
 default_diffusion_vis_type = diffusion_screenshot_vis_types[0]

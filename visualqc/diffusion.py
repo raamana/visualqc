@@ -856,8 +856,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if label is not None:
             self.current_alignment_check = label
 
-        if label in ['Align to b=0 (animate)', 'Alignment to b=0', 'Align to b=0',
-                     'Align to b=0 (edges)']:
+        if label in ['Align to b0 animate', 'Alignment to b0', 'Align to b0',
+                     'Align to b0 edges']:
             self.alignment_to_b0()
         elif label in ['Animate all', 'Flip through all']:
             self.animate_through_gradients()
@@ -872,11 +872,11 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         self.checking_alignment = True
 
-        if self.current_alignment_check in ['Align to b=0 (animate)',
-                                            'Align to b=0']:
+        if self.current_alignment_check in ['Align to b0 animate',
+                                            'Align to b0']:
             self.flip_between_two(self.b0_indices, self.current_grad_index,
                                   first_index_in_b0=True)
-        elif self.current_alignment_check in ['Align to b=0 (edges)', ]:
+        elif self.current_alignment_check in ['Align to b0 (edges)', ]:
             self.overlay_dwi_edges()
 
 
