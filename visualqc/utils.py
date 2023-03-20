@@ -1,4 +1,3 @@
-__all__ = ['read_image', 'check_image_is_3d', 'check_bids_dir']
 
 import os
 import sys
@@ -65,6 +64,15 @@ def pixdim_nifti_header(header):
 
     # TODO additional checks whether hdr is valid, contains pixdim key or not
     return header['pixdim'][1:4]
+
+
+def set_fig_window_title(fig, text):
+    """Sets the title of the given figure"""
+
+    try:
+        fig.canvas.manager.set_window_title(text)
+    except:  # not all backends support this, so quietly ignoring it
+        pass
 
 
 def slice_aspect_ratio(pixel_dim, axis):
@@ -187,7 +195,8 @@ def get_axis(array, axis, slice_num):
     # Using a non-tuple sequence for multidimensional indexing is deprecated;
     #   use `arr[tuple(seq)]` instead of `arr[seq]`.
     # In the future this will be interpreted as an array index,
-    #   `arr[np.array(seq)]`, which will result either in an error or a different result.
+    #   `arr[np.array(seq)]`, which will result either in an error or a different
+    #   result.
     slice_data = array[tuple(slice_list)].T  # for proper appearance
 
     return slice_data
@@ -221,7 +230,8 @@ def pick_slices(img, view_set, num_slices):
         slices_in_dim = non_empty_slices[np.around(sampled_indices).astype('int64')]
 
         # ensure you do not overshoot
-        slices_in_dim = [sn for sn in slices_in_dim if sn >= 0 or sn <= num_non_empty]
+        slices_in_dim = [sn for sn in slices_in_dim if
+                         sn >= 0 or sn <= num_non_empty]
         # adding view and slice # at the same time.
         slices.extend([(view, slice) for slice in slices_in_dim])
 
@@ -238,17 +248,19 @@ def check_event_in_axes(event, axes):
     # Axis.contains() method returns a tuple: Bool, Dict; so need [0] to capture Bool
     try:
         return any([ax.contains(event)[0] for ax in axes])
-    except TypeError: # when it is not a list/iterable of axes
+    except TypeError:  # when it is not a list/iterable of axes
         return axes.contains(event)[0]
     except:
         raise ValueError('Input must be a matplotlib Axis or an Iterable of Axes!')
 
 
-def check_layout(total_num_slices, num_views, num_rows_per_view, num_rows_for_surf_vis):
+def check_layout(total_num_slices, num_views, num_rows_per_view,
+                 num_rows_for_surf_vis):
     """Ensures all odd cases are dealt with"""
 
     num_cols = int(np.ceil(
-        total_num_slices / ((num_views * num_rows_per_view) + num_rows_for_surf_vis)))
+        total_num_slices / (
+            (num_views * num_rows_per_view) + num_rows_for_surf_vis)))
 
     return num_cols
 
@@ -266,6 +278,18 @@ def check_finite_int(num_slices, num_rows):
         raise ValueError('num_slices and num_rows must be positive (>=1).')
 
     return num_slices, num_rows
+
+
+def check_numerical_limits(values, name, lower_limit, upper_limit):
+    """Ensure given variable values are within limits specified."""
+
+    values = np.array(values).astype('float16').ravel()
+
+    if any(values < lower_limit) or any(values > upper_limit):
+        raise ValueError("{} out of range - must be within [{}, {}]"
+                         "".format(name, lower_limit, upper_limit))
+
+    return values
 
 
 def check_alpha_set(alpha_set):
@@ -512,7 +536,6 @@ def summarize_ratings(ratings_file, out_dir=None):
 
     counter = Counter(all_labels)
     print('Ratings summary\n  Counts (note some IDs can have multiple ratings):')
-    id_lists = dict()
     for label, count in counter.items():
         print('\t{lbl:>{mw}} : {cnt:>7}'.format(lbl=label, cnt=count, mw=max_width))
 
@@ -647,14 +670,14 @@ def check_input_dir_alignment(in_dir):
 
 
 def check_bids_dir(dir_path):
-    """Checks if its a BIDS folder or not"""
+    """Checks if input is a valid BIDS folder"""
 
     descr_file_name = 'dataset_description.json'
     descr_path = pjoin(dir_path, descr_file_name)
     if not pexists(descr_path):
-        raise ValueError('There is no {} file at the root\n '
+        raise ValueError('There is no {} file at the root\n {}\n'
                          'Ensure folder is formatted according to BIDS spec.'
-                         ''.format(descr_file_name))
+                         ''.format(descr_file_name, dir_path))
 
     try:
         import json
@@ -886,8 +909,9 @@ def expand_regex_paths(in_dir, subject_id, req_file):
 def get_path_for_subject(in_dir, subject_id, req_file, vis_type, in_dir_type=None):
     """Constructs the path for the image file based on chosen input and vis type"""
 
-    if vis_type is not None and (
-        vis_type in freesurfer_vis_types or in_dir_type in ['freesurfer', ]):
+    if (vis_type is not None) and \
+        ((vis_type in freesurfer_vis_types) or
+         (in_dir_type in ['freesurfer', ])):
         out_path = get_freesurfer_mri_path(in_dir, subject_id, req_file)
     else:
         out_path = realpath(pjoin(in_dir, subject_id, req_file))
@@ -939,7 +963,7 @@ def check_outlier_params(method, fraction, feat_types, disable_outlier_detection
             ' '.format(type_of_features, cfg.avail_OLD_source_of_features))
 
     if type_of_features.lower() == 'freesurfer' and \
-        vis_type not in cfg.freesurfer_vis_types:
+            vis_type not in cfg.freesurfer_vis_types:
         raise NotImplementedError(
             'Outlier detection based on current vis_type is not implemented.'
             '\nAllowed visualization types: {}'.format(cfg.freesurfer_vis_types))
@@ -1028,12 +1052,20 @@ def check_views(views):
     return out_views
 
 
+def check_screenshot_params(vis_type, allowed_types):
+    """Validation of parameters related to batch generation of screenshots"""
+
+    if vis_type not in allowed_types:
+        raise ValueError('Screenshot can not be generated for {} vis_type.'
+                         'Choose one of {}'.format(vis_type, allowed_types))
+
+
 def check_string_is_nonempty(string, string_type='string'):
     """Ensures input is a string of non-zero length"""
 
-    if string is None or \
-        (not isinstance(string, str)) or \
-        len(string) < 1:
+    if (string is None) or \
+            (not isinstance(string, str)) or \
+            (len(string) < 1):
         raise ValueError('name of the {} must not be empty!'
                          ''.format(string_type))
 
@@ -1166,3 +1198,10 @@ def print_platform_version_info():
     print('numpy {} / scipy {} / matplotlib {}\npython {}'.format(
         np.__version__, scipy.__version__, matplotlib.__version__, sys.version))
     print('platform {}\n{}\n\n'.format(platform.platform(), platform.version()))
+
+
+def remove_matplotlib_axes(mpl_objects):
+    """Calls the .ax.remove() method on all the objects"""
+
+    for artist in mpl_objects:
+        artist.ax.remove()

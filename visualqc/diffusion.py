@@ -10,6 +10,7 @@ import textwrap
 import time
 import warnings
 from abc import ABC
+from os.path import basename, join as pjoin, exists as pexists
 from textwrap import wrap
 
 import nibabel as nib
@@ -17,16 +18,16 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.widgets import CheckButtons, RadioButtons
 from mrivis.utils import crop_image
-from os.path import basename, join as pjoin
+
 from visualqc import config as cfg
 from visualqc.image_utils import dwi_overlay_edges
 from visualqc.readers import diffusion_traverse_bids
-from visualqc.t1_mri import T1MriInterface
+from visualqc.t1_mri import BaseReviewInterface
 from visualqc.utils import (check_bids_dir, check_finite_int, check_image_is_4d,
                             check_out_dir, check_outlier_params, check_time,
-                            check_views, get_axis,
-                            pick_slices,
-                            scale_0to1)
+                            check_views, get_axis, pick_slices, scale_0to1,
+                            set_fig_window_title, check_screenshot_params,
+                            remove_matplotlib_axes)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -45,7 +46,7 @@ def _prettify(filename, max_width=18):
     return '\n'.join(fixed_width)
 
 
-class DiffusionMRIInterface(T1MriInterface):
+class DiffusionMRIInterface(BaseReviewInterface):
     """Interface for the review of fMRI images."""
 
 
@@ -70,9 +71,7 @@ class DiffusionMRIInterface(T1MriInterface):
                  total_num_layers=5):
         """Constructor"""
 
-        super().__init__(fig, axes, issue_list,
-                         next_button_callback,
-                         quit_button_callback)
+        super().__init__(fig, axes, next_button_callback, quit_button_callback)
         self.issue_list = issue_list
 
         self.prev_axis = None
@@ -100,10 +99,6 @@ class DiffusionMRIInterface(T1MriInterface):
 
         self.add_checkboxes()
         self.add_radio_buttons_comparison_method()
-
-        # this list of artists to be populated later
-        # makes to handy to clean them all
-        self.data_handles = list()
 
         self.unzoomable_axes = [self.checkbox.ax, self.radio_bt_vis_type.ax,
                                 self.text_box.ax, self.bt_next.ax, self.bt_quit.ax,
@@ -263,14 +258,94 @@ class DiffusionMRIInterface(T1MriInterface):
         self.scroll_callback(scroll_event)
 
 
+    def get_ratings(self):
+        """Returns the final set of checked ratings"""
+
+        cbox_statuses = self.checkbox.get_status()
+        user_ratings = [self.checkbox.labels[idx].get_text()
+                        for idx, this_cbox_active in
+                        enumerate(cbox_statuses) if this_cbox_active]
+
+        return user_ratings
+
+
+    def allowed_to_advance(self):
+        """
+        Method to ensure work is done for current iteration,
+        before allowing the user to advance to next subject.
+
+        Returns False if atleast one of the following conditions are not met:
+            Atleast Checkbox is checked
+        """
+
+        return self._is_checkbox_ticked(self.checkbox)
+
+
+    def save_issues(self, label):
+        """
+        Update the rating
+
+        This function is called whenever set_active() happens on any label,
+        if checkbox.eventson is True.
+
+        """
+
+        if label == cfg.visual_qc_pass_indicator:
+            self.clear_checkboxes(except_pass=True)
+        else:
+            self.clear_pass_only_if_on()
+
+        self.fig.canvas.draw_idle()
+
+
+    def clear_checkboxes(self, except_pass=False):
+        """Clears all checkboxes.
+
+        if except_pass=True,
+            does not clear checkbox corresponding to cfg.t1_mri_pass_indicator
+        """
+
+        cbox_statuses = self.checkbox.get_status()
+        for index, this_cbox_active in enumerate(cbox_statuses):
+            if except_pass and index == self._index_pass:
+                continue
+            # if it was selected already, toggle it.
+            if this_cbox_active:
+                # not calling checkbox.set_active() as it calls the callback
+                # self.save_issues() each time, if eventson is True
+                self._toggle_visibility_checkbox(index)
+
+
+    def clear_pass_only_if_on(self):
+        """Clear pass checkbox only"""
+
+        cbox_statuses = self.checkbox.get_status()
+        if cbox_statuses[self._index_pass]:
+            self._toggle_visibility_checkbox(self._index_pass)
+
+
+    def _toggle_visibility_checkbox(self, index):
+        """toggles the visibility of a given checkbox"""
+
+        l1, l2 = self.checkbox.lines[index]
+        l1.set_visible(not l1.get_visible())
+        l2.set_visible(not l2.get_visible())
+
+
     def reset_figure(self):
-        "Resets the figure to prepare it for display of next subject."
+        """Resets the figure to prepare it for display of next subject."""
 
         self.zoom_out_callback(None)
         self.restore_axis()
         self.clear_data()
         self.clear_checkboxes()
         self.clear_notes_annot()
+
+
+    def remove_UI_local(self):
+        """Removes module specific UI elements for cleaner screenshots"""
+
+        remove_matplotlib_axes([self.checkbox, self.radio_bt_vis_type])
 
 
 class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
@@ -297,27 +372,10 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  vis_type=None,
                  views=cfg.default_views_diffusion,
                  num_slices_per_view=cfg.default_num_slices_diffusion,
-                 num_rows_per_view=cfg.default_num_rows_diffusion):
+                 num_rows_per_view=cfg.default_num_rows_diffusion,
+                 screenshot_only=cfg.default_screenshot_only):
         """
         Constructor.
-
-        Parameters
-        ----------
-        in_dir : path
-            must be a path to BIDS directory
-
-        drop_start : int
-            Number of frames to drop at the beginning of the time series.
-
-        apply_preproc : bool
-            Whether to apply basic preprocessing steps (detrend, slice timing
-            correction etc)
-                before building the carpet image.
-                If the images are already preprocessed elsewhere, disable this
-                with apply_preproc=True
-            Default : False, to not apply any preprocessing before display for
-            review.
-
         """
 
         if id_list is None and 'BIDS' in in_dir_type:
@@ -325,7 +383,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         super().__init__(id_list, in_dir, out_dir,
                          outlier_method, outlier_fraction,
-                         outlier_feat_types, disable_outlier_detection)
+                         outlier_feat_types, disable_outlier_detection,
+                         screenshot_only=screenshot_only)
 
         # basic cleaning before display
         # whether to remove and detrend before making carpet plot
@@ -394,7 +453,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.feature_extractor = diffusion_mri_features
 
         if 'BIDS' in self.in_dir_type.upper():
-            from bids import BIDSLayout
+            from bids import BIDSLayout, config as bids_config
+            bids_config.set_option('extension_initial_dot', True)
             self.bids_layout = BIDSLayout(self.in_dir)
             self.units = diffusion_traverse_bids(self.bids_layout)
 
@@ -438,9 +498,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # 1. main carpet, in the background
         self.fig, self.ax_carpet = plt.subplots(1, 1, figsize=self.figsize)
-        self.fig.canvas.set_window_title('VisualQC Diffusion MRI :'
-                                         ' {}'.format(self.in_dir))
-
+        set_fig_window_title(
+            self.fig, f'VisualQC Diffusion MRI : {self.in_dir} ')
         self.ax_carpet.set_zorder(self.layer_order_carpet)
         #   vmin/vmax are controlled, because we rescale all to [0, 1]
         self.imshow_params_carpet = dict(interpolation='none', aspect='auto',
@@ -609,7 +668,24 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             hdr = nib.load(img_path)
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
             self.img_this_unit_raw = self.hdr_this_unit.get_data()
-            self.b_values_this_unit = np.loadtxt(bval_path).flatten()
+
+            num_dwi_volumes = self.img_this_unit_raw.shape[-1]
+            if (not pexists(bval_path)) or (bval_path.lower() == 'assume_first'):
+                self.b_values_this_unit = None # to indicate we have no info
+
+                self.b0_indices = [False, ]*num_dwi_volumes
+                self.b0_indices[0] = True # assume first volume is b=0
+
+                # do the opposite with dw volumes
+                self.dw_indices = [True, ] * num_dwi_volumes
+                self.dw_indices[0] = False
+
+                self.b0_indices = np.flatnonzero(self.b0_indices)
+                self.dw_indices = np.flatnonzero(self.dw_indices)
+            else:
+                self.b_values_this_unit = np.loadtxt(bval_path).flatten()
+                self.b0_indices = np.flatnonzero(self.b_values_this_unit == 0)
+                self.dw_indices = np.flatnonzero(self.b_values_this_unit != 0)
         except Exception as exc:
             print(exc)
             print('Unable to read image at \n\t{}'.format(img_path))
@@ -617,7 +693,6 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         else:
             check_image_is_4d(self.img_this_unit_raw)
 
-            self.b0_indices = np.flatnonzero(self.b_values_this_unit == 0)
             if len(self.b0_indices) < 1:
                 skip_subject = True
                 print('There are no b=0 volumes for {}! '
@@ -635,7 +710,6 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                 self.b0_volume = self.img_this_unit_raw[..., self.b0_indices[0]].squeeze()
             # need more thorough checks on whether image loaded is indeed DWI
 
-            self.dw_indices = np.flatnonzero(self.b_values_this_unit != 0)
             self.dw_volumes = self.img_this_unit_raw[:, :, :, self.dw_indices]
             self.num_gradients = self.dw_volumes.shape[3]
             # to check alignment
@@ -789,8 +863,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if label is not None:
             self.current_alignment_check = label
 
-        if label in ['Align to b=0 (animate)', 'Alignment to b=0', 'Align to b=0',
-                     'Align to b=0 (edges)']:
+        if label in ['Align to b0 animate', 'Alignment to b0', 'Align to b0',
+                     'Align to b0 edges']:
             self.alignment_to_b0()
         elif label in ['Animate all', 'Flip through all']:
             self.animate_through_gradients()
@@ -805,11 +879,11 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         self.checking_alignment = True
 
-        if self.current_alignment_check in ['Align to b=0 (animate)',
-                                            'Align to b=0']:
+        if self.current_alignment_check in ['Align to b0 animate',
+                                            'Align to b0']:
             self.flip_between_two(self.b0_indices, self.current_grad_index,
                                   first_index_in_b0=True)
-        elif self.current_alignment_check in ['Align to b=0 (edges)', ]:
+        elif self.current_alignment_check in ['Align to b0 (edges)', ]:
             self.overlay_dwi_edges()
 
 
@@ -1072,11 +1146,9 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                            id_with_counter, **cfg.annot_text_props)
 
 
-    def cleanup(self):
-        """Preparing for exit."""
+    def close_UI(self):
+        """Method to close all figures and UI elements."""
 
-        # save ratings before exiting
-        self.save_ratings()
         for cid in (self.con_id_click, self.con_id_keybd, self.con_id_scroll):
             self.fig.canvas.mpl_disconnect(cid)
         plt.close('all')
@@ -1292,6 +1364,14 @@ def get_parser():
     This flag disables outlier detection and alerts altogether.
     \n""")
 
+    help_text_vis_type = textwrap.dedent("""
+    Type of visualization to start review with, or for screenshots.
+    Allowed options: {}
+
+    Default: {}.
+    \n""".format(cfg.diffusion_screenshot_vis_types,
+                 cfg.default_diffusion_vis_type))
+
     help_text_delay_in_animation = textwrap.dedent("""
     Specifies the delay in animation of the display of two images (like in a GIF).
 
@@ -1330,6 +1410,11 @@ def get_parser():
                      default=cfg.delay_in_animation, required=False,
                      help=help_text_delay_in_animation)
 
+    vis.add_argument("-vt", "--vis_type", action="store",
+                     dest="vis_type", choices=cfg.diffusion_screenshot_vis_types,
+                     default=cfg.default_diffusion_vis_type, required=False,
+                     help=help_text_vis_type)
+
     outliers = parser.add_argument_group('Outlier detection',
                                          'options related to automatically '
                                          'detecting possible outliers')
@@ -1351,7 +1436,7 @@ def get_parser():
 
     # TODO re-enable it when OLD is ready for DWI
     outliers.add_argument("-old", "--disable_outlier_detection",
-                          action="store_false",
+                          action="store_true",
                           dest="disable_outlier_detection",
                           required=False, help=help_text_disable_outlier_detection)
 
@@ -1381,6 +1466,9 @@ def get_parser():
                          dest="prepare_first",
                          help=help_text_prepare)
 
+    wf_args.add_argument("-so", "--screenshot_only", dest="screenshot_only",
+                         action="store_true",
+                         help=cfg.help_text_screenshot_only)
     return parser
 
 
@@ -1412,14 +1500,11 @@ def make_workflow_from_user_options():
     name_pattern = None
     images_for_id = None
 
-    # elif user_args.bids_dir is None and user_args.user_dir is not None:
-    #     name_pattern = user_args.name_pattern
-    #     in_dir = realpath(user_args.user_dir)
-    #     in_dir_type = 'generic'
-    #     id_list, images_for_id = check_id_list_with_regex(user_args.id_list,
-    #     in_dir, name_pattern)
-
     out_dir = check_out_dir(user_args.out_dir, in_dir)
+
+    if user_args.screenshot_only:
+        check_screenshot_params(user_args.vis_type,
+                                cfg.diffusion_screenshot_vis_types)
     apply_preproc = user_args.apply_preproc
     delay_in_animation = check_time(user_args.delay_in_animation, var_name='Delay')
 
@@ -1427,11 +1512,11 @@ def make_workflow_from_user_options():
     num_slices_per_view, num_rows_per_view = check_finite_int(user_args.num_slices,
                                                               user_args.num_rows)
 
-    outlier_method, outlier_fraction, \
-    outlier_feat_types, disable_outlier_detection = check_outlier_params(
-        user_args.outlier_method, user_args.outlier_fraction,
-        user_args.outlier_feat_types, user_args.disable_outlier_detection,
-        id_list, vis_type, type_of_features)
+    outlier_method, outlier_fraction, outlier_feat_types, \
+        disable_outlier_detection = check_outlier_params(
+            user_args.outlier_method, user_args.outlier_fraction,
+            user_args.outlier_feat_types, user_args.disable_outlier_detection,
+            id_list, vis_type, type_of_features)
 
     wf = DiffusionRatingWorkflow(in_dir, out_dir,
                                  id_list=id_list,
@@ -1448,7 +1533,8 @@ def make_workflow_from_user_options():
                                  vis_type=vis_type,
                                  views=views,
                                  num_slices_per_view=num_slices_per_view,
-                                 num_rows_per_view=num_rows_per_view)
+                                 num_rows_per_view=num_rows_per_view,
+                                 screenshot_only=user_args.screenshot_only)
 
     return wf
 

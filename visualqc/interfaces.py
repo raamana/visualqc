@@ -18,7 +18,7 @@ class BaseReviewInterface(ABC):
     def __init__(self, fig, axes,
                  next_button_callback=None,
                  quit_button_callback=None):
-        "Constructor."
+        """Constructor."""
 
         self.fig = fig
         self.axes = axes
@@ -30,6 +30,9 @@ class BaseReviewInterface(ABC):
         self.zoomed_in = False
         self.prev_axis = None
         self.prev_ax_pos = None
+
+        # list of artists is to be populated later; handy to clear/reset them all
+        self.data_handles = list()
 
         self.add_annot()
         self.add_navigation(next_button_callback, quit_button_callback)
@@ -114,7 +117,7 @@ class BaseReviewInterface(ABC):
 
 
     def builtin_quit(self, input_event_to_ignore=None):
-        "terminator"
+        """terminator"""
 
         if not self.allowed_to_advance():
             print('You have not rated the current subject! '
@@ -126,7 +129,7 @@ class BaseReviewInterface(ABC):
 
 
     def builtin_next(self, input_event_to_ignore=None):
-        "advancer"
+        """advancer"""
 
         if not self.allowed_to_advance():
             print('You have not rated the current subject! '
@@ -137,6 +140,57 @@ class BaseReviewInterface(ABC):
             self.reset_figure()
 
 
+    def clear_data(self):
+        """clearing all data/image handles"""
+
+        if self.data_handles:
+            for artist in self.data_handles:
+                artist.remove()
+            # resetting it
+            self.data_handles = list()
+
+
+    def clear_notes_annot(self):
+        """clearing notes and annotations"""
+
+        self.text_box.set_val(cfg.textbox_initial_text)
+        # text is matplotlib artist
+        self.annot_text.remove()
+
+
+    def remove_UI(self):
+        """Removes some UI elements to accommodate cleaner export of screenshots"""
+
+        self.text_box.ax.remove()
+        self.bt_next.ax.remove()
+        self.bt_quit.ax.remove()
+        self.remove_UI_local()
+
+
+    @abstractmethod
+    def remove_UI_local(self):
+        """Removes module specific UI elements for cleaner screenshots"""
+
+
     @abstractmethod
     def reset_figure(self):
         """ Resets the state of UI and clears the axes. """
+
+
+    @staticmethod
+    def _is_checkbox_ticked(cbox):
+        """Checks if the one of the buttons in checkbox is ticked"""
+
+        if any(cbox.get_status()):
+            allowed = True
+        else:
+            allowed = False
+
+        return allowed
+
+
+    @staticmethod
+    def _is_radiobutton_selected(radio_button):
+        """Checks if the one of the options in radio button is ticked"""
+
+        return radio_button.value_selected is not None
