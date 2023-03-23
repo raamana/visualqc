@@ -16,7 +16,12 @@ name_rendered = 'rendered.png'
 out_dir = pjoin(base_dir, 'out_defacing')
 makedirs(out_dir, exist_ok=True)
 
+screenshot_opts = " --screenshot_only "
+
+
 sys.argv = shlex.split('visualqc_defacing -u {} -i {} -o {} -d {} -m {} -r {}'
+                       ' {} '
                        ''.format(base_dir, id_list, out_dir,
-                                 name_defaced, name_mri, name_rendered))
+                                 name_defaced, name_mri, name_rendered,
+                                 screenshot_opts))
 cli_run()

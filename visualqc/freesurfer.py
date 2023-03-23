@@ -32,7 +32,8 @@ from visualqc.utils import (check_alpha_set, check_event_in_axes, check_finite_i
                             check_out_dir, check_outlier_params, check_views,
                             freesurfer_vis_tool_installed, get_axis,
                             get_freesurfer_mri_path, get_label_set, pick_slices,
-                            read_image, scale_0to1, set_fig_window_title,
+                            read_image, remove_matplotlib_axes, scale_0to1,
+                            set_fig_window_title,
                             void_subcortical_symmetrize_cortical)
 from visualqc.workflows import BaseWorkflowVisualQC
 
@@ -65,10 +66,6 @@ class FreesurferReviewInterface(BaseReviewInterface):
 
         self.next_button_callback = next_button_callback
         self.quit_button_callback = quit_button_callback
-
-        # this list of artists to be populated later
-        # makes to handy to clean them all
-        self.data_handles = list()
 
         self.unzoomable_axes = [self.radio_bt_rating.ax, self.text_box.ax,
                                 self.bt_next.ax, self.bt_quit.ax]
@@ -131,6 +128,12 @@ class FreesurferReviewInterface(BaseReviewInterface):
         self.clear_data()
         self.clear_radio_buttons()
         self.clear_notes_annot()
+
+
+    def remove_UI_local(self):
+        """Removes module specific UI elements for cleaner screenshots"""
+
+        remove_matplotlib_axes([self.radio_bt_rating, self.slider])
 
 
     def clear_data(self):
@@ -289,12 +292,14 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  no_surface_vis=False,
                  views=cfg.default_views,
                  num_slices_per_view=cfg.default_num_slices,
-                 num_rows_per_view=cfg.default_num_rows):
+                 num_rows_per_view=cfg.default_num_rows,
+                 screenshot_only=cfg.default_screenshot_only):
         """Constructor"""
 
         super().__init__(id_list, in_dir, out_dir,
                          outlier_method, outlier_fraction,
-                         outlier_feat_types, disable_outlier_detection)
+                         outlier_feat_types, disable_outlier_detection,
+                         screenshot_only=screenshot_only)
 
         self.issue_list = issue_list
         # in_dir_type must be freesurfer; vis_type must be freesurfer
@@ -690,11 +695,8 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         return contour_handles
 
 
-    def cleanup(self):
-        """Preparating for exit."""
-
-        # save ratings before exiting
-        self.save_ratings()
+    def close_UI(self):
+        """Method to close all figures and UI elements."""
 
         self.fig.canvas.mpl_disconnect(self.con_id_click)
         self.fig.canvas.mpl_disconnect(self.con_id_keybd)
@@ -1051,7 +1053,9 @@ def get_parser():
                           required=False, help=help_text_alphas)
 
     outliers = parser.add_argument_group('Outlier detection',
-                                         'options related to automatically detecting possible outliers')
+                                         'options related to automatically detecting'
+                                         ' possible outliers')
+
     outliers.add_argument("-olm", "--outlier_method", action="store",
                           dest="outlier_method",
                           default=cfg.default_outlier_detection_method, required=False,
@@ -1084,12 +1088,18 @@ def get_parser():
                         default=cfg.default_num_rows, required=False,
                         help=help_text_num_rows)
 
-    wf_args = parser.add_argument_group('Workflow', 'Options related to workflow '
-                                                    'e.g. to pre-compute resource-intensive features, '
-                                                    'and pre-generate all the visualizations required')
+    wf_args = parser.add_argument_group('Workflow',
+                                        'Options related to workflow e.g. to '
+                                        'pre-compute resource-intensive features, '
+                                        'and pre-generate all the visualizations '
+                                        'required')
 
     wf_args.add_argument("-ns", "--no_surface_vis", action="store_true",
                          dest="no_surface_vis", help=help_text_no_surface_vis)
+
+    wf_args.add_argument("-so", "--screenshot_only", dest="screenshot_only",
+                         action="store_true",
+                         help=cfg.help_text_screenshot_only)
 
     return parser
 
@@ -1156,7 +1166,8 @@ def make_workflow_from_user_options():
                                   no_surface_vis=user_args.no_surface_vis,
                                   views=views,
                                   num_slices_per_view=num_slices,
-                                  num_rows_per_view=num_rows)
+                                  num_rows_per_view=num_rows,
+                                  screenshot_only=user_args.screenshot_only)
 
     return wf
 

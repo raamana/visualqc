@@ -22,7 +22,7 @@ from visualqc.interfaces import BaseReviewInterface
 from visualqc.utils import (check_event_in_axes, check_inputs_defacing,
                             check_out_dir, compute_cell_extents_grid,
                             pixdim_nifti_header, read_image, set_fig_window_title,
-                            slice_aspect_ratio)
+                            slice_aspect_ratio, remove_matplotlib_axes)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -59,23 +59,14 @@ class DefacingInterface(BaseReviewInterface):
 
         self.add_checkboxes()
         self.add_process_options()
-        # include all the non-data axes here (so they wont be zoomed-in)
+        # include all the non-data axes here (so they won't be zoomed-in)
         self.unzoomable_axes = [self.checkbox.ax, self.text_box.ax,
                                 self.bt_next.ax, self.bt_quit.ax,
                                 self.radio_bt_vis_type.ax]
 
-        # this list of artists to be populated later
-        # makes to handy to clean them all
-        self.data_handles = list()
-
 
     def add_checkboxes(self):
-        """
-        Checkboxes offer the ability to select multiple tags such as Motion,
-        Ghosting Aliasing etc, instead of one from a list of mutual exclusive
-        rating options (such as Good, Bad, Error etc).
-
-        """
+        """Checkboxes offer the ability to select multiple tags"""
 
         ax_checkbox = plt.axes(cfg.position_checkbox_t1_mri,
                                facecolor=cfg.color_rating_axis)
@@ -288,6 +279,12 @@ class DefacingInterface(BaseReviewInterface):
         self.fig.canvas.draw_idle()
 
 
+    def remove_UI_local(self):
+        """Removes module specific UI elements for cleaner screenshots"""
+
+        remove_matplotlib_axes([self.checkbox, self.radio_bt_vis_type])
+
+
 class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
     """Rating workflow for defaced MRI scans"""
 
@@ -301,14 +298,16 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
                  mri_name,
                  render_name,
                  issue_list=cfg.defacing_default_issue_list,
-                 vis_type='defacing'):
+                 vis_type='defacing',
+                 screenshot_only=cfg.default_screenshot_only):
         """Constructor"""
 
         super().__init__(id_list, in_dir, out_dir,
                          show_unit_id=False,  # preventing bias/batch-effects
                          outlier_method=None, outlier_fraction=None,
                          outlier_feat_types=None,
-                         disable_outlier_detection=None)
+                         disable_outlier_detection=None,
+                         screenshot_only=screenshot_only)
 
         self.vis_type = vis_type
         self.issue_list = issue_list
@@ -558,11 +557,10 @@ class RatingWorkflowDefacing(BaseWorkflowVisualQC, ABC):
         raise NotImplementedError()
 
 
-    def cleanup(self):
-        """Cleanup before exit"""
-
-        # save ratings
-        self.save_ratings()
+    def close_UI(self):
+        """
+        Method to close all figures and UI elements
+        """
 
         self.fig.canvas.mpl_disconnect(self.con_id_click)
         self.fig.canvas.mpl_disconnect(self.con_id_keybd)
@@ -650,6 +648,9 @@ def get_parser():
     in_out.add_argument("-i", "--id_list", action="store", dest="id_list",
                         default=None, required=False, help=help_text_id_list)
 
+    in_out.add_argument("-so", "--screenshot_only", dest="screenshot_only",
+                        action="store_true",
+                        help=cfg.help_text_screenshot_only)
     return parser
 
 
@@ -680,7 +681,8 @@ def make_workflow_from_user_options():
 
     wf = RatingWorkflowDefacing(id_list, images_for_id, user_dir, out_dir,
                                 defaced_name, mri_name, render_name,
-                                cfg.defacing_default_issue_list, vis_type)
+                                cfg.defacing_default_issue_list, vis_type,
+                                screenshot_only=user_args.screenshot_only)
 
     return wf
 

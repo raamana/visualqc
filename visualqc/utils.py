@@ -1,4 +1,3 @@
-__all__ = ['read_image', 'check_image_is_3d', 'check_bids_dir']
 
 import os
 import sys
@@ -279,6 +278,18 @@ def check_finite_int(num_slices, num_rows):
         raise ValueError('num_slices and num_rows must be positive (>=1).')
 
     return num_slices, num_rows
+
+
+def check_numerical_limits(values, name, lower_limit, upper_limit):
+    """Ensure given variable values are within limits specified."""
+
+    values = np.array(values).astype('float16').ravel()
+
+    if any(values < lower_limit) or any(values > upper_limit):
+        raise ValueError("{} out of range - must be within [{}, {}]"
+                         "".format(name, lower_limit, upper_limit))
+
+    return values
 
 
 def check_alpha_set(alpha_set):
@@ -659,14 +670,14 @@ def check_input_dir_alignment(in_dir):
 
 
 def check_bids_dir(dir_path):
-    """Checks if its a BIDS folder or not"""
+    """Checks if input is a valid BIDS folder"""
 
     descr_file_name = 'dataset_description.json'
     descr_path = pjoin(dir_path, descr_file_name)
     if not pexists(descr_path):
-        raise ValueError('There is no {} file at the root\n '
+        raise ValueError('There is no {} file at the root\n {}\n'
                          'Ensure folder is formatted according to BIDS spec.'
-                         ''.format(descr_file_name))
+                         ''.format(descr_file_name, dir_path))
 
     try:
         import json
@@ -1041,6 +1052,14 @@ def check_views(views):
     return out_views
 
 
+def check_screenshot_params(vis_type, allowed_types):
+    """Validation of parameters related to batch generation of screenshots"""
+
+    if vis_type not in allowed_types:
+        raise ValueError('Screenshot can not be generated for {} vis_type.'
+                         'Choose one of {}'.format(vis_type, allowed_types))
+
+
 def check_string_is_nonempty(string, string_type='string'):
     """Ensures input is a string of non-zero length"""
 
@@ -1179,3 +1198,10 @@ def print_platform_version_info():
     print('numpy {} / scipy {} / matplotlib {}\npython {}'.format(
         np.__version__, scipy.__version__, matplotlib.__version__, sys.version))
     print('platform {}\n{}\n\n'.format(platform.platform(), platform.version()))
+
+
+def remove_matplotlib_axes(mpl_objects):
+    """Calls the .ax.remove() method on all the objects"""
+
+    for artist in mpl_objects:
+        artist.ax.remove()

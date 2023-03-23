@@ -21,6 +21,7 @@
     <inspection_tool class="AngularUndefinedBinding" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="AngularUndefinedModuleExport" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="AngularUndefinedTag" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="Annotator" enabled="true" level="WARNING" enabled_by_default="true" editorAttributes="WARNING_ATTRIBUTES" />
     <inspection_tool class="AppEngineDeprecatedRuntimeInspection" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="AppEngineThreadsafeCGIHandlerInspection" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="AppEngineThreadsafeInspection" enabled="false" level="WARNING" enabled_by_default="false" />
@@ -251,6 +252,8 @@
         <list>
           <option value="E203" />
           <option value="E501" />
+          <option value="E266" />
+          <option value="E722" />
         </list>
       </option>
     </inspection_tool>

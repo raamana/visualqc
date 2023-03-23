@@ -22,9 +22,11 @@ from visualqc.image_utils import mask_image
 from visualqc.interfaces import BaseReviewInterface
 from visualqc.readers import find_anatomical_images_in_BIDS
 from visualqc.utils import (check_bids_dir, check_finite_int, check_id_list,
-                            check_input_dir_T1, check_out_dir, check_outlier_params,
-                            check_views, read_image, saturate_brighter_intensities,
-                            scale_0to1, set_fig_window_title)
+                            check_input_dir_T1, check_numerical_limits,
+                            check_out_dir, check_outlier_params, check_views,
+                            read_image, remove_matplotlib_axes,
+                            saturate_brighter_intensities, scale_0to1,
+                            set_fig_window_title)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -61,16 +63,13 @@ class T1MriInterface(BaseReviewInterface):
 
         self.add_checkboxes()
         self.add_process_options()
-        # include all the non-data axes here (so they wont be zoomed-in)
+
+        # include all the non-data axes here (so they won't be zoomed-in)
         self.unzoomable_axes = [self.checkbox.ax, self.text_box.ax,
                                 self.bt_next.ax, self.bt_quit.ax]
         # radio buttons may not exist in all interfaces
         if hasattr(self, 'radio_bt_vis_type'):
             self.unzoomable_axes.append(self.radio_bt_vis_type)
-
-        # this list of artists to be populated later
-        # makes to handy to clean them all
-        self.data_handles = list()
 
 
     def add_checkboxes(self):
@@ -209,14 +208,10 @@ class T1MriInterface(BaseReviewInterface):
         self.clear_notes_annot()
 
 
-    def clear_data(self):
-        """clearing all data/image handles"""
+    def remove_UI_local(self):
+        """Removes module specific UI elements for cleaner screenshots"""
 
-        if self.data_handles:
-            for artist in self.data_handles:
-                artist.remove()
-            # resetting it
-            self.data_handles = list()
+        remove_matplotlib_axes([self.checkbox, self.radio_bt_vis_type])
 
 
     def clear_notes_annot(self):
@@ -311,16 +306,18 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
                  images_for_id,
                  outlier_method, outlier_fraction,
                  outlier_feat_types, disable_outlier_detection,
-                 prepare_first,
-                 vis_type,
-                 views, num_slices_per_view, num_rows_per_view):
+                 vis_type, saturate_perc,
+                 views, num_slices_per_view, num_rows_per_view,
+                 screenshot_only=cfg.default_screenshot_only):
         """Constructor"""
 
         super().__init__(id_list, in_dir, out_dir,
                          outlier_method, outlier_fraction,
-                         outlier_feat_types, disable_outlier_detection)
+                         outlier_feat_types, disable_outlier_detection,
+                         screenshot_only=screenshot_only)
 
         self.vis_type = vis_type
+        self.saturate_perc = saturate_perc
         self.issue_list = issue_list
         self.mri_name = mri_name
         self.in_dir_type = in_dir_type
@@ -328,7 +325,6 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.expt_id = 'rate_mri_{}'.format(self.mri_name)
         self.suffix = self.expt_id
         self.current_alert_msg = None
-        self.prepare_first = prepare_first
 
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
@@ -389,9 +385,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         from visualqc.features import extract_T1_features
         self.feature_extractor = extract_T1_features
 
-        if (self.vis_type is not None) and \
-                ((self.vis_type in cfg.freesurfer_vis_types) or
-                 (self.in_dir_type in ['freesurfer', ])):
+        if self.in_dir_type.lower() in ('freesurfer', ):
             self.path_getter_inputs = lambda sub_id: \
                 realpath(pjoin(self.in_dir, sub_id, 'mri', self.mri_name))
         else:
@@ -528,7 +522,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
 
         if user_choice in ('Saturate',):
             self.show_saturated(no_toggle=True)
-        elif user_choice in ('Background only',):
+        elif user_choice in ('Background_only',):
             self.show_background_only(no_toggle=True)
         elif user_choice in ('Tails_trimmed', 'Tails trimmed'):
             self.show_tails_trimmed(no_toggle=True)
@@ -544,7 +538,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         if not self.currently_showing in ['saturated', ] or no_toggle:
             if not hasattr(self, 'saturated_img'):
                 self.saturated_img = saturate_brighter_intensities(
-                    self.current_img, percentile=cfg.saturate_perc_t1)
+                    self.current_img, percentile=self.saturate_perc)
             self.collage.attach(self.saturated_img)
             self.currently_showing = 'saturated'
         else:
@@ -554,10 +548,10 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
     def show_background_only(self, no_toggle=False):
         """Callback for ghosting specific review"""
 
-        if not self.currently_showing in ['Background only', ] or no_toggle:
+        if not self.currently_showing in ['Background_only', ] or no_toggle:
             self._compute_background()
             self.collage.attach(self.background_img)
-            self.currently_showing = 'Background only'
+            self.currently_showing = 'Background_only'
         else:
             self.show_original()
 
@@ -596,11 +590,8 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
         self.currently_showing = 'original'
 
 
-    def cleanup(self):
-        """Preparating for exit."""
-
-        # save ratings before exiting
-        self.save_ratings()
+    def close_UI(self):
+        """Method to close all figures and UI elements."""
 
         self.fig.canvas.mpl_disconnect(self.con_id_click)
         self.fig.canvas.mpl_disconnect(self.con_id_keybd)
@@ -667,6 +658,25 @@ def get_parser():
     Default: a new folder called ``{}`` will be created inside the input folder
     \n""".format(cfg.default_out_dir_name))
 
+    help_text_vis_type = textwrap.dedent("""
+    Type of visualization/processed image to start review with.
+    Allowed options: {}
+
+    Default: {}.
+    \n""".format(cfg.processing_choices_t1_mri,
+                 cfg.default_processing_choice_t1_mri))
+
+    help_text_saturate_perc_t1 = textwrap.dedent("""
+    Sets all intensities in the image above this percentile to max intensity.
+    This is helpful to reveal and detect any ghosting.
+
+    Specific formula used to compute threshold:
+    threshold = numpy.percentile(image, saturate_perc)
+    image[image > threshold] = max_value
+
+    Default: {}. It must be within [1, 99]
+    """.format(cfg.saturate_perc_max_intensity))
+
     help_text_views = textwrap.dedent("""
     Specifies the set of views to display - could be just 1 view, or 2 or all 3.
     Example: --views 0 (typically sagittal) or --views 1 2 (axial and coronal)
@@ -683,15 +693,6 @@ def get_parser():
     Specifies the number of rows to display per each axis.
     Default: {}.
     \n""".format(cfg.default_num_rows))
-
-    help_text_prepare = textwrap.dedent("""
-    This flag enables batch-generation of 3d surface visualizations,
-    prior to starting any review and rating operations. This makes the switch
-    from one subject to the next, even more seamless (saving few seconds :) ).
-
-    Default: False  (required visualizations are generated only on demand,
-    which can take 5-10 seconds for each subject).
-    \n""")
 
     help_text_outlier_detection_method = textwrap.dedent("""
     Method used to detect the outliers.
@@ -749,10 +750,22 @@ def get_parser():
                         default=cfg.default_freesurfer_dir,
                         required=False, help=help_text_fs_dir)
 
+    vis = parser.add_argument_group('Visualization', '')
+
+    vis.add_argument("-vt", "--vis_type", action="store",
+                     dest="vis_type", choices=cfg.processing_choices_t1_mri,
+                     default=cfg.default_processing_choice_t1_mri, required=False,
+                     help=help_text_vis_type)
+
+    vis.add_argument("-sp", "--saturate_perc", action="store",
+                     dest="saturate_perc",
+                     default=cfg.saturate_perc_max_intensity, required=False,
+                     help=help_text_saturate_perc_t1)
+
     outliers = parser.add_argument_group('Outlier detection',
                                          'options related to automatically '
-                                         'detecting '
-                                         'possible outliers')
+                                         'detecting possible outliers')
+
     outliers.add_argument("-olm", "--outlier_method", action="store",
                           dest="outlier_method",
                           default=cfg.default_outlier_detection_method,
@@ -789,11 +802,11 @@ def get_parser():
     wf_args = parser.add_argument_group('Workflow',
                                         'Options related to workflow e.g. to '
                                         'pre-compute resource-intensive features, '
-                                        'and pre-generate all the visualizations '
-                                        'required')
-    wf_args.add_argument("-p", "--prepare_first", action="store_true",
-                         dest="prepare_first",
-                         help=help_text_prepare)
+                                        'or generate screenshots only')
+
+    wf_args.add_argument("-so", "--screenshot_only", dest="screenshot_only",
+                         action="store_true",
+                         help=cfg.help_text_screenshot_only)
 
     return parser
 
@@ -814,7 +827,11 @@ def make_workflow_from_user_options():
     except:
         parser.exit(1)
 
-    vis_type = 'collage_t1_mri'
+    vis_type = user_args.vis_type
+    if vis_type.lower() not in [pc.lower() for pc in cfg.processing_choices_t1_mri]:
+        raise ValueError('Invalid vis_type - choose one of {}'
+                         ''.format(cfg.processing_choices_t1_mri))
+
     type_of_features = 't1_mri'
     in_dir, in_dir_type = check_input_dir_T1(user_args.fs_dir, user_args.user_dir,
                                              user_args.bids_dir)
@@ -835,6 +852,9 @@ def make_workflow_from_user_options():
     num_slices_per_view, num_rows_per_view = check_finite_int(user_args.num_slices,
                                                               user_args.num_rows)
 
+    saturate_perc = check_numerical_limits(user_args.saturate_perc, 'saturate_perc',
+                                           1, 99)[0]  # return type array
+
     outlier_method, outlier_fraction, outlier_feat_types, disable_outlier_detect = \
         check_outlier_params(
             user_args.outlier_method, user_args.outlier_fraction,
@@ -846,9 +866,9 @@ def make_workflow_from_user_options():
                           mri_name, in_dir_type, images_for_id,
                           outlier_method, outlier_fraction,
                           outlier_feat_types, disable_outlier_detect,
-                          user_args.prepare_first,
-                          vis_type,
-                          views, num_slices_per_view, num_rows_per_view)
+                          vis_type, saturate_perc,
+                          views, num_slices_per_view, num_rows_per_view,
+                          screenshot_only=user_args.screenshot_only)
 
     return wf
 

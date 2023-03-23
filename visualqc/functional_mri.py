@@ -20,11 +20,12 @@ from mrivis.utils import crop_image
 from visualqc import config as cfg
 from visualqc.image_utils import mask_image
 from visualqc.readers import func_mri_traverse_bids
-from visualqc.t1_mri import T1MriInterface
+from visualqc.t1_mri import BaseReviewInterface
 from visualqc.utils import (check_bids_dir, check_event_in_axes, check_finite_int,
                             check_id_list_with_regex, check_image_is_4d,
                             check_out_dir, check_outlier_params, check_views,
-                            get_axis, pick_slices, scale_0to1, set_fig_window_title)
+                            get_axis, pick_slices, scale_0to1, set_fig_window_title,
+                            remove_matplotlib_axes)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
@@ -43,7 +44,7 @@ def _unbidsify(filename, max_width=18):
     return '\n'.join(fixed_width)
 
 
-class FunctionalMRIInterface(T1MriInterface):
+class FunctionalMRIInterface(BaseReviewInterface):
     """Interface for the review of fMRI images."""
 
 
@@ -63,9 +64,7 @@ class FunctionalMRIInterface(T1MriInterface):
                  total_num_layers=5):
         """Constructor"""
 
-        super().__init__(fig, axes, issue_list,
-                         next_button_callback,
-                         quit_button_callback)
+        super().__init__(fig, axes, next_button_callback, quit_button_callback)
         self.issue_list = issue_list
 
         self.prev_axis = None
@@ -91,10 +90,6 @@ class FunctionalMRIInterface(T1MriInterface):
         self.unzoomable_axes = [self.checkbox.ax, self.text_box.ax,
                                 self.bt_next.ax, self.bt_quit.ax]
 
-        # this list of artists to be populated later
-        # makes to handy to clean them all
-        self.data_handles = list()
-
 
     def add_checkboxes(self):
         """Checkboxes offer the ability to select multiple tags such as Motion,
@@ -105,7 +100,8 @@ class FunctionalMRIInterface(T1MriInterface):
         ax_checkbox = plt.axes(cfg.position_checkbox, facecolor=cfg.color_rating_axis)
         # initially de-activating all
         actives = [False] * len(self.issue_list)
-        self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list, actives=actives)
+        self.checkbox = CheckButtons(ax_checkbox, labels=self.issue_list,
+                                     actives=actives)
         self.checkbox.on_clicked(self.save_issues)
         for txt_lbl in self.checkbox.labels:
             txt_lbl.set(**cfg.checkbox_font_properties)
@@ -120,6 +116,57 @@ class FunctionalMRIInterface(T1MriInterface):
             x_line2.set_color(cfg.checkbox_cross_color)
 
         self._index_pass = self.issue_list.index(cfg.func_mri_pass_indicator)
+
+
+    def save_issues(self, label):
+        """
+        Update the rating
+
+        This function is called whenever set_active() happens on any label,
+        if checkbox.eventson is True.
+
+        """
+
+        if label == cfg.visual_qc_pass_indicator:
+            self.clear_checkboxes(except_pass=True)
+        else:
+            self.clear_pass_only_if_on()
+
+        self.fig.canvas.draw_idle()
+
+
+    def clear_checkboxes(self, except_pass=False):
+        """Clears all checkboxes.
+
+        if except_pass=True,
+            does not clear checkbox corresponding to cfg.t1_mri_pass_indicator
+        """
+
+        cbox_statuses = self.checkbox.get_status()
+        for index, this_cbox_active in enumerate(cbox_statuses):
+            if except_pass and index == self._index_pass:
+                continue
+            # if it was selected already, toggle it.
+            if this_cbox_active:
+                # not calling checkbox.set_active() as it calls the callback
+                # self.save_issues() each time, if eventson is True
+                self._toggle_visibility_checkbox(index)
+
+
+    def clear_pass_only_if_on(self):
+        """Clear pass checkbox only"""
+
+        cbox_statuses = self.checkbox.get_status()
+        if cbox_statuses[self._index_pass]:
+            self._toggle_visibility_checkbox(self._index_pass)
+
+
+    def _toggle_visibility_checkbox(self, index):
+        """toggles the visibility of a given checkbox"""
+
+        l1, l2 = self.checkbox.lines[index]
+        l1.set_visible(not l1.get_visible())
+        l2.set_visible(not l2.get_visible())
 
 
     def maximize_axis(self, ax):
@@ -206,6 +253,30 @@ class FunctionalMRIInterface(T1MriInterface):
 
         self.fig.canvas.draw_idle()
 
+
+    def get_ratings(self):
+        """Returns the final set of checked ratings"""
+
+        cbox_statuses = self.checkbox.get_status()
+        user_ratings = [self.checkbox.labels[idx].get_text()
+                        for idx, this_cbox_active in
+                        enumerate(cbox_statuses) if this_cbox_active]
+
+        return user_ratings
+
+
+    def allowed_to_advance(self):
+        """
+        Method to ensure work is done for current iteration,
+        before allowing the user to advance to next subject.
+
+        Returns False if atleast one of the following conditions are not met:
+            Atleast Checkbox is checked
+        """
+
+        return self._is_checkbox_ticked(self.checkbox)
+
+
     def reset_figure(self):
         """Resets the figure to prepare it for display of next subject."""
 
@@ -214,6 +285,12 @@ class FunctionalMRIInterface(T1MriInterface):
         self.clear_data()
         self.clear_checkboxes()
         self.clear_notes_annot()
+
+
+    def remove_UI_local(self):
+        """Removes module specific UI elements for cleaner screenshots"""
+
+        remove_matplotlib_axes([self.checkbox, ])
 
 
 class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
@@ -241,7 +318,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  vis_type=None,
                  views=cfg.default_views_fmri,
                  num_slices_per_view=cfg.default_num_slices_fmri,
-                 num_rows_per_view=cfg.default_num_rows_fmri):
+                 num_rows_per_view=cfg.default_num_rows_fmri,
+                 screenshot_only=cfg.default_screenshot_only):
         """
         Constructor.
 
@@ -267,7 +345,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         super().__init__(id_list, in_dir, out_dir,
                          outlier_method, outlier_fraction,
-                         outlier_feat_types, disable_outlier_detection)
+                         outlier_feat_types, disable_outlier_detection,
+                         screenshot_only=screenshot_only)
 
         # proper checks
         self.drop_start = drop_start
@@ -342,7 +421,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.feature_extractor = functional_mri_features
 
         if 'BIDS' in self.in_dir_type.upper():
-            from bids import BIDSLayout
+            from bids import BIDSLayout, config as bids_config
+            bids_config.set_option('extension_initial_dot', True)
             self.bids_layout = BIDSLayout(self.in_dir)
             self.units = func_mri_traverse_bids(self.bids_layout,
                                                 **cfg.func_mri_BIDS_filters)
@@ -781,11 +861,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                            id_with_counter, **cfg.annot_text_props)
 
 
-    def cleanup(self):
-        """Preparing for exit."""
-
-        # save ratings before exiting
-        self.save_ratings()
+    def close_UI(self):
+        """Method to close all figures and UI elements."""
 
         self.fig.canvas.mpl_disconnect(self.con_id_click)
         self.fig.canvas.mpl_disconnect(self.con_id_keybd)
@@ -1069,6 +1146,10 @@ def get_parser():
                          dest="prepare_first",
                          help=help_text_prepare)
 
+    wf_args.add_argument("-so", "--screenshot_only", dest="screenshot_only",
+                         action="store_true",
+                         help=cfg.help_text_screenshot_only)
+
     return parser
 
 
@@ -1102,7 +1183,8 @@ def make_workflow_from_user_options():
         in_dir_type = 'generic'
         id_list, images_for_id = check_id_list_with_regex(user_args.id_list, in_dir, name_pattern)
     else:
-        raise ValueError('Invalid args: specify only one of bids_dir or user_dir, not both.')
+        raise ValueError('Invalid args: specify only one of bids_dir or user_dir, '
+                         'not both.')
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
     no_preproc = user_args.no_preproc
@@ -1112,7 +1194,7 @@ def make_workflow_from_user_options():
                                                               user_args.num_rows)
 
     outlier_method, outlier_fraction, \
-    outlier_feat_types, disable_outlier_detection = check_outlier_params(
+        outlier_feat_types, disable_outlier_detection = check_outlier_params(
         user_args.outlier_method, user_args.outlier_fraction,
         user_args.outlier_feat_types, user_args.disable_outlier_detection,
         id_list, vis_type, type_of_features)
@@ -1123,12 +1205,14 @@ def make_workflow_from_user_options():
                             issue_list=cfg.func_mri_default_issue_list,
                             name_pattern=name_pattern, in_dir_type=in_dir_type,
                             no_preproc=no_preproc,
-                            outlier_method=outlier_method, outlier_fraction=outlier_fraction,
+                            outlier_method=outlier_method,
+                            outlier_fraction=outlier_fraction,
                             outlier_feat_types=outlier_feat_types,
                             disable_outlier_detection=disable_outlier_detection,
                             prepare_first=user_args.prepare_first, vis_type=vis_type,
                             views=views, num_slices_per_view=num_slices_per_view,
-                            num_rows_per_view=num_rows_per_view)
+                            num_rows_per_view=num_rows_per_view,
+                            screenshot_only=user_args.screenshot_only)
 
     return wf
 
