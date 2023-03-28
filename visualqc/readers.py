@@ -6,7 +6,7 @@ Data reader module.
 import numpy as np
 from os.path import exists as pexists, join as pjoin, realpath, splitext, basename
 from itertools import product
-from collections import Sequence
+from collections.abc import Sequence
 from visualqc import config as cfg
 
 
