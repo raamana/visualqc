@@ -1013,11 +1013,15 @@ def get_parser():
     \n""".format(cfg.default_out_dir_name))
 
     help_text_no_preproc = textwrap.dedent("""
-    Whether to apply basic preprocessing steps (detrend, slice timing correction etc), before building the carpet image.
+    Whether to apply basic preprocessing steps (detrending etc), before building the
+    carpet image. Check
+    https://nilearn.github.io/stable/modules/generated/nilearn.signal.clean.html
+    for more details.
 
     If the images are already preprocessed elsewhere, use this flag ``--no_preproc``
 
-    Default is to apply minimal preprocessing (detrending etc) before showing images for review.
+    Default is to apply minimal preprocessing (detrend, low- and high-pass
+    butterworth filter) before showing images for review.
     \n""")
 
     help_text_views = textwrap.dedent("""
@@ -1099,8 +1103,9 @@ def get_parser():
     preproc = parser.add_argument_group('Preprocessing',
                                          'options related to preprocessing before review')
 
-    preproc.add_argument("-np", "--no_preproc", action="store_true", dest="no_preproc",
-                          required=False, help=help_text_no_preproc)
+    preproc.add_argument("-np", "--no_preproc",
+                         action="store_true", dest="no_preproc",
+                         required=False, help=help_text_no_preproc)
 
     outliers = parser.add_argument_group('Outlier detection',
                                          'options related to automatically detecting possible outliers')
@@ -1187,7 +1192,16 @@ def make_workflow_from_user_options():
                          'not both.')
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
+
     no_preproc = user_args.no_preproc
+    if not no_preproc:
+        try:
+            from nilearn.signal import clean
+        except ImportError:
+            raise ImportError('nilearn is required for fMRI preprocessing. '
+                              'Install nilearn before running VisualQC for fMRI. '
+                              'It is not required if you are not applying any '
+                              'preprocessing, or you preprocessed them elsewhere.')
 
     views = check_views(user_args.views)
     num_slices_per_view, num_rows_per_view = check_finite_int(user_args.num_slices,

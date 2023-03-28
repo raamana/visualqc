@@ -31,9 +31,6 @@ dependencies = [
     'nibabel',
     'scikit-learn',
     'pybids',
-    'nilearn',
-    'pyyaml>=4.2b1',
-    'pillow',
 ]
 
 dynamic = ["version"]
