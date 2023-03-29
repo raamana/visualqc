@@ -29,6 +29,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+visualqc/_version.py
 
 #PyCharm
 .idea/*

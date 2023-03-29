@@ -1,10 +1,9 @@
+#!/bin/bash
 
-REPONAME=`basename $PWD`
-rm -rf dist build ${REPONAME}.egg-info
+rm -rf dist
 
-python3 setup.py sdist bdist_wheel
+hatch build
 
-twine upload dist/*
+hatch publish
 
-rm -rf dist build ${REPONAME}.egg-info
-
+rm -rf dist

@@ -57,7 +57,6 @@ vqcalign = "visualqc.__alignment__:main"
 [tool.hatch.build]
 include = [
     "visualqc/*.py",
-    "visualqc/atlases/*",
     "visualqc/resources/*",
 ]
 exclude = [
@@ -68,6 +67,9 @@ exclude = [
 
 [tool.hatch.version]
 source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "visualqc/_version.py"
 
 [tool.hatch.build.targets.sdist]
 exclude = [
