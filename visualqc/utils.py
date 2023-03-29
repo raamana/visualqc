@@ -1228,8 +1228,13 @@ def print_platform_version_info():
     print('platform {}\n{}\n\n'.format(platform.platform(), platform.version()))
 
 
-def remove_matplotlib_axes(mpl_objects):
-    """Calls the .ax.remove() method on all the objects"""
+def remove_matplotlib_axes(mpl_artists):
+    """Calls the .ax.remove() method on all the objects,
+        after disconnecting events linked to them
+    """
 
-    for artist in mpl_objects:
+    for artist in mpl_artists:
+        # All subclasses of AxesWidget will have a disconnect_events() method
+        if hasattr(artist, 'disconnect_events'):
+            artist.disconnect_events()
         artist.ax.remove()
