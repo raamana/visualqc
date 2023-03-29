@@ -400,7 +400,7 @@ class BaseWorkflowVisualQC(ABC):
     def print_rating(self, subject_id):
         """Method to print the rating recorded for the current subject."""
 
-        if subject_id in self.ratings:
+        if subject_id in self.ratings and (self.ratings[subject_id] is not None):
             # checking if "i'm tired" or 'review later' appear in ratings
             do_not_save = any([ rt.lower() in cfg.ratings_not_to_be_recorded
                   for rt in self.ratings[subject_id]])
