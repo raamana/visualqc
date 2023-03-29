@@ -582,8 +582,6 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.subplots_adjust(**cfg.review_area)
         plt.show(block=False)
 
-        self.anim_loop = asyncio.get_event_loop()
-
 
     def add_UI(self):
         """Adds the review UI with defaults"""
@@ -800,11 +798,10 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def animate_through_gradients(self):
         """Loops through all gradients, in mulitslice view, to help spot artefacts"""
 
-        self.anim_loop.run_until_complete(self._animate_through_gradients())
+        asyncio.run(self._animate_through_gradients())
 
 
-    @asyncio.coroutine
-    def _animate_through_gradients(self):
+    async def _animate_through_gradients(self):
         """Show image 1, wait, show image 2"""
 
         # fixing the same slices for all gradients
@@ -813,8 +810,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         for grad_idx in range(self.num_gradients):
             self.show_3dimage(self.dw_volumes[:, :, :, grad_idx].squeeze(),
                               slices=slices, annot='gradient {}'.format(grad_idx))
-            plt.pause(0.05)
-            time.sleep(self.delay_in_animation)
+            plt.pause(cfg.plotting_pause_interval)
 
 
     def flip_first_last(self):
@@ -827,13 +823,13 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def flip_between_two(self, index_one, index_two, first_index_in_b0=False):
         """Flips between first and last volume to identify any pulsation artefacts"""
 
-        self.anim_loop.run_until_complete(
+        asyncio.run(
             self._flip_between_two_nTimes(index_one, index_two,
                                           first_index_in_b0=first_index_in_b0))
 
 
-    @asyncio.coroutine
-    def _flip_between_two_nTimes(self, index_one, index_two, first_index_in_b0=False):
+    async def _flip_between_two_nTimes(self, index_one, index_two,
+                                       first_index_in_b0=False):
         """Show first, wait, show last, repeat"""
 
         if first_index_in_b0:
@@ -853,8 +849,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             for img, txt in ((_first_vol, _id_first),
                              (_second_vol, _id_second)):
                 self.show_3dimage(img, txt)
-                plt.pause(0.05)
-                time.sleep(self.delay_in_animation)
+                plt.pause(cfg.plotting_pause_interval)
 
 
     def alignment_check(self, label=None):
@@ -907,10 +902,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
 
     def stop_animation(self):
-        # TODO this not working - run_until_complete() is likely the reason
-        # call_soon does not start animation right away or at all
-        if self.anim_loop.is_running():
-            self.anim_loop.stop()
+
+        pass
 
 
     def show_next(self):
@@ -1152,9 +1145,6 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         for cid in (self.con_id_click, self.con_id_keybd, self.con_id_scroll):
             self.fig.canvas.mpl_disconnect(cid)
         plt.close('all')
-
-        self.anim_loop.run_until_complete(self.anim_loop.shutdown_asyncgens())
-        self.anim_loop.close()
 
 
 def pis_map(diffn_img, index_low_b_val, index_high_b_val):
