@@ -58,6 +58,7 @@ class AlignmentInterface(BaseReviewInterface):
                  toggle_animation_callback=None,
                  show_first_image_callback=None,
                  show_second_image_callback=None,
+                 vis_type_to_highlight=cfg.alignment_default_vis_type,
                  alpha_seg=cfg.default_alpha_seg):
         """Constructor"""
 
@@ -77,21 +78,24 @@ class AlignmentInterface(BaseReviewInterface):
         self.show_first_image_callback = show_first_image_callback
         self.show_second_image_callback = show_second_image_callback
 
+        # below call selects a button although user hasn't clicked on it yet
         self.add_radio_buttons_rating()
-        self.add_radio_buttons_comparison_method()
+        # hence clearing the selected button, to force user to click on them
+        self.clear_rating_radio_buttons()
+        self.add_radio_buttons_comparison_method(vis_type_to_highlight)
 
         self.unzoomable_axes = [self.radio_bt_rating.ax, self.radio_bt_vis_type.ax,
                                 self.text_box.ax, self.bt_next.ax, self.bt_quit.ax, ]
 
 
-    def add_radio_buttons_comparison_method(self):
+    def add_radio_buttons_comparison_method(self, vis_type_to_highlight):
 
         ax_radio = plt.axes(cfg.position_alignment_radio_button_method,
                             facecolor=cfg.color_rating_axis, aspect='equal')
         vis_type_choices = list(cfg.alignment_comparison_choices)
         self.radio_bt_vis_type = RadioButtons(
             ax_radio, vis_type_choices,
-            active=vis_type_choices.index(cfg.alignment_default_vis_type),
+            active=vis_type_choices.index(vis_type_to_highlight),
             activecolor='orange')
         self.radio_bt_vis_type.on_clicked(self.change_vis_type_callback)
         for txt_lbl in self.radio_bt_vis_type.labels:
@@ -393,13 +397,16 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def add_UI(self):
         """Adds the review UI with defaults"""
 
-        self.UI = AlignmentInterface(self.fig, self.issue_list,
-                                     next_button_callback=self.next,
-                                     quit_button_callback=self.quit,
-                                     change_vis_type_callback=self.callback_display_update,
-                                     toggle_animation_callback=self.toggle_animation,
-                                     show_first_image_callback=self.show_first_image,
-                                     show_second_image_callback=self.show_second_image)
+        self.UI = AlignmentInterface(
+            self.fig,
+            self.issue_list,
+            next_button_callback=self.next,
+            quit_button_callback=self.quit,
+            change_vis_type_callback=self.callback_display_update,
+            toggle_animation_callback=self.toggle_animation,
+            show_first_image_callback=self.show_first_image,
+            show_second_image_callback=self.show_second_image,
+            vis_type_to_highlight=self.vis_type)
 
         # connecting callbacks
         self.con_id_click = self.fig.canvas.mpl_connect('button_press_event',
