@@ -310,8 +310,9 @@ diffusion_mri_BIDS_filters = dict(modalities='dwi', types='dwi')
 # not important here, just for display, doing it anyways.
 scale_factor_diffusion = 1000
 
-delay_in_animation_diffusion_mri = 0.3
+delay_in_animation_diffusion_mri = 0.1
 num_times_to_animate_diffusion_mri = 4
+plotting_pause_interval = 0.6  # 0.05 didn't seem to work
 
 alpha_stats_overlay_diffusion = 0.5
 linewidth_stats_diffusion = 2
