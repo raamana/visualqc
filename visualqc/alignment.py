@@ -39,8 +39,10 @@ from visualqc.image_utils import (overlay_edges, mix_color, diff_image,
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
 
+
 def mask_below_perc(img):
     """returns a mask of pixels below a percentile value"""
+
     # return img <= np.max(img)/10
     return img <= np.percentile(img, cfg.weak_edge_threshold)
 
@@ -335,7 +337,7 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def init_layout(self, views, num_rows_per_view,
                     num_slices_per_view, padding=cfg.default_padding):
 
-        self.views = views
+        self.views = views  # noqa
         self.num_slices_per_view = num_slices_per_view
         self.num_rows_per_view = num_rows_per_view
         self.num_rows = len(self.views) * self.num_rows_per_view
@@ -664,7 +666,7 @@ def get_parser():
     \n""".format(cfg.default_out_dir_name))
 
     help_text_vis_type = textwrap.dedent("""
-    Specifies the visualiztion type to start with. You can change this via radio
+    Specifies the visualization type to start with. You can change this via radio
     buttons as you go along.
 
     Default: {}.

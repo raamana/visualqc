@@ -170,9 +170,9 @@ class FunctionalMRIInterface(BaseReviewInterface):
 
 
     def maximize_axis(self, ax):
-        """zooms a given axes"""
+        """zooms a given axis"""  # noqa
 
-        if not self.nested_zoomed_in:
+        if not self.nested_zoomed_in:  # noqa
             self.prev_ax_pos = ax.get_position()
             self.prev_ax_zorder = ax.get_zorder()
             self.prev_ax_alpha = ax.get_alpha()
@@ -928,7 +928,7 @@ def _rescale_over_time(matrix):
 
 
 def _within_frame_rescale(matrix):
-    """Rescaling within a given grame"""
+    """Rescaling within a given frame"""
 
     min_colwise = matrix.min(axis=0)
     range_colwise = matrix.ptp(axis=0)  # ptp : peak to peak, max-min

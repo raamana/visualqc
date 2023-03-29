@@ -153,12 +153,12 @@ class DiffusionMRIInterface(BaseReviewInterface):
 
 
     def add_process_options(self):
-        """redefining it to void it's actions intended for T1w MRI interface"""
+        """redefining it to void its actions intended for T1w MRI interface"""
         pass
 
 
     def maximize_axis(self, ax):
-        """zooms a given axes"""
+        """zooms a given axis"""
 
         if not self.nested_zoomed_in:
             self.prev_ax_pos = ax.get_position()
