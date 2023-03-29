@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 from matplotlib.widgets import Button, TextBox
 
 from visualqc import config as cfg
+from visualqc.utils import remove_matplotlib_axes
 
 
 class BaseReviewInterface(ABC):
@@ -161,10 +162,11 @@ class BaseReviewInterface(ABC):
     def remove_UI(self):
         """Removes some UI elements to accommodate cleaner export of screenshots"""
 
-        self.text_box.ax.remove()
-        self.bt_next.ax.remove()
-        self.bt_quit.ax.remove()
+        remove_matplotlib_axes([self.text_box,
+                                self.bt_next,
+                                self.bt_quit])
         self.remove_UI_local()
+        self.fig.canvas.draw_idle()  # to update figure
 
 
     @abstractmethod
