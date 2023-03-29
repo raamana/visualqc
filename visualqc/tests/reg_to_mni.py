@@ -11,8 +11,8 @@ path_sub_T1 = '/Users/Reddy/dev/visualqc/example_datasets/id_001/mri/orig.mgz'
 static_hdr = nib.load(path_mni_T1)
 moving_hdr = nib.load(path_sub_T1)
 
-static = static_hdr.get_data()
-moving = moving_hdr.get_data()
+static = static_hdr.get_fdata()
+moving = moving_hdr.get_fdata()
 
 static_grid2world = static_hdr.affine
 moving_grid2world = moving_hdr.affine

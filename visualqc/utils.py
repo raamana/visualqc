@@ -31,7 +31,7 @@ def read_image(img_spec,
             # trying to stick to an orientation
             if reorient_canonical:
                 init_obj = nib.as_closest_canonical(init_obj)
-            img = init_obj.get_data()
+            img = init_obj.get_fdata()
         else:
             raise IOError('Given path to {} does not exist!\n\t{}'
                           ''.format(error_msg, img_spec))

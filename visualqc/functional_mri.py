@@ -624,7 +624,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         try:
             hdr = nib.load(img_path)
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
-            self.img_this_unit_raw = self.hdr_this_unit.get_data()
+            self.img_this_unit_raw = self.hdr_this_unit.get_fdata()
         except Exception as exc:
             print(exc)
             print('Unable to read image at \n\t{}'.format(img_path))

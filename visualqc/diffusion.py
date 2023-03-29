@@ -665,7 +665,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         try:
             hdr = nib.load(img_path)
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
-            self.img_this_unit_raw = self.hdr_this_unit.get_data()
+            self.img_this_unit_raw = self.hdr_this_unit.get_fdata()
 
             num_dwi_volumes = self.img_this_unit_raw.shape[-1]
             if (not pexists(bval_path)) or (bval_path.lower() == 'assume_first'):
