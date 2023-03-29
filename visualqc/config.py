@@ -326,7 +326,8 @@ default_name_pattern_diffusion = '*.nii'
 diffusion_mri_features_OLD = ('dvars',)
 colormap_stdev_diffusion = 'seismic'
 
-choices_alignment_comparison_diffusion = ('Animate all',
+choices_alignment_comparison_diffusion = ('None',
+                                          'Animate all',
                                           'Flip first & last',
                                           'Align to b0 animate',
                                           'Align to b0 edges')
@@ -352,7 +353,7 @@ alignment_cmap = OrderedDict(Animate='gray',
                              Edges_Thinner=None,
                              Edges_Diffused=None,
                              Color_mix=None)
-alignment_comparison_choices = set(alignment_cmap.keys())
+alignment_comparison_choices = set(sorted(alignment_cmap.keys()))
 alignment_screenshot_vis_types = alignment_comparison_choices - {'Animate', }
 alignment_default_vis_type = 'Edges_Thinner'
 

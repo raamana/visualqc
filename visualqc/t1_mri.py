@@ -109,9 +109,11 @@ class T1MriInterface(BaseReviewInterface):
 
         ax_radio = plt.axes(cfg.position_radio_bt_t1_mri,
                             facecolor=cfg.color_rating_axis)
-        self.radio_bt_vis_type = RadioButtons(ax_radio,
-                                              cfg.processing_choices_t1_mri,
-                                              active=None, activecolor='orange')
+        self.radio_bt_vis_type = RadioButtons(  # noqa
+            ax_radio, cfg.processing_choices_t1_mri,
+            active=cfg.processing_choices_t1_mri
+            .index(cfg.default_processing_choice_t1_mri),
+            activecolor='orange')
         self.radio_bt_vis_type.on_clicked(self.processing_choice_callback)
         for txt_lbl in self.radio_bt_vis_type.labels:
             txt_lbl.set(color=cfg.text_option_color, fontweight='normal')

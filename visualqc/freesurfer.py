@@ -73,10 +73,12 @@ class FreesurferReviewInterface(BaseReviewInterface):
 
     def add_radio_buttons(self):
 
-        ax_radio = plt.axes(cfg.position_radio_buttons,
+        ax_radio = plt.axes(cfg.position_radio_buttons,  # noqa
                             facecolor=cfg.color_rating_axis, aspect='equal')
-        self.radio_bt_rating = RadioButtons(ax_radio, self.rating_list,
-                                            active=None, activecolor='orange')
+        self.radio_bt_rating = RadioButtons(
+            ax_radio, self.rating_list,
+            active=self.rating_list.index(cfg.freesurfer_default_rating),
+            activecolor='orange')
         self.radio_bt_rating.on_clicked(self.save_rating)
         for txt_lbl in self.radio_bt_rating.labels:
             txt_lbl.set(color=cfg.text_option_color, fontweight='normal')

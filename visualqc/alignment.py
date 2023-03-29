@@ -88,8 +88,11 @@ class AlignmentInterface(BaseReviewInterface):
 
         ax_radio = plt.axes(cfg.position_alignment_radio_button_method,
                             facecolor=cfg.color_rating_axis, aspect='equal')
-        self.radio_bt_vis_type = RadioButtons(ax_radio, cfg.alignment_comparison_choices,
-                                              active=None, activecolor='orange')
+        vis_type_choices = list(cfg.alignment_comparison_choices)
+        self.radio_bt_vis_type = RadioButtons(
+            ax_radio, vis_type_choices,
+            active=vis_type_choices.index(cfg.alignment_default_vis_type),
+            activecolor='orange')
         self.radio_bt_vis_type.on_clicked(self.change_vis_type_callback)
         for txt_lbl in self.radio_bt_vis_type.labels:
             txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
@@ -100,10 +103,12 @@ class AlignmentInterface(BaseReviewInterface):
 
     def add_radio_buttons_rating(self):
 
-        ax_radio = plt.axes(cfg.position_alignment_radio_button_rating,
+        ax_radio = plt.axes(cfg.position_alignment_radio_button_rating,  # noqa
                             facecolor=cfg.color_rating_axis, aspect='equal')
-        self.radio_bt_rating = RadioButtons(ax_radio, self.rating_list,
-                                            active=None, activecolor='orange')
+        self.radio_bt_rating = RadioButtons(
+            ax_radio, self.rating_list,
+            active=self.rating_list.index(cfg.freesurfer_default_rating),
+            activecolor='orange')
         self.radio_bt_rating.on_clicked(self.save_rating)
         for txt_lbl in self.radio_bt_rating.labels:
             txt_lbl.set(color=cfg.text_option_color, fontweight='normal')

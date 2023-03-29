@@ -141,7 +141,7 @@ class DiffusionMRIInterface(BaseReviewInterface):
                             facecolor=cfg.color_rating_axis)
         self.radio_bt_vis_type = RadioButtons(ax_radio,
                                               cfg.choices_alignment_comparison_diffusion,
-                                              active=None, activecolor='orange')
+                                              active=0, activecolor='orange')
         for lbl in self.radio_bt_vis_type.labels:
             lbl.set_fontsize(cfg.fontsize_radio_button_align_method_diffusion)
         self.radio_bt_vis_type.on_clicked(self.alignment_callback)
@@ -855,7 +855,13 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def alignment_check(self, label=None):
         """Chooses between the type of alignment check to show"""
 
-        if label is not None:
+        if label in ['None', None]:
+            self.zoom_out_callback(event=None)
+            self.checking_alignment = False
+            self.current_alignment_check = None
+            return  # nothing to do
+        else:
+            self.checking_alignment = True
             self.current_alignment_check = label
 
         if label in ['Align to b0 animate', 'Alignment to b0', 'Align to b0',
@@ -866,7 +872,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         elif label in ['Flip first & last', ]:
             self.flip_first_last()
         else:
-            raise NotImplementedError('alignment check:{} not implemented.')
+            raise NotImplementedError(f'alignment check:{label} not implemented.')
 
 
     def alignment_to_b0(self):
