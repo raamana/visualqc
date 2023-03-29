@@ -72,13 +72,14 @@ source = "vcs"
 version-file = "visualqc/_version.py"
 
 [tool.hatch.build.targets.sdist]
+include = [
+    "/visualqc",
+]
 exclude = [
   "/.github",
   "/docs",
 ]
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/foo"]
 
 [tool.hatch.envs.default]
 dependencies = [
