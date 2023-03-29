@@ -390,9 +390,6 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.subplots_adjust(**cfg.review_area)
         plt.show(block=False)
 
-        # animation setup
-        self.anim_loop = asyncio.get_event_loop()
-
 
     def add_UI(self):
         """Adds the review UI with defaults"""
@@ -511,8 +508,6 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if self.vis_type in ['GIF', 'Animate']:
             self.animate()
         else:
-            # the following isnt immediately effective
-            self.anim_loop.stop()
             self.mix_and_display()
 
         self.fg_annot_h.set_visible(False)
@@ -531,17 +526,15 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def animate(self):
         """Displays the two images alternatively, until paused by external callbacks"""
 
-        self.anim_loop.run_until_complete(self.alternate_images_with_delay_nTimes())
+        asyncio.run(self.alternate_images_with_delay_nTimes())
 
-    @asyncio.coroutine
-    def alternate_images_with_delay_nTimes(self):
+    async def alternate_images_with_delay_nTimes(self):
         """Show image 1, wait, show image 2"""
 
         for _ in range(cfg.num_times_to_animate):
             for img in (self.image_one, self.image_two):
                 self.show_image(img)
-                plt.pause(0.05)
-                time.sleep(self.delay_in_animation)
+                plt.pause(cfg.plotting_pause_interval)
 
     def mix_and_display(self):
         """Static mix and display."""
@@ -613,11 +606,8 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def toggle_animation(self, input_event_to_ignore=None):
         """Callback to start or stop animation."""
 
-        if self.anim_loop.is_running():
-            self.anim_loop.stop()
-        elif self.vis_type in ['GIF', 'Animate']:
-            # run only when the vis_type selected in animatable.
-            self.animate()
+        pass  # doing nothing as there is no way to stop asyncio.run()
+        # users will have to click on animate radio button again to rerun animation
 
 
     def close_UI(self):
@@ -626,9 +616,6 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.fig.canvas.mpl_disconnect(self.con_id_click)
         self.fig.canvas.mpl_disconnect(self.con_id_keybd)
         plt.close('all')
-
-        self.anim_loop.run_until_complete(self.anim_loop.shutdown_asyncgens())
-        self.anim_loop.close()
 
 
 def get_parser():
@@ -687,7 +674,7 @@ def get_parser():
     Specifies the delay in animation of the display of two images (like in a GIF).
 
     Default: {} (units in seconds).
-    \n""".format(cfg.delay_in_animation))
+    \n""".format(cfg.plotting_pause_interval))
 
     help_text_views = textwrap.dedent("""
     Specifies the set of views to display - could be just 1 view, or 2 or all 3.
