@@ -149,7 +149,7 @@ class AlignmentInterface(BaseReviewInterface):
         "Resets the figure to prepare it for display of next subject."
 
         self.clear_data()
-        self.clear_radio_buttons()
+        self.clear_rating_radio_buttons()
         self.clear_notes_annot()
 
 
@@ -163,7 +163,7 @@ class AlignmentInterface(BaseReviewInterface):
             self.data_handles = list()
 
 
-    def clear_radio_buttons(self):
+    def clear_rating_radio_buttons(self):
         """Clears the radio button"""
 
         # enabling default rating encourages lazy advancing without review
