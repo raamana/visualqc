@@ -1200,7 +1200,7 @@ def _rescale_over_gradients(matrix):
     min_tile = np.tile(min_, (matrix.shape[1], 1)).T
     range_tile = np.tile(range_, (matrix.shape[1], 1)).T
     # avoiding any numerical difficulties
-    range_tile[range_tile < np.finfo(np.float).eps] = 1.0
+    range_tile[range_tile < np.finfo(np.double).eps] = 1.0
 
     normed = (matrix - min_tile) / range_tile
 

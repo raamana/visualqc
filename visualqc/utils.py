@@ -963,7 +963,7 @@ def run_common_utils_before_starting():
 def check_time(time_interval, var_name='time interval'):
     """Util to ensure the time value specified is non-zero and finite"""
 
-    time_interval = np.float(time_interval)
+    time_interval = float(time_interval)
     if not np.isfinite(time_interval) or np.isclose(time_interval, 0.0):
         raise ValueError('Value of {} must be > 0 and be finite.'.format(var_name))
 
