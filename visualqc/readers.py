@@ -287,21 +287,6 @@ def anatomical_traverse_bids(bids_layout,
     return files_by_id
 
 
-def find_anatomical_images_in_BIDS(bids_dir):
-    """Traverses the BIDS structure to find all the relevant anatomical images."""
-
-    from bids import BIDSLayout
-    bids_layout = BIDSLayout(bids_dir)
-    images = anatomical_traverse_bids(bids_layout)
-    # file name of each scan is the unique identifier,
-    #   as it essentially contains all the key info.
-    images_by_id = {basename(sub_data['image']): sub_data
-                    for _, sub_data in images.items()}
-    id_list = np.array(list(images_by_id.keys()))
-
-    return id_list, images_by_id
-
-
 def func_mri_traverse_bids(bids_layout,
                            modalities='func',
                            subjects=None,

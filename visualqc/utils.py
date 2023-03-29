@@ -696,6 +696,34 @@ def check_bids_dir(dir_path):
     return in_dir, dir_type
 
 
+def process_bids_dir(in_dir, traverse_func):
+    """processes a BIDS directory given a method to traverse it!"""
+
+    import bids
+    from bids import BIDSLayout
+    from packaging.version import Version
+    if Version(bids.__version__) < Version("0.14"):
+        bids.config.set_option("extension_initial_dot", True)
+
+    bids_layout = BIDSLayout(in_dir)
+    units = traverse_func(bids_layout)
+
+    if units is None or len(units) < 1:
+        print('No valid subjects are found! Exiting.\n'
+              'Double check the format and integrity of the dataset '
+              'if this is unexpected.')
+        import sys
+        sys.exit(1)
+
+    # file name of each scan is the unique identifier,
+    #   as it essentially contains all the key info.
+    unit_by_id = {basename(sub_data['image']): sub_data
+                  for _, sub_data in units.items()}
+    id_list = np.array(list(unit_by_id.keys()))
+
+    return units, unit_by_id, id_list
+
+
 def freesurfer_installed():
     """Checks whether Freesurfer is installed."""
 

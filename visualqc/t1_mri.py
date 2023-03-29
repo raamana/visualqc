@@ -20,7 +20,6 @@ from mrivis.utils import crop_image
 from visualqc import config as cfg
 from visualqc.image_utils import mask_image
 from visualqc.interfaces import BaseReviewInterface
-from visualqc.readers import find_anatomical_images_in_BIDS
 from visualqc.utils import (check_bids_dir, check_finite_int, check_id_list,
                             check_input_dir_T1, check_numerical_limits,
                             check_out_dir, check_outlier_params, check_views,
