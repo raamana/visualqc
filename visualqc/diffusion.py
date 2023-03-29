@@ -453,23 +453,9 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.feature_extractor = diffusion_mri_features
 
         if 'BIDS' in self.in_dir_type.upper():
-            from bids import BIDSLayout, config as bids_config
-            bids_config.set_option('extension_initial_dot', True)
-            self.bids_layout = BIDSLayout(self.in_dir)
-            self.units = diffusion_traverse_bids(self.bids_layout)
-
-            if self.units is None or len(self.units) < 1:
-                print('No valid subjects are found! Exiting.\n'
-                      'Double check the format and integrity of the dataset '
-                      'if this is unexpected.')
-                import sys
-                sys.exit(1)
-
-            # file name of each scan is the unique identifier,
-            #   as it essentially contains all the key info.
-            self.unit_by_id = {basename(sub_data['image']): sub_data
-                               for _, sub_data in self.units.items()}
-            self.id_list = list(self.unit_by_id.keys())
+            from visualqc.utils import process_bids_dir
+            self.units, self.unit_by_id, self.id_list = process_bids_dir(
+                self.in_dir, diffusion_traverse_bids)
         else:
             raise NotImplementedError('Only the BIDS format is supported for now!')
 

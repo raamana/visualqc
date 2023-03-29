@@ -841,7 +841,9 @@ def make_workflow_from_user_options():
     if in_dir_type.upper() in ('BIDS',):
         mri_name = None
         in_dir, bids_dir_type = check_bids_dir(in_dir)
-        id_list, images_for_id = find_anatomical_images_in_BIDS(in_dir)
+        from visualqc.utils import process_bids_dir
+        from visualqc.readers import anatomical_traverse_bids
+        _, images_for_id, id_list = process_bids_dir(in_dir, anatomical_traverse_bids)
     else:
         mri_name = user_args.mri_name
         id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type,
