@@ -4,3 +4,9 @@ white-space: normal !important;
 .wy-table-responsive {
 overflow: visible !important;
 }
+
+
+img{
+    width:100%;
+    max-width:1200px;
+}

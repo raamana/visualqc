@@ -37,7 +37,7 @@ sys.path.insert(0, os.path.abspath('visualqc'))
 
 
 import visualqc
-import sphinx_rtd_theme
+
 # -- General configuration ---------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -123,10 +123,14 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-# html_theme = 'alabaster'
-html_theme = "sphinx_rtd_theme"
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+# html_theme_name = 'alabaster'
+# html_theme_name = "sphinx_rtd_theme"
+# html_theme_name = "sphinx-bernard-theme"
 
+import importlib
+# html_theme = importlib.import_module(html_theme_name)
+# html_theme_path = [html_theme.get_html_theme_path()]
+html_theme = 'sizzle'
 
 # Theme options are theme-specific and customize the look and feel of a
 # theme further.  For a list of options available for each theme, see the
@@ -158,7 +162,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # static files, so a file named "default.css" will overwrite the builtin
 # "default.css".
 
-html_static_path = ['_static']
+html_static_path = ['../_static']
 
 html_context = {
     'css_files': [
@@ -166,6 +170,8 @@ html_context = {
         ],
      }
 
+def setup(app):
+   app.add_css_file("custom.css")
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page
 # bottom, using the given strftime format.
