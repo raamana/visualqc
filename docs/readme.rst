@@ -15,8 +15,8 @@ VisualQC
 VisualQC : assistive tool to improve the quality control workflow of neuroimaging data.
 
 .. image:: vqc_logo_small.png
-    :height: 200
-    :align: center
+    :height: 250
+    :align: left
 
 Assessing and assuring the quality of imaging data, be it an raw acquisition (fMRI run or T1w MRI) or an automatic segmentation (be it gray or white surfaces for cortical thickness, or a subcortical segmentation) requires visual inspection manually. Not just one slice. Or one view. But many slices in all the views to ensure the 3d segmentation is accurate at the voxel-level. Often, looking at raw data is not sufficient to spot subtle errors, wherein statistical measurements (across space or time) assist greatly in rating the quality of image or severity of artefacts spotted.
 
