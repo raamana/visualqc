@@ -26,17 +26,21 @@ Volumetric segmentation QC (contours):
 
 .. image:: vis/screenshots/id_001_labels_contour_screenshot_VQC.png
 
+------------
 
 Volumetric segmentation QC (filled labels):
 
 .. image:: vis/screenshots/id_002_labels_volumetric_screenshot_VQC.png
 
+------------
 
 Diffusion MRI:
 
 .. image:: vis/screenshots/sub-01_dwi.nii.gz_diffusion_mri_screenshot_VQC.png
 
+------------
 
 Functional MRI:
 
 .. image:: vis/screenshots/sub-02_task-linebisection_bold.nii_func_mri_screenshot_VQC.png
+    :width: 800
