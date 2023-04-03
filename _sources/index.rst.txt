@@ -38,7 +38,7 @@ Contents:
    contributing
    citation
    authors
-   history
+
 
 Indices and tables
 ==================
