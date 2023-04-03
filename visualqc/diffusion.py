@@ -141,7 +141,7 @@ class DiffusionMRIInterface(BaseReviewInterface):
                             facecolor=cfg.color_rating_axis)
         self.radio_bt_vis_type = RadioButtons(ax_radio,
                                               cfg.choices_alignment_comparison_diffusion,
-                                              active=None, activecolor='orange')
+                                              active=0, activecolor='orange')
         for lbl in self.radio_bt_vis_type.labels:
             lbl.set_fontsize(cfg.fontsize_radio_button_align_method_diffusion)
         self.radio_bt_vis_type.on_clicked(self.alignment_callback)
@@ -153,12 +153,12 @@ class DiffusionMRIInterface(BaseReviewInterface):
 
 
     def add_process_options(self):
-        """redefining it to void it's actions intended for T1w MRI interface"""
+        """redefining it to void its actions intended for T1w MRI interface"""
         pass
 
 
     def maximize_axis(self, ax):
-        """zooms a given axes"""
+        """zooms a given axis"""
 
         if not self.nested_zoomed_in:
             self.prev_ax_pos = ax.get_position()
@@ -453,23 +453,9 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.feature_extractor = diffusion_mri_features
 
         if 'BIDS' in self.in_dir_type.upper():
-            from bids import BIDSLayout, config as bids_config
-            bids_config.set_option('extension_initial_dot', True)
-            self.bids_layout = BIDSLayout(self.in_dir)
-            self.units = diffusion_traverse_bids(self.bids_layout)
-
-            if self.units is None or len(self.units) < 1:
-                print('No valid subjects are found! Exiting.\n'
-                      'Double check the format and integrity of the dataset '
-                      'if this is unexpected.')
-                import sys
-                sys.exit(1)
-
-            # file name of each scan is the unique identifier,
-            #   as it essentially contains all the key info.
-            self.unit_by_id = {basename(sub_data['image']): sub_data
-                               for _, sub_data in self.units.items()}
-            self.id_list = list(self.unit_by_id.keys())
+            from visualqc.utils import process_bids_dir
+            self.units, self.unit_by_id, self.id_list = process_bids_dir(
+                self.in_dir, diffusion_traverse_bids)
         else:
             raise NotImplementedError('Only the BIDS format is supported for now!')
 
@@ -582,8 +568,6 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.subplots_adjust(**cfg.review_area)
         plt.show(block=False)
 
-        self.anim_loop = asyncio.get_event_loop()
-
 
     def add_UI(self):
         """Adds the review UI with defaults"""
@@ -667,7 +651,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         try:
             hdr = nib.load(img_path)
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
-            self.img_this_unit_raw = self.hdr_this_unit.get_data()
+            self.img_this_unit_raw = self.hdr_this_unit.get_fdata()
 
             num_dwi_volumes = self.img_this_unit_raw.shape[-1]
             if (not pexists(bval_path)) or (bval_path.lower() == 'assume_first'):
@@ -800,11 +784,10 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def animate_through_gradients(self):
         """Loops through all gradients, in mulitslice view, to help spot artefacts"""
 
-        self.anim_loop.run_until_complete(self._animate_through_gradients())
+        asyncio.run(self._animate_through_gradients())
 
 
-    @asyncio.coroutine
-    def _animate_through_gradients(self):
+    async def _animate_through_gradients(self):
         """Show image 1, wait, show image 2"""
 
         # fixing the same slices for all gradients
@@ -813,8 +796,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         for grad_idx in range(self.num_gradients):
             self.show_3dimage(self.dw_volumes[:, :, :, grad_idx].squeeze(),
                               slices=slices, annot='gradient {}'.format(grad_idx))
-            plt.pause(0.05)
-            time.sleep(self.delay_in_animation)
+            plt.pause(cfg.plotting_pause_interval)
 
 
     def flip_first_last(self):
@@ -827,13 +809,13 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def flip_between_two(self, index_one, index_two, first_index_in_b0=False):
         """Flips between first and last volume to identify any pulsation artefacts"""
 
-        self.anim_loop.run_until_complete(
+        asyncio.run(
             self._flip_between_two_nTimes(index_one, index_two,
                                           first_index_in_b0=first_index_in_b0))
 
 
-    @asyncio.coroutine
-    def _flip_between_two_nTimes(self, index_one, index_two, first_index_in_b0=False):
+    async def _flip_between_two_nTimes(self, index_one, index_two,
+                                       first_index_in_b0=False):
         """Show first, wait, show last, repeat"""
 
         if first_index_in_b0:
@@ -853,14 +835,19 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             for img, txt in ((_first_vol, _id_first),
                              (_second_vol, _id_second)):
                 self.show_3dimage(img, txt)
-                plt.pause(0.05)
-                time.sleep(self.delay_in_animation)
+                plt.pause(cfg.plotting_pause_interval)
 
 
     def alignment_check(self, label=None):
         """Chooses between the type of alignment check to show"""
 
-        if label is not None:
+        if label in ['None', None]:
+            self.zoom_out_callback(event=None)
+            self.checking_alignment = False
+            self.current_alignment_check = None
+            return  # nothing to do
+        else:
+            self.checking_alignment = True
             self.current_alignment_check = label
 
         if label in ['Align to b0 animate', 'Alignment to b0', 'Align to b0',
@@ -871,7 +858,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         elif label in ['Flip first & last', ]:
             self.flip_first_last()
         else:
-            raise NotImplementedError('alignment check:{} not implemented.')
+            raise NotImplementedError(f'alignment check:{label} not implemented.')
 
 
     def alignment_to_b0(self):
@@ -907,10 +894,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
 
     def stop_animation(self):
-        # TODO this not working - run_until_complete() is likely the reason
-        # call_soon does not start animation right away or at all
-        if self.anim_loop.is_running():
-            self.anim_loop.stop()
+
+        pass
 
 
     def show_next(self):
@@ -1153,9 +1138,6 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.fig.canvas.mpl_disconnect(cid)
         plt.close('all')
 
-        self.anim_loop.run_until_complete(self.anim_loop.shutdown_asyncgens())
-        self.anim_loop.close()
-
 
 def pis_map(diffn_img, index_low_b_val, index_high_b_val):
     """
@@ -1218,7 +1200,7 @@ def _rescale_over_gradients(matrix):
     min_tile = np.tile(min_, (matrix.shape[1], 1)).T
     range_tile = np.tile(range_, (matrix.shape[1], 1)).T
     # avoiding any numerical difficulties
-    range_tile[range_tile < np.finfo(np.float).eps] = 1.0
+    range_tile[range_tile < np.finfo(np.double).eps] = 1.0
 
     normed = (matrix - min_tile) / range_tile
 

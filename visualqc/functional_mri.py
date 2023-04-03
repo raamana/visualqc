@@ -170,9 +170,9 @@ class FunctionalMRIInterface(BaseReviewInterface):
 
 
     def maximize_axis(self, ax):
-        """zooms a given axes"""
+        """zooms a given axis"""  # noqa
 
-        if not self.nested_zoomed_in:
+        if not self.nested_zoomed_in:  # noqa
             self.prev_ax_pos = ax.get_position()
             self.prev_ax_zorder = ax.get_zorder()
             self.prev_ax_alpha = ax.get_alpha()
@@ -421,25 +421,9 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.feature_extractor = functional_mri_features
 
         if 'BIDS' in self.in_dir_type.upper():
-            from bids import BIDSLayout, config as bids_config
-            bids_config.set_option('extension_initial_dot', True)
-            self.bids_layout = BIDSLayout(self.in_dir)
-            self.units = func_mri_traverse_bids(self.bids_layout,
-                                                **cfg.func_mri_BIDS_filters)
-
-            if self.units is None or len(self.units) < 1:
-                print('No valid subjects are found! Exiting.\n'
-                      'Double check the format and integrity of the dataset '
-                      'if this is unexpected.')
-                import sys
-                sys.exit(1)
-
-            # file name of each BOLD scan is the unique identifier,
-            #   as it essentially contains all the key info.
-            self.unit_by_id = {basename(sub_data['image']): sub_data
-                               for _, sub_data in self.units.items()}
-            self.id_list = list(self.unit_by_id.keys())
-
+            from visualqc.utils import process_bids_dir
+            self.units, self.unit_by_id, self.id_list = process_bids_dir(
+                self.in_dir, func_mri_traverse_bids)
         elif 'GENERIC' in self.in_dir_type.upper():
             if self.id_list is None or self.images_for_id is None:
                 raise ValueError('id_list or images_for_id can not be None '
@@ -624,7 +608,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         try:
             hdr = nib.load(img_path)
             self.hdr_this_unit = nib.as_closest_canonical(hdr)
-            self.img_this_unit_raw = self.hdr_this_unit.get_data()
+            self.img_this_unit_raw = self.hdr_this_unit.get_fdata()
         except Exception as exc:
             print(exc)
             print('Unable to read image at \n\t{}'.format(img_path))
@@ -934,7 +918,7 @@ def _rescale_over_time(matrix):
     min_tile = np.tile(min_, (matrix.shape[1], 1)).T
     range_tile = np.tile(range_, (matrix.shape[1], 1)).T
     # avoiding any numerical difficulties
-    range_tile[range_tile < np.finfo(np.float).eps] = 1.0
+    range_tile[range_tile < np.finfo(np.double).eps] = 1.0
 
     normed = (matrix - min_tile) / range_tile
 
@@ -944,7 +928,7 @@ def _rescale_over_time(matrix):
 
 
 def _within_frame_rescale(matrix):
-    """Rescaling within a given grame"""
+    """Rescaling within a given frame"""
 
     min_colwise = matrix.min(axis=0)
     range_colwise = matrix.ptp(axis=0)  # ptp : peak to peak, max-min
@@ -1013,11 +997,15 @@ def get_parser():
     \n""".format(cfg.default_out_dir_name))
 
     help_text_no_preproc = textwrap.dedent("""
-    Whether to apply basic preprocessing steps (detrend, slice timing correction etc), before building the carpet image.
+    Whether to apply basic preprocessing steps (detrending etc), before building the
+    carpet image. Check
+    https://nilearn.github.io/stable/modules/generated/nilearn.signal.clean.html
+    for more details.
 
     If the images are already preprocessed elsewhere, use this flag ``--no_preproc``
 
-    Default is to apply minimal preprocessing (detrending etc) before showing images for review.
+    Default is to apply minimal preprocessing (detrend, low- and high-pass
+    butterworth filter) before showing images for review.
     \n""")
 
     help_text_views = textwrap.dedent("""
@@ -1099,8 +1087,9 @@ def get_parser():
     preproc = parser.add_argument_group('Preprocessing',
                                          'options related to preprocessing before review')
 
-    preproc.add_argument("-np", "--no_preproc", action="store_true", dest="no_preproc",
-                          required=False, help=help_text_no_preproc)
+    preproc.add_argument("-np", "--no_preproc",
+                         action="store_true", dest="no_preproc",
+                         required=False, help=help_text_no_preproc)
 
     outliers = parser.add_argument_group('Outlier detection',
                                          'options related to automatically detecting possible outliers')
@@ -1187,7 +1176,16 @@ def make_workflow_from_user_options():
                          'not both.')
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
+
     no_preproc = user_args.no_preproc
+    if not no_preproc:
+        try:
+            from nilearn.signal import clean
+        except ImportError:
+            raise ImportError('nilearn is required for fMRI preprocessing. '
+                              'Install nilearn before running VisualQC for fMRI. '
+                              'It is not required if you are not applying any '
+                              'preprocessing, or you preprocessed them elsewhere.')
 
     views = check_views(user_args.views)
     num_slices_per_view, num_rows_per_view = check_finite_int(user_args.num_slices,

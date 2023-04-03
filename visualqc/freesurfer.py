@@ -39,6 +39,7 @@ from visualqc.workflows import BaseWorkflowVisualQC
 
 next_click = time.monotonic()
 
+
 class FreesurferReviewInterface(BaseReviewInterface):
     """Custom interface for rating the quality of Freesurfer parcellation."""
 
@@ -73,10 +74,12 @@ class FreesurferReviewInterface(BaseReviewInterface):
 
     def add_radio_buttons(self):
 
-        ax_radio = plt.axes(cfg.position_radio_buttons,
+        ax_radio = plt.axes(cfg.position_radio_buttons,  # noqa
                             facecolor=cfg.color_rating_axis, aspect='equal')
-        self.radio_bt_rating = RadioButtons(ax_radio, self.rating_list,
-                                            active=None, activecolor='orange')
+        self.radio_bt_rating = RadioButtons(
+            ax_radio, self.rating_list,
+            active=self.rating_list.index(cfg.freesurfer_default_rating),
+            activecolor='orange')
         self.radio_bt_rating.on_clicked(self.save_rating)
         for txt_lbl in self.radio_bt_rating.labels:
             txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
@@ -532,14 +535,15 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # to update thickness histogram, you need access to full FS output or aparc.stats
         try:
-            distribution_to_show = read_aparc_stats_wholebrain(self.in_dir, self.current_unit_id,
-                                                   subset=(cfg.statistic_in_histogram_freesurfer,))
+            distr_to_show = read_aparc_stats_wholebrain(
+                self.in_dir, self.current_unit_id,
+                subset=(cfg.statistic_in_histogram_freesurfer,))
         except:
             # do nothing
             return
 
-        # number of vertices is too high - so presenting mean ROI thickness is smarter!
-        _, _, patches_hist = self.ax_hist.hist(distribution_to_show, density=True,
+        # number of vertices is too high - so showing mean ROI thickness is smarter!
+        _, _, patches_hist = self.ax_hist.hist(distr_to_show, density=True,
                                                bins=cfg.num_bins_histogram_display)
         self.ax_hist.set_xlim(cfg.xlim_histogram_freesurfer)
         self.ax_hist.relim(visible_only=True)
@@ -565,8 +569,8 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if flagged_as_outlier:
             alerts_list = self.by_sample.get(self.current_unit_id,
                                              None)  # None, if id not in dict
-            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'.format(
-                '\t'.join(alerts_list)))
+            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'
+                  ''.format('\t'.join(alerts_list)))
 
             strings_to_show = ['Flagged as an outlier:', ] + alerts_list
             self.current_alert_msg = '\n'.join(strings_to_show)
@@ -591,7 +595,8 @@ class FreesurferRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         skip_subject = False
         if self.vis_type in ('cortical_volumetric', 'cortical_contour'):
-            temp_seg_uncropped, roi_set_is_empty = void_subcortical_symmetrize_cortical(temp_fs_seg)
+            temp_seg_uncropped, roi_set_is_empty = \
+                void_subcortical_symmetrize_cortical(temp_fs_seg)
         elif self.vis_type in ('labels_volumetric', 'labels_contour'):
             if self.label_set is not None:
                 # TODO same colors for same labels is not guaranteed
@@ -850,7 +855,8 @@ def run_tksurfer_script(fs_dir, subject_id, hemi, script_file):
     try:
         cmd_args = ['tksurfer', '-sdir', fs_dir, subject_id, hemi, 'pial',
                     '-tcl', script_file]
-        txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
+        txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT,
+                               universal_newlines=True)
     except subprocess.CalledProcessError as tksurfer_exc:
         exit_code = tksurfer_exc.returncode
         txt_out = tksurfer_exc.output
@@ -867,7 +873,8 @@ def run_freeview_script(script_file):
 
     try:
         cmd_args = ['freeview', '--command', script_file]
-        txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT, universal_newlines=True)
+        txt_out = check_output(cmd_args, shell=False, stderr=subprocess.STDOUT,
+                               universal_newlines=True)
     except subprocess.CalledProcessError as tksurfer_exc:
         exit_code = tksurfer_exc.returncode
         txt_out = tksurfer_exc.output

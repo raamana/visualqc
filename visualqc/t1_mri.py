@@ -20,7 +20,6 @@ from mrivis.utils import crop_image
 from visualqc import config as cfg
 from visualqc.image_utils import mask_image
 from visualqc.interfaces import BaseReviewInterface
-from visualqc.readers import find_anatomical_images_in_BIDS
 from visualqc.utils import (check_bids_dir, check_finite_int, check_id_list,
                             check_input_dir_T1, check_numerical_limits,
                             check_out_dir, check_outlier_params, check_views,
@@ -109,9 +108,11 @@ class T1MriInterface(BaseReviewInterface):
 
         ax_radio = plt.axes(cfg.position_radio_bt_t1_mri,
                             facecolor=cfg.color_rating_axis)
-        self.radio_bt_vis_type = RadioButtons(ax_radio,
-                                              cfg.processing_choices_t1_mri,
-                                              active=None, activecolor='orange')
+        self.radio_bt_vis_type = RadioButtons(  # noqa
+            ax_radio, cfg.processing_choices_t1_mri,
+            active=cfg.processing_choices_t1_mri
+            .index(cfg.default_processing_choice_t1_mri),
+            activecolor='orange')
         self.radio_bt_vis_type.on_clicked(self.processing_choice_callback)
         for txt_lbl in self.radio_bt_vis_type.labels:
             txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
@@ -839,7 +840,9 @@ def make_workflow_from_user_options():
     if in_dir_type.upper() in ('BIDS',):
         mri_name = None
         in_dir, bids_dir_type = check_bids_dir(in_dir)
-        id_list, images_for_id = find_anatomical_images_in_BIDS(in_dir)
+        from visualqc.utils import process_bids_dir
+        from visualqc.readers import anatomical_traverse_bids
+        _, images_for_id, id_list = process_bids_dir(in_dir, anatomical_traverse_bids)
     else:
         mri_name = user_args.mri_name
         id_list, images_for_id = check_id_list(user_args.id_list, in_dir, vis_type,

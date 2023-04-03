@@ -95,8 +95,9 @@ class DefacingInterface(BaseReviewInterface):
 
         ax_radio = plt.axes(cfg.position_radio_bt_t1_mri,
                             facecolor=cfg.color_rating_axis)
-        self.radio_bt_vis_type = RadioButtons(ax_radio, cfg.vis_choices_defacing,
-                                              active=None, activecolor='orange')
+        self.radio_bt_vis_type = RadioButtons(
+            ax_radio, cfg.vis_choices_defacing,
+            active=1, activecolor='orange')
         self.radio_bt_vis_type.on_clicked(self.processing_choice_callback)
         for txt_lbl in self.radio_bt_vis_type.labels:
             txt_lbl.set(color=cfg.text_option_color, fontweight='normal')

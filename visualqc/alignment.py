@@ -39,8 +39,10 @@ from visualqc.image_utils import (overlay_edges, mix_color, diff_image,
 # each rating is a set of labels, join them with a plus delimiter
 _plus_join = lambda label_set: '+'.join(label_set)
 
+
 def mask_below_perc(img):
     """returns a mask of pixels below a percentile value"""
+
     # return img <= np.max(img)/10
     return img <= np.percentile(img, cfg.weak_edge_threshold)
 
@@ -58,6 +60,7 @@ class AlignmentInterface(BaseReviewInterface):
                  toggle_animation_callback=None,
                  show_first_image_callback=None,
                  show_second_image_callback=None,
+                 vis_type_to_highlight=cfg.alignment_default_vis_type,
                  alpha_seg=cfg.default_alpha_seg):
         """Constructor"""
 
@@ -77,19 +80,25 @@ class AlignmentInterface(BaseReviewInterface):
         self.show_first_image_callback = show_first_image_callback
         self.show_second_image_callback = show_second_image_callback
 
+        # below call selects a button although user hasn't clicked on it yet
         self.add_radio_buttons_rating()
-        self.add_radio_buttons_comparison_method()
+        # hence clearing the selected button, to force user to click on them
+        self.clear_rating_radio_buttons()
+        self.add_radio_buttons_comparison_method(vis_type_to_highlight)
 
         self.unzoomable_axes = [self.radio_bt_rating.ax, self.radio_bt_vis_type.ax,
                                 self.text_box.ax, self.bt_next.ax, self.bt_quit.ax, ]
 
 
-    def add_radio_buttons_comparison_method(self):
+    def add_radio_buttons_comparison_method(self, vis_type_to_highlight):
 
         ax_radio = plt.axes(cfg.position_alignment_radio_button_method,
                             facecolor=cfg.color_rating_axis, aspect='equal')
-        self.radio_bt_vis_type = RadioButtons(ax_radio, cfg.alignment_comparison_choices,
-                                              active=None, activecolor='orange')
+        vis_type_choices = list(cfg.alignment_comparison_choices)
+        self.radio_bt_vis_type = RadioButtons(
+            ax_radio, vis_type_choices,
+            active=vis_type_choices.index(vis_type_to_highlight),
+            activecolor='orange')
         self.radio_bt_vis_type.on_clicked(self.change_vis_type_callback)
         for txt_lbl in self.radio_bt_vis_type.labels:
             txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
@@ -100,10 +109,12 @@ class AlignmentInterface(BaseReviewInterface):
 
     def add_radio_buttons_rating(self):
 
-        ax_radio = plt.axes(cfg.position_alignment_radio_button_rating,
+        ax_radio = plt.axes(cfg.position_alignment_radio_button_rating,  # noqa
                             facecolor=cfg.color_rating_axis, aspect='equal')
-        self.radio_bt_rating = RadioButtons(ax_radio, self.rating_list,
-                                            active=None, activecolor='orange')
+        self.radio_bt_rating = RadioButtons(
+            ax_radio, self.rating_list,
+            active=self.rating_list.index(cfg.freesurfer_default_rating),
+            activecolor='orange')
         self.radio_bt_rating.on_clicked(self.save_rating)
         for txt_lbl in self.radio_bt_rating.labels:
             txt_lbl.set(color=cfg.text_option_color, fontweight='normal')
@@ -140,7 +151,7 @@ class AlignmentInterface(BaseReviewInterface):
         "Resets the figure to prepare it for display of next subject."
 
         self.clear_data()
-        self.clear_radio_buttons()
+        self.clear_rating_radio_buttons()
         self.clear_notes_annot()
 
 
@@ -154,7 +165,7 @@ class AlignmentInterface(BaseReviewInterface):
             self.data_handles = list()
 
 
-    def clear_radio_buttons(self):
+    def clear_rating_radio_buttons(self):
         """Clears the radio button"""
 
         # enabling default rating encourages lazy advancing without review
@@ -326,7 +337,7 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def init_layout(self, views, num_rows_per_view,
                     num_slices_per_view, padding=cfg.default_padding):
 
-        self.views = views
+        self.views = views  # noqa
         self.num_slices_per_view = num_slices_per_view
         self.num_rows_per_view = num_rows_per_view
         self.num_rows = len(self.views) * self.num_rows_per_view
@@ -381,20 +392,20 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         plt.subplots_adjust(**cfg.review_area)
         plt.show(block=False)
 
-        # animation setup
-        self.anim_loop = asyncio.get_event_loop()
-
 
     def add_UI(self):
         """Adds the review UI with defaults"""
 
-        self.UI = AlignmentInterface(self.fig, self.issue_list,
-                                     next_button_callback=self.next,
-                                     quit_button_callback=self.quit,
-                                     change_vis_type_callback=self.callback_display_update,
-                                     toggle_animation_callback=self.toggle_animation,
-                                     show_first_image_callback=self.show_first_image,
-                                     show_second_image_callback=self.show_second_image)
+        self.UI = AlignmentInterface(
+            self.fig,
+            self.issue_list,
+            next_button_callback=self.next,
+            quit_button_callback=self.quit,
+            change_vis_type_callback=self.callback_display_update,
+            toggle_animation_callback=self.toggle_animation,
+            show_first_image_callback=self.show_first_image,
+            show_second_image_callback=self.show_second_image,
+            vis_type_to_highlight=self.vis_type)
 
         # connecting callbacks
         self.con_id_click = self.fig.canvas.mpl_connect('button_press_event',
@@ -499,8 +510,6 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if self.vis_type in ['GIF', 'Animate']:
             self.animate()
         else:
-            # the following isnt immediately effective
-            self.anim_loop.stop()
             self.mix_and_display()
 
         self.fg_annot_h.set_visible(False)
@@ -519,17 +528,15 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def animate(self):
         """Displays the two images alternatively, until paused by external callbacks"""
 
-        self.anim_loop.run_until_complete(self.alternate_images_with_delay_nTimes())
+        asyncio.run(self.alternate_images_with_delay_nTimes())
 
-    @asyncio.coroutine
-    def alternate_images_with_delay_nTimes(self):
+    async def alternate_images_with_delay_nTimes(self):
         """Show image 1, wait, show image 2"""
 
         for _ in range(cfg.num_times_to_animate):
             for img in (self.image_one, self.image_two):
                 self.show_image(img)
-                plt.pause(0.05)
-                time.sleep(self.delay_in_animation)
+                plt.pause(cfg.plotting_pause_interval)
 
     def mix_and_display(self):
         """Static mix and display."""
@@ -601,11 +608,8 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def toggle_animation(self, input_event_to_ignore=None):
         """Callback to start or stop animation."""
 
-        if self.anim_loop.is_running():
-            self.anim_loop.stop()
-        elif self.vis_type in ['GIF', 'Animate']:
-            # run only when the vis_type selected in animatable.
-            self.animate()
+        pass  # doing nothing as there is no way to stop asyncio.run()
+        # users will have to click on animate radio button again to rerun animation
 
 
     def close_UI(self):
@@ -614,9 +618,6 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.fig.canvas.mpl_disconnect(self.con_id_click)
         self.fig.canvas.mpl_disconnect(self.con_id_keybd)
         plt.close('all')
-
-        self.anim_loop.run_until_complete(self.anim_loop.shutdown_asyncgens())
-        self.anim_loop.close()
 
 
 def get_parser():
@@ -665,7 +666,7 @@ def get_parser():
     \n""".format(cfg.default_out_dir_name))
 
     help_text_vis_type = textwrap.dedent("""
-    Specifies the visualiztion type to start with. You can change this via radio
+    Specifies the visualization type to start with. You can change this via radio
     buttons as you go along.
 
     Default: {}.
@@ -675,7 +676,7 @@ def get_parser():
     Specifies the delay in animation of the display of two images (like in a GIF).
 
     Default: {} (units in seconds).
-    \n""".format(cfg.delay_in_animation))
+    \n""".format(cfg.plotting_pause_interval))
 
     help_text_views = textwrap.dedent("""
     Specifies the set of views to display - could be just 1 view, or 2 or all 3.

@@ -310,8 +310,9 @@ diffusion_mri_BIDS_filters = dict(modalities='dwi', types='dwi')
 # not important here, just for display, doing it anyways.
 scale_factor_diffusion = 1000
 
-delay_in_animation_diffusion_mri = 0.3
+delay_in_animation_diffusion_mri = 0.1
 num_times_to_animate_diffusion_mri = 4
+plotting_pause_interval = 0.6  # 0.05 didn't seem to work
 
 alpha_stats_overlay_diffusion = 0.5
 linewidth_stats_diffusion = 2
@@ -326,7 +327,8 @@ default_name_pattern_diffusion = '*.nii'
 diffusion_mri_features_OLD = ('dvars',)
 colormap_stdev_diffusion = 'seismic'
 
-choices_alignment_comparison_diffusion = ('Animate all',
+choices_alignment_comparison_diffusion = ('None',
+                                          'Animate all',
                                           'Flip first & last',
                                           'Align to b0 animate',
                                           'Align to b0 edges')
@@ -352,7 +354,7 @@ alignment_cmap = OrderedDict(Animate='gray',
                              Edges_Thinner=None,
                              Edges_Diffused=None,
                              Color_mix=None)
-alignment_comparison_choices = set(alignment_cmap.keys())
+alignment_comparison_choices = set(sorted(alignment_cmap.keys()))
 alignment_screenshot_vis_types = alignment_comparison_choices - {'Animate', }
 alignment_default_vis_type = 'Edges_Thinner'
 

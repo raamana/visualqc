@@ -31,7 +31,7 @@ def read_image(img_spec,
             # trying to stick to an orientation
             if reorient_canonical:
                 init_obj = nib.as_closest_canonical(init_obj)
-            img = init_obj.get_data()
+            img = init_obj.get_fdata()
         else:
             raise IOError('Given path to {} does not exist!\n\t{}'
                           ''.format(error_msg, img_spec))
@@ -696,6 +696,34 @@ def check_bids_dir(dir_path):
     return in_dir, dir_type
 
 
+def process_bids_dir(in_dir, traverse_func):
+    """processes a BIDS directory given a method to traverse it!"""
+
+    import bids
+    from bids import BIDSLayout
+    from packaging.version import Version
+    if Version(bids.__version__) < Version("0.14"):
+        bids.config.set_option("extension_initial_dot", True)
+
+    bids_layout = BIDSLayout(in_dir)
+    units = traverse_func(bids_layout)
+
+    if units is None or len(units) < 1:
+        print('No valid subjects are found! Exiting.\n'
+              'Double check the format and integrity of the dataset '
+              'if this is unexpected.')
+        import sys
+        sys.exit(1)
+
+    # file name of each scan is the unique identifier,
+    #   as it essentially contains all the key info.
+    unit_by_id = {basename(sub_data['image']): sub_data
+                  for _, sub_data in units.items()}
+    id_list = np.array(list(unit_by_id.keys()))
+
+    return units, unit_by_id, id_list
+
+
 def freesurfer_installed():
     """Checks whether Freesurfer is installed."""
 
@@ -935,7 +963,7 @@ def run_common_utils_before_starting():
 def check_time(time_interval, var_name='time interval'):
     """Util to ensure the time value specified is non-zero and finite"""
 
-    time_interval = np.float(time_interval)
+    time_interval = float(time_interval)
     if not np.isfinite(time_interval) or np.isclose(time_interval, 0.0):
         raise ValueError('Value of {} must be > 0 and be finite.'.format(var_name))
 
@@ -1200,8 +1228,13 @@ def print_platform_version_info():
     print('platform {}\n{}\n\n'.format(platform.platform(), platform.version()))
 
 
-def remove_matplotlib_axes(mpl_objects):
-    """Calls the .ax.remove() method on all the objects"""
+def remove_matplotlib_axes(mpl_artists):
+    """Calls the .ax.remove() method on all the objects,
+        after disconnecting events linked to them
+    """
 
-    for artist in mpl_objects:
+    for artist in mpl_artists:
+        # All subclasses of AxesWidget will have a disconnect_events() method
+        if hasattr(artist, 'disconnect_events'):
+            artist.disconnect_events()
         artist.ax.remove()
