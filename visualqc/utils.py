@@ -1226,6 +1226,11 @@ def print_platform_version_info():
     print('numpy {} / scipy {} / matplotlib {}\npython {}'.format(
         np.__version__, scipy.__version__, matplotlib.__version__, sys.version))
     print('platform {}\n{}\n\n'.format(platform.platform(), platform.version()))
+    try:
+        # works only in Linux
+        print('\tLinux distribution: {}'.format(platform.freedesktop_os_release()))
+    except:
+        pass
 
 
 def remove_matplotlib_axes(mpl_artists):
