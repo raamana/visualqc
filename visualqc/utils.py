@@ -1243,3 +1243,30 @@ def remove_matplotlib_axes(mpl_artists):
         if hasattr(artist, 'disconnect_events'):
             artist.disconnect_events()
         artist.ax.remove()
+
+
+def set_noninteractive_backend():
+    """Sets a non-interactive backend to matplotlib, for batch processing"""  # noqa
+
+    import matplotlib
+
+    # # copied from neuropredict, but may not be necessary
+    # def set_agg():
+    #     """set agg as backend"""
+    #
+    #     matplotlib.use('Agg')
+    #     matplotlib.interactive(False)
+    #
+    #
+    # if 'DISPLAY' in os.environ:
+    #     display = os.environ['DISPLAY']
+    #     display_name, display_num = display.split(':')
+    #     display_num = int(float(display_num))
+    #     if display_num != 0:
+    #         set_agg()
+    # else:
+    #     set_agg()
+    #     display = None
+
+    matplotlib.use('Agg')
+    matplotlib.interactive(False)
