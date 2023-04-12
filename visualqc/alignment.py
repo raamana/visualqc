@@ -390,7 +390,6 @@ class AlignmentRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         # leaving some space on the right for review elements
         plt.subplots_adjust(**cfg.review_area)
-        plt.show(block=False)
 
 
     def add_UI(self):

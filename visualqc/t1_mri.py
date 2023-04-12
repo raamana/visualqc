@@ -401,7 +401,7 @@ class RatingWorkflowT1(BaseWorkflowVisualQC, ABC):
     def open_figure(self):
         """Creates the master figure to show everything in."""
 
-        plt.show(block=False)
+        pass
 
 
     def add_UI(self):
