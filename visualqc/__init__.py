@@ -28,25 +28,3 @@ else:
     raise NotImplementedError('Python 3 or higher is required to run VisualQC.'
                               'Please upgrade.')
 del version_info
-
-# dealing with matplotlib backend
-import os
-import matplotlib
-
-
-def set_agg():
-    """set agg as backend"""
-
-    matplotlib.use('Agg')
-    matplotlib.interactive(False)
-
-
-if 'DISPLAY' in os.environ:
-    display = os.environ['DISPLAY']
-    display_name, display_num = display.split(':')
-    display_num = int(float(display_num))
-    if display_num != 0:
-        set_agg()
-else:
-    set_agg()
-    display = None

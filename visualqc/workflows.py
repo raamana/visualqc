@@ -69,6 +69,10 @@ class BaseWorkflowVisualQC(ABC):
 
         self.screenshot_only = screenshot_only
         if self.screenshot_only:
+            # to enable batch generation without any windows
+            from visualqc.utils import set_noninteractive_backend
+            set_noninteractive_backend()
+
             self.screenshot_dir = self.out_dir / cfg.screenshot_out_dir_name
             if not self.screenshot_dir.exists():
                 self.screenshot_dir.mkdir(exist_ok=True)
