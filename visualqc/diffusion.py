@@ -404,6 +404,8 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.current_grad_index = 0
         self.delay_in_animation = delay_in_animation
 
+        self.checking_alignment = False  # reflects default data viz radio btn
+
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
 
