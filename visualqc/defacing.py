@@ -177,12 +177,7 @@ class DefacingInterface(BaseReviewInterface):
             Atleast Checkbox is checked
         """
 
-        if any(self.checkbox.get_status()):
-            allowed = True
-        else:
-            allowed = False
-
-        return allowed
+        return self._is_checkbox_ticked(self.checkbox)
 
 
     def reset_figure(self):
