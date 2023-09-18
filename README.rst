@@ -33,18 +33,12 @@ Links
 Galleries
 ----------
 
- * NEW: `Defacing QC <https://raamana.github.io/visualqc/gallery_defacing.html>`_
- * `Freesurfer <https://raamana.github.io/visualqc/gallery_freesurfer.html>`_
- * `Functional MRI <https://raamana.github.io/visualqc/gallery_functional_mri.html>`_
- * `Registration/Alignment quality <https://raamana.github.io/visualqc/gallery_registration_unimodal.html>`_
- * `Structural T1w MRI <https://raamana.github.io/visualqc/gallery_t1_mri.html>`_
- * `Volumetric Segmentation <https://raamana.github.io/visualqc/gallery_segmentation_volumetric.html>`_
-
-
-Contributions
---------------
-
-`Contributions are welcome. <CONTRIBUTING.rst>`_
+* NEW: `Defacing QC <https://raamana.github.io/visualqc/gallery_defacing.html>`_
+* `Freesurfer <https://raamana.github.io/visualqc/gallery_freesurfer.html>`_
+* `Functional MRI <https://raamana.github.io/visualqc/gallery_functional_mri.html>`_
+* `Registration/Alignment quality <https://raamana.github.io/visualqc/gallery_registration_unimodal.html>`_
+* `Structural T1w MRI <https://raamana.github.io/visualqc/gallery_t1_mri.html>`_
+* `Volumetric Segmentation <https://raamana.github.io/visualqc/gallery_segmentation_volumetric.html>`_
 
 
 Citation
@@ -71,6 +65,11 @@ Bibtex:
 
 
 More details at `<docs/citation.rst>`_
+
+Contributions
+--------------
+
+`Contributions are welcome. <CONTRIBUTING.rst>`_
 
 ---
 
