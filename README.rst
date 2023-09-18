@@ -59,7 +59,7 @@ Bibtex:
       month        = Aug,
       year         = 2022,
       doi          = {10.52294/ApertureNeuro.2022.2.DXYR5548},
-      url          = {https://doi.org/10.5281/zenodo.1211365}
+      url          = {https://apertureneuropub.cloud68.co/articles/79/}
     }
 
 
