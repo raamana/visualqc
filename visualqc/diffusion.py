@@ -525,8 +525,7 @@ class DiffusionRatingWorkflow(BaseWorkflowVisualQC, ABC):
             ax.spines['left'].set_position(('outward', 1))
 
         # sharing the time point axis
-        self.stats_axes[0].get_shared_x_axes().join(self.ax_carpet.xaxis,
-                                                    self.stats_axes[0].xaxis)
+        self.stats_axes[0].sharex(self.ax_carpet)
         # self.stats_axes[0].autoscale()
 
         # 3. axes to show slices in foreground when a time point is selected
