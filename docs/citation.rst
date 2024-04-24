@@ -9,16 +9,16 @@ Bibtex:
 
 .. code-block:: tex
 
-@article{Raamana_2022_VisualQCSoftware,
-	journal={Aperture Neuro},
-	doi={10.52294/e130fcd2-ce83-4222-856d-c82022013a50},
-	publisher={Organization for Human Brain Mapping},
-	title={VisualQC: software development kit for medical and neuroimaging quality control and assurance},
-	volume=3,
-	author={Reddy Raamana, Pradeep},
-	pages={1--4},
-	date={2023-03-02},
-	year=2023,
-	month=3,
-	day=2,
-}
+    @article{Raamana_2022_VisualQCSoftware,
+    	journal={Aperture Neuro},
+    	doi={10.52294/e130fcd2-ce83-4222-856d-c82022013a50},
+    	publisher={Organization for Human Brain Mapping},
+    	title={VisualQC: software development kit for medical and neuroimaging quality control and assurance},
+    	volume=3,
+    	author={Reddy Raamana, Pradeep},
+    	pages={1--4},
+    	date={2023-03-02},
+    	year=2023,
+    	month=3,
+    	day=2,
+    }
