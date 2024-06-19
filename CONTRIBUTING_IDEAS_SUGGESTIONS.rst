@@ -4,7 +4,13 @@
 Ideas and suggestions for contribution
 ================================================
 
-You can contribute in different ways to different modalities, as noted below.
+You can contribute in different ways to different modalities, as noted below, as well as in helping fix `issues <https://github.com/raamana/visualqc/issues>`_ and improving `pull requests <https://github.com/raamana/visualqc/pulls>`_.
+
+Defacing module
+-------------------------
+
+ - improve the current implementation of a defacing module to be more automatic e.g., in generating the 3D renderings of a patients brain just from the T1w MRI scan, fully natively in Python. See PR https://github.com/raamana/visualqc/pull/62 for a start.
+
 
 Alignment / Registration
 -------------------------
