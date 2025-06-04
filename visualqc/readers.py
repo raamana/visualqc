@@ -127,8 +127,8 @@ def read_aparc_stats_in_hemi(stats_file,
             raise ValueError('Atleast 1 valid stat must be chosen! '
                              'From: \n{}'.format(subset_all))
 
-    roi_stats = np.genfromtxt(stats_file, dtype=aparc_roi_dtype, filling_values=np.NaN)
-    roi_stats_values = np.full((len(roi_stats), len(subset_return)), np.NaN)
+    roi_stats = np.genfromtxt(stats_file, dtype=aparc_roi_dtype, filling_values=np.nan)
+    roi_stats_values = np.full((len(roi_stats), len(subset_return)), np.nan)
     for idx, stat in enumerate(roi_stats):
         roi_stats_values[idx, :] = [stat[feat] for feat in subset_return]
 

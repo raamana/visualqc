@@ -177,7 +177,7 @@ default_contour_face_color = 'yellow'  # '#cccc00' # 'yellow'
 contour_line_width = 1
 binary_pixel_value = 1
 contour_level = 0.5
-line_break = [np.NaN, np.NaN]
+line_break = [np.nan, np.nan]
 
 ## ----------------------------------------------------------------------------
 #       T1 mri specific
