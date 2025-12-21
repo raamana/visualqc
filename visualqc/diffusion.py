@@ -7,10 +7,9 @@ import argparse
 import asyncio
 import sys
 import textwrap
-import time
 import warnings
 from abc import ABC
-from os.path import basename, join as pjoin, exists as pexists
+from os.path import exists as pexists, join as pjoin
 from textwrap import wrap
 
 import nibabel as nib
@@ -24,10 +23,10 @@ from visualqc.image_utils import dwi_overlay_edges
 from visualqc.readers import diffusion_traverse_bids
 from visualqc.t1_mri import BaseReviewInterface
 from visualqc.utils import (check_bids_dir, check_finite_int, check_image_is_4d,
-                            check_out_dir, check_outlier_params, check_time,
-                            check_views, get_axis, pick_slices, scale_0to1,
-                            set_fig_window_title, check_screenshot_params,
-                            remove_matplotlib_axes)
+                            check_out_dir, check_outlier_params,
+                            check_screenshot_params, check_time, check_views,
+                            get_axis, pick_slices, remove_matplotlib_axes,
+                            scale_0to1, set_fig_window_title)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 

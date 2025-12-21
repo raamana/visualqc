@@ -8,7 +8,6 @@ import argparse
 import asyncio
 import sys
 import textwrap
-import time
 import warnings
 from abc import ABC
 from functools import partial
@@ -795,7 +794,7 @@ def get_parser():
                         help=help_text_num_rows)
 
     wf_args = parser.add_argument_group('Workflow',
-                                        'Options related to workflow e.g. to ' \
+                                        'Options related to workflow e.g. to '
                                         'pre-compute resource-intensive features, '
                                         'and pre-generate all the visualizations '
                                         'required')

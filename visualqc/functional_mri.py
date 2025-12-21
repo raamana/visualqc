@@ -8,7 +8,7 @@ import sys
 import textwrap
 import warnings
 from abc import ABC
-from os.path import basename, join as pjoin, realpath
+from os.path import join as pjoin, realpath
 from textwrap import wrap
 
 import nibabel as nib
@@ -24,8 +24,8 @@ from visualqc.t1_mri import BaseReviewInterface
 from visualqc.utils import (check_bids_dir, check_event_in_axes, check_finite_int,
                             check_id_list_with_regex, check_image_is_4d,
                             check_out_dir, check_outlier_params, check_views,
-                            get_axis, pick_slices, scale_0to1, set_fig_window_title,
-                            remove_matplotlib_axes)
+                            get_axis, pick_slices, remove_matplotlib_axes,
+                            scale_0to1, set_fig_window_title)
 from visualqc.workflows import BaseWorkflowVisualQC
 
 
