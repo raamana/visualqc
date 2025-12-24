@@ -333,7 +333,7 @@ class BaseWorkflowVisualQC(ABC):
             return
 
         print('\nRestoring ratings from previous session(s), if they exist ..')
-        prev_done = []  # empty list
+        prev_done = set()  # Track restored ratings
 
         # Load from SQLite database (primary source)
         if self.ratings_db is not None:
@@ -372,6 +372,7 @@ class BaseWorkflowVisualQC(ABC):
         This is only called once when database is empty or doesn't exist.
         """
         ratings_file, _ = get_ratings_path_info(self)
+        prev_done = set()  # Initialize to avoid NameError
         
         if pexists(ratings_file):
             print('Migrating legacy CSV ratings to database...')
@@ -427,7 +428,7 @@ class BaseWorkflowVisualQC(ABC):
             self.notes = dict()
 
         if len(prev_done) > 0:
-            print('\nRatings for {} sessions were restored'.format(len(prev_done)))
+            print('\nRatings for {} subjects were restored'.format(len(prev_done)))
 
         if len(self.incomplete_list) < 1:
             print('No subjects to review/rate - exiting.')
