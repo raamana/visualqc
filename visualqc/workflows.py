@@ -34,6 +34,137 @@ class DummyCallable(object):
         raise NotImplementedError(
             'This callable must be overridden before being used!')
 
+
+def reconstruct_command_line(user_args, parser, program_name: str) -> str:
+    """
+    Reconstruct command line from parsed arguments for reproducibility.
+    
+    This creates a clean, reproducible command line from the parsed arguments,
+    which is more useful than the raw sys.argv (which may have typos, etc.).
+    
+    Parameters
+    ----------
+    user_args : argparse.Namespace
+        Parsed command line arguments
+    parser : argparse.ArgumentParser
+        Argument parser instance
+    program_name : str
+        Program name (e.g., 'visualqc_alignment')
+        
+    Returns
+    -------
+    str
+        Reconstructed command line
+    """
+    parts = [program_name]
+    
+    for action in parser._actions:
+        if action.dest == 'help' or action.dest is None:
+            continue
+        
+        # Skip if this is a positional argument (we'll handle those separately)
+        if not action.option_strings:
+            continue
+        
+        value = getattr(user_args, action.dest, None)
+        
+        # Skip if value is None, False (for flags), or matches default
+        if value is None:
+            continue
+        
+        # Handle boolean flags
+        if isinstance(value, bool):
+            if value and not action.default:
+                # Only add if it's True and default is False
+                parts.append(action.option_strings[0])
+            continue
+        
+        # Handle lists/tuples
+        if isinstance(value, (list, tuple)):
+            if value:
+                parts.append(action.option_strings[0])
+                parts.extend(str(v) for v in value)
+            continue
+        
+        # Skip if value matches default
+        if hasattr(action, 'default') and value == action.default:
+            continue
+        
+        # Add the option and value
+        parts.append(action.option_strings[0])
+        if isinstance(value, Path):
+            parts.append(str(value))
+        else:
+            parts.append(str(value))
+    
+    # Add positional arguments at the end
+    for action in parser._actions:
+        if action.dest == 'help' or action.dest is None:
+            continue
+        if not action.option_strings:  # Positional argument
+            value = getattr(user_args, action.dest, None)
+            if value is not None:
+                if isinstance(value, (list, tuple)):
+                    parts.extend(str(v) for v in value)
+                else:
+                    parts.append(str(value))
+    
+    return ' '.join(parts)
+
+
+def extract_command_args(user_args, parser) -> dict:
+    """
+    Extract all command arguments with their values and descriptions.
+    
+    Parameters
+    ----------
+    user_args : argparse.Namespace
+        Parsed arguments
+    parser : argparse.ArgumentParser
+        Argument parser with help text
+        
+    Returns
+    -------
+    dict
+        {
+            'arg_name': {
+                'value': arg_value,
+                'description': help_text,
+                'default': default_value
+            },
+            ...
+        }
+    """
+    args_dict = {}
+    
+    for action in parser._actions:
+        if action.dest == 'help' or action.dest is None:
+            continue
+        
+        arg_name = action.dest
+        value = getattr(user_args, arg_name, None)
+        
+        # Get default
+        default = action.default if hasattr(action, 'default') else None
+        
+        # Get help text
+        help_text = action.help if hasattr(action, 'help') and action.help else ''
+        
+        # Convert value to string if it's a Path or list
+        if isinstance(value, Path):
+            value = str(value)
+        elif isinstance(value, (list, tuple)):
+            value = list(value)  # Keep as list for JSON
+        
+        args_dict[arg_name] = {
+            'value': value,
+            'description': help_text,
+            'default': default
+        }
+    
+    return args_dict
+
+
 def setup_ratings_logger(out_dir: Path):
     """
     Set up structured logging for ratings.
@@ -135,6 +266,39 @@ class BaseWorkflowVisualQC(ABC):
         self.UI = None
 
         self.quit_now = False
+        
+        # Capture command line for metadata (will be updated after parsing/validation)
+        self.command_line = ' '.join(sys.argv)
+        
+        # Initialize ratings database for immediate checkpointing
+        # Only initialize if not in screenshot-only mode
+        self.ratings_db = None
+        self.session_id = None
+        if not self.screenshot_only:
+            from visualqc.ratings_db import RatingsDatabase
+            ratings_dir = Path(self.out_dir) / cfg.suffix_ratings_dir
+            # Generate database filename based on vis_type and suffix
+            # These will be set by child classes, so we'll initialize later
+            # For now, just set up the logger
+            self.logger = setup_ratings_logger(self.out_dir)
+        else:
+            self.logger = None
+
+
+    def capture_command_metadata(self, command_line: str):
+        """
+        Capture command line for session tracking.
+        
+        This should be called after workflow instantiation with the validated
+        command line (after parsing and validation).
+        
+        Parameters
+        ----------
+        command_line : str
+            Full command line after parsing/validation
+        """
+        self.command_line = command_line
+    
 
 
     def run(self):
