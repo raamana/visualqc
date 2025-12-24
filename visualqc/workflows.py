@@ -299,12 +299,38 @@ class BaseWorkflowVisualQC(ABC):
         """
         self.command_line = command_line
     
-
+    def _init_ratings_database(self):
+        """Initialize the ratings database after vis_type and suffix are set."""
+        if self.screenshot_only or self.ratings_db is not None:
+            return
+        
+        from visualqc.ratings_db import RatingsDatabase
+        ratings_dir = Path(self.out_dir) / cfg.suffix_ratings_dir
+        # Generate database filename based on vis_type and suffix
+        db_filename = f"{self.vis_type}_{self.suffix}_ratings.db"
+        db_path = ratings_dir / db_filename
+        self.ratings_db = RatingsDatabase(db_path)
+        
+        # Generate session ID for tracking
+        self.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # Save session metadata (command line and versions)
+        if self.command_line:
+            self.ratings_db.save_session_metadata(
+                session_id=self.session_id,
+                command_line=self.command_line
+            )
+        
+        if self.logger:
+            self.logger.info(f"Initialized ratings database: {db_path}")
+            self.logger.info(f"Session ID: {self.session_id}")
 
     def run(self):
         """Entry point after init."""
 
         self.preprocess()
+        # Initialize database after vis_type and suffix are set by child class
+        self._init_ratings_database()
         self.restore_ratings()
         self.prepare_UI()
         self.loop_through_units()
