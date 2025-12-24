@@ -6,8 +6,10 @@ Module to define base classes.
 
 import sys
 import traceback
+import logging
+import json
 from abc import ABC, abstractmethod
-from datetime import timedelta
+from datetime import datetime, timedelta
 from os import makedirs
 from os.path import exists as pexists, join as pjoin
 from pathlib import Path
@@ -17,7 +19,7 @@ from timeit import default_timer as timer
 import numpy as np
 
 from visualqc import config as cfg
-from visualqc.utils import get_ratings_path_info, load_ratings_csv, summarize_ratings
+from visualqc.utils import get_ratings_path_info, load_ratings_csv
 
 
 class DummyCallable(object):
@@ -31,6 +33,52 @@ class DummyCallable(object):
     def __call__(self, *args, **kwargs):
         raise NotImplementedError(
             'This callable must be overridden before being used!')
+
+def setup_ratings_logger(out_dir: Path):
+    """
+    Set up structured logging for ratings.
+    
+    Parameters
+    ----------
+    out_dir : Path
+        Output directory for log files
+        
+    Returns
+    -------
+    logging.Logger
+        Configured logger instance
+    """
+    log_dir = Path(out_dir) / cfg.suffix_ratings_dir
+    log_dir.mkdir(parents=True, exist_ok=True)
+    
+    log_file = log_dir / f"ratings_{datetime.now().strftime('%Y%m%d')}.log"
+    
+    # Create logger
+    logger = logging.getLogger('visualqc.ratings')
+    logger.setLevel(logging.INFO)
+    
+    # Remove existing handlers to avoid duplicates
+    logger.handlers.clear()
+    
+    # File handler with structured format
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setFormatter(
+        logging.Formatter(
+            '%(asctime)s | %(levelname)s | %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+    )
+    logger.addHandler(file_handler)
+    
+    # Console handler (only INFO and above to avoid clutter)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.WARNING)  # Only show warnings/errors on console
+    console_handler.setFormatter(
+        logging.Formatter('%(levelname)s: %(message)s')
+    )
+    logger.addHandler(console_handler)
+    
+    return logger
 
 
 class BaseWorkflowVisualQC(ABC):
