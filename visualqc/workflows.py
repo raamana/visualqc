@@ -419,12 +419,64 @@ class BaseWorkflowVisualQC(ABC):
             # Database not initialized - shouldn't happen in normal operation
             self.ratings = dict()
             self.notes = dict()
+    
+    def _migrate_csv_to_db(self):
+        """
+        One-time migration: Load from CSV if it exists, then migrate to SQLite.
+        This is only called once when database is empty or doesn't exist.
+        """
+        ratings_file, _ = get_ratings_path_info(self)
+        
         if pexists(ratings_file):
-            self.ratings, self.notes = load_ratings_csv(ratings_file)
-            # finding the remaining
-            prev_done = set(self.ratings.keys())
-            self.incomplete_list = list(set(self.id_list) - prev_done)
+            print('Migrating legacy CSV ratings to database...')
+            try:
+                csv_ratings, csv_notes = load_ratings_csv(ratings_file)
+                if csv_ratings and self.ratings_db is not None:
+                    # Migrate CSV data to database
+                    migrated_count = 0
+                    for unit_id, rating in csv_ratings.items():
+                        notes = csv_notes.get(unit_id, '')
+                        success = self.ratings_db.save_rating(
+                            unit_id=unit_id,
+                            rating=rating,
+                            notes=notes,
+                            session_id='migrated_from_csv',
+                            module_type=getattr(self, '__module_type__', None),
+                            vis_type=self.vis_type
+                        )
+                        if success:
+                            migrated_count += 1
+                    
+                    if migrated_count > 0:
+                        print(f'✓ Migrated {migrated_count} ratings from CSV to database')
+                        # Reload from database
+                        db_ratings = self.ratings_db.get_all_ratings()
+                        self.ratings = {k: v[0] for k, v in db_ratings.items()}
+                        self.notes = {k: v[1] for k, v in db_ratings.items()}
+                        prev_done = set(self.ratings.keys())
+                        self.incomplete_list = list(set(self.id_list) - prev_done)
+                        
+                        if self.logger:
+                            self.logger.info(f"Migrated {migrated_count} ratings from CSV to database")
+                    else:
+                        # Fallback: use CSV data in memory
+                        self.ratings = csv_ratings
+                        self.notes = csv_notes
+                        prev_done = set(self.ratings.keys())
+                        self.incomplete_list = list(set(self.id_list) - prev_done)
+                else:
+                    # No CSV or no database - use CSV in memory if available
+                    self.ratings = csv_ratings if csv_ratings else dict()
+                    self.notes = csv_notes if csv_notes else dict()
+                    prev_done = set(self.ratings.keys())
+                    self.incomplete_list = list(set(self.id_list) - prev_done)
+            except Exception as e:
+                if self.logger:
+                    self.logger.error(f"Failed to migrate CSV: {e}")
+                self.ratings = dict()
+                self.notes = dict()
         else:
+            # No CSV, no database - start fresh
             self.ratings = dict()
             self.notes = dict()
 
