@@ -491,31 +491,44 @@ class BaseWorkflowVisualQC(ABC):
             print('To be reviewed : {}\n'.format(self.num_units_to_review))
 
 
-    def save_ratings(self):
-        """Saves ratings to disk """
+    def save_ratings(self, export_json: bool = True):
+        """
+        Export ratings to JSON (SQLite is source of truth).
+        
+        Note: Ratings are already checkpointed immediately when captured.
+        This method exports them to JSON format for human readability.
+        
+        Parameters
+        ----------
+        export_json : bool
+            Whether to export to JSON (default: True)
+        """
 
         print('\nSaving ratings .. \n')
-        ratings_file, prev_ratings_backup = get_ratings_path_info(self)
-
-        if pexists(ratings_file):
-            copyfile(ratings_file, prev_ratings_backup)
-
-        # add column names: subject_id,issue1:issue2:issue3,...,notes etc
-        # TODO add path(s) to data (images etc) that produced the review
-        lines = '\n'.join(['{},{},{}'.format(sid, self._join_ratings(rating_set),
-                                             self.notes[sid])
-                           for sid, rating_set in self.ratings.items()])
-        try:
-            with open(ratings_file, 'w') as cf:
-                cf.write(lines)
-        except:
-            raise IOError(
-                'Error in saving ratings to file!!\n'
-                'Backup might be helpful at:\n\t{}'.format(prev_ratings_backup))
-
-        # summarize ratings to stdout and id lists
-        summarize_ratings(ratings_file)
+        
+        if self.ratings_db is not None:
+            # Export to JSON (human-readable with full metadata)
+            if export_json:
+                json_path = self.ratings_db.get_json_path()
+                success = self.ratings_db.export_to_json(json_path, include_metadata=True)
+                if success:
+                    print(f'✓ Exported ratings to JSON: {json_path}')
+                else:
+                    print('✗ Warning: Failed to export to JSON')
+            
+            # Summarize ratings directly from SQLite database
+            from visualqc.utils import summarize_ratings
+            summarize_ratings(self.ratings_db)
+        else:
+            # Fallback: database not initialized (shouldn't happen in normal operation)
+            if self.logger:
+                self.logger.warning("No database available for export")
+            print('✗ Warning: No ratings database available')
+        
         self.save_time_spent()
+        
+        if self.logger:
+            self.logger.info("Ratings export completed")
 
 
     @staticmethod
@@ -591,7 +604,8 @@ class BaseWorkflowVisualQC(ABC):
                 # capturing time elapsed by ID, in seconds
                 self.timer[unit_id] = timedelta(seconds=timer() - timer_start).seconds
 
-                # TODO save each rating to disk to avoid loss of work due to crach etc
+                # Rating is already checkpointed in capture_user_input()
+                # No need to save here - it's already on disk!
                 self.print_rating(unit_id)
 
                 if self.quit_now:
