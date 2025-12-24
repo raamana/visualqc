@@ -733,18 +733,11 @@ class BaseWorkflowVisualQC(ABC):
         """Method to print the rating recorded for the current subject."""
 
         if subject_id in self.ratings and (self.ratings[subject_id] is not None):
-            # checking if "i'm tired" or 'review later' appear in ratings
-            do_not_save = any([ rt.lower() in cfg.ratings_not_to_be_recorded
-                  for rt in self.ratings[subject_id]])
-
-            # not saving ratings meant not to be saved!
-            if do_not_save:
-                self.ratings.pop(subject_id)
-            else:
-                print('    id: {}\n'
-                      'rating: {}\n'
-                      ' notes: {}'.format(subject_id, self.ratings[subject_id],
-                                          self.notes[subject_id]))
+            # Note: "do not save" ratings are already handled in capture_user_input()
+            print('    id: {}\n'
+                  'rating: {}\n'
+                  ' notes: {}'.format(subject_id, self.ratings[subject_id],
+                                      self.notes[subject_id]))
         else:
             print(f'rating for {subject_id} has not been recorded!')
 
