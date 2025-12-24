@@ -727,10 +727,59 @@ class BaseWorkflowVisualQC(ABC):
 
 
     def capture_user_input(self):
-        """Updates all user input to class"""
+        """Updates all user input to class and checkpoints immediately."""
 
         self.ratings[self.current_unit_id] = self.UI.get_ratings()
         self.notes[self.current_unit_id] = self.UI.user_notes
+        
+        # IMMEDIATE CHECKPOINT - write to disk right away
+        rating_value = self.ratings[self.current_unit_id]
+        
+        # Skip checkpointing if rating is None or empty
+        if rating_value is None:
+            return
+        
+        # Check if this is a "do not save" rating
+        do_not_save = False
+        if isinstance(rating_value, (list, tuple)):
+            do_not_save = any([
+                str(rt).lower() in cfg.ratings_not_to_be_recorded
+                for rt in rating_value
+            ])
+        elif isinstance(rating_value, str):
+            # Handle string ratings that might contain multiple values
+            rating_parts = rating_value.split(cfg.rating_joiner)
+            do_not_save = any([
+                rt.lower() in cfg.ratings_not_to_be_recorded
+                for rt in rating_parts
+            ])
+        
+        if not do_not_save and self.ratings_db is not None:
+            # Convert rating to string format
+            rating_str = self._join_ratings(rating_value)
+            notes_str = self.notes.get(self.current_unit_id, '')
+            
+            # Write immediately to database
+            success = self.ratings_db.save_rating(
+                unit_id=self.current_unit_id,
+                rating=rating_str,
+                notes=notes_str,
+                session_id=self.session_id,
+                module_type=getattr(self, '__module_type__', None),
+                vis_type=self.vis_type
+            )
+            
+            # Only log/print failures (quiet on success)
+            if not success:
+                if self.logger:
+                    self.logger.error(f"Failed to checkpoint rating for {self.current_unit_id}: {rating_str}")
+                print(f'✗ Warning: Failed to checkpoint rating for {self.current_unit_id}')
+        elif do_not_save:
+            # Remove from in-memory dict if it's a "do not save" rating
+            if self.current_unit_id in self.ratings:
+                self.ratings.pop(self.current_unit_id)
+            if self.current_unit_id in self.notes:
+                self.notes.pop(self.current_unit_id)
 
 
     def print_rating(self, subject_id):
