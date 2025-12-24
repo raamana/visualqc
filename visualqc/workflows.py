@@ -389,8 +389,36 @@ class BaseWorkflowVisualQC(ABC):
         print('\nRestoring ratings from previous session(s), if they exist ..')
         prev_done = []  # empty list
 
-        ratings_file, backup_name_ratings = get_ratings_path_info(self)
-
+        # Load from SQLite database (primary source)
+        if self.ratings_db is not None:
+            try:
+                db_ratings = self.ratings_db.get_all_ratings()
+                if db_ratings:
+                    self.ratings = {k: v[0] for k, v in db_ratings.items()}
+                    self.notes = {k: v[1] for k, v in db_ratings.items()}
+                    prev_done = set(self.ratings.keys())
+                    self.incomplete_list = list(set(self.id_list) - prev_done)
+                    print(f'\n✓ Restored {len(prev_done)} ratings from database')
+                    
+                    # Auto-regenerate JSON if stale
+                    if self.ratings_db.is_json_stale():
+                        print('Regenerating JSON export (was stale)...')
+                        self.ratings_db.export_json_if_needed(force=True)
+                    
+                    if self.logger:
+                        self.logger.info(f"Restored {len(prev_done)} ratings from database")
+                else:
+                    # Database exists but empty - check for legacy CSV to migrate
+                    self._migrate_csv_to_db()
+            except Exception as e:
+                if self.logger:
+                    self.logger.error(f"Failed to load from database: {e}")
+                # Try to migrate CSV if database fails
+                self._migrate_csv_to_db()
+        else:
+            # Database not initialized - shouldn't happen in normal operation
+            self.ratings = dict()
+            self.notes = dict()
         if pexists(ratings_file):
             self.ratings, self.notes = load_ratings_csv(ratings_file)
             # finding the remaining
