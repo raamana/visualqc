@@ -13,7 +13,6 @@ from datetime import datetime, timedelta
 from os import makedirs
 from os.path import exists as pexists, join as pjoin
 from pathlib import Path
-from shutil import copyfile
 from timeit import default_timer as timer
 
 import numpy as np
@@ -110,59 +109,6 @@ def reconstruct_command_line(user_args, parser, program_name: str) -> str:
                     parts.append(str(value))
     
     return ' '.join(parts)
-
-
-def extract_command_args(user_args, parser) -> dict:
-    """
-    Extract all command arguments with their values and descriptions.
-    
-    Parameters
-    ----------
-    user_args : argparse.Namespace
-        Parsed arguments
-    parser : argparse.ArgumentParser
-        Argument parser with help text
-        
-    Returns
-    -------
-    dict
-        {
-            'arg_name': {
-                'value': arg_value,
-                'description': help_text,
-                'default': default_value
-            },
-            ...
-        }
-    """
-    args_dict = {}
-    
-    for action in parser._actions:
-        if action.dest == 'help' or action.dest is None:
-            continue
-        
-        arg_name = action.dest
-        value = getattr(user_args, arg_name, None)
-        
-        # Get default
-        default = action.default if hasattr(action, 'default') else None
-        
-        # Get help text
-        help_text = action.help if hasattr(action, 'help') and action.help else ''
-        
-        # Convert value to string if it's a Path or list
-        if isinstance(value, Path):
-            value = str(value)
-        elif isinstance(value, (list, tuple)):
-            value = list(value)  # Keep as list for JSON
-        
-        args_dict[arg_name] = {
-            'value': value,
-            'description': help_text,
-            'default': default
-        }
-    
-    return args_dict
 
 
 def setup_ratings_logger(out_dir: Path):
@@ -800,17 +746,6 @@ class BaseWorkflowVisualQC(ABC):
                                           self.notes[subject_id]))
         else:
             print(f'rating for {subject_id} has not been recorded!')
-
-
-    def save_cmd(self):
-        """Saves the command issued by the user for debugging purposes"""
-
-        cmd_file = pjoin(self.out_dir,
-                         'cmd_issued.visualqc.{}'.format(self.__name__))
-        with open(cmd_file, 'w') as cf:
-            cf.write('{}\n'.format(' '.join(sys.argv)))
-
-        return
 
 
     def save(self):
