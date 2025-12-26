@@ -497,29 +497,43 @@ def save_ratings_to_disk(ratings, notes, qcw):
     return
 
 
-def summarize_ratings(ratings_file, out_dir=None):
+def summarize_ratings(ratings_db, out_dir=None):
     """
-    Summarizes the counts and ID for different unique ratings
+    Summarizes the counts and ID for different unique ratings from SQLite database.
 
-    Returns a counter per rating label as well as list of IDs per each label.
+    Parameters
+    ----------
+    ratings_db : RatingsDatabase
+        SQLite database instance containing ratings
+    out_dir : Path, optional
+        Output directory for ID lists. If None, uses database directory.
+
+    Returns
+    -------
+    counter : dict
+        Counter per rating label
+    id_lists : dict
+        List of IDs per each rating label
     """
 
-    ratings_file = Path(ratings_file).resolve()
-    if not pexists(ratings_file):
-        raise IOError('Ratings file does not exist! : {}'.format(ratings_file))
-
+    from visualqc.ratings_db import RatingsDatabase
+    
+    if not isinstance(ratings_db, RatingsDatabase):
+        raise TypeError('ratings_db must be a RatingsDatabase instance')
+    
     if out_dir is None:
-        out_dir = ratings_file.parents[0]
+        out_dir = ratings_db.db_path.parent
 
     import re
     clean = lambda lbl: re.sub(r'\W+', '_', lbl.lower())
 
-    rating_dict, notes = load_ratings_csv(ratings_file)
+    # Get all ratings from database
+    rating_dict = ratings_db.get_all_ratings()
 
     rating_list = list()
     uniq_labels = set()
     all_labels = list()
-    for sid, labels in rating_dict.items():
+    for sid, (labels, notes) in rating_dict.items():
         # each ID can have multiple ratings
         sid_labels = [clean(lbl) for lbl in labels.split(cfg.rating_joiner)]
         for lbl in sid_labels:

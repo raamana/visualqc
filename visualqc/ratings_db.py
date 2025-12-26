@@ -127,7 +127,7 @@ class RatingsDatabase:
                 """, (unit_id, rating, notes, timestamp, session_id, module_type, vis_type))
                 conn.commit()
             
-            logger.info(f"Checkpointed rating for {unit_id}: {rating}")
+            # Don't log success - quiet on success, only log errors
             return True
             
         except Exception as e:
