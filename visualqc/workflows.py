@@ -245,6 +245,23 @@ class BaseWorkflowVisualQC(ABC):
         """
         self.command_line = command_line
     
+    def capture_command_metadata_from_args(self, user_args, parser):
+        """
+        Reconstruct and capture command line from parsed arguments.
+        
+        Automatically extracts program name from parser.prog.
+        
+        Parameters
+        ----------
+        user_args : argparse.Namespace
+            Parsed command line arguments
+        parser : argparse.ArgumentParser
+            Argument parser instance (must have prog set)
+        """
+        program_name = parser.prog if hasattr(parser, 'prog') and parser.prog else sys.argv[0]
+        command_line = reconstruct_command_line(user_args, parser, program_name)
+        self.capture_command_metadata(command_line)
+    
     def _init_ratings_database(self):
         """Initialize the ratings database after vis_type and suffix are set."""
         if self.screenshot_only or self.ratings_db is not None:

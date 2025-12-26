@@ -679,6 +679,9 @@ def make_workflow_from_user_options():
                                 defaced_name, mri_name, render_name,
                                 cfg.defacing_default_issue_list, vis_type,
                                 screenshot_only=user_args.screenshot_only)
+    
+    # Capture command metadata after parsing/validation
+    wf.capture_command_metadata_from_args(user_args, parser)
 
     return wf
 

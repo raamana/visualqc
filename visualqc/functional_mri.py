@@ -1210,6 +1210,9 @@ def make_workflow_from_user_options():
                             views=views, num_slices_per_view=num_slices_per_view,
                             num_rows_per_view=num_rows_per_view,
                             screenshot_only=user_args.screenshot_only)
+    
+    # Capture command metadata after parsing/validation
+    wf.capture_command_metadata_from_args(user_args, parser)
 
     return wf
 
