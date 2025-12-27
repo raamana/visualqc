@@ -32,16 +32,16 @@ from visualqc.workflows import BaseWorkflowVisualQC
 def _unbidsify(filename, max_width=18):
     """Returns a easily displayable and readable multiline string"""
 
-    parts = [s.replace('-', ' ') for s in filename.split('_')]
+    parts = [s.replace("-", " ") for s in filename.split("_")]
     fixed_width = list()
     for p in parts:
         if len(p) > max_width:
             # indenting by two spaces
-            fixed_width.extend([' -'+s for s in wrap(p, max_width-2)])
+            fixed_width.extend([" -"+s for s in wrap(p, max_width-2)])
         else:
             fixed_width.append(p)
 
-    return '\n'.join(fixed_width)
+    return "\n".join(fixed_width)
 
 
 class FunctionalMRIInterface(BaseReviewInterface):
@@ -233,15 +233,15 @@ class FunctionalMRIInterface(BaseReviewInterface):
 
         key_pressed = key_in.key.lower()
         # print(key_pressed)
-        if key_pressed in ['right', 'up']:
+        if key_pressed in ["right", "up"]:
             self.right_arrow_callback()
-        elif key_pressed in ['left', 'down']:
+        elif key_pressed in ["left", "down"]:
             self.left_arrow_callback()
-        elif key_pressed in [' ', 'space']:
+        elif key_pressed in [" ", "space"]:
             self.next_button_callback()
-        elif key_pressed in ['ctrl+q', 'q+ctrl']:
+        elif key_pressed in ["ctrl+q", "q+ctrl"]:
             self.quit_button_callback()
-        elif key_pressed in ['alt+s', 's+alt']:
+        elif key_pressed in ["alt+s", "s+alt"]:
             self.show_stdev_callback()
         else:
             if key_pressed in cfg.abbreviation_func_mri_default_issue_list:
@@ -309,7 +309,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                  name_pattern=None,
                  images_for_id=None,
                  issue_list=cfg.func_mri_default_issue_list,
-                 in_dir_type='BIDS',
+                 in_dir_type="BIDS",
                  outlier_method=cfg.default_outlier_detection_method,
                  outlier_fraction=cfg.default_outlier_fraction,
                  outlier_feat_types=cfg.func_mri_features_OLD,
@@ -340,8 +340,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         """
 
-        if id_list is None and 'BIDS' in in_dir_type:
-            id_list = pjoin(in_dir, 'participants.tsv')
+        if id_list is None and "BIDS" in in_dir_type:
+            id_list = pjoin(in_dir, "participants.tsv")
 
         super().__init__(id_list, in_dir, out_dir,
                          outlier_method, outlier_fraction,
@@ -365,7 +365,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.in_dir_type = in_dir_type
         self.name_pattern = name_pattern
         self.images_for_id = images_for_id
-        self.expt_id = 'rate_fmri'
+        self.expt_id = "rate_fmri"
         self.suffix = self.expt_id
         self.current_alert_msg = None
         self.prepare_first = prepare_first
@@ -376,7 +376,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.init_layout(views, num_rows_per_view, num_slices_per_view)
         self.init_getters()
 
-        self.__module_type__ = 'functional_mri'
+        self.__module_type__ = "functional_mri"
 
 
     def preprocess(self):
@@ -387,8 +387,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """
 
         if not self.disable_outlier_detection:
-            print('Preprocessing data - please wait .. '
-                  '\n\t(or contemplate the vastness of universe! )')
+            print("Preprocessing data - please wait .. "
+                  "\n\t(or contemplate the vastness of universe! )")
             self.extract_features()
         self.detect_outliers()
 
@@ -420,18 +420,18 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         from visualqc.features import functional_mri_features
         self.feature_extractor = functional_mri_features
 
-        if 'BIDS' in self.in_dir_type.upper():
+        if "BIDS" in self.in_dir_type.upper():
             from visualqc.utils import process_bids_dir
             self.units, self.unit_by_id, self.id_list = process_bids_dir(
                 self.in_dir, func_mri_traverse_bids)
-        elif 'GENERIC' in self.in_dir_type.upper():
+        elif "GENERIC" in self.in_dir_type.upper():
             if self.id_list is None or self.images_for_id is None:
-                raise ValueError('id_list or images_for_id can not be None '
-                                 'for generic in_dir')
+                raise ValueError("id_list or images_for_id can not be None "
+                                 "for generic in_dir")
             self.unit_by_id = self.images_for_id.copy()
         else:
-            raise NotImplementedError('Only two formats are supported: BIDS and '
-                                      'GENERIC with regex spec for filenames')
+            raise NotImplementedError("Only two formats are supported: BIDS and "
+                                      "GENERIC with regex spec for filenames")
 
 
     def open_figure(self):
@@ -453,20 +453,20 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.layer_order_to_hide = -1
         self.total_num_layers = 3
 
-        plt.style.use('dark_background')
+        plt.style.use("dark_background")
 
         # 1. main carpet, in the background
         self.fig, self.ax_carpet = plt.subplots(1, 1, figsize=self.figsize)
-        set_fig_window_title(self.fig, f'VisualQC Functional MRI : {self.in_dir}')
+        set_fig_window_title(self.fig, f"VisualQC Functional MRI : {self.in_dir}")
 
         self.ax_carpet.set_zorder(self.layer_order_carpet)
         #   vmin/vmax are controlled, because we rescale all to [0, 1]
-        self.imshow_params_carpet = dict(interpolation='none', aspect='auto',
-                                         origin='lower', cmap='gray',
+        self.imshow_params_carpet = dict(interpolation="none", aspect="auto",
+                                         origin="lower", cmap="gray",
                                          vmin=0.0, vmax=1.0)
 
         self.ax_carpet.yaxis.set_visible(False)
-        self.ax_carpet.set_xlabel('time point')
+        self.ax_carpet.set_xlabel("time point")
         self.carpet_handle = self.ax_carpet.imshow(empty_image,
                                                    **self.imshow_params_carpet)
         self.ax_carpet.set_frame_on(False)
@@ -477,9 +477,9 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.stats_axes = tmp_mat.flatten()
         self.stats_handles = [None] * len(self.stats_axes)
 
-        stats = [(empty_vec, 'mean BOLD', 'cyan'),
-                 (empty_vec, 'SD BOLD', 'xkcd:orange red'),
-                 (empty_vec, 'DVARS', 'xkcd:mustard')]
+        stats = [(empty_vec, "mean BOLD", "cyan"),
+                 (empty_vec, "SD BOLD", "xkcd:orange red"),
+                 (empty_vec, "DVARS", "xkcd:mustard")]
         for ix, (ax, (stat, label, color)) in enumerate(zip(self.stats_axes, stats)):
             (vh,) = ax.plot(time_points, stat, color=color)
             self.stats_handles[ix] = vh
@@ -492,8 +492,8 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             ax.set_zorder(self.layer_order_stats)
             ax.set_alpha(cfg.alpha_stats_overlay)
             ax.tick_params(color=color, labelcolor=color)
-            ax.spines['left'].set_color(color)
-            ax.spines['left'].set_position(('outward', 1))
+            ax.spines["left"].set_color(color)
+            ax.spines["left"].set_position(("outward", 1))
 
         # sharing the time point axis
         self.stats_axes[0].get_shared_x_axes().join(self.ax_carpet.xaxis,
@@ -509,21 +509,21 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # vmin/vmax are controlled, because we rescale all to [0, 1]
         # TODO aspect auto here covers carpet so the user can focus on the frame,
         #   not accurately representing geometry underneath
-        self.imshow_params_zoomed = dict(interpolation='none', aspect='auto',
-                                         rasterized=True, origin='lower',
-                                         cmap='gray', vmin=0.0, vmax=1.0)
+        self.imshow_params_zoomed = dict(interpolation="none", aspect="auto",
+                                         rasterized=True, origin="lower",
+                                         cmap="gray", vmin=0.0, vmax=1.0)
 
         # images to be shown in the forground
         self.images_fg = [None] * len(self.fg_axes)
         for ix, ax in enumerate(self.fg_axes):
-            ax.axis('off')
+            ax.axis("off")
             self.images_fg[ix] = ax.imshow(empty_image, **self.imshow_params_zoomed)
             ax.set_visible(False)
             ax.set_zorder(self.layer_order_zoomedin)
 
         self.foreground_h = self.fig.text(cfg.position_zoomed_time_point[0],
                                           cfg.position_zoomed_time_point[1],
-                                          ' ', **cfg.annot_time_point)
+                                          " ", **cfg.annot_time_point)
         self.foreground_h.set_visible(False)
 
         # leaving some space on the right for review elements
@@ -546,9 +546,9 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
                                          total_num_layers=self.total_num_layers)
 
         # connecting callbacks
-        self.con_id_click = self.fig.canvas.mpl_connect('button_press_event',
+        self.con_id_click = self.fig.canvas.mpl_connect("button_press_event",
                                                         self.UI.on_mouse)
-        self.con_id_keybd = self.fig.canvas.mpl_connect('key_press_event',
+        self.con_id_keybd = self.fig.canvas.mpl_connect("key_press_event",
                                                         self.UI.on_keyboard)
 
         # TODO implement the scrolling movement to scroll in time
@@ -589,11 +589,11 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         if flagged_as_outlier:
             alerts_list = self.by_sample.get(self.current_unit_id,
                                              None)  # None, if id not in dict
-            print('\n\tFlagged as a possible outlier by these measures:\n\t\t{}'.format(
-                '\t'.join(alerts_list)))
+            alerts_str = "\t".join(alerts_list)
+            print(f"\n\tFlagged as a possible outlier by these measures:\n\t\t{alerts_str}")
 
-            strings_to_show = ['Flagged as an outlier:', ] + alerts_list
-            self.current_alert_msg = '\n'.join(strings_to_show)
+            strings_to_show = ["Flagged as an outlier:", ] + alerts_list
+            self.current_alert_msg = "\n".join(strings_to_show)
             self.update_alerts()
         else:
             self.current_alert_msg = None
@@ -602,7 +602,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
     def load_unit(self, unit_id):
         """Loads the image data for display."""
 
-        img_path = self.unit_by_id[unit_id]['image']
+        img_path = self.unit_by_id[unit_id]["image"]
         # params_path = self.unit_by_id[unit_id]['params']
         try:
             hdr = nib.load(img_path)
@@ -610,7 +610,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             self.img_this_unit_raw = self.hdr_this_unit.get_fdata()
         except Exception as exc:
             print(exc)
-            print('Unable to read image at \n\t{}'.format(img_path))
+            print(f"Unable to read image at \n\t{img_path}")
             skip_subject = True
         else:
             check_image_is_4d(self.img_this_unit_raw)
@@ -619,7 +619,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
             skip_subject = False
             if np.count_nonzero(self.img_this_unit_raw) == 0:
                 skip_subject = True
-                print('Functional image is empty!')
+                print("Functional image is empty!")
 
         return skip_subject
 
@@ -684,7 +684,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         # dropping alternating voxels if it gets too big
         # to save on memory and avoid losing signal
         if normed_carpet.shape[1] > 600:
-            print('Too many frames (n={}) to display: dropping alternating frames'.format(normed_carpet.shape[1]))
+            print(f"Too many frames (n={normed_carpet.shape[1]}) to display: dropping alternating frames")
             normed_carpet = normed_carpet[:, ::2]
 
         return normed_carpet
@@ -744,14 +744,13 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Exhibits a selected timepoint on top of stats/carpet"""
 
         if time_pt < 0 or time_pt >= self.img_this_unit.shape[3]:
-            print('Requested time point outside '
-                  'range [0, {}]'.format(self.img_this_unit.shape[3]))
+            print(f"Requested time point outside range [0, {self.img_this_unit.shape[3]}]")
             return
 
-        # print('Time point zoomed-in {}'.format(time_pt))
+        # print(f'Time point zoomed-in {time_pt}')
         image3d = np.squeeze(self.img_this_unit[:, :, :, time_pt])
         self.attach_image_to_foreground_axes(image3d)
-        self._identify_foreground('zoomed-in time point {}'.format(time_pt))
+        self._identify_foreground(f"zoomed-in time point {time_pt}")
         # this state flag in important
         self.UI.zoomed_in = True
 
@@ -767,11 +766,11 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """Shows the image of temporal std. dev"""
 
         self.attach_image_to_foreground_axes(self.stdev_this_unit, cfg.colormap_stdev_fmri)
-        self._identify_foreground('Std. dev over time')
+        self._identify_foreground("Std. dev over time")
         self.UI.zoomed_in = True
 
 
-    def attach_image_to_foreground_axes(self, image3d, cmap='gray'):
+    def attach_image_to_foreground_axes(self, image3d, cmap="gray"):
         """Attaches a given image to the foreground axes and bring it forth"""
 
         image3d = crop_image(image3d, self.padding)
@@ -792,11 +791,11 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         dvars = compute_DVARS(self.img_this_unit)
 
         for stat, sname in zip((mean_signal_spatial, stdev_signal_spatial, dvars),
-                               ('mean_signal_spatial', 'stdev_signal_spatial', 'dvars')):
+                               ("mean_signal_spatial", "stdev_signal_spatial", "dvars")):
             if len(stat) != self.img_this_unit.shape[3]:
-                raise ValueError('ERROR: lengths of different stats do not match!')
+                raise ValueError("ERROR: lengths of different stats do not match!")
             if any(np.isnan(stat)):
-                raise ValueError('ERROR: invalid values in stat : {}'.format(sname))
+                raise ValueError(f"ERROR: invalid values in stat : {sname}")
 
         mask = mask_image(mean_img_temporal, update_factor=0.9, init_percentile=5)
         carpet = self.make_carpet(mask)
@@ -815,7 +814,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         self.carpet_handle.set_extent(
             (-0.5, num_time_points - 0.5, -0.5, num_voxels_shown - 0.5))
         self.ax_carpet.set_xticks(np.linspace(0, num_time_points-1,
-                                              num=20, dtype='int'))
+                                              num=20, dtype="int"))
 
 
     def refresh_layer_order(self):
@@ -835,8 +834,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
         """
 
         str_list = _unbidsify(unit_id)
-        id_with_counter = '{}\n({}/{})'.format(str_list, counter + 1,
-                                               self.num_units_to_review)
+        id_with_counter = f"{str_list}\n({counter + 1}/{self.num_units_to_review})"
         if len(id_with_counter) < 1:
             return
         self.UI.annot_text = self.fig.text(cfg.position_annot_text[0],
@@ -849,7 +847,7 @@ class FmriRatingWorkflow(BaseWorkflowVisualQC, ABC):
 
         self.fig.canvas.mpl_disconnect(self.con_id_click)
         self.fig.canvas.mpl_disconnect(self.con_id_keybd)
-        plt.close('all')
+        plt.close("all")
 
 
 def compute_DVARS(func_img, mean_img=None, mask=None, apply_mask=False):
@@ -909,8 +907,8 @@ def _rescale_over_time(matrix):
     """
 
     if matrix.shape[0] <= matrix.shape[1]:
-        raise ValueError('Number of voxels is less than the number of time points!! '
-                         'Are you sure data is reshaped correctly?')
+        raise ValueError("Number of voxels is less than the number of time points!! "
+                         "Are you sure data is reshaped correctly?")
 
     min_ = matrix.min(axis=1)
     range_ = matrix.ptp(axis=1)  # ptp : peak to peak, max-min
@@ -941,7 +939,7 @@ def get_parser():
 
     parser = argparse.ArgumentParser(prog="visualqc_func_mri",
                                      formatter_class=argparse.RawTextHelpFormatter,
-                                     description='visualqc_func_mri: rate quality of functional MR scan.')
+                                     description="visualqc_func_mri: rate quality of functional MR scan.")
 
     help_text_bids_dir = textwrap.dedent("""
     Absolute path to the root folder of the dataset formatted with the BIDS spec.
@@ -974,7 +972,7 @@ def get_parser():
 
     \n""")
 
-    help_text_name_pattern = textwrap.dedent("""
+    help_text_name_pattern = textwrap.dedent(f"""
     Specifies the regex to be used to search for the image to be reviewed.
     Typical options include:
 
@@ -987,13 +985,13 @@ def get_parser():
 
     Make sure to use single quotes to avoid the shell globbing before visualqc receives it.
 
-    Default: '{}'
-    \n""".format(cfg.default_name_pattern))
+    Default: '{cfg.default_name_pattern}'
+    \n""")
 
-    help_text_out_dir = textwrap.dedent("""
+    help_text_out_dir = textwrap.dedent(f"""
     Output folder to store the visualizations & ratings.
-    Default: a new folder called ``{}`` will be created inside the input folder
-    \n""".format(cfg.default_out_dir_name))
+    Default: a new folder called ``{cfg.default_out_dir_name}`` will be created inside the input folder
+    \n""")
 
     help_text_no_preproc = textwrap.dedent("""
     Whether to apply basic preprocessing steps (detrending etc), before building the
@@ -1007,22 +1005,22 @@ def get_parser():
     butterworth filter) before showing images for review.
     \n""")
 
-    help_text_views = textwrap.dedent("""
+    help_text_views = textwrap.dedent(f"""
     Specifies the set of views to display - could be just 1 view, or 2 or all 3.
     Example: --views 0 (typically sagittal) or --views 1 2 (axial and coronal)
-    Default: {} {} {} (show all the views in the selected segmentation)
-    \n""".format(cfg.default_views[0], cfg.default_views[1], cfg.default_views[2]))
+    Default: {cfg.default_views[0]} {cfg.default_views[1]} {cfg.default_views[2]} (show all the views in the selected segmentation)
+    \n""")
 
-    help_text_num_slices = textwrap.dedent("""
+    help_text_num_slices = textwrap.dedent(f"""
     Specifies the number of slices to display per each view.
     This must be even to facilitate better division.
-    Default: {}.
-    \n""".format(cfg.default_num_slices))
+    Default: {cfg.default_num_slices}.
+    \n""")
 
-    help_text_num_rows = textwrap.dedent("""
+    help_text_num_rows = textwrap.dedent(f"""
     Specifies the number of rows to display per each axis.
-    Default: {}.
-    \n""".format(cfg.default_num_rows))
+    Default: {cfg.default_num_rows}.
+    \n""")
 
     help_text_prepare = textwrap.dedent("""
     This flag enables batch-generation of 3d surface visualizations, prior to starting any review and rating operations.
@@ -1032,37 +1030,37 @@ def get_parser():
     Default: False (required visualizations are generated only on demand, which can take 5-10 seconds for each subject).
     \n""")
 
-    help_text_outlier_detection_method = textwrap.dedent("""
+    help_text_outlier_detection_method = textwrap.dedent(f"""
     Method used to detect the outliers.
 
     For more info, read http://scikit-learn.org/stable/modules/outlier_detection.html
 
-    Default: {}.
-    \n""".format(cfg.default_outlier_detection_method))
+    Default: {cfg.default_outlier_detection_method}.
+    \n""")
 
-    help_text_outlier_fraction = textwrap.dedent("""
+    help_text_outlier_fraction = textwrap.dedent(f"""
     Fraction of outliers expected in the given sample. Must be >= 1/n and <= (n-1)/n,
     where n is the number of samples in the current sample.
 
     For more info, read http://scikit-learn.org/stable/modules/outlier_detection.html
 
-    Default: {}.
-    \n""".format(cfg.default_outlier_fraction))
+    Default: {cfg.default_outlier_fraction}.
+    \n""")
 
-    help_text_outlier_feat_types = textwrap.dedent("""
+    help_text_outlier_feat_types = textwrap.dedent(f"""
     Type of features to be employed in training the outlier detection method.  It could be one of
     'cortical' (aparc.stats: mean thickness and other geometrical features from each cortical label),
     'subcortical' (aseg.stats: volumes of several subcortical structures),
     or 'both' (using both aseg and aparc stats).
 
-    Default: {}.
-    \n""".format(cfg.func_mri_features_OLD))
+    Default: {cfg.func_mri_features_OLD}.
+    \n""")
 
     help_text_disable_outlier_detection = textwrap.dedent("""
     This flag disables outlier detection and alerts altogether.
     \n""")
 
-    in_out = parser.add_argument_group('Input and output', ' ')
+    in_out = parser.add_argument_group("Input and output", " ")
 
     in_out.add_argument("-b", "--bids_dir", action="store", dest="bids_dir",
                         default=cfg.default_user_dir,
@@ -1083,15 +1081,15 @@ def get_parser():
                         default=cfg.default_name_pattern, required=False,
                         help=help_text_name_pattern)
 
-    preproc = parser.add_argument_group('Preprocessing',
-                                         'options related to preprocessing before review')
+    preproc = parser.add_argument_group("Preprocessing",
+                                         "options related to preprocessing before review")
 
     preproc.add_argument("-np", "--no_preproc",
                          action="store_true", dest="no_preproc",
                          required=False, help=help_text_no_preproc)
 
-    outliers = parser.add_argument_group('Outlier detection',
-                                         'options related to automatically detecting possible outliers')
+    outliers = parser.add_argument_group("Outlier detection",
+                                         "options related to automatically detecting possible outliers")
     outliers.add_argument("-olm", "--outlier_method", action="store",
                           dest="outlier_method",
                           default=cfg.default_outlier_detection_method, required=False,
@@ -1111,11 +1109,11 @@ def get_parser():
                           dest="disable_outlier_detection",
                           required=False, help=help_text_disable_outlier_detection)
 
-    layout = parser.add_argument_group('Layout options',
-                                       'Slice layout arragement when zooming in on a time point,\n'
-                                       ' or show to the std. dev plot.')
+    layout = parser.add_argument_group("Layout options",
+                                       "Slice layout arragement when zooming in on a time point,\n"
+                                       " or show to the std. dev plot.")
     layout.add_argument("-w", "--views", action="store", dest="views",
-                        default=cfg.default_views, required=False, nargs='+',
+                        default=cfg.default_views, required=False, nargs="+",
                         help=help_text_views)
 
     layout.add_argument("-s", "--num_slices", action="store", dest="num_slices",
@@ -1126,10 +1124,10 @@ def get_parser():
                         default=cfg.default_num_rows, required=False,
                         help=help_text_num_rows)
 
-    wf_args = parser.add_argument_group('Workflow', 'Options related to workflow '
-                                                    'e.g. to pre-compute resource-intensive features, '
-                                                    'and pre-generate all the visualizations required '
-                                                    'before bringin up the review interface.')
+    wf_args = parser.add_argument_group("Workflow", "Options related to workflow "
+                                                    "e.g. to pre-compute resource-intensive features, "
+                                                    "and pre-generate all the visualizations required "
+                                                    "before bringin up the review interface.")
     wf_args.add_argument("-p", "--prepare_first", action="store_true",
                          dest="prepare_first",
                          help=help_text_prepare)
@@ -1147,7 +1145,7 @@ def make_workflow_from_user_options():
     parser = get_parser()
 
     if len(sys.argv) < 2:
-        print('Too few arguments!')
+        print("Too few arguments!")
         parser.print_help()
         parser.exit(1)
 
@@ -1157,8 +1155,8 @@ def make_workflow_from_user_options():
     except:
         parser.exit(1)
 
-    vis_type = 'func_mri'
-    type_of_features = 'func_mri'
+    vis_type = "func_mri"
+    type_of_features = "func_mri"
 
     if user_args.bids_dir is not None and user_args.user_dir is None:
         in_dir, in_dir_type = check_bids_dir(user_args.bids_dir)
@@ -1168,11 +1166,11 @@ def make_workflow_from_user_options():
     elif user_args.bids_dir is None and user_args.user_dir is not None:
         name_pattern = user_args.name_pattern
         in_dir = realpath(user_args.user_dir)
-        in_dir_type = 'generic'
+        in_dir_type = "generic"
         id_list, images_for_id = check_id_list_with_regex(user_args.id_list, in_dir, name_pattern)
     else:
-        raise ValueError('Invalid args: specify only one of bids_dir or user_dir, '
-                         'not both.')
+        raise ValueError("Invalid args: specify only one of bids_dir or user_dir, "
+                         "not both.")
 
     out_dir = check_out_dir(user_args.out_dir, in_dir)
 
@@ -1181,10 +1179,10 @@ def make_workflow_from_user_options():
         try:
             from nilearn.signal import clean
         except ImportError:
-            raise ImportError('nilearn is required for fMRI preprocessing. '
-                              'Install nilearn before running VisualQC for fMRI. '
-                              'It is not required if you are not applying any '
-                              'preprocessing, or you preprocessed them elsewhere.')
+            raise ImportError("nilearn is required for fMRI preprocessing. "
+                              "Install nilearn before running VisualQC for fMRI. "
+                              "It is not required if you are not applying any "
+                              "preprocessing, or you preprocessed them elsewhere.")
 
     views = check_views(user_args.views)
     num_slices_per_view, num_rows_per_view = check_finite_int(user_args.num_slices,
@@ -1220,7 +1218,7 @@ def make_workflow_from_user_options():
 def cli_run():
     """Main entry point."""
 
-    print('\nFunctional MRI module')
+    print("\nFunctional MRI module")
     from visualqc.utils import run_common_utils_before_starting
     run_common_utils_before_starting()
 
@@ -1230,7 +1228,7 @@ def cli_run():
     return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # disabling all not severe warnings
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
